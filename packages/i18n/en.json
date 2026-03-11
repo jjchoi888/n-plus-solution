@@ -1,0 +1,19 @@
+{
+  "common": {
+    "brand": "n+",
+    "bookNow": "Book Now",
+    "viewRooms": "View Rooms",
+    "contactUs": "Contact Us"
+  },
+  "home": {
+    "heroTitle": "More Than Just a Stay",
+    "heroSubtitle": "Perfect relaxation with n+. Discover our most special rooms today.",
+    "location": "Location"
+  },
+  "booking": {
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests",
+    "search": "Check Availability"
+  }
+}
