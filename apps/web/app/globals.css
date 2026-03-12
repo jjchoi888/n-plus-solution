@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-emerald: #50C878;
+  --color-emerald-light: #D1FAE5;
+  --color-emerald-dark: #065F46;
+  --font-serif: "Playfair Display", serif;
+}
+
+:root {
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}

@@ -1,0 +1,176 @@
+"use client";
+import { useState } from "react";
+
+// 💡 [신규] 다국어 번역 사전
+const translations = {
+  en: { findBooking: "Find Booking", resId: "Reservation ID", email: "Email", search: "Search", close: "Close", status: "Status", checkIn: "Check-in", checkOut: "Check-out", room: "Room Type", notFound: "No matching reservation found.", enterDetails: "Please enter your Reservation ID OR Email.", searching: "Searching...", guest: "Guest Name" },
+  ko: { findBooking: "예약 조회", resId: "예약 번호", email: "이메일", search: "조회하기", close: "닫기", status: "상태", checkIn: "체크인", checkOut: "체크아웃", room: "객실 타입", notFound: "일치하는 예약 내역이 없습니다.", enterDetails: "예약 번호 또는 이메일을 입력해 주세요.", searching: "조회 중...", guest: "예약자명" },
+  ja: { findBooking: "予約照会", resId: "予約番号", email: "メールアドレス", search: "検索", close: "閉じる", status: "状態", checkIn: "チェックイン", checkOut: "チェックアウト", room: "客室タイプ", notFound: "一致する予約が見つかりません。", enterDetails: "予約情報を入力してください。", searching: "検索中...", guest: "予約者名" },
+  zh: { findBooking: "查找预订", resId: "预订编号", email: "电子邮箱", search: "搜索", close: "关闭", status: "状态", checkIn: "入住", checkOut: "退房", room: "客房类型", notFound: "未找到匹配的预订。", enterDetails: "请输入您的预订信息。", searching: "搜索中...", guest: "预订人" }
+};
+
+const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
+
+export default function Navbar({ currentLang, setLang }) {
+  const t = translations[currentLang] || translations.en;
+  
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLookupOpen, setIsLookupOpen] = useState(false);
+  
+  // 예약 조회 상태 관리
+  const [lookupData, setLookupData] = useState({ res_id: "", email: "" });
+  const [lookupResult, setLookupResult] = useState(null);
+  const [lookupError, setLookupError] = useState("");
+  const [isLookingUp, setIsLookingUp] = useState(false);
+
+  const languages = [
+    { code: "ko", label: "한국어" },
+    { code: "en", label: "English" },
+    { code: "zh", label: "简体中文" },
+    { code: "ja", label: "日本語" },
+  ];
+
+  const handleLookup = async (e) => {
+    e.preventDefault();
+    
+    // 💡 [수정] 둘 다 비어있을 때만 경고 메시지 표시
+    if (!lookupData.res_id.trim() && !lookupData.email.trim()) {
+        setLookupError(t.enterDetails);
+        return;
+    }
+
+    setIsLookingUp(true);
+    setLookupError("");
+    setLookupResult(null);
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/public/reservations/lookup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lookupData)
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setLookupResult(data.reservation);
+      } else {
+        setLookupError(t.notFound);
+      }
+    } catch (error) {
+      setLookupError("Network Error.");
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const closeLookupModal = () => {
+    setIsLookupOpen(false);
+    setLookupResult(null);
+    setLookupError("");
+    setLookupData({ res_id: "", email: "" });
+  };
+
+  return (
+    <>
+      <nav className="w-full flex justify-between items-center px-8 py-6 bg-white border-b border-gray-100 shadow-sm fixed top-0 z-50">
+        {/* 로고 */}
+        <div className="text-2xl font-black text-emerald tracking-tighter cursor-pointer">
+          n+
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* 💡 [신규] 예약 조회 버튼 */}
+          <button 
+            onClick={() => setIsLookupOpen(true)}
+            className="text-sm font-bold text-gray-600 hover:text-emerald transition-colors"
+          >
+            {t.findBooking}
+          </button>
+
+          {/* 언어 선택 드롭다운 */}
+          <div className="relative">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex items-center gap-2 border-2 border-emerald px-4 py-2 rounded-full text-emerald font-bold hover:bg-emerald hover:text-white transition-colors"
+            >
+              {languages.find((l) => l.code === currentLang)?.label} ▼
+            </button>
+
+            {isOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden flex flex-col">
+                {languages.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setLang(l.code);
+                      setIsOpen(false);
+                    }}
+                    className="px-4 py-3 text-left hover:bg-emerald-light hover:text-emerald transition-colors text-sm font-medium text-gray-700"
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* 💡 [신규] 예약 조회 팝업 모달창 */}
+      {isLookupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[200] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div className="bg-emerald px-6 py-5 flex justify-between items-center text-white">
+              <h2 className="text-xl font-bold">{t.findBooking}</h2>
+              <button onClick={closeLookupModal} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
+            </div>
+            
+            <div className="p-8">
+              {!lookupResult ? (
+                <form onSubmit={handleLookup} className="space-y-5">
+                  <p className="text-sm text-gray-500 mb-2">{t.enterDetails}</p>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.resId}</label>
+                    {/* 💡 [수정] required 속성 제거 */}
+                    <input type="text" placeholder="WEBXXXXXX" value={lookupData.res_id} onChange={e => setLookupData({...lookupData, res_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-mono" />
+                  </div>
+                  <div className="flex items-center justify-center"><span className="text-xs font-black text-gray-400 bg-gray-100 px-3 rounded-full">OR</span></div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.email}</label>
+                    {/* 💡 [수정] required 속성 제거 */}
+                    <input type="email" placeholder="email@example.com" value={lookupData.email} onChange={e => setLookupData({...lookupData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none" />
+                  </div>
+                  
+                  {lookupError && <p className="text-sm text-red-500 font-bold bg-red-50 p-3 rounded-lg">{lookupError}</p>}
+
+                  <button type="submit" disabled={isLookingUp} className={`w-full py-3.5 text-white font-bold rounded-xl shadow-md transition-all text-lg mt-4 ${isLookingUp ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark'}`}>
+                    {isLookingUp ? t.searching : t.search}
+                  </button>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center mb-6">
+                    <span className="text-xs uppercase text-emerald-600 font-bold mb-1">{t.resId}</span>
+                    <span className="text-2xl font-black text-emerald-900 font-mono tracking-widest">{lookupResult.res_id}</span>
+                  </div>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.guest}</span><span className="font-bold text-gray-800">{lookupResult.guest_name}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.status}</span><span className={`font-black px-2 py-0.5 rounded text-xs ${lookupResult.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>{lookupResult.status}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.room}</span><span className="font-bold text-gray-800">{lookupResult.room_type}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.checkIn}</span><span className="font-bold text-gray-800">{lookupResult.check_in_date}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.checkOut}</span><span className="font-bold text-gray-800">{lookupResult.check_out_date}</span></div>
+                  </div>
+
+                  <button onClick={closeLookupModal} className="w-full mt-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors">
+                    {t.close}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
