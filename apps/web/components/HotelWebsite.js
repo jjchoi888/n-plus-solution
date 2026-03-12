@@ -212,7 +212,7 @@ export default function HotelWebsite({ domain }) {
                     <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
                         {facilities.map((fac, idx) => (
                             <button key={idx} onClick={(e) => handleTabClick(e, setActiveFacIdx, idx)} 
-                                className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${activeFacIdx === idx ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
+                                className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeFacIdx === idx ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
                                 {fac.title || 'Facility'}
                             </button>
                         ))}
@@ -228,7 +228,7 @@ export default function HotelWebsite({ domain }) {
                         </div>
                         <div className="lg:col-span-3 flex flex-col justify-center">
                             {/* 💡 [수정] 구분선을 아주 얇은 1px 선(border-b)으로 변경했습니다! */}
-                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start">{facilities[activeFacIdx]?.title}</h3>
+                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{facilities[activeFacIdx]?.title}</h3>
                             {/* 💡 [수정] 에디터의 HTML 코드를 적용합니다! */}
                             <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: facilities[activeFacIdx]?.description || '' }} />
                         </div>
@@ -246,7 +246,7 @@ export default function HotelWebsite({ domain }) {
                     <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
                         {attractions.map((att, idx) => (
                             <button key={idx} onClick={(e) => handleTabClick(e, setActiveAttIdx, idx)} 
-                                className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${activeAttIdx === idx ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
+                                className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeAttIdx === idx ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
                                 {att.title || 'Attraction'}
                             </button>
                         ))}
@@ -262,7 +262,7 @@ export default function HotelWebsite({ domain }) {
                         </div>
                         <div className="lg:col-span-3 flex flex-col justify-center">
                             {/* 💡 [수정] 구분선을 아주 얇은 1px 선(border-b)으로 변경했습니다! */}
-                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start">{attractions[activeAttIdx]?.title}</h3>
+                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{attractions[activeAttIdx]?.title}</h3>
                             {/* 💡 [수정] 에디터의 HTML 코드를 적용합니다! */}
                             <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: attractions[activeAttIdx]?.description || '' }} />
                         </div>
