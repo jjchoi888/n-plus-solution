@@ -74,10 +74,13 @@ export default function HotelWebsite({ domain }) {
     }
   }, [sliderImages.length, activeMenu]);
 
+  // 💡 [수정] ROOMS 탭에 있을 때만 슬라이더가 돌도록 하여 다른 페이지(지도 등) 깜빡임 방지
   useEffect(() => {
-    const timer = setInterval(() => setRoomSlideIdx(prev => prev + 1), 3000);
-    return () => clearInterval(timer);
-  }, []);
+    if (activeMenu === 'ROOMS') {
+        const timer = setInterval(() => setRoomSlideIdx(prev => prev + 1), 3000);
+        return () => clearInterval(timer);
+    }
+  }, [activeMenu]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-xl font-bold text-slate-500 bg-slate-50">Loading your perfect stay...</div>;
 
@@ -272,8 +275,8 @@ export default function HotelWebsite({ domain }) {
           <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
              <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-8">
                 
-                {/* 왼쪽 70%: 구글 지도 */}
-                <div className="lg:col-span-7 w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&>iframe]:w-full [&>iframe]:h-full">
+                {/* 💡 왼쪽 70%: 구글 지도가 강제로 영역에 꽉 차도록 CSS Override (!w-full !h-full) */}
+                <div className="lg:col-span-7 w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
                     {safeConfig.map_embed_url ? (
                          <div dangerouslySetInnerHTML={{ __html: safeConfig.map_embed_url }} className="w-full h-full" />
                     ) : (
@@ -281,10 +284,10 @@ export default function HotelWebsite({ domain }) {
                     )}
                 </div>
                 
-                {/* 💡 오른쪽 30%: 연락처 정보 & 하단 SNS 아이콘 */}
+                {/* 오른쪽 30%: 연락처 정보 & 하단 SNS 아이콘 */}
                 <div className="lg:col-span-3 flex flex-col">
-                    <div className="text-5xl mb-4">📍</div>
-                    <h3 className="text-3xl font-black text-slate-800 mb-6 border-b-4 theme-border pb-2 inline-block self-start">Contact Us</h3>
+                    {/* 💡 이모티콘 제거 및 밑줄(border-b) 제거 적용 */}
+                    <h3 className="text-3xl font-black text-slate-800 mb-8 self-start">Contact Us</h3>
                     
                     <div className="space-y-6 text-slate-600 flex-1">
                         <div>
