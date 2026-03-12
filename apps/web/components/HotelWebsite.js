@@ -111,7 +111,7 @@ export default function HotelWebsite({ domain }) {
             {safeConfig.logo_url ? <img src={safeConfig.logo_url} className="h-8 md:h-12 object-contain" /> : <span className="text-2xl font-black theme-text uppercase">{safeConfig.welcome_title || 'LOGO'}</span>}
           </div>
           <div className="hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest">
-            {['HOME', 'ROOMS', 'FACILITIES', 'ATTRACTIONS', 'LOCATION'].map(menu => (
+            {['HOME', 'ROOMS', 'FACILITIES', 'ATTRACTIONS', 'CONTACT'].map(menu => (
                 <button key={menu} onClick={() => setActiveMenu(menu)} className={`transition-colors pb-1 ${activeMenu === menu ? 'theme-text border-b-2 theme-border' : 'hover:theme-text'}`}>{menu}</button>
             ))}
           </div>
@@ -267,10 +267,12 @@ export default function HotelWebsite({ domain }) {
           </section>
         )}
 
-        {/* 📍 메뉴 5: 오시는 길 (LOCATION) */}
-        {activeMenu === 'LOCATION' && (
+        {/* 📍 메뉴 5: 연락처 및 오시는 길 (CONTACT) */}
+        {activeMenu === 'CONTACT' && (
           <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
              <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-8">
+                
+                {/* 왼쪽 70%: 구글 지도 */}
                 <div className="lg:col-span-7 w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&>iframe]:w-full [&>iframe]:h-full">
                     {safeConfig.map_embed_url ? (
                          <div dangerouslySetInnerHTML={{ __html: safeConfig.map_embed_url }} className="w-full h-full" />
@@ -278,12 +280,35 @@ export default function HotelWebsite({ domain }) {
                         <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">Location map is currently being updated.</div>
                     )}
                 </div>
-                <div className="lg:col-span-3 flex flex-col justify-center">
+                
+                {/* 💡 오른쪽 30%: 연락처 정보 & 하단 SNS 아이콘 */}
+                <div className="lg:col-span-3 flex flex-col">
                     <div className="text-5xl mb-4">📍</div>
-                    <h3 className="text-3xl font-black text-slate-800 mb-6 border-b-4 theme-border pb-2 inline-block">Find Us Here</h3>
-                    <div className="space-y-4 text-slate-600">
-                        <p className="font-bold text-lg text-slate-800">{safeConfig.welcome_title || "Our Hotel"}</p>
-                        <p className="font-medium text-base">We are located in the heart of the city, providing easy access to all major attractions and transport links.</p>
+                    <h3 className="text-3xl font-black text-slate-800 mb-6 border-b-4 theme-border pb-2 inline-block self-start">Contact Us</h3>
+                    
+                    <div className="space-y-6 text-slate-600 flex-1">
+                        <div>
+                            <p className="font-black text-xl text-slate-800 mb-4">{safeConfig.welcome_title || "Our Hotel"}</p>
+                            
+                            {sns.address && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-lg">🏠</span> <span>{sns.address}</span></p>}
+                            {sns.phone && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-lg">📞</span> <span>{sns.phone}</span></p>}
+                            {sns.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-lg">✉️</span> <span>{sns.email}</span></p>}
+                            
+                            {(!sns.address && !sns.phone && !sns.email) && (
+                                 <p className="font-medium text-base leading-relaxed">We are located in the heart of the city. Detailed contact info will be updated soon.</p>
+                            )}
+                        </div>
+                        
+                        {/* 하단 SNS 버튼 영역 */}
+                        {(sns.ig || sns.fb) && (
+                            <div className="pt-8 mt-auto border-t border-slate-100">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Follow Us</p>
+                                <div className="flex gap-4">
+                                    {sns.ig && <a href={sns.ig} target="_blank" rel="noreferrer" className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16.11 7.99a.01.01 0 0 1 .02 0"/><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18"/></svg></a>}
+                                    {sns.fb && <a href={sns.fb} target="_blank" rel="noreferrer" className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
