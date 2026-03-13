@@ -98,8 +98,15 @@ export default function HotelWebsite({ domain }) {
   const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
 
   // 💡 [추가 3] 백오피스에서 드래그로 저장된 텍스트 위치(좌표) 파싱 (안전장치 포함)
-  let textPos = { x: 50, y: 50 };
-  try { if(safeConfig.welcome_text_pos) textPos = JSON.parse(safeConfig.welcome_text_pos); } catch(e){}
+  // 💡 [분리형 좌표 적용] 타이틀과 서브타이틀 각각의 좌표 파싱 (구버전 호환)
+  let textPos = { title: {x: 50, y: 40}, subtitle: {x: 50, y: 55} };
+  try { 
+      if(safeConfig.welcome_text_pos) {
+          const raw = JSON.parse(safeConfig.welcome_text_pos);
+          if (raw.title && raw.subtitle) textPos = raw;
+          else textPos = { title: {x: raw.x || 50, y: Math.max(0, (raw.y || 50) - 10)}, subtitle: {x: raw.x || 50, y: Math.min(100, (raw.y || 50) + 10)} };
+      }
+  } catch(e){}
 
   return (
     <>
@@ -156,16 +163,22 @@ export default function HotelWebsite({ domain }) {
                   ))}
               </div>
               
-              {/* 💡 [추가 5] 드래그한 텍스트 위치(textPos) 반영 */}
+              {/* 💡 [분리 적용] 타이틀과 서브타이틀 각각의 위치와 줄바꿈(whitespace-pre-wrap) 적용 */}
               <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
                    style={{ 
-                       left: `${textPos.x}%`, 
-                       top: `${textPos.y}%`, 
-                       transform: `translate(-${textPos.x}%, -${textPos.y}%)`,
-                       textAlign: textPos.x < 30 ? 'left' : textPos.x > 70 ? 'right' : 'center'
+                       left: `${textPos.title?.x ?? 50}%`, top: `${textPos.title?.y ?? 40}%`, 
+                       transform: `translate(-${textPos.title?.x ?? 50}%, -${textPos.title?.y ?? 40}%)`,
+                       textAlign: (textPos.title?.x ?? 50) < 30 ? 'left' : (textPos.title?.x ?? 50) > 70 ? 'right' : 'center'
                    }}>
-                {/* 💡 텍스트에 whitespace-pre-wrap 속성을 추가하여 줄바꿈이 적용되도록 합니다. */}
-                <h1 className="text-5xl md:text-7xl text-white leading-tight mb-4 drop-shadow-2xl font-black whitespace-pre-wrap">{safeConfig.welcome_title || "Welcome"}</h1>
+                <h1 className="text-5xl md:text-7xl text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap">{safeConfig.welcome_title || "Welcome"}</h1>
+              </div>
+
+              <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
+                   style={{ 
+                       left: `${textPos.subtitle?.x ?? 50}%`, top: `${textPos.subtitle?.y ?? 60}%`, 
+                       transform: `translate(-${textPos.subtitle?.x ?? 50}%, -${textPos.subtitle?.y ?? 60}%)`,
+                       textAlign: (textPos.subtitle?.x ?? 50) < 30 ? 'left' : (textPos.subtitle?.x ?? 50) > 70 ? 'right' : 'center'
+                   }}>
                 <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap">{safeConfig.welcome_subtitle || "Your perfect stay awaits."}</p>
               </div>
             </section>
