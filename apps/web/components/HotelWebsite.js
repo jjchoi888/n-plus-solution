@@ -460,13 +460,18 @@ export default function HotelWebsite({ domain }) {
             const extraBedPrice = extraBed * 1000 * nights;
             const finalTotal = basePrice + extraBedPrice;
 
+            // 💡 [추가] 국적 리스트 정렬 (Top 5 + 나머지 알파벳 순)
+            const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
+            const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
+
             const handleConfirmBooking = async () => {
                 if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
                     return setAlertMessage(lang === 'ko' ? "필수 정보를 모두 입력해주세요." : "Please fill in all required details.");
                 }
                 setIsBooking(true);
                 try {
-                    const res = await fetch(`${BASE_URL}/api/bookings/create`, {
+                    // 💡 [에러 해결!] 404 에러가 나지 않도록 원래 작동하던 /api/bookings 주소로 원상복구했습니다.
+                    const res = await fetch(`${BASE_URL}/api/bookings`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -515,9 +520,12 @@ export default function HotelWebsite({ domain }) {
                         {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                     </div>
                     
-                    <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+                    {/* 💡 [모바일 스크롤 해결] flex-1 속성에 overflow-y-auto를 부여하여 모바일에서 화면 전체가 스크롤되게 수정했습니다! */}
+                    <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+                        
                         {/* 왼쪽: 입력 폼 구역 */}
-                        <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
+                        {/* 💡 데스크탑(lg) 이상에서만 자체 스크롤되도록 lg:overflow-y-auto 적용 */}
+                        <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                             
                             <section>
                                 <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
@@ -543,12 +551,13 @@ export default function HotelWebsite({ domain }) {
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label>
                                         <select value={nationality} onChange={e=>setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer">
-                                            <option value="Philippines">Philippines</option>
-                                            <option value="South Korea">South Korea</option>
-                                            <option value="United States">United States</option>
-                                            <option value="Japan">Japan</option>
-                                            <option value="China">China</option>
-                                            <option value="Others">Others</option>
+                                            {/* 💡 [기능 적용] 주요 5개국 고정 & 나머지 A-Z 정렬 드롭다운 */}
+                                            <optgroup label="Top Options">
+                                                {topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
+                                            </optgroup>
+                                            <optgroup label="All Countries">
+                                                {otherCountries.map(c => <option key={`oth_${c}`} value={c}>{c}</option>)}
+                                            </optgroup>
                                         </select>
                                     </div>
                                 </div>
@@ -591,7 +600,8 @@ export default function HotelWebsite({ domain }) {
                         </div>
 
                         {/* 오른쪽: Booking Summary 구역 */}
-                        <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col">
+                        {/* 💡 [모바일 스크롤 해결] h-full을 없애고 내용물에 맞춰 밑으로 자연스럽게 늘어나도록 변경했습니다. */}
+                        <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto lg:h-full lg:overflow-y-auto">
                             <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                             
                             <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
