@@ -241,10 +241,11 @@ export default function HotelWebsite({ domain }) {
 
         {/* 🛏️ ROOMS */}
         {activeMenu === 'ROOMS' && (
-          <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
+          // 💡 [수정] 팝업이 아래로 열릴 충분한 공간(pb-40)을 주고, 최우선순위(z-20)를 부여합니다.
+          <section className="pt-24 md:pt-32 pb-40 md:pb-56 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow relative z-20">
             {rooms.length > 0 && activeRoom ? (
-                <div>
-                    <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
+                <div className="relative z-30">
+                    <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x relative z-10">
                         {rooms.map(r => (
                             <button key={r.id} onClick={(e) => handleTabClick(e, setSelectedRoomId, r.id)} 
                                 className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${selectedRoomId === r.id ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
@@ -252,7 +253,8 @@ export default function HotelWebsite({ domain }) {
                             </button>
                         ))}
                     </div>
-                    <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
+                    {/* 💡 [수정] z-0을 z-30으로 변경하여 푸터에 절대 가려지지 않게 강제합니다! */}
+                    <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-30 -mt-px">
                         <div className="lg:col-span-7 flex flex-col gap-4 md:gap-6">
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
                                 {activeRoom.images && activeRoom.images.length > 0 ? (
@@ -424,21 +426,25 @@ export default function HotelWebsite({ domain }) {
             </div>
         )}
 
-        {/* 📱 푸터 (집 나간 SNS 링크 정상 복구!) */}
-        <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 text-center mt-auto">
-          <div className="max-w-4xl mx-auto flex flex-col items-center gap-4">
+        {/* 📱 푸터 (겹침 방지 z-index 및 데스크탑/모바일 맞춤 레이아웃 적용) */}
+        <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               
-              {/* 💡 [핵심 해결] SNS 아이콘이 http 포함 여부 상관없이 100% 렌더링되도록 수정 */}
-              {(sns?.ig || sns?.fb) && (
-                  <div className="flex gap-4 mb-2">
-                      {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16.11 7.99a.01.01 0 0 1 .02 0"/><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18"/></svg></a>}
-                      {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>}
-                  </div>
-              )}
+              {/* 데스크탑 레이아웃에서 중앙을 맞추기 위한 투명 블록 (모바일에서는 자동 숨김) */}
+              <div className="hidden md:block flex-1"></div>
+              
+              {/* 중앙: SNS 링크 */}
+              <div className="flex-1 flex justify-center gap-4">
+                  {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16.11 7.99a.01.01 0 0 1 .02 0"/><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18"/></svg></a>}
+                  {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>}
+              </div>
 
-              <p className="text-xs md:text-sm font-bold text-slate-500">
-                  &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
-              </p>
+              {/* 우측(데스크탑) / 하단(모바일): 카피라이트 */}
+              <div className="flex-1 flex justify-center md:justify-end w-full">
+                  <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
+                      &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
+                  </p>
+              </div>
           </div>
         </footer>
       </div>
