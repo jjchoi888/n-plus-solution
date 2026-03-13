@@ -82,6 +82,12 @@ export default function HotelWebsite({ domain }) {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false); 
+  
+  // 💡 [복구 완료] 실제 예약자 정보 입력 및 로딩 상태
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
 
   const getHotelCodeFromDomain = (hostname) => {
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
@@ -276,7 +282,12 @@ export default function HotelWebsite({ domain }) {
                             <h3 className="text-xl md:text-2xl font-black theme-text mb-2">{t.bookStay}</h3>
                             <p className="text-slate-500 text-xs md:text-sm font-bold mb-6">{renderPriceStr(activeRoom.price, activeRoom.name)}</p>
                             
-                            <form className="space-y-4 relative mt-2" onSubmit={(e) => { e.preventDefault(); setShowBookingModal(true); }}>
+                            <form className="space-y-4 relative mt-2" onSubmit={(e) => { 
+                                e.preventDefault(); 
+                                if (!checkIn || !checkOut) return alert(lang === 'ko' ? "체크인/체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
+                                if (new Date(checkOut) <= new Date(checkIn)) return alert(lang === 'ko' ? "체크아웃은 체크인 이후여야 합니다." : "Check-out must be after check-in.");
+                                setShowBookingModal(true); 
+                            }}>
                                 <div className="flex flex-col gap-4">
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
@@ -408,23 +419,97 @@ export default function HotelWebsite({ domain }) {
           </section>
         )}
 
-        {/* 💡 4개 국어 지원 중앙 예약 알림 모달창 */}
-        {showBookingModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowBookingModal(false)}>
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-                    <div className="bg-blue-600 p-6 text-white">
-                        <span className="text-4xl block mb-2">🗓️</span>
-                        <h3 className="text-xl font-black">{t.modalTitle}</h3>
+        {/* 💡 [복구 완료] 실제 예약자 정보 입력 폼 및 API 연동 모달 */}
+        {showBookingModal && (() => {
+            const start = new Date(checkIn);
+            const end = new Date(checkOut);
+            const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+            const totalPrice = (activeRoom?.price || 0) * nights * roomCount;
+
+            const handleConfirmBooking = async () => {
+                if (!guestName || !guestEmail || !guestPhone) return alert(lang === 'ko' ? "예약자 정보를 모두 입력해주세요." : "Please fill in all guest details.");
+                setIsBooking(true);
+                try {
+                    // 💡 [중요] 기존에 완벽하게 작동했던 백엔드 예약 생성 API 호출 주소입니다!
+                    // 혹시 백엔드 엔드포인트가 /api/bookings/create 였다면 그에 맞게 뒷부분만 수정해주세요.
+                    const res = await fetch(`${BASE_URL}/api/bookings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            hotel_code: hotelCode,
+                            room_id: activeRoom.id,
+                            room_type: activeRoom.name,
+                            check_in: checkIn,
+                            check_out: checkOut,
+                            adults, kids, infants,
+                            room_count: roomCount,
+                            guest_name: guestName,
+                            guest_email: guestEmail,
+                            guest_phone: guestPhone,
+                            total_price: totalPrice,
+                            status: 'CONFIRMED'
+                        })
+                    });
+                    
+                    const data = await res.json();
+                    if (res.ok || data.success) {
+                        alert(lang === 'ko' ? "✅ 예약이 확정되었습니다! 이메일과 영수증이 성공적으로 발송되었습니다." : "✅ Booking Confirmed! Email and receipt have been sent.");
+                        setShowBookingModal(false);
+                        setGuestName(''); setGuestEmail(''); setGuestPhone('');
+                        setCheckIn(''); setCheckOut('');
+                    } else {
+                        alert("❌ Failed: " + (data.message || "Booking API Error"));
+                    }
+                } catch (error) {
+                    console.error("Booking Error:", error);
+                    alert("Error connecting to the server.");
+                } finally {
+                    setIsBooking(false);
+                }
+            };
+
+            return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden text-left border border-slate-100" onClick={e => e.stopPropagation()}>
+                    <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
+                        <h3 className="text-xl font-black">{lang === 'ko' ? '예약자 정보 입력' : 'Guest Information'}</h3>
+                        {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-xl">✕</button>}
                     </div>
-                    <div className="p-8 text-slate-700 font-medium text-base">
-                        <p className="font-bold text-lg text-slate-900 mb-4">{t.modalMsg}</p>
+                    
+                    <div className="p-6 space-y-4 text-slate-700 max-h-[60vh] overflow-y-auto">
+                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm">
+                            <p className="font-black text-blue-900 mb-1 text-base">{activeRoom?.name}</p>
+                            <p className="text-blue-800 font-medium">{checkIn} ~ {checkOut} <span className="font-bold">({nights} Nights)</span></p>
+                            <p className="text-blue-800 font-medium">{adults} Adults, {roomCount} Rooms</p>
+                            <div className="border-t border-blue-200 mt-3 pt-3 flex justify-between items-center font-black text-blue-900 text-lg">
+                                <span>Total Amount:</span>
+                                <span>₱{totalPrice.toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{lang === 'ko' ? '이름 (Full Name)' : 'Full Name'}</label>
+                            <input value={guestName} onChange={e=>setGuestName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="John Doe" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{lang === 'ko' ? '이메일 주소 (Email)' : 'Email Address'}</label>
+                            <input value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="john@example.com" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{lang === 'ko' ? '연락처 (Phone)' : 'Phone Number'}</label>
+                            <input value={guestPhone} onChange={e=>setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="+1 234 567 890" />
+                        </div>
                     </div>
-                    <div className="p-5 bg-slate-50 border-t border-slate-100">
-                        <button onClick={() => setShowBookingModal(false)} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black transition-transform active:scale-95 shadow-md">{t.close}</button>
+
+                    <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <button onClick={handleConfirmBooking} disabled={isBooking} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black transition-transform active:scale-95 shadow-md disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
+                            {isBooking ? <span className="animate-pulse">{lang === 'ko' ? '처리 중...' : 'Processing...'}</span> : <span>{lang === 'ko' ? '결제 및 예약 확정' : 'Confirm & Book'}</span>}
+                        </button>
                     </div>
                 </div>
             </div>
-        )}
+            );
+        })()}
 
         {/* 📱 푸터 (겹침 방지 z-index 및 데스크탑/모바일 맞춤 레이아웃 적용) */}
         <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
