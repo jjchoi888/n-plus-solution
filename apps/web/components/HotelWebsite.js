@@ -4,7 +4,7 @@ import RoomList from "./RoomList";
 
 const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
 
-// 💡 4개 국어(EN, KO, ZH, JA) 번역 딕셔너리
+// 💡 4개 국어(EN, KO, ZH, JA) 번역 딕셔너리 (결제창 단어 대거 추가)
 const translations = {
     en: {
         home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
@@ -15,8 +15,13 @@ const translations = {
         room: 'Room', rooms: 'Rooms', done: 'Done', maxGuests: 'Max', guests: 'Guests',
         noImg: 'No Image Available', noRooms: 'No rooms available.', noFac: 'No facilities registered.', noAtt: 'No attractions registered.',
         mapUpdating: 'Location map is currently being updated.', contactUs: 'Contact Us', rights: 'All rights reserved.',
-        modalTitle: 'Booking System Update', modalMsg: 'Booking API integration is in preparation.', close: 'Close',
-        standardBed: 'Standard Bed'
+        standardBed: 'Standard Bed',
+        // 결제창 전용 번역
+        secureCheckout: 'Secure Checkout', guestDetails: 'Guest Details', 
+        firstName: 'First Name', lastName: 'Last Name', email: 'Email Address', phone: 'Phone Number', nationality: 'Nationality',
+        extraOptions: 'Extra Options', extraBed: 'Extra Bed',
+        paymentMethod: 'Payment Method', cardNum: 'Card Number', expiry: 'Expiry Date', cvv: 'CVV',
+        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...'
     },
     ko: {
         home: '홈', rooms: '객실', facilities: '부대시설', attractions: '관광지', contact: '오시는길',
@@ -27,8 +32,13 @@ const translations = {
         room: '객실', rooms: '객실', done: '완료', maxGuests: '최대', guests: '명',
         noImg: '이미지 없음', noRooms: '등록된 객실이 없습니다.', noFac: '등록된 부대시설이 없습니다.', noAtt: '등록된 관광지가 없습니다.',
         mapUpdating: '지도가 업데이트 중입니다.', contactUs: '문의 및 연락처', rights: '모든 권리 보유.',
-        modalTitle: '예약 시스템 안내', modalMsg: '개별 호텔 예약 API 연동 준비 중입니다.', close: '닫기',
-        standardBed: '스탠다드 베드'
+        standardBed: '스탠다드 베드',
+        // 결제창 전용 번역
+        secureCheckout: '안전한 객실 결제', guestDetails: '예약자 정보', 
+        firstName: '이름 (First Name)', lastName: '성 (Last Name)', email: '이메일', phone: '연락처', nationality: '국적',
+        extraOptions: '추가 옵션', extraBed: '엑스트라 베드',
+        paymentMethod: '결제 정보', cardNum: '카드 번호', expiry: '유효기간 (MM/YY)', cvv: '보안코드 (CVV)',
+        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...'
     },
     zh: {
         home: '首页', rooms: '客房', facilities: '设施', attractions: '景点', contact: '联系我们',
@@ -39,8 +49,13 @@ const translations = {
         room: '间', rooms: '间', done: '完成', maxGuests: '最多', guests: '人',
         noImg: '暂无图片', noRooms: '暂无客房。', noFac: '暂无设施。', noAtt: '暂无景点。',
         mapUpdating: '位置地图正在更新中。', contactUs: '联系我们', rights: '版权所有。',
-        modalTitle: '预订系统通知', modalMsg: '预订 API 连动准备中。', close: '关闭',
-        standardBed: '标准床'
+        standardBed: '标准床',
+        // 결제창 전용 번역
+        secureCheckout: '安全结账', guestDetails: '客人信息', 
+        firstName: '名字', lastName: '姓氏', email: '电子邮件', phone: '电话号码', nationality: '国籍',
+        extraOptions: '额外选项', extraBed: '加床',
+        paymentMethod: '付款方式', cardNum: '卡号', expiry: '有效期', cvv: 'CVV',
+        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...'
     },
     ja: {
         home: 'ホーム', rooms: '客室', facilities: '施設', attractions: '観光', contact: 'アクセス',
@@ -51,8 +66,13 @@ const translations = {
         room: '室', rooms: '室', done: '完了', maxGuests: '最大', guests: '名',
         noImg: '画像なし', noRooms: '利用可能な客室がありません。', noFac: '登録された施設がありません。', noAtt: '登録された観光地がありません。',
         mapUpdating: 'マップは現在更新中です。', contactUs: 'お問い合わせ', rights: '無断複写・転載を禁じます。',
-        modalTitle: '予約システムのお知らせ', modalMsg: '予約API連携の準備中です。', close: '閉じる',
-        standardBed: 'スタンダードベッド'
+        standardBed: 'スタンダードベッド',
+        // 결제창 전용 번역
+        secureCheckout: '安全なチェックアウト', guestDetails: '宿泊者情報', 
+        firstName: '名', lastName: '姓', email: 'メールアドレス', phone: '電話番号', nationality: '国籍',
+        extraOptions: '追加オプション', extraBed: 'エキストラベッド',
+        paymentMethod: 'お支払い方法', cardNum: 'カード番号', expiry: '有効期限', cvv: 'CVV',
+        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...'
     }
 };
 
@@ -82,15 +102,20 @@ export default function HotelWebsite({ domain }) {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false); 
-  
-  // 💡 [복구 완료] 실제 예약자 정보 입력 및 로딩 상태
-  const [guestName, setGuestName] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  // 💡 [복구 완료] PMS 연동용 상세 예약 정보 (이름/성 분리, 국적, 카드 등)
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [nationality, setNationality] = useState('Philippines');
+  const [extraBed, setExtraBed] = useState(0);
+  const [cardNum, setCardNum] = useState('');
+  const [cardExp, setCardExp] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [promoCode, setPromoCode] = useState('');
   const [isBooking, setIsBooking] = useState(false);
-  
-  // 💡 [신규] 브라우저 기본 경고창(alert)을 대체할 세련된 중앙 모달 상태
-  const [alertMessage, setAlertMessage] = useState('');
 
   const getHotelCodeFromDomain = (hostname) => {
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
@@ -250,7 +275,6 @@ export default function HotelWebsite({ domain }) {
 
         {/* 🛏️ ROOMS */}
         {activeMenu === 'ROOMS' && (
-          // 💡 [수정] 팝업이 아래로 열릴 충분한 공간(pb-40)을 주고, 최우선순위(z-20)를 부여합니다.
           <section className="pt-24 md:pt-32 pb-40 md:pb-56 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow relative z-20">
             {rooms.length > 0 && activeRoom ? (
                 <div className="relative z-30">
@@ -262,7 +286,6 @@ export default function HotelWebsite({ domain }) {
                             </button>
                         ))}
                     </div>
-                    {/* 💡 [수정] z-0을 z-30으로 변경하여 푸터에 절대 가려지지 않게 강제합니다! */}
                     <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-30 -mt-px">
                         <div className="lg:col-span-7 flex flex-col gap-4 md:gap-6">
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
@@ -285,7 +308,6 @@ export default function HotelWebsite({ domain }) {
                             <h3 className="text-xl md:text-2xl font-black theme-text mb-2">{t.bookStay}</h3>
                             <p className="text-slate-500 text-xs md:text-sm font-bold mb-6">{renderPriceStr(activeRoom.price, activeRoom.name)}</p>
                             
-                            {/* 💡 [수정] 기본 alert() 대신 예쁜 setAlertMessage() 사용 */}
                             <form className="space-y-4 relative mt-2" onSubmit={(e) => { 
                                 e.preventDefault(); 
                                 if (!checkIn || !checkOut) return setAlertMessage(lang === 'ko' ? "체크인/체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
@@ -423,18 +445,23 @@ export default function HotelWebsite({ domain }) {
           </section>
         )}
 
-        {/* 💡 [복구 완료] 실제 예약자 정보 입력 폼 및 API 연동 모달 */}
+        {/* 💡 [완벽 복구] 원본 "Secure Checkout" 그린 테마 2단 결제창 */}
         {showBookingModal && (() => {
             const start = new Date(checkIn);
             const end = new Date(checkOut);
             const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-            const totalPrice = (activeRoom?.price || 0) * nights * roomCount;
+            
+            // 기본 방 가격 + 엑스트라 베드 가격 계산 (엑스트라 베드 1박당 1000페소 가정)
+            const basePrice = (activeRoom?.price || 0) * nights * roomCount;
+            const extraBedPrice = extraBed * 1000 * nights;
+            const finalTotal = basePrice + extraBedPrice;
 
             const handleConfirmBooking = async () => {
-                if (!guestName || !guestEmail || !guestPhone) return setAlertMessage(lang === 'ko' ? "예약자 정보를 모두 입력해주세요." : "Please fill in all guest details.");
+                if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
+                    return setAlertMessage(lang === 'ko' ? "필수 정보를 모두 입력해주세요." : "Please fill in all required details.");
+                }
                 setIsBooking(true);
                 try {
-                    // 💡 [핵심 에러 원인 해결!] /api/bookings 가 아니라 /api/bookings/create 로 호출해야 404 에러가 나지 않습니다.
                     const res = await fetch(`${BASE_URL}/api/bookings/create`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -446,10 +473,12 @@ export default function HotelWebsite({ domain }) {
                             check_out: checkOut,
                             adults, kids, infants,
                             room_count: roomCount,
-                            guest_name: guestName,
+                            guest_name: `${firstName} ${lastName}`, // Frontdesk 연동을 위해 이름 합쳐서 전송
                             guest_email: guestEmail,
                             guest_phone: guestPhone,
-                            total_price: totalPrice,
+                            nationality: nationality,
+                            extra_bed: extraBed,
+                            total_price: finalTotal,
                             status: 'CONFIRMED'
                         })
                     });
@@ -458,7 +487,8 @@ export default function HotelWebsite({ domain }) {
                     if (res.ok || data.success) {
                         setAlertMessage(lang === 'ko' ? "✅ 예약이 확정되었습니다!\n이메일과 영수증이 성공적으로 발송되었습니다." : "✅ Booking Confirmed!\nEmail and receipt have been sent.");
                         setShowBookingModal(false);
-                        setGuestName(''); setGuestEmail(''); setGuestPhone('');
+                        setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
+                        setCardNum(''); setCardExp(''); setCardCvv(''); setExtraBed(0);
                         setCheckIn(''); setCheckOut('');
                     } else {
                         setAlertMessage("❌ Failed: " + (data.message || "Booking API Error"));
@@ -472,49 +502,145 @@ export default function HotelWebsite({ domain }) {
             };
 
             return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden text-left border border-slate-100" onClick={e => e.stopPropagation()}>
-                    <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
-                        <h3 className="text-xl font-black">{lang === 'ko' ? '예약자 정보 입력' : 'Guest Information'}</h3>
-                        {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-xl">✕</button>}
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
+                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                    
+                    {/* 상단 헤더 (그린 테마) */}
+                    <div className="bg-[#2ebf70] p-5 md:p-6 text-white flex justify-between items-center shrink-0">
+                        <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
+                        {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                     </div>
                     
-                    <div className="p-6 space-y-4 text-slate-700 max-h-[60vh] overflow-y-auto">
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm">
-                            <p className="font-black text-blue-900 mb-1 text-base">{activeRoom?.name}</p>
-                            <p className="text-blue-800 font-medium">{checkIn} ~ {checkOut} <span className="font-bold">({nights} Nights)</span></p>
-                            <p className="text-blue-800 font-medium">{adults} Adults, {roomCount} Rooms</p>
-                            <div className="border-t border-blue-200 mt-3 pt-3 flex justify-between items-center font-black text-blue-900 text-lg">
-                                <span>Total Amount:</span>
-                                <span>₱{totalPrice.toLocaleString()}</span>
+                    <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+                        {/* 왼쪽: 입력 폼 구역 */}
+                        <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
+                            
+                            {/* 1. Guest Details */}
+                            <section>
+                                <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
+                                {/* 💡 이름 / 성 분리 */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.firstName}</label>
+                                        <input value={firstName} onChange={e=>setFirstName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="John" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.lastName}</label>
+                                        <input value={lastName} onChange={e=>setLastName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="Doe" />
+                                    </div>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.email}</label>
+                                    <input value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 bg-blue-50/30 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="john@example.com" />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label>
+                                        <input value={guestPhone} onChange={e=>setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="+1 234 567 890" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label>
+                                        <select value={nationality} onChange={e=>setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none bg-white cursor-pointer">
+                                            <option value="Philippines">Philippines</option>
+                                            <option value="South Korea">South Korea</option>
+                                            <option value="United States">United States</option>
+                                            <option value="Japan">Japan</option>
+                                            <option value="China">China</option>
+                                            <option value="Others">Others</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 2. Extra Options */}
+                            <section>
+                                <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">2. {t.extraOptions}</h3>
+                                <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                    <div>
+                                        <p className="font-bold text-slate-800">{t.extraBed}</p>
+                                        <p className="text-xs text-slate-500">₱1,000 / night</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button type="button" disabled={isBooking} onClick={()=>setExtraBed(Math.max(0, extraBed-1))} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">-</button>
+                                        <span className="w-4 text-center font-bold text-[#2ebf70]">{extraBed}</span>
+                                        <button type="button" disabled={isBooking} onClick={()=>setExtraBed(extraBed+1)} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">+</button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 3. Payment Method */}
+                            <section>
+                                <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">3. {t.paymentMethod}</h3>
+                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cardNum}</label>
+                                        <input value={cardNum} onChange={e=>setCardNum(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#2ebf70] outline-none tracking-widest" placeholder="0000 0000 0000 0000" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.expiry}</label>
+                                            <input value={cardExp} onChange={e=>setCardExp(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#2ebf70] outline-none text-center" placeholder="MM/YY" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cvv}</label>
+                                            <input value={cardCvv} onChange={e=>setCardCvv(e.target.value)} disabled={isBooking} type="password" maxLength={4} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#2ebf70] outline-none text-center tracking-widest" placeholder="•••" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* 오른쪽: Booking Summary 구역 */}
+                        <div className="w-full lg:w-[350px] bg-[#f0fdf4] p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l border-[#bbf7d0] flex flex-col">
+                            <h3 className="text-xl font-black text-[#14532d] mb-6">{t.bookingSummary}</h3>
+                            
+                            <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#bbf7d0] mb-6">
+                                <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
+                                    <span>{t.checkIn}</span>
+                                    <span>{t.checkOut}</span>
+                                </div>
+                                <div className="flex justify-between font-black text-slate-800 text-sm">
+                                    <span>{checkIn}</span>
+                                    <span>{checkOut}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-start mb-6">
+                                <div>
+                                    <p className="font-black text-[#14532d] text-lg leading-tight">{activeRoom?.name}</p>
+                                    <p className="text-[#15803d] text-xs font-bold mt-1">₱{(activeRoom?.price || 0).toLocaleString()} x {nights} {t.night.replace('/','')}</p>
+                                    {extraBed > 0 && <p className="text-[#16a34a] text-xs font-bold mt-1">+ {t.extraBed} (x{extraBed})</p>}
+                                </div>
+                                <div className="bg-[#dcfce7] text-[#166534] font-black px-3 py-1 rounded-lg text-sm">
+                                    x {roomCount}
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="text-[10px] font-bold text-[#15803d] uppercase mb-1 block">{t.promoCode}</label>
+                                <div className="flex gap-2">
+                                    <input value={promoCode} onChange={e=>setPromoCode(e.target.value)} disabled={isBooking} className="flex-1 p-2.5 border border-[#bbf7d0] rounded-xl text-sm outline-none focus:border-[#2ebf70]" placeholder="E.G. WELCOME10" />
+                                    <button type="button" disabled={isBooking} className="bg-[#16a34a] text-white px-4 rounded-xl font-bold hover:bg-[#15803d] transition-colors text-sm">{t.apply}</button>
+                                </div>
+                            </div>
+
+                            <div className="mt-auto pt-6 border-t border-[#bbf7d0]">
+                                <div className="flex justify-between items-end mb-6">
+                                    <span className="font-black text-[#14532d] text-xl">{t.total}</span>
+                                    <span className="font-black text-[#15803d] text-3xl">₱{finalTotal.toLocaleString()}</span>
+                                </div>
+                                <button onClick={handleConfirmBooking} disabled={isBooking} className="w-full bg-[#2ebf70] hover:bg-[#22c55e] text-white py-4 rounded-2xl font-black transition-transform active:scale-95 shadow-xl shadow-green-200 disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
+                                    {isBooking ? <span className="animate-pulse">{t.processing}</span> : <span>{t.confirmBook}</span>}
+                                </button>
                             </div>
                         </div>
-
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{lang === 'ko' ? '이름 (Full Name)' : 'Full Name'}</label>
-                            <input value={guestName} onChange={e=>setGuestName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="John Doe" />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{lang === 'ko' ? '이메일 주소 (Email)' : 'Email Address'}</label>
-                            <input value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="john@example.com" />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{lang === 'ko' ? '연락처 (Phone)' : 'Phone Number'}</label>
-                            <input value={guestPhone} onChange={e=>setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="+1 234 567 890" />
-                        </div>
-                    </div>
-
-                    <div className="p-5 bg-slate-50 border-t border-slate-100 flex gap-3">
-                        <button onClick={handleConfirmBooking} disabled={isBooking} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black transition-transform active:scale-95 shadow-md disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
-                            {isBooking ? <span className="animate-pulse">{lang === 'ko' ? '처리 중...' : 'Processing...'}</span> : <span>{lang === 'ko' ? '결제 및 예약 확정' : 'Confirm & Book'}</span>}
-                        </button>
                     </div>
                 </div>
             </div>
             );
         })()}
 
-        {/* 💡 [신규] 전역 알림(Alert) 커스텀 모달창 (투박한 기본 브라우저 경고창 완전 대체!) */}
+        {/* 💡 전역 알림(Alert) 커스텀 모달창 */}
         {alertMessage && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
@@ -533,20 +659,17 @@ export default function HotelWebsite({ domain }) {
             </div>
         )}
 
-        {/* 📱 푸터 (겹침 방지 z-index 및 데스크탑/모바일 맞춤 레이아웃 적용) */}
+        {/* 📱 푸터 (데스크탑/모바일 맞춤 레이아웃 적용) */}
         <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               
-              {/* 데스크탑 레이아웃에서 중앙을 맞추기 위한 투명 블록 (모바일에서는 자동 숨김) */}
               <div className="hidden md:block flex-1"></div>
               
-              {/* 중앙: SNS 링크 */}
               <div className="flex-1 flex justify-center gap-4">
                   {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16.11 7.99a.01.01 0 0 1 .02 0"/><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18"/></svg></a>}
                   {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>}
               </div>
 
-              {/* 우측(데스크탑) / 하단(모바일): 카피라이트 */}
               <div className="flex-1 flex justify-center md:justify-end w-full">
                   <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
                       &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
