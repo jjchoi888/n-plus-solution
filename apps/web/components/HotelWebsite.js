@@ -164,8 +164,9 @@ export default function HotelWebsite({ domain }) {
                        transform: `translate(-${textPos.x}%, -${textPos.y}%)`,
                        textAlign: textPos.x < 30 ? 'left' : textPos.x > 70 ? 'right' : 'center'
                    }}>
-                <h1 className="text-5xl md:text-7xl text-white leading-tight mb-4 drop-shadow-2xl font-black">{safeConfig.welcome_title || "Welcome"}</h1>
-                <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg">{safeConfig.welcome_subtitle || "Your perfect stay awaits."}</p>
+                {/* 💡 텍스트에 whitespace-pre-wrap 속성을 추가하여 줄바꿈이 적용되도록 합니다. */}
+                <h1 className="text-5xl md:text-7xl text-white leading-tight mb-4 drop-shadow-2xl font-black whitespace-pre-wrap">{safeConfig.welcome_title || "Welcome"}</h1>
+                <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap">{safeConfig.welcome_subtitle || "Your perfect stay awaits."}</p>
               </div>
             </section>
             
