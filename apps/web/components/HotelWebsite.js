@@ -13,7 +13,11 @@ export default function HotelWebsite({ domain }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   
   const [selectedRoomId, setSelectedRoomId] = useState(null);
+  
+  // 💡 [추가 1] 부대시설과 관광지도 메인 화면처럼 슬라이드 되도록 타이머 상태 추가
   const [roomSlideIdx, setRoomSlideIdx] = useState(0);
+  const [facSlideIdx, setFacSlideIdx] = useState(0);
+  const [attSlideIdx, setAttSlideIdx] = useState(0);
   
   const [activeFacIdx, setActiveFacIdx] = useState(0);
   const [activeAttIdx, setActiveAttIdx] = useState(0);
@@ -65,12 +69,17 @@ export default function HotelWebsite({ domain }) {
   else if (safeConfig.bg_image_url) sliderImages.push(safeConfig.bg_image_url);
   if (sliderImages.length === 0) sliderImages.push("https://images.unsplash.com/photo-1542314831-c6a4d27a658d?q=80&w=2000&auto=format&fit=crop"); 
 
+  // 💡 [추가 2] 현재 보고 있는 탭에 맞춰서 사진이 돌아가도록 타이머 최적화
   useEffect(() => {
     let timer;
     if (activeMenu === 'HOME' && sliderImages.length > 1) {
         timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % sliderImages.length), 4000);
     } else if (activeMenu === 'ROOMS') {
         timer = setInterval(() => setRoomSlideIdx(prev => prev + 1), 3500);
+    } else if (activeMenu === 'FACILITIES') {
+        timer = setInterval(() => setFacSlideIdx(prev => prev + 1), 3500);
+    } else if (activeMenu === 'ATTRACTIONS') {
+        timer = setInterval(() => setAttSlideIdx(prev => prev + 1), 3500);
     }
     return () => clearInterval(timer);
   }, [activeMenu, sliderImages.length]);
@@ -86,8 +95,11 @@ export default function HotelWebsite({ domain }) {
       }
   };
 
-  // 💡 [신규] 에디터에서 작성된 HTML을 예쁘게 화면에 그려주는 전용 클래스 모음
   const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
+
+  // 💡 [추가 3] 백오피스에서 드래그로 저장된 텍스트 위치(좌표) 파싱 (안전장치 포함)
+  let textPos = { x: 50, y: 50 };
+  try { if(safeConfig.welcome_text_pos) textPos = JSON.parse(safeConfig.welcome_text_pos); } catch(e){}
 
   return (
     <>
@@ -102,7 +114,11 @@ export default function HotelWebsite({ domain }) {
         .theme-hover:hover { opacity: 0.85; transform: translateY(-2px); transition: all 0.2s; }
       `}} />
 
-      <div className="min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white">
+      {/* 💡 [추가 4] 우클릭 방지 코드 적용: onContextMenu 방어 */}
+      <div 
+        className="min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         
         {/* 헤더 */}
         <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
@@ -130,7 +146,7 @@ export default function HotelWebsite({ domain }) {
         {/* 🏠 메인 화면 */}
         {activeMenu === 'HOME' && (
           <div className="animate-fade-in-up">
-            <section className="relative h-[85vh] flex flex-col items-center justify-center text-center mt-[72px] overflow-hidden bg-slate-900">
+            <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
               {sliderImages.map((img, idx) => (
                   <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
               ))}
@@ -139,8 +155,16 @@ export default function HotelWebsite({ domain }) {
                       <button key={idx} onClick={() => setCurrentSlide(idx)} className={`w-3 h-3 rounded-full transition-all ${idx === currentSlide ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/70'}`} />
                   ))}
               </div>
-              <div className="relative z-20 max-w-4xl mx-auto px-4 mt-10">
-                <h1 className="text-5xl md:text-7xl text-white leading-tight mb-6 drop-shadow-2xl font-black">{safeConfig.welcome_title || "Welcome"}</h1>
+              
+              {/* 💡 [추가 5] 드래그한 텍스트 위치(textPos) 반영 */}
+              <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
+                   style={{ 
+                       left: `${textPos.x}%`, 
+                       top: `${textPos.y}%`, 
+                       transform: `translate(-${textPos.x}%, -${textPos.y}%)`,
+                       textAlign: textPos.x < 30 ? 'left' : textPos.x > 70 ? 'right' : 'center'
+                   }}>
+                <h1 className="text-5xl md:text-7xl text-white leading-tight mb-4 drop-shadow-2xl font-black">{safeConfig.welcome_title || "Welcome"}</h1>
                 <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg">{safeConfig.welcome_subtitle || "Your perfect stay awaits."}</p>
               </div>
             </section>
@@ -148,7 +172,6 @@ export default function HotelWebsite({ domain }) {
             <section className="py-24 px-8 bg-white text-center">
               <div className="max-w-3xl mx-auto">
                 <h2 className="text-3xl font-black mb-8 theme-text">About Us</h2>
-                {/* 💡 에디터 HTML 렌더링 적용 */}
                 <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: safeConfig.description || "Information updating..." }} />
               </div>
             </section>
@@ -219,17 +242,23 @@ export default function HotelWebsite({ domain }) {
                     </div>
                     <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
                         <div className="lg:col-span-7 flex flex-col gap-6">
+                            {/* 💡 [추가 6] 최대 5장 이미지 부드러운 슬라이더 적용 */}
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
-                                {facilities.map((fac, idx) => (
-                                    <img key={`fac_${idx}`} src={fac.image_url || "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"} 
-                                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${activeFacIdx === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt={fac.title} />
-                                ))}
+                                {(() => {
+                                    const activeItem = facilities[activeFacIdx] || {};
+                                    let images = [];
+                                    if (activeItem.image_urls && activeItem.image_urls.length > 0) images = activeItem.image_urls;
+                                    else if (activeItem.image_url) images = [activeItem.image_url]; // 이전 버전 호환
+                                    else images = ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"];
+                                    
+                                    return images.map((img, idx) => (
+                                        <img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" />
+                                    ));
+                                })()}
                             </div>
                         </div>
                         <div className="lg:col-span-3 flex flex-col justify-center">
-                            {/* 💡 [수정] 구분선을 아주 얇은 1px 선(border-b)으로 변경했습니다! */}
                             <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{facilities[activeFacIdx]?.title}</h3>
-                            {/* 💡 [수정] 에디터의 HTML 코드를 적용합니다! */}
                             <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: facilities[activeFacIdx]?.description || '' }} />
                         </div>
                     </div>
@@ -253,17 +282,23 @@ export default function HotelWebsite({ domain }) {
                     </div>
                     <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
                         <div className="lg:col-span-7 flex flex-col gap-6">
+                            {/* 💡 [추가 7] 관광지 이미지 슬라이더 적용 */}
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
-                                {attractions.map((att, idx) => (
-                                    <img key={`att_${idx}`} src={att.image_url || "https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"} 
-                                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${activeAttIdx === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt={att.title} />
-                                ))}
+                                {(() => {
+                                    const activeItem = attractions[activeAttIdx] || {};
+                                    let images = [];
+                                    if (activeItem.image_urls && activeItem.image_urls.length > 0) images = activeItem.image_urls;
+                                    else if (activeItem.image_url) images = [activeItem.image_url];
+                                    else images = ["https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"];
+                                    
+                                    return images.map((img, idx) => (
+                                        <img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" />
+                                    ));
+                                })()}
                             </div>
                         </div>
                         <div className="lg:col-span-3 flex flex-col justify-center">
-                            {/* 💡 [수정] 구분선을 아주 얇은 1px 선(border-b)으로 변경했습니다! */}
                             <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{attractions[activeAttIdx]?.title}</h3>
-                            {/* 💡 [수정] 에디터의 HTML 코드를 적용합니다! */}
                             <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: attractions[activeAttIdx]?.description || '' }} />
                         </div>
                     </div>
@@ -302,7 +337,6 @@ export default function HotelWebsite({ domain }) {
         <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 text-center mt-auto">
           <div className="max-w-4xl mx-auto flex flex-col items-center gap-4">
               
-              {/* 💡 [신규] 푸터에 SNS 링크들을 전역적으로 복구했습니다! */}
               {(sns.ig || sns.fb) && (
                   <div className="flex gap-4 mb-2">
                       {sns.ig && <a href={sns.ig} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16.11 7.99a.01.01 0 0 1 .02 0"/><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18"/></svg></a>}
@@ -310,7 +344,10 @@ export default function HotelWebsite({ domain }) {
                   </div>
               )}
 
-              <p className="text-xs md:text-sm font-bold text-slate-500">&copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.welcome_title || "Our Hotel"}</span>. All rights reserved.</p>
+              {/* 💡 [추가 8] 사용자가 입력한 회사 이름이 우선적으로 표기되도록 적용 */}
+              <p className="text-xs md:text-sm font-bold text-slate-500">
+                  &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. All rights reserved.
+              </p>
           </div>
         </footer>
       </div>
