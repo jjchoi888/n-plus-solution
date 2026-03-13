@@ -88,6 +88,9 @@ export default function HotelWebsite({ domain }) {
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+  
+  // 💡 [신규] 브라우저 기본 경고창(alert)을 대체할 세련된 중앙 모달 상태
+  const [alertMessage, setAlertMessage] = useState('');
 
   const getHotelCodeFromDomain = (hostname) => {
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
@@ -282,10 +285,11 @@ export default function HotelWebsite({ domain }) {
                             <h3 className="text-xl md:text-2xl font-black theme-text mb-2">{t.bookStay}</h3>
                             <p className="text-slate-500 text-xs md:text-sm font-bold mb-6">{renderPriceStr(activeRoom.price, activeRoom.name)}</p>
                             
+                            {/* 💡 [수정] 기본 alert() 대신 예쁜 setAlertMessage() 사용 */}
                             <form className="space-y-4 relative mt-2" onSubmit={(e) => { 
                                 e.preventDefault(); 
-                                if (!checkIn || !checkOut) return alert(lang === 'ko' ? "체크인/체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
-                                if (new Date(checkOut) <= new Date(checkIn)) return alert(lang === 'ko' ? "체크아웃은 체크인 이후여야 합니다." : "Check-out must be after check-in.");
+                                if (!checkIn || !checkOut) return setAlertMessage(lang === 'ko' ? "체크인/체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
+                                if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage(lang === 'ko' ? "체크아웃은 체크인 이후여야 합니다." : "Check-out must be after check-in.");
                                 setShowBookingModal(true); 
                             }}>
                                 <div className="flex flex-col gap-4">
@@ -427,12 +431,11 @@ export default function HotelWebsite({ domain }) {
             const totalPrice = (activeRoom?.price || 0) * nights * roomCount;
 
             const handleConfirmBooking = async () => {
-                if (!guestName || !guestEmail || !guestPhone) return alert(lang === 'ko' ? "예약자 정보를 모두 입력해주세요." : "Please fill in all guest details.");
+                if (!guestName || !guestEmail || !guestPhone) return setAlertMessage(lang === 'ko' ? "예약자 정보를 모두 입력해주세요." : "Please fill in all guest details.");
                 setIsBooking(true);
                 try {
-                    // 💡 [중요] 기존에 완벽하게 작동했던 백엔드 예약 생성 API 호출 주소입니다!
-                    // 혹시 백엔드 엔드포인트가 /api/bookings/create 였다면 그에 맞게 뒷부분만 수정해주세요.
-                    const res = await fetch(`${BASE_URL}/api/bookings`, {
+                    // 💡 [핵심 에러 원인 해결!] /api/bookings 가 아니라 /api/bookings/create 로 호출해야 404 에러가 나지 않습니다.
+                    const res = await fetch(`${BASE_URL}/api/bookings/create`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -453,16 +456,16 @@ export default function HotelWebsite({ domain }) {
                     
                     const data = await res.json();
                     if (res.ok || data.success) {
-                        alert(lang === 'ko' ? "✅ 예약이 확정되었습니다! 이메일과 영수증이 성공적으로 발송되었습니다." : "✅ Booking Confirmed! Email and receipt have been sent.");
+                        setAlertMessage(lang === 'ko' ? "✅ 예약이 확정되었습니다!\n이메일과 영수증이 성공적으로 발송되었습니다." : "✅ Booking Confirmed!\nEmail and receipt have been sent.");
                         setShowBookingModal(false);
                         setGuestName(''); setGuestEmail(''); setGuestPhone('');
                         setCheckIn(''); setCheckOut('');
                     } else {
-                        alert("❌ Failed: " + (data.message || "Booking API Error"));
+                        setAlertMessage("❌ Failed: " + (data.message || "Booking API Error"));
                     }
                 } catch (error) {
                     console.error("Booking Error:", error);
-                    alert("Error connecting to the server.");
+                    setAlertMessage(lang === 'ko' ? "서버 연결에 실패했습니다.\n잠시 후 다시 시도해주세요." : "Error connecting to the server.");
                 } finally {
                     setIsBooking(false);
                 }
@@ -510,6 +513,25 @@ export default function HotelWebsite({ domain }) {
             </div>
             );
         })()}
+
+        {/* 💡 [신규] 전역 알림(Alert) 커스텀 모달창 (투박한 기본 브라우저 경고창 완전 대체!) */}
+        {alertMessage && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
+                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
+                    <div className="bg-blue-600 p-4 text-white flex justify-center items-center">
+                        <h3 className="font-black text-lg">Notification</h3>
+                    </div>
+                    <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
+                        {alertMessage}
+                    </div>
+                    <div className="p-4 bg-slate-50 border-t border-slate-100">
+                        <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+                            OK / 확인
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {/* 📱 푸터 (겹침 방지 z-index 및 데스크탑/모바일 맞춤 레이아웃 적용) */}
         <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
