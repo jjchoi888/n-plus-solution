@@ -4,64 +4,84 @@ import RoomList from "./RoomList";
 
 const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
 
-// 💡 [신규] 4개 국어(EN, KO, ZH, JA) 번역 딕셔너리
+// 💡 4개 국어(EN, KO, ZH, JA) 번역 딕셔너리
 const translations = {
     en: {
-        MENU_HOME: 'HOME', MENU_ROOMS: 'ROOMS', MENU_FACILITIES: 'FACILITIES', MENU_ATTRACTIONS: 'ATTRACTIONS', MENU_CONTACT: 'CONTACT',
-        bookNow: 'Book Now', aboutUs: 'About Us', bookStay: 'Book Your Stay', expStart: 'Experience', startingFrom: 'starting from', night: '/night',
-        checkIn: 'Check-in', checkOut: 'Check-out', guestsRooms: 'Guests & Rooms', adults: 'Adults', age13: 'Age 13+', children: 'Children', age2_12: 'Ages 2-12', infants: 'Infants', under2: 'Under 2', room: 'Room', rooms: 'Rooms', done: 'Done', checkAvail: 'Check Availability',
-        noRooms: 'No rooms available.', noFac: 'No facilities registered.', noAtt: 'No attractions registered.',
+        home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
+        bookNow: 'Book Now', aboutUs: 'About Us', bookStay: 'Book Your Stay', checkAvail: 'Check Availability',
+        expStart: 'Experience', startingFrom: 'starting from', night: '/night',
+        checkIn: 'Check-in', checkOut: 'Check-out', guestsRooms: 'Guests & Rooms',
+        adults: 'Adults', age13: 'Age 13+', children: 'Children', age2_12: 'Ages 2-12', infants: 'Infants', under2: 'Under 2',
+        room: 'Room', rooms: 'Rooms', done: 'Done', maxGuests: 'Max', guests: 'Guests',
+        noImg: 'No Image Available', noRooms: 'No rooms available.', noFac: 'No facilities registered.', noAtt: 'No attractions registered.',
         mapUpdating: 'Location map is currently being updated.', contactUs: 'Contact Us', rights: 'All rights reserved.',
-        modalTitle: 'Booking System Update', modalMsg: 'Booking API integration is in preparation.', close: 'Close', maxGuests: 'Max', guests: 'Guests'
+        modalTitle: 'Booking System Update', modalMsg: 'Booking API integration is in preparation.', close: 'Close',
+        standardBed: 'Standard Bed'
     },
     ko: {
-        MENU_HOME: '홈', MENU_ROOMS: '객실', MENU_FACILITIES: '부대시설', MENU_ATTRACTIONS: '관광지', MENU_CONTACT: '오시는길',
-        bookNow: '예약하기', aboutUs: '호텔 소개', bookStay: '객실 예약', expStart: '', startingFrom: '최저가', night: '/1박',
-        checkIn: '체크인', checkOut: '체크아웃', guestsRooms: '인원 및 객실', adults: '성인', age13: '13세 이상', children: '어린이', age2_12: '2~12세', infants: '유아', under2: '2세 미만', room: '객실', rooms: '객실', done: '완료', checkAvail: '예약 가능 여부 확인',
-        noRooms: '등록된 객실이 없습니다.', noFac: '등록된 부대시설이 없습니다.', noAtt: '등록된 관광지가 없습니다.',
+        home: '홈', rooms: '객실', facilities: '부대시설', attractions: '관광지', contact: '오시는길',
+        bookNow: '예약하기', aboutUs: '호텔 소개', bookStay: '객실 예약', checkAvail: '예약 가능 여부 확인',
+        expStart: '', startingFrom: '최저가', night: '/1박',
+        checkIn: '체크인', checkOut: '체크아웃', guestsRooms: '인원 및 객실',
+        adults: '성인', age13: '13세 이상', children: '어린이', age2_12: '2~12세', infants: '유아', under2: '2세 미만',
+        room: '객실', rooms: '객실', done: '완료', maxGuests: '최대', guests: '명',
+        noImg: '이미지 없음', noRooms: '등록된 객실이 없습니다.', noFac: '등록된 부대시설이 없습니다.', noAtt: '등록된 관광지가 없습니다.',
         mapUpdating: '지도가 업데이트 중입니다.', contactUs: '문의 및 연락처', rights: '모든 권리 보유.',
-        modalTitle: '예약 시스템 안내', modalMsg: '개별 호텔 예약 API 연동 준비 중입니다.', close: '닫기', maxGuests: '최대', guests: '명'
+        modalTitle: '예약 시스템 안내', modalMsg: '개별 호텔 예약 API 연동 준비 중입니다.', close: '닫기',
+        standardBed: '스탠다드 베드'
     },
     zh: {
-        MENU_HOME: '首页', MENU_ROOMS: '客房', MENU_FACILITIES: '设施', MENU_ATTRACTIONS: '景点', MENU_CONTACT: '联系我们',
-        bookNow: '立即预订', aboutUs: '关于我们', bookStay: '预订客房', expStart: '体验', startingFrom: '起价', night: '/晚',
-        checkIn: '入住', checkOut: '退房', guestsRooms: '人数与客房', adults: '成人', age13: '13岁以上', children: '儿童', age2_12: '2-12岁', infants: '婴儿', under2: '2岁以下', room: '房间', rooms: '房间', done: '完成', checkAvail: '查看空房情况',
-        noRooms: '暂无客房。', noFac: '暂无设施。', noAtt: '暂无景点。',
+        home: '首页', rooms: '客房', facilities: '设施', attractions: '景点', contact: '联系我们',
+        bookNow: '立即预订', aboutUs: '关于我们', bookStay: '预订客房', checkAvail: '查看空房情况',
+        expStart: '体验', startingFrom: '起价', night: '/晚',
+        checkIn: '入住', checkOut: '退房', guestsRooms: '人数与客房',
+        adults: '成人', age13: '13岁以上', children: '儿童', age2_12: '2-12岁', infants: '婴儿', under2: '2岁以下',
+        room: '间', rooms: '间', done: '完成', maxGuests: '最多', guests: '人',
+        noImg: '暂无图片', noRooms: '暂无客房。', noFac: '暂无设施。', noAtt: '暂无景点。',
         mapUpdating: '位置地图正在更新中。', contactUs: '联系我们', rights: '版权所有。',
-        modalTitle: '预订系统通知', modalMsg: '预订 API 连动准备中。', close: '关闭', maxGuests: '最多', guests: '人'
+        modalTitle: '预订系统通知', modalMsg: '预订 API 连动准备中。', close: '关闭',
+        standardBed: '标准床'
     },
     ja: {
-        MENU_HOME: 'ホーム', MENU_ROOMS: '客室', MENU_FACILITIES: '施設', MENU_ATTRACTIONS: '観光', MENU_CONTACT: 'アクセス',
-        bookNow: '今すぐ予約', aboutUs: 'ホテルについて', bookStay: 'ご予約', expStart: '', startingFrom: '最安値', night: '/泊',
-        checkIn: 'チェックイン', checkOut: 'チェックアウト', guestsRooms: '人数と客室', adults: '大人', age13: '13歳以上', children: '子供', age2_12: '2~12歳', infants: '幼児', under2: '2歳未満', room: '室', rooms: '室', done: '完了', checkAvail: '空室状況を確認',
-        noRooms: '利用可能な客室がありません。', noFac: '登録された施設がありません。', noAtt: '登録された観光地がありません。',
+        home: 'ホーム', rooms: '客室', facilities: '施設', attractions: '観光', contact: 'アクセス',
+        bookNow: '今すぐ予約', aboutUs: 'ホテルについて', bookStay: 'ご予約', checkAvail: '空室状況を確認',
+        expStart: '', startingFrom: '最安値', night: '/泊',
+        checkIn: 'チェックイン', checkOut: 'チェックアウト', guestsRooms: '人数と客室',
+        adults: '大人', age13: '13歳以上', children: '子供', age2_12: '2~12歳', infants: '幼児', under2: '2歳未満',
+        room: '室', rooms: '室', done: '完了', maxGuests: '最大', guests: '名',
+        noImg: '画像なし', noRooms: '利用可能な客室がありません。', noFac: '登録された施設がありません。', noAtt: '登録された観光地がありません。',
         mapUpdating: 'マップは現在更新中です。', contactUs: 'お問い合わせ', rights: '無断複写・転載を禁じます。',
-        modalTitle: '予約システムに関するお知らせ', modalMsg: '予約API連携の準備中です。', close: '閉じる', maxGuests: '最大', guests: '名'
+        modalTitle: '予約システムのお知らせ', modalMsg: '予約API連携の準備中です。', close: '閉じる',
+        standardBed: 'スタンダードベッド'
     }
 };
 
 export default function HotelWebsite({ domain }) {
+  const [lang, setLang] = useState('en');
   const [config, setConfig] = useState(null);
   const [rooms, setRooms] = useState([]); 
   const [loading, setLoading] = useState(true);
+  
   const [activeMenu, setActiveMenu] = useState('HOME'); 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
+  
   const [roomSlideIdx, setRoomSlideIdx] = useState(0);
-
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [adults, setAdults] = useState(2);
   const [kids, setKids] = useState(0);
-  const [infants, setInfants] = useState(0);
+  const [infants, setInfants] = useState(0); 
   const [roomCount, setRoomCount] = useState(1);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
+  
   const [facSlideIdx, setFacSlideIdx] = useState(0);
   const [attSlideIdx, setAttSlideIdx] = useState(0);
   const [activeFacIdx, setActiveFacIdx] = useState(0);
   const [activeAttIdx, setActiveAttIdx] = useState(0);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false); 
 
   const getHotelCodeFromDomain = (hostname) => {
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
@@ -95,7 +115,6 @@ export default function HotelWebsite({ domain }) {
   const safeConfig = config || {};
   let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch(e){}
   
-  // 💡 [버그 완벽 수정] 집 나간 SNS 복구 (이중 문자열 인코딩 에러 방어)
   let sns = {}; 
   try { 
       if (safeConfig.sns_json) {
@@ -107,45 +126,6 @@ export default function HotelWebsite({ domain }) {
   let facilities = []; try { facilities = JSON.parse(safeConfig.facilities_json || '[]'); } catch(e){}
   let attractions = []; try { attractions = JSON.parse(safeConfig.attractions_json || '[]'); } catch(e){}
 
-  const themeColor = safeConfig.theme_color?.startsWith('#') ? safeConfig.theme_color : '#2563eb';
-  const themeFont = safeConfig.theme_font || 'Inter';
-  const sliderStyle = safeConfig.slider_style || 'fade';
-  
-  const sliderImages = [];
-  if (gallery.length > 0) sliderImages.push(...gallery);
-  else if (safeConfig.bg_image_url) sliderImages.push(safeConfig.bg_image_url);
-  if (sliderImages.length === 0) sliderImages.push("https://images.unsplash.com/photo-1542314831-c6a4d27a658d?q=80&w=2000&auto=format&fit=crop"); 
-
-  // 💡 [추가 2] 현재 보고 있는 탭에 맞춰서 사진이 돌아가도록 타이머 최적화
-  useEffect(() => {
-    let timer;
-    if (activeMenu === 'HOME' && sliderImages.length > 1) {
-        timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % sliderImages.length), 4000);
-    } else if (activeMenu === 'ROOMS') {
-        timer = setInterval(() => setRoomSlideIdx(prev => prev + 1), 3500);
-    } else if (activeMenu === 'FACILITIES') {
-        timer = setInterval(() => setFacSlideIdx(prev => prev + 1), 3500);
-    } else if (activeMenu === 'ATTRACTIONS') {
-        timer = setInterval(() => setAttSlideIdx(prev => prev + 1), 3500);
-    }
-    return () => clearInterval(timer);
-  }, [activeMenu, sliderImages.length]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-xl font-bold text-slate-500 bg-slate-50">Loading your perfect stay...</div>;
-
-  const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
-
-  const handleTabClick = (e, setter, value) => {
-      setter(value);
-      if (e.target) {
-          e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-  };
-
-  const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
-
-  // 💡 [추가 3] 백오피스에서 드래그로 저장된 텍스트 위치(좌표) 파싱 (안전장치 포함)
-  // 💡 [분리형 좌표 적용] 타이틀과 서브타이틀 각각의 좌표 파싱 (구버전 호환)
   let textPos = { title: {x: 50, y: 40}, subtitle: {x: 50, y: 55} };
   try { 
       if(safeConfig.welcome_text_pos) {
@@ -183,10 +163,8 @@ export default function HotelWebsite({ domain }) {
   const handleTabClick = (e, setter, value) => { setter(value); if (e.target) e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); };
   const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
 
-  // 💡 선택된 언어의 번역 객체 가져오기
   const t = translations[lang] || translations.en;
   
-  // 💡 가격 표시 다국어 로직
   const renderPriceStr = (price, name) => {
       if(lang === 'ko') return `${name} 객실을 ₱${price.toLocaleString()}${t.night} ${t.startingFrom}`;
       if(lang === 'zh') return `${t.expStart} ${name} ${t.startingFrom} ₱${price.toLocaleString()}${t.night}`;
@@ -221,7 +199,6 @@ export default function HotelWebsite({ domain }) {
                 ))}
               </div>
               <div className="flex items-center gap-2 md:gap-4">
-                  {/* 💡 4개 국어 언어 선택 드롭다운 */}
                   <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                       <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                   </select>
@@ -318,7 +295,6 @@ export default function HotelWebsite({ domain }) {
 
                                     {showGuestPicker && (
                                         <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-fade-in space-y-4 text-slate-800">
-                                            {/* 💡 [버그 완벽 수정] 폼 제출을 막기 위해 모든 버튼에 type="button" 속성 강제 추가! */}
                                             <div className="flex justify-between items-center">
                                                 <div><p className="font-bold text-sm">{t.adults}</p><p className="text-[10px] text-slate-500">{t.age13}</p></div>
                                                 <div className="flex items-center gap-3"><button type="button" onClick={()=>setAdults(Math.max(1, adults-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{adults}</span><button type="button" onClick={()=>setAdults(adults+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
