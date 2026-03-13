@@ -210,13 +210,18 @@ export default function HotelWebsite({ domain }) {
     <>
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=${themeFont.replace(/ /g, '+')}:wght@300;400;600;900&display=swap');
-        :root { --theme-color: ${themeColor}; --theme-color-light: ${themeColor}15; }
+        :root { 
+            --theme-color: ${themeColor}; 
+            --theme-color-light: ${themeColor}15; 
+            --theme-color-border: ${themeColor}40; 
+        }
         .custom-font { font-family: '${themeFont}', sans-serif; }
         .theme-bg { background-color: var(--theme-color) !important; }
         .theme-bg-light { background-color: var(--theme-color-light) !important; }
         .theme-text { color: var(--theme-color) !important; }
-        .theme-border { border-color: var(--theme-color) !important; }
+        .theme-border { border-color: var(--theme-color-border) !important; }
         .theme-hover:hover { opacity: 0.85; transform: translateY(-2px); transition: all 0.2s; }
+        .theme-focus:focus { border-color: var(--theme-color) !important; box-shadow: 0 0 0 2px var(--theme-color-light) !important; outline: none; }
       `}} />
 
       <div className="min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white" onContextMenu={(e) => e.preventDefault()}>
@@ -445,13 +450,12 @@ export default function HotelWebsite({ domain }) {
           </section>
         )}
 
-        {/* 💡 [완벽 복구] 원본 "Secure Checkout" 그린 테마 2단 결제창 */}
+        {/* 💡 [테마 동적 적용 완료] Secure Checkout 2단 결제창 */}
         {showBookingModal && (() => {
             const start = new Date(checkIn);
             const end = new Date(checkOut);
             const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
             
-            // 기본 방 가격 + 엑스트라 베드 가격 계산 (엑스트라 베드 1박당 1000페소 가정)
             const basePrice = (activeRoom?.price || 0) * nights * roomCount;
             const extraBedPrice = extraBed * 1000 * nights;
             const finalTotal = basePrice + extraBedPrice;
@@ -473,7 +477,7 @@ export default function HotelWebsite({ domain }) {
                             check_out: checkOut,
                             adults, kids, infants,
                             room_count: roomCount,
-                            guest_name: `${firstName} ${lastName}`, // Frontdesk 연동을 위해 이름 합쳐서 전송
+                            guest_name: `${firstName} ${lastName}`, 
                             guest_email: guestEmail,
                             guest_phone: guestPhone,
                             nationality: nationality,
@@ -505,8 +509,8 @@ export default function HotelWebsite({ domain }) {
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                     
-                    {/* 상단 헤더 (그린 테마) */}
-                    <div className="bg-[#2ebf70] p-5 md:p-6 text-white flex justify-between items-center shrink-0">
+                    {/* 상단 헤더 (동적 테마 적용) */}
+                    <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
                         <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
                         {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                     </div>
@@ -515,32 +519,30 @@ export default function HotelWebsite({ domain }) {
                         {/* 왼쪽: 입력 폼 구역 */}
                         <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
                             
-                            {/* 1. Guest Details */}
                             <section>
                                 <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
-                                {/* 💡 이름 / 성 분리 */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.firstName}</label>
-                                        <input value={firstName} onChange={e=>setFirstName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="John" />
+                                        <input value={firstName} onChange={e=>setFirstName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="John" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.lastName}</label>
-                                        <input value={lastName} onChange={e=>setLastName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="Doe" />
+                                        <input value={lastName} onChange={e=>setLastName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="Doe" />
                                     </div>
                                 </div>
                                 <div className="mb-4">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.email}</label>
-                                    <input value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 bg-blue-50/30 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="john@example.com" />
+                                    <input value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 theme-bg-light rounded-xl theme-focus outline-none" placeholder="john@example.com" />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label>
-                                        <input value={guestPhone} onChange={e=>setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none" placeholder="+1 234 567 890" />
+                                        <input value={guestPhone} onChange={e=>setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label>
-                                        <select value={nationality} onChange={e=>setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2ebf70] outline-none bg-white cursor-pointer">
+                                        <select value={nationality} onChange={e=>setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer">
                                             <option value="Philippines">Philippines</option>
                                             <option value="South Korea">South Korea</option>
                                             <option value="United States">United States</option>
@@ -552,7 +554,6 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                             </section>
 
-                            {/* 2. Extra Options */}
                             <section>
                                 <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">2. {t.extraOptions}</h3>
                                 <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
@@ -562,28 +563,27 @@ export default function HotelWebsite({ domain }) {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <button type="button" disabled={isBooking} onClick={()=>setExtraBed(Math.max(0, extraBed-1))} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">-</button>
-                                        <span className="w-4 text-center font-bold text-[#2ebf70]">{extraBed}</span>
+                                        <span className="w-4 text-center font-bold theme-text">{extraBed}</span>
                                         <button type="button" disabled={isBooking} onClick={()=>setExtraBed(extraBed+1)} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">+</button>
                                     </div>
                                 </div>
                             </section>
 
-                            {/* 3. Payment Method */}
                             <section>
                                 <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">3. {t.paymentMethod}</h3>
                                 <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cardNum}</label>
-                                        <input value={cardNum} onChange={e=>setCardNum(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#2ebf70] outline-none tracking-widest" placeholder="0000 0000 0000 0000" />
+                                        <input value={cardNum} onChange={e=>setCardNum(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none tracking-widest" placeholder="0000 0000 0000 0000" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.expiry}</label>
-                                            <input value={cardExp} onChange={e=>setCardExp(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#2ebf70] outline-none text-center" placeholder="MM/YY" />
+                                            <input value={cardExp} onChange={e=>setCardExp(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none text-center" placeholder="MM/YY" />
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cvv}</label>
-                                            <input value={cardCvv} onChange={e=>setCardCvv(e.target.value)} disabled={isBooking} type="password" maxLength={4} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#2ebf70] outline-none text-center tracking-widest" placeholder="•••" />
+                                            <input value={cardCvv} onChange={e=>setCardCvv(e.target.value)} disabled={isBooking} type="password" maxLength={4} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none text-center tracking-widest" placeholder="•••" />
                                         </div>
                                     </div>
                                 </div>
@@ -591,10 +591,10 @@ export default function HotelWebsite({ domain }) {
                         </div>
 
                         {/* 오른쪽: Booking Summary 구역 */}
-                        <div className="w-full lg:w-[350px] bg-[#f0fdf4] p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l border-[#bbf7d0] flex flex-col">
-                            <h3 className="text-xl font-black text-[#14532d] mb-6">{t.bookingSummary}</h3>
+                        <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col">
+                            <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                             
-                            <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#bbf7d0] mb-6">
+                            <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
                                 <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
                                     <span>{t.checkIn}</span>
                                     <span>{t.checkOut}</span>
@@ -607,29 +607,29 @@ export default function HotelWebsite({ domain }) {
 
                             <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <p className="font-black text-[#14532d] text-lg leading-tight">{activeRoom?.name}</p>
-                                    <p className="text-[#15803d] text-xs font-bold mt-1">₱{(activeRoom?.price || 0).toLocaleString()} x {nights} {t.night.replace('/','')}</p>
-                                    {extraBed > 0 && <p className="text-[#16a34a] text-xs font-bold mt-1">+ {t.extraBed} (x{extraBed})</p>}
+                                    <p className="font-black theme-text text-lg leading-tight">{activeRoom?.name}</p>
+                                    <p className="theme-text text-xs font-bold mt-1 opacity-80">₱{(activeRoom?.price || 0).toLocaleString()} x {nights} {t.night.replace('/','')}</p>
+                                    {extraBed > 0 && <p className="theme-text text-xs font-bold mt-1 opacity-80">+ {t.extraBed} (x{extraBed})</p>}
                                 </div>
-                                <div className="bg-[#dcfce7] text-[#166534] font-black px-3 py-1 rounded-lg text-sm">
+                                <div className="bg-white/50 border theme-border theme-text font-black px-3 py-1 rounded-lg text-sm">
                                     x {roomCount}
                                 </div>
                             </div>
 
                             <div className="mb-6">
-                                <label className="text-[10px] font-bold text-[#15803d] uppercase mb-1 block">{t.promoCode}</label>
+                                <label className="text-[10px] font-bold theme-text uppercase mb-1 block">{t.promoCode}</label>
                                 <div className="flex gap-2">
-                                    <input value={promoCode} onChange={e=>setPromoCode(e.target.value)} disabled={isBooking} className="flex-1 p-2.5 border border-[#bbf7d0] rounded-xl text-sm outline-none focus:border-[#2ebf70]" placeholder="E.G. WELCOME10" />
-                                    <button type="button" disabled={isBooking} className="bg-[#16a34a] text-white px-4 rounded-xl font-bold hover:bg-[#15803d] transition-colors text-sm">{t.apply}</button>
+                                    <input value={promoCode} onChange={e=>setPromoCode(e.target.value)} disabled={isBooking} className="flex-1 p-2.5 border theme-border rounded-xl text-sm outline-none theme-focus" placeholder="E.G. WELCOME10" />
+                                    <button type="button" disabled={isBooking} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm">{t.apply}</button>
                                 </div>
                             </div>
 
-                            <div className="mt-auto pt-6 border-t border-[#bbf7d0]">
+                            <div className="mt-auto pt-6 border-t theme-border">
                                 <div className="flex justify-between items-end mb-6">
-                                    <span className="font-black text-[#14532d] text-xl">{t.total}</span>
-                                    <span className="font-black text-[#15803d] text-3xl">₱{finalTotal.toLocaleString()}</span>
+                                    <span className="font-black text-slate-800 text-xl">{t.total}</span>
+                                    <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                 </div>
-                                <button onClick={handleConfirmBooking} disabled={isBooking} className="w-full bg-[#2ebf70] hover:bg-[#22c55e] text-white py-4 rounded-2xl font-black transition-transform active:scale-95 shadow-xl shadow-green-200 disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
+                                <button onClick={handleConfirmBooking} disabled={isBooking} className="w-full theme-bg theme-hover text-white py-4 rounded-2xl font-black transition-transform active:scale-95 shadow-xl disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
                                     {isBooking ? <span className="animate-pulse">{t.processing}</span> : <span>{t.confirmBook}</span>}
                                 </button>
                             </div>
