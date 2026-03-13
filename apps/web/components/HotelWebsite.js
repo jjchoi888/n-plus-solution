@@ -32,6 +32,7 @@ export default function HotelWebsite({ domain }) {
   const [activeAttIdx, setActiveAttIdx] = useState(0);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false); // 💡 4개 국어 예약 알림창 스위치 추가
 
   const getHotelCodeFromDomain = (hostname) => {
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
@@ -238,20 +239,22 @@ export default function HotelWebsite({ domain }) {
                             <h3 className="text-xl md:text-2xl font-black theme-text mb-2">Book Your Stay</h3>
                             <p className="text-slate-500 text-xs md:text-sm font-bold mb-6">Experience {activeRoom.name} starting from ₱{activeRoom.price.toLocaleString()}/night.</p>
                             {/* 💡 [업그레이드] 통합 채널 스타일의 고급 예약 검색 모달 */}
+                            {/* 💡 [업그레이드] 통합 채널 스타일의 고급 예약 검색 모달 */}
                             <div className="space-y-4 relative mt-2">
-                                <div className="flex gap-2 md:gap-3">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Check-in</label>
+                                {/* 💡 [수정] 공간 부족을 해결하기 위해 체크인/체크아웃을 세로로 분리 */}
+                                <div className="flex flex-col gap-4">
+                                    <div className="w-full">
+                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">Check-in</label>
                                         <input type="date" value={checkIn} onChange={e=>setCheckIn(e.target.value)} className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" />
                                     </div>
-                                    <div className="flex-1">
-                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Check-out</label>
+                                    <div className="w-full">
+                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">Check-out</label>
                                         <input type="date" value={checkOut} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" />
                                     </div>
                                 </div>
 
-                                <div className="relative">
-                                    <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Guests & Rooms</label>
+                                <div className="relative mt-2">
+                                    <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase block mb-1">Guests & Rooms</label>
                                     <div 
                                         onClick={() => setShowGuestPicker(!showGuestPicker)}
                                         className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 cursor-pointer flex justify-between items-center select-none hover:bg-blue-50 transition-colors"
@@ -262,7 +265,7 @@ export default function HotelWebsite({ domain }) {
                                         <span className="text-slate-400 shrink-0">▼</span>
                                     </div>
 
-                                    {/* 💡 인원수/객실수 선택 드롭다운 팝업 */}
+                                    {/* 💡 기존에 만드셨던 인원수/객실수 팝업 유지 */}
                                     {showGuestPicker && (
                                         <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-fade-in space-y-4 text-slate-800">
                                             <div className="flex justify-between items-center">
@@ -286,7 +289,8 @@ export default function HotelWebsite({ domain }) {
                                     )}
                                 </div>
                                 
-                                <button onClick={() => alert("개별 호텔 예약 API 연동 준비 중입니다.")} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95">Check Availability</button>
+                                {/* 💡 [수정] 얼럿 창 대신 커스텀 모달창 띄우기 함수 연결 */}
+                                <button onClick={() => setShowBookingModal(true)} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95">Check Availability</button>
                             </div>
                         </div>
                     </div>
@@ -399,6 +403,29 @@ export default function HotelWebsite({ domain }) {
                 </div>
             </div>
           </section>
+        )}
+
+        {/* 💡 [신규] 4개 국어 지원 중앙 예약 알림 모달창 */}
+        {showBookingModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowBookingModal(false)}>
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
+                    <div className="bg-blue-600 p-6 text-white">
+                        <span className="text-4xl block mb-2">🗓️</span>
+                        <h3 className="text-xl font-black">Booking System Update</h3>
+                    </div>
+                    <div className="p-8 space-y-4 text-slate-700 font-medium text-sm md:text-base">
+                        <p className="font-bold text-lg text-slate-900 border-b border-slate-100 pb-4 mb-4">Booking API integration is in preparation.</p>
+                        <p>예약 API 연동 준비 중입니다.</p>
+                        <p>预订 API 连动准备中。</p>
+                        <p>予約API連携の準備中です。</p>
+                    </div>
+                    <div className="p-5 bg-slate-50 border-t border-slate-100">
+                        <button onClick={() => setShowBookingModal(false)} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+                            Close / 닫기
+                        </button>
+                    </div>
+                </div>
+            </div>
         )}
 
         {/* 📱 푸터 */}
