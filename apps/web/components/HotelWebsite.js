@@ -1,22 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
+// 💡 [복구 핵심] 기존 통합 장바구니 기반 예약 컴포넌트 임포트
 import RoomList from "./RoomList";
 
 const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
 
-// 💡 4개 국어(EN, KO, ZH, JA) 번역 딕셔너리 (결제창 단어 대거 추가)
+// 4개 국어 번역 딕셔너리
 const translations = {
     en: {
         home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
-        bookNow: 'Book Now', aboutUs: 'About Us', bookStay: 'Book Your Stay', checkAvail: 'Check Availability',
+        bookNow: 'Book Now', aboutUs: 'About Us', bookStay: 'Book Your Stay', reserveNow: 'Reserve Now',
         expStart: 'Experience', startingFrom: 'starting from', night: '/night',
         checkIn: 'Check-in', checkOut: 'Check-out', guestsRooms: 'Guests & Rooms',
         adults: 'Adults', age13: 'Age 13+', children: 'Children', age2_12: 'Ages 2-12', infants: 'Infants', under2: 'Under 2',
         room: 'Room', rooms: 'Rooms', done: 'Done', maxGuests: 'Max', guests: 'Guests',
         noImg: 'No Image Available', noRooms: 'No rooms available.', noFac: 'No facilities registered.', noAtt: 'No attractions registered.',
         mapUpdating: 'Location map is currently being updated.', contactUs: 'Contact Us', rights: 'All rights reserved.',
-        standardBed: 'Standard Bed',
-        // 결제창 전용 번역
+        standardBed: 'Standard Bed', available: 'Available', soldOut: 'Sold Out / Not Enough Rooms',
         secureCheckout: 'Secure Checkout', guestDetails: 'Guest Details', 
         firstName: 'First Name', lastName: 'Last Name', email: 'Email Address', phone: 'Phone Number', nationality: 'Nationality',
         extraOptions: 'Extra Options', extraBed: 'Extra Bed',
@@ -25,15 +25,14 @@ const translations = {
     },
     ko: {
         home: '홈', rooms: '객실', facilities: '부대시설', attractions: '관광지', contact: '오시는길',
-        bookNow: '예약하기', aboutUs: '호텔 소개', bookStay: '객실 예약', checkAvail: '예약 가능 여부 확인',
+        bookNow: '예약하기', aboutUs: '호텔 소개', bookStay: '객실 예약', reserveNow: '예약 진행하기',
         expStart: '', startingFrom: '최저가', night: '/1박',
         checkIn: '체크인', checkOut: '체크아웃', guestsRooms: '인원 및 객실',
         adults: '성인', age13: '13세 이상', children: '어린이', age2_12: '2~12세', infants: '유아', under2: '2세 미만',
         room: '객실', rooms: '객실', done: '완료', maxGuests: '최대', guests: '명',
         noImg: '이미지 없음', noRooms: '등록된 객실이 없습니다.', noFac: '등록된 부대시설이 없습니다.', noAtt: '등록된 관광지가 없습니다.',
         mapUpdating: '지도가 업데이트 중입니다.', contactUs: '문의 및 연락처', rights: '모든 권리 보유.',
-        standardBed: '스탠다드 베드',
-        // 결제창 전용 번역
+        standardBed: '스탠다드 베드', available: '예약 가능', soldOut: '해당 일자 예약 마감 (객실 부족)',
         secureCheckout: '안전한 객실 결제', guestDetails: '예약자 정보', 
         firstName: '이름 (First Name)', lastName: '성 (Last Name)', email: '이메일', phone: '연락처', nationality: '국적',
         extraOptions: '추가 옵션', extraBed: '엑스트라 베드',
@@ -42,15 +41,14 @@ const translations = {
     },
     zh: {
         home: '首页', rooms: '客房', facilities: '设施', attractions: '景点', contact: '联系我们',
-        bookNow: '立即预订', aboutUs: '关于我们', bookStay: '预订客房', checkAvail: '查看空房情况',
+        bookNow: '立即预订', aboutUs: '关于我们', bookStay: '预订客房', reserveNow: '立即预订',
         expStart: '体验', startingFrom: '起价', night: '/晚',
         checkIn: '入住', checkOut: '退房', guestsRooms: '人数与客房',
         adults: '成人', age13: '13岁以上', children: '儿童', age2_12: '2-12岁', infants: '婴儿', under2: '2岁以下',
         room: '间', rooms: '间', done: '完成', maxGuests: '最多', guests: '人',
         noImg: '暂无图片', noRooms: '暂无客房。', noFac: '暂无设施。', noAtt: '暂无景点。',
         mapUpdating: '位置地图正在更新中。', contactUs: '联系我们', rights: '版权所有。',
-        standardBed: '标准床',
-        // 결제창 전용 번역
+        standardBed: '标准床', available: '可预订', soldOut: '客房已满',
         secureCheckout: '安全结账', guestDetails: '客人信息', 
         firstName: '名字', lastName: '姓氏', email: '电子邮件', phone: '电话号码', nationality: '国籍',
         extraOptions: '额外选项', extraBed: '加床',
@@ -59,15 +57,14 @@ const translations = {
     },
     ja: {
         home: 'ホーム', rooms: '客室', facilities: '施設', attractions: '観光', contact: 'アクセス',
-        bookNow: '今すぐ予約', aboutUs: 'ホテルについて', bookStay: 'ご予約', checkAvail: '空室状況を確認',
+        bookNow: '今すぐ予約', aboutUs: 'ホテルについて', bookStay: 'ご予約', reserveNow: '予約する',
         expStart: '', startingFrom: '最安値', night: '/泊',
         checkIn: 'チェックイン', checkOut: 'チェックアウト', guestsRooms: '人数と客室',
         adults: '大人', age13: '13歳以上', children: '子供', age2_12: '2~12歳', infants: '幼児', under2: '2歳未満',
         room: '室', rooms: '室', done: '完了', maxGuests: '最大', guests: '名',
         noImg: '画像なし', noRooms: '利用可能な客室がありません。', noFac: '登録された施設がありません。', noAtt: '登録された観光地がありません。',
         mapUpdating: 'マップは現在更新中です。', contactUs: 'お問い合わせ', rights: '無断複写・転載を禁じます。',
-        standardBed: 'スタンダードベッド',
-        // 결제창 전용 번역
+        standardBed: 'スタンダードベッド', available: '空室あり', soldOut: '満室 (予約不可)',
         secureCheckout: '安全なチェックアウト', guestDetails: '宿泊者情報', 
         firstName: '名', lastName: '姓', email: 'メールアドレス', phone: '電話番号', nationality: '国籍',
         extraOptions: '追加オプション', extraBed: 'エキストラベッド',
@@ -104,7 +101,6 @@ export default function HotelWebsite({ domain }) {
   const [showBookingModal, setShowBookingModal] = useState(false); 
   const [alertMessage, setAlertMessage] = useState('');
 
-  // 💡 [복구 완료] PMS 연동용 상세 예약 정보 (이름/성 분리, 국적, 카드 등)
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
@@ -116,6 +112,9 @@ export default function HotelWebsite({ domain }) {
   const [cardCvv, setCardCvv] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+
+  // 💡 [신규] 실시간 잔여 객실 수 확인 상태
+  const [availableCount, setAvailableCount] = useState(null);
 
   const getHotelCodeFromDomain = (hostname) => {
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
@@ -191,9 +190,22 @@ export default function HotelWebsite({ domain }) {
     return () => clearInterval(timer);
   }, [activeMenu, sliderImages.length]);
 
+  const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
+
+  // 💡 [핵심] 날짜나 방이 바뀔 때마다 실시간으로 빈 방 갯수 확인 API 호출
+  useEffect(() => {
+      if (checkIn && checkOut && activeRoom && activeMenu === 'ROOMS') {
+          fetch(`${BASE_URL}/api/public/check-availability?hotel=${hotelCode}&type=${activeRoom.name}&check_in=${checkIn}&check_out=${checkOut}`)
+              .then(r => r.json())
+              .then(data => setAvailableCount(data.count))
+              .catch(() => setAvailableCount(null));
+      } else {
+          setAvailableCount(null);
+      }
+  }, [checkIn, checkOut, activeRoom, hotelCode, activeMenu]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-xl font-bold text-slate-500 bg-slate-50">Loading your perfect stay...</div>;
 
-  const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
   const handleTabClick = (e, setter, value) => { setter(value); if (e.target) e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); };
   const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
 
@@ -241,7 +253,8 @@ export default function HotelWebsite({ domain }) {
                   <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                       <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                   </select>
-                  <button onClick={() => setActiveMenu('ROOMS')} className="theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
+                  {/* 💡 [복구 핵심] 상단 Book Now 버튼 클릭 시 통합 장바구니 페이지(BOOK) 탭으로 이동하게 수정 */}
+                  <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
                   <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
               </div>
           </div>
@@ -278,7 +291,14 @@ export default function HotelWebsite({ domain }) {
           </div>
         )}
 
-        {/* 🛏️ ROOMS */}
+        {/* 💡 [복구 완료] 통합 장바구니 예약 페이지 (RoomList) */}
+        {activeMenu === 'BOOK' && (
+          <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
+              <RoomList hotelCode={hotelCode} />
+          </section>
+        )}
+
+        {/* 🛏️ 개별 ROOMS 탭 */}
         {activeMenu === 'ROOMS' && (
           <section className="pt-24 md:pt-32 pb-40 md:pb-56 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow relative z-20">
             {rooms.length > 0 && activeRoom ? (
@@ -317,6 +337,7 @@ export default function HotelWebsite({ domain }) {
                                 e.preventDefault(); 
                                 if (!checkIn || !checkOut) return setAlertMessage(lang === 'ko' ? "체크인/체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
                                 if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage(lang === 'ko' ? "체크아웃은 체크인 이후여야 합니다." : "Check-out must be after check-in.");
+                                if (availableCount !== null && availableCount < roomCount) return setAlertMessage(lang === 'ko' ? "선택하신 날짜에 방이 부족합니다." : "Not enough rooms available.");
                                 setShowBookingModal(true); 
                             }}>
                                 <div className="flex flex-col gap-4">
@@ -359,7 +380,18 @@ export default function HotelWebsite({ domain }) {
                                         </div>
                                     )}
                                 </div>
-                                <button type="submit" className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95">{t.checkAvail}</button>
+                                
+                                {/* 💡 [핵심] 실시간 객실 가능 여부 표시 영역 추가 */}
+                                {availableCount !== null && checkIn && checkOut && (
+                                    <div className="mt-4 p-3 rounded-xl text-center font-black text-sm border shadow-sm transition-all" style={{ backgroundColor: availableCount >= roomCount ? '#f0fdf4' : '#fef2f2', borderColor: availableCount >= roomCount ? '#bbf7d0' : '#fecaca', color: availableCount >= roomCount ? '#166534' : '#991b1b' }}>
+                                        {availableCount >= roomCount ? `✅ ${availableCount} ${t.rooms} ${t.available}` : `❌ ${t.soldOut}`}
+                                    </div>
+                                )}
+
+                                {/* 💡 버튼 이름 Reserve Now 로 변경 및 품절 시 버튼 잠금 처리 */}
+                                <button type="submit" disabled={availableCount !== null && availableCount < roomCount} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {t.reserveNow}
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -450,7 +482,7 @@ export default function HotelWebsite({ domain }) {
           </section>
         )}
 
-        {/* 💡 [테마 동적 적용 완료] Secure Checkout 2단 결제창 */}
+        {/* 💡 [복구 및 스크롤 패치 완료] Secure Checkout 2단 결제창 */}
         {showBookingModal && (() => {
             const start = new Date(checkIn);
             const end = new Date(checkOut);
@@ -460,7 +492,6 @@ export default function HotelWebsite({ domain }) {
             const extraBedPrice = extraBed * 1000 * nights;
             const finalTotal = basePrice + extraBedPrice;
 
-            // 💡 [추가] 국적 리스트 정렬 (Top 5 + 나머지 알파벳 순)
             const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
             const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
 
@@ -470,20 +501,20 @@ export default function HotelWebsite({ domain }) {
                 }
                 setIsBooking(true);
                 try {
-                    // 💡 [핵심 해결] server.js에 정의된 "진짜 API 주소"와 "정확한 변수명"으로 매칭했습니다!
                     const res = await fetch(`${BASE_URL}/api/public/reservations/create`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             hotel_code: hotelCode,
                             room_type: activeRoom.name,
-                            check_in_date: checkIn,       // server.js 요구 변수명 일치
-                            check_out_date: checkOut,     // server.js 요구 변수명 일치
+                            check_in_date: checkIn,
+                            check_out_date: checkOut,
                             guest_name: `${firstName} ${lastName}`, 
-                            email: guestEmail,            // server.js 요구 변수명 일치
-                            phone: guestPhone,            // server.js 요구 변수명 일치
+                            email: guestEmail,
+                            phone: guestPhone,
                             nationality: nationality,
-                            total_price: finalTotal
+                            total_price: finalTotal,
+                            room_count: roomCount // [추가 방어] 방 갯수도 확실하게 전달
                         })
                     });
                     
@@ -508,20 +539,12 @@ export default function HotelWebsite({ domain }) {
             return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                    
-                    {/* 상단 헤더 (동적 테마 적용) */}
                     <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
                         <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
                         {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                     </div>
-                    
-                    {/* 💡 [모바일 스크롤 해결] flex-1 속성에 overflow-y-auto를 부여하여 모바일에서 화면 전체가 스크롤되게 수정했습니다! */}
                     <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
-                        
-                        {/* 왼쪽: 입력 폼 구역 */}
-                        {/* 💡 데스크탑(lg) 이상에서만 자체 스크롤되도록 lg:overflow-y-auto 적용 */}
                         <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
-                            
                             <section>
                                 <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -546,7 +569,6 @@ export default function HotelWebsite({ domain }) {
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label>
                                         <select value={nationality} onChange={e=>setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer">
-                                            {/* 💡 [기능 적용] 주요 5개국 고정 & 나머지 A-Z 정렬 드롭다운 */}
                                             <optgroup label="Top Options">
                                                 {topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
                                             </optgroup>
@@ -594,8 +616,6 @@ export default function HotelWebsite({ domain }) {
                             </section>
                         </div>
 
-                        {/* 오른쪽: Booking Summary 구역 */}
-                        {/* 💡 [모바일 스크롤 해결] h-full을 없애고 내용물에 맞춰 밑으로 자연스럽게 늘어나도록 변경했습니다. */}
                         <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto lg:h-full lg:overflow-y-auto">
                             <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                             
@@ -664,17 +684,14 @@ export default function HotelWebsite({ domain }) {
             </div>
         )}
 
-        {/* 📱 푸터 (데스크탑/모바일 맞춤 레이아웃 적용) */}
+        {/* 📱 푸터 */}
         <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-              
               <div className="hidden md:block flex-1"></div>
-              
               <div className="flex-1 flex justify-center gap-4">
                   {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16.11 7.99a.01.01 0 0 1 .02 0"/><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18"/></svg></a>}
                   {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>}
               </div>
-
               <div className="flex-1 flex justify-center md:justify-end w-full">
                   <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
                       &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
