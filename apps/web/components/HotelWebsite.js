@@ -470,25 +470,20 @@ export default function HotelWebsite({ domain }) {
                 }
                 setIsBooking(true);
                 try {
-                    // 💡 [에러 해결!] 404 에러가 나지 않도록 원래 작동하던 /api/bookings 주소로 원상복구했습니다.
-                    const res = await fetch(`${BASE_URL}/api/bookings`, {
+                    // 💡 [핵심 해결] server.js에 정의된 "진짜 API 주소"와 "정확한 변수명"으로 매칭했습니다!
+                    const res = await fetch(`${BASE_URL}/api/public/reservations/create`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             hotel_code: hotelCode,
-                            room_id: activeRoom.id,
                             room_type: activeRoom.name,
-                            check_in: checkIn,
-                            check_out: checkOut,
-                            adults, kids, infants,
-                            room_count: roomCount,
+                            check_in_date: checkIn,       // server.js 요구 변수명 일치
+                            check_out_date: checkOut,     // server.js 요구 변수명 일치
                             guest_name: `${firstName} ${lastName}`, 
-                            guest_email: guestEmail,
-                            guest_phone: guestPhone,
+                            email: guestEmail,            // server.js 요구 변수명 일치
+                            phone: guestPhone,            // server.js 요구 변수명 일치
                             nationality: nationality,
-                            extra_bed: extraBed,
-                            total_price: finalTotal,
-                            status: 'CONFIRMED'
+                            total_price: finalTotal
                         })
                     });
                     
