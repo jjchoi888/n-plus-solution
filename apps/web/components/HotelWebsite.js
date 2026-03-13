@@ -16,6 +16,15 @@ export default function HotelWebsite({ domain }) {
   
   // 💡 [추가 1] 부대시설과 관광지도 메인 화면처럼 슬라이드 되도록 타이머 상태 추가
   const [roomSlideIdx, setRoomSlideIdx] = useState(0);
+
+  // 💡 [신규] 고급 예약 시스템(날짜, 인원, 방 갯수) 전용 상태 추가
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [adults, setAdults] = useState(2);
+  const [kids, setKids] = useState(0);
+  const [infants, setInfants] = useState(0); // 유아 추가
+  const [roomCount, setRoomCount] = useState(1);
+  const [showGuestPicker, setShowGuestPicker] = useState(false);
   const [facSlideIdx, setFacSlideIdx] = useState(0);
   const [attSlideIdx, setAttSlideIdx] = useState(0);
   
@@ -228,12 +237,57 @@ export default function HotelWebsite({ domain }) {
                         <div className="lg:col-span-3 theme-bg-light p-5 md:p-8 rounded-2xl md:rounded-3xl border theme-border flex flex-col justify-center h-full">
                             <h3 className="text-xl md:text-2xl font-black theme-text mb-2">Book Your Stay</h3>
                             <p className="text-slate-500 text-xs md:text-sm font-bold mb-6">Experience {activeRoom.name} starting from ₱{activeRoom.price.toLocaleString()}/night.</p>
-                            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert("예약 시스템과 연결 중입니다."); }}>
-                                <div><label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Check-in</label><input type="date" className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-sm text-slate-700" required /></div>
-                                <div><label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Check-out</label><input type="date" className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-sm text-slate-700" required /></div>
-                                <div><label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Guest Name</label><input type="text" placeholder="John Doe" className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-sm text-slate-700" required /></div>
-                                <button type="submit" className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95">Confirm Booking</button>
-                            </form>
+                            {/* 💡 [업그레이드] 통합 채널 스타일의 고급 예약 검색 모달 */}
+                            <div className="space-y-4 relative mt-2">
+                                <div className="flex gap-2 md:gap-3">
+                                    <div className="flex-1">
+                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Check-in</label>
+                                        <input type="date" value={checkIn} onChange={e=>setCheckIn(e.target.value)} className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Check-out</label>
+                                        <input type="date" value={checkOut} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" />
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Guests & Rooms</label>
+                                    <div 
+                                        onClick={() => setShowGuestPicker(!showGuestPicker)}
+                                        className="w-full p-2.5 md:p-3 border border-white rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 cursor-pointer flex justify-between items-center select-none hover:bg-blue-50 transition-colors"
+                                    >
+                                        <span className="truncate pr-2">
+                                            {adults} Adults{kids > 0 ? `, ${kids} Kids` : ''}{infants > 0 ? `, ${infants} Inf` : ''} · {roomCount} Room
+                                        </span>
+                                        <span className="text-slate-400 shrink-0">▼</span>
+                                    </div>
+
+                                    {/* 💡 인원수/객실수 선택 드롭다운 팝업 */}
+                                    {showGuestPicker && (
+                                        <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-fade-in space-y-4 text-slate-800">
+                                            <div className="flex justify-between items-center">
+                                                <div><p className="font-bold text-sm">Adults</p><p className="text-[10px] text-slate-500">Age 13+</p></div>
+                                                <div className="flex items-center gap-3"><button onClick={()=>setAdults(Math.max(1, adults-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">-</button><span className="w-4 text-center font-bold">{adults}</span><button onClick={()=>setAdults(adults+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">+</button></div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <div><p className="font-bold text-sm">Children</p><p className="text-[10px] text-slate-500">Ages 2-12</p></div>
+                                                <div className="flex items-center gap-3"><button onClick={()=>setKids(Math.max(0, kids-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">-</button><span className="w-4 text-center font-bold">{kids}</span><button onClick={()=>setKids(kids+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">+</button></div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <div><p className="font-bold text-sm">Infants</p><p className="text-[10px] text-slate-500">Under 2</p></div>
+                                                <div className="flex items-center gap-3"><button onClick={()=>setInfants(Math.max(0, infants-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">-</button><span className="w-4 text-center font-bold">{infants}</span><button onClick={()=>setInfants(infants+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">+</button></div>
+                                            </div>
+                                            <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
+                                                <div><p className="font-bold text-sm">Rooms</p></div>
+                                                <div className="flex items-center gap-3"><button onClick={()=>setRoomCount(Math.max(1, roomCount-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button onClick={()=>setRoomCount(roomCount+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200 transition-colors">+</button></div>
+                                            </div>
+                                            <button onClick={()=>setShowGuestPicker(false)} className="w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl mt-2 hover:bg-slate-800 transition-colors">Done</button>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <button onClick={() => alert("개별 호텔 예약 API 연동 준비 중입니다.")} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95">Check Availability</button>
+                            </div>
                         </div>
                     </div>
                 </div>
