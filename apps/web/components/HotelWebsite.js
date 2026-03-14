@@ -1,11 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-// 💡 [복구 핵심] 기존 통합 장바구니 기반 예약 컴포넌트 임포트
 import RoomList from "./RoomList";
 
 const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
 
-// 4개 국어 번역 딕셔너리
+// 💡 4개 국어 번역 딕셔너리
 const translations = {
     en: {
         home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
@@ -24,7 +23,7 @@ const translations = {
         bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...'
     },
     ko: {
-        home: '홈', rooms: '객실', facilities: '부대시설', attractions: '관광지', contact: '오시는길',
+        home: '홈', rooms: '객실', facilities: '부대시설', attractions: '주변관광안내', contact: '오시는길',
         bookNow: '예약하기', aboutUs: '호텔 소개', bookStay: '객실 예약', reserveNow: '예약 진행하기',
         expStart: '', startingFrom: '최저가', night: '/1박',
         checkIn: '체크인', checkOut: '체크아웃', guestsRooms: '인원 및 객실',
@@ -113,7 +112,6 @@ export default function HotelWebsite({ domain }) {
   const [promoCode, setPromoCode] = useState('');
   const [isBooking, setIsBooking] = useState(false);
 
-  // 💡 [신규] 실시간 잔여 객실 수 확인 상태
   const [availableCount, setAvailableCount] = useState(null);
 
   const getHotelCodeFromDomain = (hostname) => {
@@ -137,7 +135,6 @@ export default function HotelWebsite({ domain }) {
               const formattedRooms = adminData.rooms.map(r => ({
                   id: r.id, name: typeof r.name === 'object' ? r.name.en : r.name,
                   price: r.basePrice, images: r.images || [], availableCount: 5, roomConfig: r.roomConfig,
-                  // 💡 [수정] 숨어있던 데이터들을 밖으로 꺼내줍니다!
                   maxGuests: r.roomConfig?.maxGuests || 2,
                   size: r.roomConfig?.size || '',
                   description: r.roomConfig?.description || ''
@@ -151,15 +148,7 @@ export default function HotelWebsite({ domain }) {
 
   const safeConfig = config || {};
   let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch(e){}
-  
-  let sns = {}; 
-  try { 
-      if (safeConfig.sns_json) {
-          sns = typeof safeConfig.sns_json === 'string' ? JSON.parse(safeConfig.sns_json) : safeConfig.sns_json;
-          if (typeof sns === 'string') sns = JSON.parse(sns); 
-      }
-  } catch(e){}
-  
+  let sns = {}; try { if (safeConfig.sns_json) { sns = typeof safeConfig.sns_json === 'string' ? JSON.parse(safeConfig.sns_json) : safeConfig.sns_json; if (typeof sns === 'string') sns = JSON.parse(sns); } } catch(e){}
   let facilities = []; try { facilities = JSON.parse(safeConfig.facilities_json || '[]'); } catch(e){}
   let attractions = []; try { attractions = JSON.parse(safeConfig.attractions_json || '[]'); } catch(e){}
 
@@ -196,7 +185,6 @@ export default function HotelWebsite({ domain }) {
 
   const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
 
-  // 💡 [핵심] 날짜나 방이 바뀔 때마다 실시간으로 빈 방 갯수 확인 API 호출
   useEffect(() => {
       if (checkIn && checkOut && activeRoom && activeMenu === 'ROOMS') {
           fetch(`${BASE_URL}/api/public/check-availability?hotel=${hotelCode}&type=${activeRoom.name}&check_in=${checkIn}&check_out=${checkOut}`)
@@ -226,11 +214,7 @@ export default function HotelWebsite({ domain }) {
     <>
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=${themeFont.replace(/ /g, '+')}:wght@300;400;600;900&display=swap');
-        :root { 
-            --theme-color: ${themeColor}; 
-            --theme-color-light: ${themeColor}15; 
-            --theme-color-border: ${themeColor}40; 
-        }
+        :root { --theme-color: ${themeColor}; --theme-color-light: ${themeColor}15; --theme-color-border: ${themeColor}40; }
         .custom-font { font-family: '${themeFont}', sans-serif; }
         .theme-bg { background-color: var(--theme-color) !important; }
         .theme-bg-light { background-color: var(--theme-color-light) !important; }
@@ -257,7 +241,7 @@ export default function HotelWebsite({ domain }) {
                   <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                       <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                   </select>
-                  {/* 💡 [복구 핵심] 상단 Book Now 버튼 클릭 시 통합 장바구니 페이지(BOOK) 탭으로 이동하게 수정 */}
+                  {/* 💡 [복구] Book Now 클릭 시 통합 장바구니 탭으로 이동 */}
                   <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
                   <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
               </div>
@@ -295,7 +279,7 @@ export default function HotelWebsite({ domain }) {
           </div>
         )}
 
-        {/* 💡 [복구 완료] 통합 장바구니 예약 페이지 (RoomList) */}
+        {/* 💡 [복구 완료] 통합 장바구니 예약 페이지 */}
         {activeMenu === 'BOOK' && (
           <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
               <RoomList hotelCode={hotelCode} />
@@ -326,13 +310,12 @@ export default function HotelWebsite({ domain }) {
                             </div>
                             <div>
                                 <h3 className="text-2xl md:text-3xl font-black mb-3 text-slate-800">{activeRoom.name}</h3>
+                                {/* 💡 [요청 반영] 태그 순서 변경: 사이즈 -> 침대 -> 인원 */}
                                 <div className="flex flex-wrap gap-2 md:gap-4 mb-4">
-                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests} {t.guests}</span>
-                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">🛏️ {activeRoom.roomConfig?.bedType || t.standardBed}</span>
-                                    {/* 💡 [복구] 객실 크기(sq.m) 표시 */}
                                     {activeRoom.size && <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">📏 {activeRoom.size} sq.m</span>}
+                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">🛏️ {activeRoom.roomConfig?.bedType || t.standardBed}</span>
+                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests} {t.guests}</span>
                                 </div>
-                                {/* 💡 [복구] 줄바꿈(엔터)이 적용된 상세 설명 표시 */}
                                 <p className="text-slate-600 leading-relaxed font-medium text-sm md:text-base whitespace-pre-wrap">{activeRoom.description}</p>
                             </div>
                         </div>
@@ -388,14 +371,14 @@ export default function HotelWebsite({ domain }) {
                                     )}
                                 </div>
                                 
-                                {/* 💡 [핵심] 실시간 객실 가능 여부 표시 영역 추가 */}
+                                {/* 💡 [요청 반영] 실시간 남은 방 갯수 표시 */}
                                 {availableCount !== null && checkIn && checkOut && (
                                     <div className="mt-4 p-3 rounded-xl text-center font-black text-sm border shadow-sm transition-all" style={{ backgroundColor: availableCount >= roomCount ? '#f0fdf4' : '#fef2f2', borderColor: availableCount >= roomCount ? '#bbf7d0' : '#fecaca', color: availableCount >= roomCount ? '#166534' : '#991b1b' }}>
                                         {availableCount >= roomCount ? `✅ ${availableCount} ${t.rooms} ${t.available}` : `❌ ${t.soldOut}`}
                                     </div>
                                 )}
 
-                                {/* 💡 버튼 이름 Reserve Now 로 변경 및 품절 시 버튼 잠금 처리 */}
+                                {/* 💡 [요청 반영] "Reserve Now" 로 버튼 이름 변경 */}
                                 <button type="submit" disabled={availableCount !== null && availableCount < roomCount} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                                     {t.reserveNow}
                                 </button>
@@ -489,7 +472,7 @@ export default function HotelWebsite({ domain }) {
           </section>
         )}
 
-        {/* 💡 [복구 및 스크롤 패치 완료] Secure Checkout 2단 결제창 */}
+        {/* 💡 Secure Checkout 모달창 */}
         {showBookingModal && (() => {
             const start = new Date(checkIn);
             const end = new Date(checkOut);
@@ -521,7 +504,7 @@ export default function HotelWebsite({ domain }) {
                             phone: guestPhone,
                             nationality: nationality,
                             total_price: finalTotal,
-                            room_count: roomCount // [추가 방어] 방 갯수도 확실하게 전달
+                            room_count: roomCount 
                         })
                     });
                     
@@ -684,7 +667,7 @@ export default function HotelWebsite({ domain }) {
                     </div>
                     <div className="p-4 bg-slate-50 border-t border-slate-100">
                         <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
-                            OK / 확인
+                            OK
                         </button>
                     </div>
                 </div>
