@@ -136,7 +136,11 @@ export default function HotelWebsite({ domain }) {
           if(adminData.success) {
               const formattedRooms = adminData.rooms.map(r => ({
                   id: r.id, name: typeof r.name === 'object' ? r.name.en : r.name,
-                  price: r.basePrice, images: r.images || [], availableCount: 5, roomConfig: r.roomConfig
+                  price: r.basePrice, images: r.images || [], availableCount: 5, roomConfig: r.roomConfig,
+                  // 💡 [수정] 숨어있던 데이터들을 밖으로 꺼내줍니다!
+                  maxGuests: r.roomConfig?.maxGuests || 2,
+                  size: r.roomConfig?.size || '',
+                  description: r.roomConfig?.description || ''
               }));
               setRooms(formattedRooms);
               if(formattedRooms.length > 0) setSelectedRoomId(formattedRooms[0].id);
@@ -323,10 +327,13 @@ export default function HotelWebsite({ domain }) {
                             <div>
                                 <h3 className="text-2xl md:text-3xl font-black mb-3 text-slate-800">{activeRoom.name}</h3>
                                 <div className="flex flex-wrap gap-2 md:gap-4 mb-4">
-                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests || 2} {t.guests}</span>
+                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests} {t.guests}</span>
                                     <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">🛏️ {activeRoom.roomConfig?.bedType || t.standardBed}</span>
+                                    {/* 💡 [복구] 객실 크기(sq.m) 표시 */}
+                                    {activeRoom.size && <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">📏 {activeRoom.size} sq.m</span>}
                                 </div>
-                                <p className="text-slate-600 leading-relaxed font-medium text-sm md:text-base">{activeRoom.description}</p>
+                                {/* 💡 [복구] 줄바꿈(엔터)이 적용된 상세 설명 표시 */}
+                                <p className="text-slate-600 leading-relaxed font-medium text-sm md:text-base whitespace-pre-wrap">{activeRoom.description}</p>
                             </div>
                         </div>
                         <div className="lg:col-span-3 theme-bg-light p-5 md:p-8 rounded-2xl md:rounded-3xl border theme-border flex flex-col justify-center h-full">
