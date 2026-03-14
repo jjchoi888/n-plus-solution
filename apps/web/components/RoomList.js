@@ -229,9 +229,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                   
                   {/* 💡 [요청 반영] 사이즈 -> 침대타입 -> 최대인원 순서 적용 */}
                   <div className="flex flex-wrap gap-2 mb-3">
-                      {room.size && <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">📏 {room.size} {t.size}</span>}
+                      {/* 💡 [수정] RoomList에서도 사이즈를 완벽하게 표시 */}
+                      {(room.size || room.roomConfig?.size) && <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">📏 {room.size || room.roomConfig?.size} {t.size}</span>}
                       <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">🛏️ {room.roomConfig?.bedType || 'Standard Bed'}</span>
-                      <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">👥 {t.maxGuests} {room.maxGuests}</span>
+                      <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">👥 {t.maxGuests} {room.maxGuests || 2}</span>
                   </div>
 
                   {/* 💡 [요청 반영] 줄바꿈(엔터)이 그대로 적용되는 객실 설명 */}

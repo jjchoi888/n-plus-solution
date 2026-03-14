@@ -303,7 +303,7 @@ export default function HotelWebsite({ domain }) {
         {activeMenu === 'BOOK' && (
           <section className="relative pt-32 pb-20 px-4 md:px-6 w-full flex-grow min-h-[85vh] flex flex-col items-center justify-start animate-fade-in-up">
               
-              {/* 1. 💡 뒷배경 은은한 슬라이더 적용 (스크롤을 내려도 배경이 고정되도록 fixed 적용) */}
+              {/* 1. 뒷배경 슬라이더 */}
               <div className="fixed inset-0 z-0 bg-slate-50">
                   {sliderImages.map((img, idx) => (
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-40 z-10' : 'opacity-0 z-0'}`} alt="slide" />
@@ -311,8 +311,8 @@ export default function HotelWebsite({ domain }) {
                   <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
               </div>
 
-              {/* 2. 메인 검색 필터 */}
-              <div className="relative z-20 w-full max-w-5xl flex flex-col items-center mt-4">
+              {/* 2. 💡 [수정] 레이어 높이를 z-[60]으로 확 올려서 드롭다운이 뒤로 숨지 않게 합니다. */}
+              <div className="relative z-[60] w-full max-w-5xl flex flex-col items-center mt-4">
                   <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
@@ -336,6 +336,13 @@ export default function HotelWebsite({ domain }) {
                                       <div><p className="font-bold text-sm">{t.children}</p><p className="text-[10px] text-slate-500">{t.age2_12}</p></div>
                                       <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setKids(Math.max(0, kids-1)); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setKids(kids+1); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                   </div>
+                                  
+                                  {/* 💡 [신규] 영유아(Free) 기분 좋은 문구 추가! */}
+                                  <div className="flex justify-between items-center bg-emerald-50/50 p-2 -mx-2 rounded-lg border border-emerald-100/50">
+                                      <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] text-emerald-600/80">{t.under2}</p></div>
+                                      <div className="font-black text-emerald-600 bg-white px-3 py-1 rounded-full text-xs border border-emerald-100 shadow-sm uppercase tracking-widest">Free</div>
+                                  </div>
+
                                   <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
                                       <div><p className="font-bold text-sm">{t.rooms}</p></div>
                                       <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setRoomCount(Math.max(1, roomCount-1)); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setRoomCount(roomCount+1); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
@@ -353,9 +360,9 @@ export default function HotelWebsite({ domain }) {
                       </button>
                   </div>
 
-                  {/* 💡 [수정 반영] 불필요한 대기창 삭제, Search 클릭 시에만 리스트 표시 */}
+                  {/* 💡 [수정] 아래 결과창의 레이어는 z-10으로 낮춰서 드롭다운 아래로 깔리게 합니다. */}
                   {hasSearched && (
-                      <div className="w-full relative z-20 mt-8">
+                      <div className="w-full relative z-10 mt-8">
                           <ErrorBoundary>
                               <RoomList 
                                   hotelCode={hotelCode} 
@@ -396,13 +403,13 @@ export default function HotelWebsite({ domain }) {
                             </div>
                             <div>
                                 <h3 className="text-2xl md:text-3xl font-black mb-3 text-slate-800">{activeRoom.name}</h3>
-                                {/* 💡 [요청 반영] 태그 순서 완벽 변경: 사이즈 -> 침대 -> 인원 */}
                                 <div className="flex flex-wrap gap-2 md:gap-4 mb-4">
-                                    {activeRoom.size && <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">📏 {activeRoom.size} sq.m</span>}
+                                    {/* 💡 [수정] 데이터 경로를 완벽하게 찾아 사이즈를 띄워줍니다. */}
+                                    {(activeRoom.size || activeRoom.roomConfig?.size) && <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">📏 {activeRoom.size || activeRoom.roomConfig?.size} sq.m</span>}
                                     <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">🛏️ {activeRoom.roomConfig?.bedType || t.standardBed}</span>
-                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests} {t.guests}</span>
+                                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests || 2} {t.guests}</span>
                                 </div>
-                                <p className="text-slate-600 leading-relaxed font-medium text-sm md:text-base whitespace-pre-wrap">{activeRoom.description}</p>
+                                <p className="text-slate-600 leading-relaxed font-medium text-sm md:text-base whitespace-pre-wrap">{activeRoom.description || activeRoom.roomConfig?.description}</p>
                             </div>
                         </div>
                         <div className="lg:col-span-3 theme-bg-light p-5 md:p-8 rounded-2xl md:rounded-3xl border theme-border flex flex-col justify-center h-full">
