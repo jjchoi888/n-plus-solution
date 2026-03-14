@@ -118,6 +118,7 @@ export default function HotelWebsite({ domain }) {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false); 
+  const [showRoomListModal, setShowRoomListModal] = useState(false); // 💡 장바구니 모달창 스위치
   const [alertMessage, setAlertMessage] = useState('');
 
   const [firstName, setFirstName] = useState('');
@@ -299,11 +300,77 @@ export default function HotelWebsite({ domain }) {
         )}
 
         {/* 💡 [에러 추적기 탑재] 통합 장바구니 예약 페이지 */}
+        {/* 💡 [완성] 개별 웹사이트 전용 BOOK(장바구니 검색) 화면 */}
         {activeMenu === 'BOOK' && (
-          <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
-              <ErrorBoundary>
-                  <RoomList hotelCode={hotelCode} />
-              </ErrorBoundary>
+          <section className="relative pt-32 pb-20 px-4 md:px-6 w-full flex-grow min-h-[85vh] flex flex-col items-center justify-center animate-fade-in-up overflow-hidden">
+              
+              {/* 1. 💡 뒷배경 은은한 슬라이더 적용 (opacity-30 및 하얀색 오버레이로 글씨가 잘 보이게 처리) */}
+              <div className="absolute inset-0 z-0 bg-slate-50">
+                  {sliderImages.map((img, idx) => (
+                      <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-40 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                  ))}
+                  <div className="absolute inset-0 bg-white/50 z-10 pointer-events-none"></div>
+              </div>
+
+              {/* 2. 메인 검색 필터 (z-index를 높여서 사진 위에 뜨게 함) */}
+              <div className="relative z-20 w-full max-w-5xl flex flex-col items-center">
+                  
+                  {/* 💡 Destination 및 쓸데없는 타이틀 완전 삭제됨 */}
+                  <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
+                      
+                      <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
+                          <input type="date" value={checkIn} onChange={e=>setCheckIn(e.target.value)} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                      </div>
+                      
+                      <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
+                          <input type="date" value={checkOut} onChange={e=>setCheckOut(e.target.value)} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                      </div>
+                      
+                      <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.guestsRooms}</label>
+                          <div className="font-black text-slate-800 text-base md:text-lg truncate">{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''} · {roomCount} {t.room}</div>
+                          
+                          {/* 💡 검색 바 전용 인원수 설정 팝업창 */}
+                          {showGuestPicker && (
+                              <div className="absolute top-full left-0 md:left-auto md:right-0 w-[300px] mt-4 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-50 animate-fade-in space-y-5 text-slate-800 cursor-default" onClick={e => e.stopPropagation()}>
+                                  <div className="flex justify-between items-center">
+                                      <div><p className="font-bold text-sm">{t.adults}</p><p className="text-[10px] text-slate-500">{t.age13}</p></div>
+                                      <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setAdults(Math.max(1, adults-1));}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{adults}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setAdults(adults+1);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                      <div><p className="font-bold text-sm">{t.children}</p><p className="text-[10px] text-slate-500">{t.age2_12}</p></div>
+                                      <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setKids(Math.max(0, kids-1));}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setKids(kids+1);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                  </div>
+                                  <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
+                                      <div><p className="font-bold text-sm">{t.rooms}</p></div>
+                                      <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setRoomCount(Math.max(1, roomCount-1));}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setRoomCount(roomCount+1);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                  </div>
+                                  <button type="button" onClick={(e)=>{e.stopPropagation(); setShowGuestPicker(false);}} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl mt-2 hover:bg-slate-800 transition-colors">{t.done}</button>
+                              </div>
+                          )}
+                      </div>
+
+                      {/* 💡 하드코딩된 초록색 대신, 지점별 테마 색상(theme-bg) 적용 */}
+                      {/* 💡 Search 버튼 클릭 시 장바구니 모달창 호출 */}
+                      <button onClick={() => {
+                          if(!checkIn || !checkOut) return setAlertMessage(lang === 'ko' ? "체크인과 체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
+                          setShowRoomListModal(true);
+                      }} className="w-full md:w-auto theme-bg theme-hover text-white px-10 py-4 md:py-5 rounded-2xl md:rounded-full font-black text-lg transition-transform active:scale-95 shadow-md m-1">
+                          Search
+                      </button>
+                  </div>
+
+                  {/* 💡 모달이 뜨는 구조이므로, 배경의 대기창을 은은하고 깔끔하게 수정 */}
+                  <div className="mt-8 md:mt-16 w-full text-center">
+                      <div className="bg-white/20 backdrop-blur-md border border-white/40 rounded-3xl py-12 md:py-16 shadow-sm flex flex-col items-center justify-center max-w-2xl mx-auto transition-all hover:bg-white/30">
+                          <p className="text-slate-900 font-black text-lg md:text-xl drop-shadow-md whitespace-pre-wrap leading-relaxed">
+                              {lang === 'ko' ? '검색 조건 설정 후 Search 버튼을 누르시면\n예약 가능한 객실 장바구니가 팝업됩니다.' : 'Set your dates and click Search\nto view available rooms.'}
+                          </p>
+                      </div>
+                  </div>
+              </div>
           </section>
         )}
 
@@ -674,6 +741,30 @@ export default function HotelWebsite({ domain }) {
             </div>
             );
         })()}
+         
+        {/* 💡 [신규] 장바구니(RoomList) 모달창 (Search 버튼 클릭 시 등장) */}
+        {showRoomListModal && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 md:p-6 animate-fade-in" onClick={() => setShowRoomListModal(false)}>
+                <div className="bg-slate-50 w-full max-w-[1400px] h-[95vh] md:h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col relative" onClick={e => e.stopPropagation()}>
+                    
+                    <div className="bg-white p-4 md:p-5 flex justify-between items-center border-b border-slate-200 shrink-0 z-10 shadow-sm">
+                        <h2 className="text-xl md:text-2xl font-black theme-text flex items-center gap-2">
+                            <span>🛒</span> {lang === 'ko' ? '예약 가능한 객실 (장바구니)' : 'Available Rooms & Cart'}
+                        </h2>
+                        <button onClick={() => setShowRoomListModal(false)} className="w-10 h-10 rounded-full bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-500 font-black text-xl flex items-center justify-center transition-colors">
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto bg-slate-50 relative">
+                        <ErrorBoundary>
+                            {/* 💡 기존 RoomList(통합예약/장바구니) 컴포넌트를 모달 안에 100% 렌더링! */}
+                            <RoomList hotelCode={hotelCode} />
+                        </ErrorBoundary>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {/* 💡 전역 알림(Alert) 커스텀 모달창 */}
         {alertMessage && (
