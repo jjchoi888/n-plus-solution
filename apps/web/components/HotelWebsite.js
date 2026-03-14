@@ -758,8 +758,15 @@ export default function HotelWebsite({ domain }) {
                     
                     <div className="flex-1 overflow-y-auto bg-slate-50 relative">
                         <ErrorBoundary>
-                            {/* 💡 기존 RoomList(통합예약/장바구니) 컴포넌트를 모달 안에 100% 렌더링! */}
-                            <RoomList hotelCode={hotelCode} />
+                            {/* 💡 [핵심] RoomList에 호텔코드, 언어, 날짜, 인원수를 완벽하게 넘겨줍니다! */}
+                            <RoomList 
+                                hotelCode={hotelCode} 
+                                lang={lang} 
+                                checkIn={checkIn} 
+                                checkOut={checkOut} 
+                                adults={adults} 
+                                kids={kids} 
+                            />
                         </ErrorBoundary>
                     </div>
                 </div>

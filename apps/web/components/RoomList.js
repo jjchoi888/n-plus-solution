@@ -8,12 +8,15 @@ const ALL_COUNTRIES = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
+// 💡 4개 국어 지원
 const translations = {
-  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount" },
-  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액" }
+  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
+  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
+  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
+  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
 };
 
-// 💡 [신규] 호텔 코드에 따른 지점 이름 변환기 (위치 뱃지용)
+// 지점 이름 변환기
 const getHotelName = (code) => {
     if (!code || code === 'ALL') return null;
     const mapping = {
@@ -37,8 +40,12 @@ const RoomImageCarousel = ({ images, name }) => {
   return <img src={images[currentIndex]} alt={name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" key={currentIndex} />;
 };
 
-export default function RoomList({ rooms, searchParams, lang = 'en' }) {
+// 💡 [핵심] 외부에서 전달받는 값들 (HotelWebsite의 검색 필터와 연동됨)
+export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids }) {
   const t = translations[lang] || translations.en;
+
+  const [fetchedRooms, setFetchedRooms] = useState([]);
+  const [isFetching, setIsFetching] = useState(false);
 
   const [cart, setCart] = useState({});
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -51,35 +58,49 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
-
   const [fees, setFees] = useState({ child: 500, extraBed: 1000 });
+
+  // 💡 검색 파라미터 유연성 확보 (통합웹 vs 개별웹)
+  const effectiveCheckIn = checkIn || searchParams?.checkIn || "";
+  const effectiveCheckOut = checkOut || searchParams?.checkOut || "";
+  const effectiveAdults = adults || searchParams?.guests?.adults || 2;
+  const effectiveKids = kids || searchParams?.guests?.child || 0;
+  const effectiveHotelCode = hotelCode || searchParams?.destination || 'ALL';
 
   useEffect(() => {
     const fetchFees = async () => {
         try {
             const res = await fetch(`${BASE_URL}/api/settings/fees`);
             const data = await res.json();
-            if (data.success && data.fees) {
-                setFees({ child: data.fees.child_fee, extraBed: data.fees.extra_bed_fee });
-            }
-        } catch (e) { console.error("Failed to fetch global fees", e); }
+            if (data.success && data.fees) setFees({ child: data.fees.child_fee, extraBed: data.fees.extra_bed_fee });
+        } catch (e) {}
     };
     fetchFees();
   }, []);
 
-  const actualRooms = Array.isArray(rooms) ? rooms : (rooms?.rooms || []);
-  const actualSearchParams = searchParams || rooms?.searchParams || {};
-  if (!actualRooms || actualRooms.length === 0) return null;
+  // 💡 [핵심] 외부에서 rooms를 안 넘겨주면, 스스로 똑똑하게 서버에서 검색해옵니다! (개별웹 대응)
+  useEffect(() => {
+    if ((!rooms || rooms.length === 0) && effectiveCheckIn && effectiveCheckOut) {
+        setIsFetching(true);
+        fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checkIn: effectiveCheckIn, checkOut: effectiveCheckOut, hotel_code: effectiveHotelCode })
+        })
+        .then(res => res.json())
+        .then(data => setFetchedRooms(Array.isArray(data) ? data : []))
+        .catch(err => console.error(err))
+        .finally(() => setIsFetching(false));
+    }
+  }, [rooms, effectiveCheckIn, effectiveCheckOut, effectiveHotelCode, lang]);
 
-  const checkInDate = actualSearchParams?.checkIn || "";
-  const checkOutDate = actualSearchParams?.checkOut || "";
+  const actualRooms = (rooms && rooms.length > 0) ? rooms : fetchedRooms;
+  
   let nights = 1;
-  if (checkInDate && checkOutDate) {
-    nights = Math.ceil((new Date(checkOutDate) - new Date(checkInDate)) / (1000 * 60 * 60 * 24));
+  if (effectiveCheckIn && effectiveCheckOut) {
+    nights = Math.ceil((new Date(effectiveCheckOut) - new Date(effectiveCheckIn)) / (1000 * 60 * 60 * 24));
     if (nights <= 0) nights = 1;
   }
-
-  const childrenCount = actualSearchParams?.guests?.child || 0;
 
   const updateCart = (roomId, delta, maxCount) => {
     setCart(prev => {
@@ -92,7 +113,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
   const totalRoomsInCart = Object.values(cart).reduce((sum, count) => sum + count, 0);
   const roomBaseTotal = actualRooms.reduce((sum, room) => sum + (cart[room.id] || 0) * (room.price || 0) * nights, 0);
   
-  const totalChildFee = childrenCount * fees.child * nights;
+  const totalChildFee = effectiveKids * fees.child * nights;
   const totalExtraBedFee = extraBeds * fees.extraBed * nights;
   const subTotal = roomBaseTotal + totalChildFee + totalExtraBedFee;
 
@@ -122,11 +143,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
 
   const submitBooking = async (e) => {
     e.preventDefault();
-    if (!checkInDate || !checkOutDate) return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
+    if (!effectiveCheckIn || !effectiveCheckOut) return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
 
     setIsBooking(true);
     const dividedGrandTotal = grandTotal / totalRoomsInCart;
-    
     let bookingPayloads = [];
 
     for (const room of actualRooms) {
@@ -135,21 +155,20 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
 
       for (let i = 0; i < count; i++) {
         const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-
-        // 💡 [핵심] 예약 페이로드에 선택된 목적지(호텔 코드)를 강제 주입합니다.
-        const targetHotelCode = room.hotelCode || (actualSearchParams.destination !== 'ALL' ? actualSearchParams.destination : 'NPLUS01');
+        // 💡 통합웹일 경우 room.hotelCode 우선 사용, 아니면 개별웹의 코드를 사용
+        const targetHotelCode = room.hotelCode || effectiveHotelCode;
 
         bookingPayloads.push({
           room_type: room.name,
-          check_in_date: checkInDate,
-          check_out_date: checkOutDate,
+          check_in_date: effectiveCheckIn,
+          check_out_date: effectiveCheckOut,
           guest_name: totalRoomsInCart > 1 ? `${fullName} (${t.roomInfo} ${bookingPayloads.length + 1})` : fullName,
           nationality: formData.nationality,
           email: formData.email,
           phone: formData.phone,
           total_price: dividedGrandTotal,
           payment_method: "Credit Card",
-          hotel_code: targetHotelCode // 백엔드로 전송될 지점 코드
+          hotel_code: targetHotelCode 
         });
       }
     }
@@ -175,9 +194,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
     }
   };
 
+  if (isFetching) return <div className="p-20 text-center text-emerald-600 font-bold text-xl animate-pulse">Searching available rooms...</div>;
+
   return (
     <>
-      <div className="w-full max-w-5xl mt-16 animate-fade-in-up pb-32 relative">
+      <div className="w-full max-w-5xl mx-auto mt-8 animate-fade-in-up pb-32 relative">
         <div className="flex justify-between items-end border-b pb-2 mb-6 text-left">
           <h3 className="text-2xl font-bold text-gray-800">{t.searchResults} <span className="text-emerald">({actualRooms.length})</span></h3>
         </div>
@@ -185,16 +206,17 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {actualRooms.map((room) => {
             const currentCount = cart[room.id] || 0;
-            // 💡 현재 렌더링될 방의 지점 위치 정보 도출
-            const locationName = getHotelName(room.hotelCode || actualSearchParams?.destination);
+            const locationName = getHotelName(room.hotelCode);
+            // 💡 [핵심] 통합웹(ALL)일 때만 위치 뱃지를 표시하고, 개별웹에서는 숨깁니다!
+            const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
             return (
               <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'border-emerald shadow-emerald/20' : 'border-gray-100 hover:shadow-2xl'}`}>
                 <div className="h-48 bg-gray-100 w-full relative overflow-hidden">
                   <RoomImageCarousel images={room.images} name={room.name} />
                   
-                  {/* 💡 [신규] 통합 검색 시 방이 어느 지점인지 알려주는 뱃지 표시 */}
-                  {locationName && (
+                  {/* 지점 뱃지 (통합웹에서만 보임) */}
+                  {showLocationBadge && (
                      <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">
                         {locationName}
                      </div>
@@ -203,10 +225,18 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
                   {currentCount > 0 && (<div className="absolute top-3 right-3 bg-emerald text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} {lang === 'ko' ? '개 선택됨' : 'Selected'}</div>)}
                 </div>
                 <div className="p-6 flex flex-col flex-grow text-left">
-                  <h4 className="text-xl font-black text-gray-900 mb-1">{room.name}</h4>
+                  <h4 className="text-xl font-black text-gray-900 mb-3">{room.name}</h4>
                   
-                  <p className="text-[10px] md:text-[11px] font-bold text-gray-500 mb-4 uppercase tracking-wider bg-gray-50 inline-block px-2 py-1 rounded-lg w-fit border border-gray-100 shadow-sm">
-                    🛏️ {room.roomConfig?.bedType || '1 King Bed'} &nbsp;•&nbsp; 📐 {room.roomConfig?.size || '32 sqm'}
+                  {/* 💡 [요청 반영] 사이즈 -> 침대타입 -> 최대인원 순서 적용 */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                      {room.size && <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">📏 {room.size} {t.size}</span>}
+                      <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">🛏️ {room.roomConfig?.bedType || 'Standard Bed'}</span>
+                      <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">👥 {t.maxGuests} {room.maxGuests}</span>
+                  </div>
+
+                  {/* 💡 [요청 반영] 줄바꿈(엔터)이 그대로 적용되는 객실 설명 */}
+                  <p className="text-xs text-gray-500 mb-5 whitespace-pre-wrap leading-relaxed line-clamp-3 hover:line-clamp-none transition-all cursor-pointer" title="Click to expand">
+                      {room.roomConfig?.description || room.description || ''}
                   </p>
 
                   <div className="mb-4"><span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-md text-xs font-black tracking-wider shadow-sm inline-block">🔥 {room.availableCount} {t.roomsLeft}</span></div>
@@ -227,7 +257,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
         </div>
 
         {totalRoomsInCart > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 animate-fade-in-up">
+          <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-[160] animate-fade-in-up rounded-t-3xl">
             <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex flex-col text-left">
                 <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
@@ -241,7 +271,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
         )}
 
         {isCheckoutOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] p-4 animate-fade-in">
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
               <div className="bg-emerald px-6 py-4 flex justify-between items-center text-white sticky top-0 z-10">
                 <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
@@ -268,9 +298,9 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nationality</label>
                         <select required value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none bg-white">
                           <option value="">Select Country...</option>
-                          {TOP_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                          {TOP_COUNTRIES.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
                           <option disabled>──────────</option>
-                          {ALL_COUNTRIES.filter(c => !TOP_COUNTRIES.includes(c)).map(c => <option key={c} value={c}>{c}</option>)}
+                          {ALL_COUNTRIES.filter(c => !TOP_COUNTRIES.includes(c)).map(c => <option key={`all_${c}`} value={c}>{c}</option>)}
                         </select>
                       </div>
                     </div>
@@ -315,8 +345,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
                   
                   <div className="space-y-4 text-sm text-emerald-800 flex-grow">
                     <div className="flex justify-between bg-white p-3 rounded-lg shadow-sm border border-emerald-100">
-                      <p className="flex flex-col text-left"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-in</span> <span className="font-bold">{checkInDate || "-"}</span></p>
-                      <p className="flex flex-col text-right"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-out</span> <span className="font-bold">{checkOutDate || "-"}</span></p>
+                      <p className="flex flex-col text-left"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-in</span> <span className="font-bold">{effectiveCheckIn || "-"}</span></p>
+                      <p className="flex flex-col text-right"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-out</span> <span className="font-bold">{effectiveCheckOut || "-"}</span></p>
                     </div>
                     
                     <div className="space-y-3 pt-2">
@@ -331,11 +361,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
                       ))}
                     </div>
 
-                    {(childrenCount > 0 || extraBeds > 0) && (
+                    {(effectiveKids > 0 || extraBeds > 0) && (
                       <div className="border-t border-emerald-200 pt-3 space-y-2">
-                        {childrenCount > 0 && (
+                        {effectiveKids > 0 && (
                           <div className="flex justify-between text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">
-                            <span>{t.childFee} (x{childrenCount})</span>
+                            <span>{t.childFee} (x{effectiveKids})</span>
                             <span>+ ₱{totalChildFee.toLocaleString()}</span>
                           </div>
                         )}
@@ -383,16 +413,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
       </div>
 
       {modal.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[200] p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[250] p-4 animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-center transform transition-all scale-100">
-            <div className={`p-8 ${modal.type === 'success' ? 'bg-emerald' : modal.type === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`}>
+            <div className={`p-8 ${modal.type === 'success' ? 'bg-emerald-500' : modal.type === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`}>
                 <span className="text-6xl drop-shadow-lg">{modal.type === 'success' ? '✅' : modal.type === 'warning' ? '⚠️' : '❌'}</span>
             </div>
             <div className="p-8 text-center">
               <h3 className="text-xl font-black text-gray-800 mb-3">{modal.title}</h3>
               <p className="text-gray-500 text-sm mb-6 leading-relaxed whitespace-pre-wrap">{modal.message}</p>
               
-              {/* 💡 예약번호 (Highlight) 구역 */}
               {modal.highlight && (
                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-8 shadow-inner">
                     <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">Your Reservation ID</p>
@@ -402,7 +431,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en' }) {
                  </div>
               )}
 
-              <button onClick={() => setModal({ show: false, title: '', message: '', highlight: '', type: 'warning' })} className={`w-full text-white font-bold py-3.5 rounded-xl shadow-md transition-colors text-lg ${modal.type === 'success' ? 'bg-emerald hover:bg-emerald-dark' : modal.type === 'warning' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-600 hover:bg-red-700'}`}>
+              <button onClick={() => setModal({ show: false, title: '', message: '', highlight: '', type: 'warning' })} className={`w-full text-white font-bold py-3.5 rounded-xl shadow-md transition-colors text-lg ${modal.type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700' : modal.type === 'warning' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-600 hover:bg-red-700'}`}>
                 {t.ok}
               </button>
             </div>
