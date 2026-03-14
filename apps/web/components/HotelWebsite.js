@@ -353,16 +353,8 @@ export default function HotelWebsite({ domain }) {
                       </button>
                   </div>
 
-                  {/* 💡 [핵심] 검색 전에는 안내창, Search 버튼을 누르면 그 자리에 RoomList 렌더링! */}
-                  {!hasSearched ? (
-                      <div className="mt-8 md:mt-16 w-full text-center relative z-20">
-                          <div className="bg-white/40 backdrop-blur-md border border-white/50 rounded-3xl py-16 md:py-24 shadow-sm flex flex-col items-center justify-center max-w-2xl mx-auto transition-all hover:bg-white/60">
-                              <p className="text-slate-800 font-black text-lg md:text-xl drop-shadow-sm whitespace-pre-wrap leading-relaxed">
-                                  {lang === 'ko' ? '검색 조건 설정 후 Search 버튼을 누르시면\n아래에 예약 가능한 객실이 표시됩니다.' : 'Set your dates and click Search\nto view available rooms below.'}
-                              </p>
-                          </div>
-                      </div>
-                  ) : (
+                  {/* 💡 [수정 반영] 불필요한 대기창 삭제, Search 클릭 시에만 리스트 표시 */}
+                  {hasSearched && (
                       <div className="w-full relative z-20 mt-8">
                           <ErrorBoundary>
                               <RoomList 
