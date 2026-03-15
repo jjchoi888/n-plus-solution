@@ -318,12 +318,21 @@ export default function HotelWebsite({ domain }) {
                       
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
-                          <input type="date" value={checkIn} onChange={e=>{setCheckIn(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                          <input type="date" value={checkIn} min={new Date().toLocaleDateString('en-CA')} onChange={e=>{
+                              const newIn = e.target.value;
+                              setCheckIn(newIn); 
+                              setHasSearched(false);
+                              // 💡 체크인 날짜를 선택했을 때, 체크아웃이 비어있거나 체크인보다 앞서면 자동으로 다음 날로 세팅!
+                              if (!checkOut || newIn >= checkOut) {
+                                  const d = new Date(newIn); d.setDate(d.getDate() + 1);
+                                  setCheckOut(d.toISOString().split('T')[0]);
+                              }
+                          }} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
                       </div>
                       
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
-                          <input type="date" value={checkOut} onChange={e=>{setCheckOut(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                          <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : new Date().toLocaleDateString('en-CA')} onChange={e=>{setCheckOut(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
                       </div>
                       
                       <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
@@ -431,11 +440,19 @@ export default function HotelWebsite({ domain }) {
                                 <div className="flex flex-col gap-4">
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
-                                        <input type="date" value={checkIn} onChange={e=>setCheckIn(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
+                                        <input type="date" value={checkIn} min={new Date().toLocaleDateString('en-CA')} onChange={e=>{
+                                            const newIn = e.target.value;
+                                            setCheckIn(newIn);
+                                            // 💡 체크인 선택 시 자동 보정
+                                            if (!checkOut || newIn >= checkOut) {
+                                                const d = new Date(newIn); d.setDate(d.getDate() + 1);
+                                                setCheckOut(d.toISOString().split('T')[0]);
+                                            }
+                                        }} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                     </div>
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkOut}</label>
-                                        <input type="date" value={checkOut} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
+                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : new Date().toLocaleDateString('en-CA')} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                     </div>
                                 </div>
 
@@ -771,8 +788,8 @@ export default function HotelWebsite({ domain }) {
             </div>
         )}
 
-        {/* 📱 푸터 (예약창이 열려있지 않을 때만 표시) */}
-        {!isBookingMode && (
+        {/* 📱 푸터 (예약 장바구니가 열려있지 않을 때만 표시) */}
+        {!hasSearched && (
           <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="hidden md:block flex-1"></div>
