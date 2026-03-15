@@ -97,44 +97,22 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
     setIsMapOpen(false); // 모달 닫기
   };
 
-  const handleSearch = async (e) => {
+  // 💡 [핵심 수정] 낡은 검색 API 호출을 지우고, 부모(MainPortal)에게 날짜/인원/지점 파라미터만 깔끔하게 토스합니다!
+  const handleSearch = (e) => {
     e.preventDefault();
     if (!checkIn || !checkOut) {
       setModal({ show: true, title: t.error, message: t.selectDates, type: 'error' });
       return;
     }
-
-    try {
-      setIsLoading(true);
-      const availableRooms = await roomApi.getAvailableRooms(checkIn, checkOut, lang, destination.code);
-      
-      if (!availableRooms || availableRooms.length === 0) {
-          setModal({ show: true, title: t.fullyBooked, message: t.noRooms, type: 'full' });
-          setIsLoading(false);
-          return; 
-      }
-
-      const totalAvailable = availableRooms.reduce((sum, r) => sum + (r.availableCount || 0), 0);
-      
-      if (totalAvailable > 0 && totalAvailable < counts.room) {
-          const availableDetails = availableRooms.map(r => `• ${r.name}: ${r.availableCount} ${t.room}`).join('\n');
-          const partialMessage = `${lang === 'ko' ? `요청하신 ${counts.room}개의 객실을 모두 준비하기 어렵습니다.` : `Not enough rooms available for ${counts.room} rooms request.`}\n\n[ ${lang === 'ko' ? '예약 가능 객실 현황' : 'Available Rooms'} ]\n${availableDetails}\n\n* Extra Bed: ₱${fees.extraBed.toLocaleString()} / night`;
-          
-          setModal({ show: true, title: lang === 'ko' ? '부분 예약 안내' : 'Partial Availability', message: partialMessage, type: 'partial', availableRoomsData: availableRooms });
-          setIsLoading(false);
-          return;
-      }
-      
-      onSearchResults({
-        rooms: availableRooms,
-        searchParams: { checkIn, checkOut, guests: counts, destination: destination.code }
-      });
-    } catch (error) {
-      console.error("Search failed:", error);
-      setModal({ show: true, title: t.error, message: t.fetchError, type: 'error' });
-    } finally {
-      setIsLoading(false);
-    }
+    
+    // RoomList가 알아들을 수 있도록 데이터 포장해서 전달
+    onSearchResults({
+      checkIn,
+      checkOut,
+      adults: counts.adults,
+      kids: counts.child,
+      destination: destination.code
+    });
   };
 
   return (

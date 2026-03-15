@@ -28,12 +28,26 @@ export default function MainPortal() {
           Experience world-class hospitality seamlessly integrated with our advanced PMS technology.
         </p>
         
-        <BookingBar lang={lang} onSearchResults={setSearchData} />
+        {/* 💡 [수정] BookingBar가 들어있는 박스에 z-[60]을 주어 드롭다운이 뒤로 숨는 것을 원천 차단합니다. */}
+        <div className="relative z-[60] w-full">
+          <BookingBar lang={lang} onSearchResults={setSearchData} />
+        </div>
       </div>
 
-      <div className="w-full max-w-6xl mt-16 animate-slide-up">
-        <RoomList lang={lang} searchData={searchData} />
-      </div>
+      {/* 💡 [수정] 검색을 눌렀을 때(searchData가 있을 때)만 RoomList를 띄우고, 파라미터를 정확히 꽂아줍니다! */}
+      {searchData && (
+        <div className="w-full max-w-6xl mt-16 animate-slide-up relative z-10 pb-32">
+          <RoomList 
+            hotelCode={searchData.destination} 
+            lang={lang} 
+            checkIn={searchData.checkIn} 
+            checkOut={searchData.checkOut} 
+            adults={searchData.adults} 
+            kids={searchData.kids} 
+          />
+        </div>
+      )}
     </main>
   );
 }
+        
