@@ -16,7 +16,6 @@ const translations = {
   ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
 };
 
-// 지점 이름 변환기
 const getHotelName = (code) => {
     if (!code || code === 'ALL') return null;
     const mapping = {
@@ -40,7 +39,6 @@ const RoomImageCarousel = ({ images, name }) => {
   return <img src={images[currentIndex]} alt={name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" key={currentIndex} />;
 };
 
-// 💡 [핵심] 외부에서 전달받는 값들 (HotelWebsite의 검색 필터와 연동됨)
 export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids }) {
   const t = translations[lang] || translations.en;
 
@@ -60,7 +58,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [fees, setFees] = useState({ child: 500, extraBed: 1000 });
 
-  // 💡 검색 파라미터 유연성 확보 (통합웹 vs 개별웹)
   const effectiveCheckIn = checkIn || searchParams?.checkIn || "";
   const effectiveCheckOut = checkOut || searchParams?.checkOut || "";
   const effectiveAdults = adults || searchParams?.guests?.adults || 2;
@@ -78,19 +75,86 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     fetchFees();
   }, []);
 
-  // 💡 [핵심] 외부에서 rooms를 안 넘겨주면, 스스로 똑똑하게 서버에서 검색해옵니다! (개별웹 대응)
+  // 💡 [핵심 개선] Frontdesk의 'Smart Search' 로직을 웹 포털(RoomList)에 완벽 이식!
   useEffect(() => {
     if ((!rooms || rooms.length === 0) && effectiveCheckIn && effectiveCheckOut) {
         setIsFetching(true);
-        fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ checkIn: effectiveCheckIn, checkOut: effectiveCheckOut, hotel_code: effectiveHotelCode })
-        })
-        .then(res => res.json())
-        .then(data => setFetchedRooms(Array.isArray(data) ? data : []))
-        .catch(err => console.error(err))
-        .finally(() => setIsFetching(false));
+        
+        const fetchSmartAvailability = async () => {
+            try {
+                // 1. 객실 타입, 실제 물리적 방 목록, 예약 목록을 한 번에 가져옵니다. (Smart Search 로직)
+                const [typesRes, physicalRes, rsvRes] = await Promise.all([
+                    fetch(`${BASE_URL}/api/admin/room-types?hotel=${effectiveHotelCode}`),
+                    fetch(`${BASE_URL}/api/rooms?hotel=${effectiveHotelCode}`),
+                    fetch(`${BASE_URL}/api/reservations?hotel=${effectiveHotelCode}`)
+                ]);
+                
+                // 만약 서버에서 권한 없음으로 막으면 옛날 API로 폴백
+                if (!typesRes.ok || !physicalRes.ok || !rsvRes.ok) throw new Error("API Auth blocked, falling back.");
+
+                const typesData = await typesRes.json();
+                const physicalRooms = await physicalRes.json();
+                const reservations = await rsvRes.json();
+                
+                const roomTypes = typesData.rooms || typesData || [];
+                const roomsList = Array.isArray(physicalRooms) ? physicalRooms : [];
+                const rsvList = Array.isArray(reservations) ? reservations : [];
+
+                const checkInD = new Date(effectiveCheckIn);
+                const checkOutD = new Date(effectiveCheckOut);
+
+                // 2. 날짜가 겹치는 유효한 예약만 걸러냅니다.
+                const overlappingRsv = rsvList.filter(res => {
+                    if (res.status === 'CANCELLED' || res.status === 'CHECKED_OUT') return false;
+                    const resIn = new Date(res.check_in_date);
+                    const resOut = new Date(res.check_out_date);
+                    return resIn < checkOutD && resOut > checkInD;
+                });
+
+                // 3. 타입별로 "실제 물리적 방 개수 - 겹치는 예약 개수"를 정밀 계산합니다.
+                const smartRooms = roomTypes.map(rt => {
+                    const typeName = typeof rt.name === 'object' ? rt.name.en : rt.name;
+                    
+                    // 물리적 방 중 점검중(MAINTENANCE)이 아닌 진짜 방 개수
+                    const totalPhysical = roomsList.filter(pr => pr.type === typeName && pr.status !== 'MAINTENANCE').length;
+                    
+                    // 해당 타입에 겹치는 예약 개수
+                    const totalBooked = overlappingRsv.filter(r => r.room_type === typeName).length;
+                    
+                    // 💡 [정답] 실제 남은 방 계산
+                    const available = Math.max(0, totalPhysical - totalBooked);
+
+                    return {
+                        id: rt.id,
+                        name: typeName,
+                        price: rt.basePrice || rt.price || 0,
+                        images: rt.images || [],
+                        availableCount: available, // 스마트 계산값 적용!
+                        roomConfig: rt.roomConfig || {},
+                        maxGuests: rt.roomConfig?.maxGuests || 2,
+                        size: rt.roomConfig?.size || '',
+                        description: rt.roomConfig?.description || '',
+                        hotelCode: rt.hotel_code || effectiveHotelCode
+                    };
+                }).filter(r => r.availableCount > 0); // 0개 남은 방은 숨김
+
+                setFetchedRooms(smartRooms);
+            } catch (error) {
+                console.warn("Smart Search fallback triggered:", error);
+                // 💡 만약 권한 에러 등으로 위 로직이 막히면 낡은 API로 안전하게 롤백
+                const res = await fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ checkIn: effectiveCheckIn, checkOut: effectiveCheckOut, hotel_code: effectiveHotelCode })
+                });
+                const data = await res.json();
+                setFetchedRooms(Array.isArray(data) ? data : []);
+            } finally {
+                setIsFetching(false);
+            }
+        };
+
+        fetchSmartAvailability();
     }
   }, [rooms, effectiveCheckIn, effectiveCheckOut, effectiveHotelCode, lang]);
 
@@ -155,7 +219,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
       for (let i = 0; i < count; i++) {
         const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-        // 💡 통합웹일 경우 room.hotelCode 우선 사용, 아니면 개별웹의 코드를 사용
         const targetHotelCode = room.hotelCode || effectiveHotelCode;
 
         bookingPayloads.push({
@@ -207,7 +270,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           {actualRooms.map((room) => {
             const currentCount = cart[room.id] || 0;
             const locationName = getHotelName(room.hotelCode);
-            // 💡 [핵심] 통합웹(ALL)일 때만 위치 뱃지를 표시하고, 개별웹에서는 숨깁니다!
             const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
             return (
@@ -215,7 +277,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 <div className="h-48 bg-gray-100 w-full relative overflow-hidden">
                   <RoomImageCarousel images={room.images} name={room.name} />
                   
-                  {/* 지점 뱃지 (통합웹에서만 보임) */}
                   {showLocationBadge && (
                      <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">
                         {locationName}
@@ -227,15 +288,12 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 <div className="p-6 flex flex-col flex-grow text-left">
                   <h4 className="text-xl font-black text-gray-900 mb-3">{room.name}</h4>
                   
-                  {/* 💡 [요청 반영] 사이즈 -> 침대타입 -> 최대인원 순서 적용 */}
                   <div className="flex flex-wrap gap-2 mb-3">
-                      {/* 💡 [수정] RoomList에서도 사이즈를 완벽하게 표시 */}
                       {(room.size || room.roomConfig?.size) && <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">📏 {room.size || room.roomConfig?.size} {t.size}</span>}
                       <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">🛏️ {room.roomConfig?.bedType || 'Standard Bed'}</span>
                       <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100 text-[10px] md:text-xs font-bold shadow-sm">👥 {t.maxGuests} {room.maxGuests || 2}</span>
                   </div>
 
-                  {/* 💡 [요청 반영] 줄바꿈(엔터)이 그대로 적용되는 객실 설명 */}
                   <p className="text-xs text-gray-500 mb-5 whitespace-pre-wrap leading-relaxed line-clamp-3 hover:line-clamp-none transition-all cursor-pointer" title="Click to expand">
                       {room.roomConfig?.description || room.description || ''}
                   </p>
@@ -282,7 +340,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 
                 <div className="flex-1 space-y-6 text-left">
                   
-                  {/* Guest Details */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{t.guestDetails}</h3>
                     
@@ -307,7 +364,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  {/* Extra Options */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.extraOptions}</h3>
                     <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
@@ -323,14 +379,13 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  {/* Payment Method */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
                       <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" required placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={e => setFormData({...formData, cardNumber: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none font-mono" /></div>
                       <div className="grid grid-cols-2 gap-4 text-left">
                         <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" required placeholder="MM/YY" value={formData.expiry} onChange={e => setFormData({...formData, expiry: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center" /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({...formData, cvv: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center" /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({...formData, cvv: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center tracking-widest" /></div>
                       </div>
                     </div>
                   </div>
@@ -340,7 +395,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                   </button>
                 </div>
 
-                {/* 요약 영역 */}
                 <div className="w-full lg:w-80 bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left">
                   <h3 className="text-lg font-bold text-emerald-900 mb-4 border-b border-emerald-200 pb-2 text-left">{t.summary}</h3>
                   
