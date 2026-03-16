@@ -9,6 +9,17 @@ const translations = {
 
 const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
 
+// 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
+const getHotelDate = (offsetDays = 0) => {
+    const now = new Date();
+    if (now.getHours() < 12) now.setDate(now.getDate() - 1);
+    now.setDate(now.getDate() + offsetDays);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // 🗺️ 1. 필리핀 Region -> City/Municipal 계층형 데이터 (호텔 주소 포함)
 const PH_LOCATIONS = [
   {
@@ -150,12 +161,14 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
           <div className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[22%]">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{t.checkIn}</label>
-            <input type="date" className="w-full text-gray-800 font-bold focus:outline-none bg-transparent cursor-pointer" required value={checkIn} min={new Date().toLocaleDateString('en-CA')} onChange={handleCheckInChange} />
+            {/* 💡 min 속성을 getHotelDate(0)으로 변경하여 낮 12시 이전에는 어제 날짜도 선택 가능하도록 허용 */}
+            <input type="date" className="w-full text-gray-800 font-bold focus:outline-none bg-transparent cursor-pointer" required value={checkIn} min={getHotelDate(0)} onChange={handleCheckInChange} />
           </div>
 
           <div className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[22%]">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{t.checkOut}</label>
-            <input type="date" className="w-full text-gray-800 font-bold focus:outline-none bg-transparent cursor-pointer" required value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : new Date().toLocaleDateString('en-CA')} onChange={(e) => setCheckOut(e.target.value)} />
+            {/* 💡 여기도 기본 min 값을 getHotelDate(0)으로 적용 */}
+            <input type="date" className="w-full text-gray-800 font-bold focus:outline-none bg-transparent cursor-pointer" required value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={(e) => setCheckOut(e.target.value)} />
           </div>
 
           <div className="relative flex flex-col px-6 py-2 w-full md:w-[25%]" ref={guestRef}>

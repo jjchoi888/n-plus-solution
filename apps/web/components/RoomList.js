@@ -8,7 +8,6 @@ const ALL_COUNTRIES = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
-// 💡 4개 국어 지원
 const translations = {
   en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
   ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
@@ -75,117 +74,25 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     fetchFees();
   }, []);
 
-  // 💡 [핵심 개선] 통합웹(ALL) 통신 에러 방지 및 Smart Search 완벽 이식
+  // 💡 [핵심 복구] 무거운 반복 통신을 제거하고, 서버에 딱 한 번만 물어보도록 롤백!
   useEffect(() => {
     if ((!rooms || rooms.length === 0) && effectiveCheckIn && effectiveCheckOut) {
         setIsFetching(true);
-        
-        const fetchSmartAvailability = async () => {
-            try {
-                // 💡 1. 통합웹(ALL)일 경우 에러가 나지 않도록 개별 지점 코드로 쪼개서 통신합니다.
-                const targetHotels = effectiveHotelCode === 'ALL' 
-                    ? ['NPLUS01', 'NPLUS02', 'NPLUS03', 'NPLUS04', 'NPLUS05', 'CEBU', 'BORACAY'] 
-                    : [effectiveHotelCode];
-                
-                let allSmartRooms = [];
-                let hasSuccess = false; // 하나라도 성공했는지 추적
-
-                // 2. 각 지점별로 물리적 객실(rooms)과 예약(reservations)을 가져옵니다.
-                for (const hCode of targetHotels) {
-                    try {
-                        const [typesRes, physicalRes, rsvRes] = await Promise.all([
-                            fetch(`${BASE_URL}/api/admin/room-types?hotel=${hCode}`),
-                            fetch(`${BASE_URL}/api/rooms?hotel=${hCode}`),
-                            fetch(`${BASE_URL}/api/reservations?hotel=${hCode}`)
-                        ]);
-                        
-                        if (!typesRes.ok || !physicalRes.ok || !rsvRes.ok) continue; // 보안에 막혔으면 건너뜀
-                        
-                        hasSuccess = true;
-
-                        const typesData = await typesRes.json();
-                        const physicalRooms = await physicalRes.json();
-                        const reservations = await rsvRes.json();
-                        
-                        const roomTypes = typesData.rooms || typesData || [];
-                        const roomsList = Array.isArray(physicalRooms) ? physicalRooms : [];
-                        const rsvList = Array.isArray(reservations) ? reservations : [];
-
-                        const checkInD = new Date(effectiveCheckIn);
-                        const checkOutD = new Date(effectiveCheckOut);
-
-                        // 3. 날짜가 겹치는 예약만 추출
-                        const overlappingRsv = rsvList.filter(res => {
-                            if (res.status === 'CANCELLED' || res.status === 'CHECKED_OUT') return false;
-                            const resIn = new Date(res.check_in_date);
-                            const resOut = new Date(res.check_out_date);
-                            return resIn < checkOutD && resOut > checkInD;
-                        });
-
-                        // 4. 타입별로 실제 방 개수(totalPhysical) - 겹치는 예약(totalBooked) 계산
-                        roomTypes.forEach(rt => {
-                            const typeName = typeof rt.name === 'object' ? rt.name.en : rt.name;
-                            
-                            const totalPhysical = roomsList.filter(pr => 
-                                (pr.type || '').toLowerCase() === typeName.toLowerCase() && 
-                                pr.status !== 'MAINTENANCE'
-                            ).length;
-                            
-                            const totalBooked = overlappingRsv.filter(r => 
-                                (r.room_type || '').toLowerCase() === typeName.toLowerCase()
-                            ).length;
-                            
-                            // 💡 [정답] 201호를 빈 방으로 인식하는 실시간 계산식 적용!
-                            let available = 0;
-                            if (roomsList.length > 0) {
-                                available = Math.max(0, totalPhysical - totalBooked);
-                            } else {
-                                // 물리적 방 세팅을 아직 안 한 지점이면 기본수량으로 계산 (안전장치)
-                                available = rt.availableCount || 0; 
-                            }
-
-                            if (available > 0) {
-                                allSmartRooms.push({
-                                    id: `${hCode}_${rt.id || typeName}`, // 구분을 위한 고유 ID
-                                    name: typeName,
-                                    price: rt.basePrice || rt.price || 0,
-                                    images: rt.images || [],
-                                    availableCount: available,
-                                    roomConfig: rt.roomConfig || {},
-                                    maxGuests: rt.roomConfig?.maxGuests || 2,
-                                    size: rt.roomConfig?.size || '',
-                                    description: rt.roomConfig?.description || '',
-                                    hotelCode: hCode
-                                });
-                            }
-                        });
-                    } catch (err) {
-                        console.warn(`Failed to fetch smart data for ${hCode}`);
-                    }
-                }
-
-                if (hasSuccess) {
-                    setFetchedRooms(allSmartRooms);
-                } else {
-                    // 모든 지점이 보안에 막혔다면 낡은 방식으로 최후의 폴백
-                    throw new Error("API Auth blocked. Trying fallback.");
-                }
-
-            } catch (error) {
-                console.warn("Smart Search fallback triggered:", error);
-                const res = await fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ checkIn: effectiveCheckIn, checkOut: effectiveCheckOut, hotel_code: effectiveHotelCode })
-                });
-                const data = await res.json();
-                setFetchedRooms(Array.isArray(data) ? data : []);
-            } finally {
-                setIsFetching(false);
-            }
-        };
-
-        fetchSmartAvailability();
+        fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checkIn: effectiveCheckIn, checkOut: effectiveCheckOut, hotel_code: effectiveHotelCode })
+        })
+        .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || "Search Error");
+            setFetchedRooms(Array.isArray(data) ? data : []);
+        })
+        .catch(err => {
+            console.error("Room fetch error:", err);
+            setFetchedRooms([]);
+        })
+        .finally(() => setIsFetching(false));
     }
   }, [rooms, effectiveCheckIn, effectiveCheckOut, effectiveHotelCode, lang]);
 
