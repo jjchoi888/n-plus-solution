@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-// 💡 [신규] 다국어 번역 사전
+// 💡 다국어 번역 사전
 const translations = {
   en: { findBooking: "Find Booking", resId: "Reservation ID", email: "Email", search: "Search", close: "Close", status: "Status", checkIn: "Check-in", checkOut: "Check-out", room: "Room Type", notFound: "No matching reservation found.", enterDetails: "Please enter your Reservation ID OR Email.", searching: "Searching...", guest: "Guest Name" },
   ko: { findBooking: "예약 조회", resId: "예약 번호", email: "이메일", search: "조회하기", close: "닫기", status: "상태", checkIn: "체크인", checkOut: "체크아웃", room: "객실 타입", notFound: "일치하는 예약 내역이 없습니다.", enterDetails: "예약 번호 또는 이메일을 입력해 주세요.", searching: "조회 중...", guest: "예약자명" },
@@ -16,6 +16,7 @@ export default function Navbar({ currentLang, setLang }) {
   
   const [isOpen, setIsOpen] = useState(false);
   const [isLookupOpen, setIsLookupOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 💡 [신규] 햄버거 메뉴 열림 상태
   
   // 예약 조회 상태 관리
   const [lookupData, setLookupData] = useState({ res_id: "", email: "" });
@@ -32,8 +33,6 @@ export default function Navbar({ currentLang, setLang }) {
 
   const handleLookup = async (e) => {
     e.preventDefault();
-    
-    // 💡 [수정] 둘 다 비어있을 때만 경고 메시지 표시
     if (!lookupData.res_id.trim() && !lookupData.email.trim()) {
         setLookupError(t.enterDetails);
         return;
@@ -72,32 +71,25 @@ export default function Navbar({ currentLang, setLang }) {
 
   return (
     <>
-      <nav className="w-full flex justify-between items-center px-8 py-6 bg-white border-b border-gray-100 shadow-sm fixed top-0 z-50">
+      <nav className="w-full flex justify-between items-center px-6 md:px-8 py-4 md:py-6 bg-white border-b border-gray-100 shadow-sm fixed top-0 z-50">
         {/* 로고 */}
-        <div className="text-2xl font-black text-emerald tracking-tighter cursor-pointer">
+        <div className="text-2xl font-black text-emerald-600 tracking-tighter cursor-pointer">
           n+
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* 💡 [신규] 예약 조회 버튼 */}
-          <button 
-            onClick={() => setIsLookupOpen(true)}
-            className="text-sm font-bold text-gray-600 hover:text-emerald transition-colors"
-          >
-            {t.findBooking}
-          </button>
-
+        <div className="flex items-center gap-2 md:gap-4">
+          
           {/* 언어 선택 드롭다운 */}
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center gap-2 border-2 border-emerald px-4 py-2 rounded-full text-emerald font-bold hover:bg-emerald hover:text-white transition-colors"
+              className="flex items-center gap-1 md:gap-2 border-2 border-emerald-600 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-emerald-600 font-bold hover:bg-emerald-600 hover:text-white transition-colors text-xs md:text-sm"
             >
               {languages.find((l) => l.code === currentLang)?.label} ▼
             </button>
 
             {isOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden flex flex-col">
+              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden flex flex-col z-[60]">
                 {languages.map((l) => (
                   <button
                     key={l.code}
@@ -105,7 +97,7 @@ export default function Navbar({ currentLang, setLang }) {
                       setLang(l.code);
                       setIsOpen(false);
                     }}
-                    className="px-4 py-3 text-left hover:bg-emerald-light hover:text-emerald transition-colors text-sm font-medium text-gray-700"
+                    className="px-4 py-3 text-left hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-sm font-medium text-gray-700"
                   >
                     {l.label}
                   </button>
@@ -113,14 +105,38 @@ export default function Navbar({ currentLang, setLang }) {
               </div>
             )}
           </div>
+
+          {/* 💡 [신규] 햄버거 메뉴 버튼 */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-2xl md:text-3xl text-emerald-600 hover:text-emerald-800 transition-colors focus:outline-none p-1 ml-1"
+          >
+            {isMobileMenuOpen ? '✕' : '☰'}
+          </button>
+        </div>
+
+        {/* 💡 [신규] 드롭다운 메뉴 패널 (Find Booking 기능 포함) */}
+        <div className={`absolute top-full left-0 w-full bg-white shadow-2xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-[400px] py-2' : 'max-h-0 py-0'}`}>
+            <button onClick={() => { setIsMobileMenuOpen(false); setIsLookupOpen(true); }} className="px-8 py-4 text-left font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 border-b border-slate-50 flex items-center gap-3 transition-colors">
+                <span className="text-xl">🔍</span> {t.findBooking}
+            </button>
+            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="px-8 py-4 text-left font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 border-b border-slate-50 flex items-center gap-3 transition-colors">
+                <span className="text-xl">☁️</span> Cloud PMS Solutions
+            </a>
+            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="px-8 py-4 text-left font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 border-b border-slate-50 flex items-center gap-3 transition-colors">
+                <span className="text-xl">🤝</span> Partner Network
+            </a>
+            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="px-8 py-4 text-left font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-3 transition-colors">
+                <span className="text-xl">📞</span> Contact Sales
+            </a>
         </div>
       </nav>
 
-      {/* 💡 [신규] 예약 조회 팝업 모달창 */}
+      {/* 예약 조회 팝업 모달창 (기존 기능 완벽 유지) */}
       {isLookupOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[200] p-4 animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div className="bg-emerald px-6 py-5 flex justify-between items-center text-white">
+            <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white">
               <h2 className="text-xl font-bold">{t.findBooking}</h2>
               <button onClick={closeLookupModal} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
             </div>
@@ -131,19 +147,17 @@ export default function Navbar({ currentLang, setLang }) {
                   <p className="text-sm text-gray-500 mb-2">{t.enterDetails}</p>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.resId}</label>
-                    {/* 💡 [수정] required 속성 제거 */}
-                    <input type="text" placeholder="WEBXXXXXX" value={lookupData.res_id} onChange={e => setLookupData({...lookupData, res_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-mono" />
+                    <input type="text" placeholder="WEBXXXXXX" value={lookupData.res_id} onChange={e => setLookupData({...lookupData, res_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-mono" />
                   </div>
                   <div className="flex items-center justify-center"><span className="text-xs font-black text-gray-400 bg-gray-100 px-3 rounded-full">OR</span></div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.email}</label>
-                    {/* 💡 [수정] required 속성 제거 */}
-                    <input type="email" placeholder="email@example.com" value={lookupData.email} onChange={e => setLookupData({...lookupData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none" />
+                    <input type="email" placeholder="email@example.com" value={lookupData.email} onChange={e => setLookupData({...lookupData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none" />
                   </div>
                   
                   {lookupError && <p className="text-sm text-red-500 font-bold bg-red-50 p-3 rounded-lg">{lookupError}</p>}
 
-                  <button type="submit" disabled={isLookingUp} className={`w-full py-3.5 text-white font-bold rounded-xl shadow-md transition-all text-lg mt-4 ${isLookingUp ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark'}`}>
+                  <button type="submit" disabled={isLookingUp} className={`w-full py-3.5 text-white font-bold rounded-xl shadow-md transition-all text-lg mt-4 ${isLookingUp ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
                     {isLookingUp ? t.searching : t.search}
                   </button>
                 </form>
