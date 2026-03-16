@@ -75,73 +75,104 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     fetchFees();
   }, []);
 
-  // 💡 [핵심 개선] Frontdesk의 'Smart Search' 로직을 웹 포털(RoomList)에 완벽 이식!
+  // 💡 [핵심 개선] 통합웹(ALL) 통신 에러 방지 및 Smart Search 완벽 이식
   useEffect(() => {
     if ((!rooms || rooms.length === 0) && effectiveCheckIn && effectiveCheckOut) {
         setIsFetching(true);
         
         const fetchSmartAvailability = async () => {
             try {
-                // 1. 객실 타입, 실제 물리적 방 목록, 예약 목록을 한 번에 가져옵니다. (Smart Search 로직)
-                const [typesRes, physicalRes, rsvRes] = await Promise.all([
-                    fetch(`${BASE_URL}/api/admin/room-types?hotel=${effectiveHotelCode}`),
-                    fetch(`${BASE_URL}/api/rooms?hotel=${effectiveHotelCode}`),
-                    fetch(`${BASE_URL}/api/reservations?hotel=${effectiveHotelCode}`)
-                ]);
+                // 💡 1. 통합웹(ALL)일 경우 에러가 나지 않도록 개별 지점 코드로 쪼개서 통신합니다.
+                const targetHotels = effectiveHotelCode === 'ALL' 
+                    ? ['NPLUS01', 'NPLUS02', 'NPLUS03', 'NPLUS04', 'NPLUS05', 'CEBU', 'BORACAY'] 
+                    : [effectiveHotelCode];
                 
-                // 만약 서버에서 권한 없음으로 막으면 옛날 API로 폴백
-                if (!typesRes.ok || !physicalRes.ok || !rsvRes.ok) throw new Error("API Auth blocked, falling back.");
+                let allSmartRooms = [];
+                let hasSuccess = false; // 하나라도 성공했는지 추적
 
-                const typesData = await typesRes.json();
-                const physicalRooms = await physicalRes.json();
-                const reservations = await rsvRes.json();
-                
-                const roomTypes = typesData.rooms || typesData || [];
-                const roomsList = Array.isArray(physicalRooms) ? physicalRooms : [];
-                const rsvList = Array.isArray(reservations) ? reservations : [];
+                // 2. 각 지점별로 물리적 객실(rooms)과 예약(reservations)을 가져옵니다.
+                for (const hCode of targetHotels) {
+                    try {
+                        const [typesRes, physicalRes, rsvRes] = await Promise.all([
+                            fetch(`${BASE_URL}/api/admin/room-types?hotel=${hCode}`),
+                            fetch(`${BASE_URL}/api/rooms?hotel=${hCode}`),
+                            fetch(`${BASE_URL}/api/reservations?hotel=${hCode}`)
+                        ]);
+                        
+                        if (!typesRes.ok || !physicalRes.ok || !rsvRes.ok) continue; // 보안에 막혔으면 건너뜀
+                        
+                        hasSuccess = true;
 
-                const checkInD = new Date(effectiveCheckIn);
-                const checkOutD = new Date(effectiveCheckOut);
+                        const typesData = await typesRes.json();
+                        const physicalRooms = await physicalRes.json();
+                        const reservations = await rsvRes.json();
+                        
+                        const roomTypes = typesData.rooms || typesData || [];
+                        const roomsList = Array.isArray(physicalRooms) ? physicalRooms : [];
+                        const rsvList = Array.isArray(reservations) ? reservations : [];
 
-                // 2. 날짜가 겹치는 유효한 예약만 걸러냅니다.
-                const overlappingRsv = rsvList.filter(res => {
-                    if (res.status === 'CANCELLED' || res.status === 'CHECKED_OUT') return false;
-                    const resIn = new Date(res.check_in_date);
-                    const resOut = new Date(res.check_out_date);
-                    return resIn < checkOutD && resOut > checkInD;
-                });
+                        const checkInD = new Date(effectiveCheckIn);
+                        const checkOutD = new Date(effectiveCheckOut);
 
-                // 3. 타입별로 "실제 물리적 방 개수 - 겹치는 예약 개수"를 정밀 계산합니다.
-                const smartRooms = roomTypes.map(rt => {
-                    const typeName = typeof rt.name === 'object' ? rt.name.en : rt.name;
-                    
-                    // 물리적 방 중 점검중(MAINTENANCE)이 아닌 진짜 방 개수
-                    const totalPhysical = roomsList.filter(pr => pr.type === typeName && pr.status !== 'MAINTENANCE').length;
-                    
-                    // 해당 타입에 겹치는 예약 개수
-                    const totalBooked = overlappingRsv.filter(r => r.room_type === typeName).length;
-                    
-                    // 💡 [정답] 실제 남은 방 계산
-                    const available = Math.max(0, totalPhysical - totalBooked);
+                        // 3. 날짜가 겹치는 예약만 추출
+                        const overlappingRsv = rsvList.filter(res => {
+                            if (res.status === 'CANCELLED' || res.status === 'CHECKED_OUT') return false;
+                            const resIn = new Date(res.check_in_date);
+                            const resOut = new Date(res.check_out_date);
+                            return resIn < checkOutD && resOut > checkInD;
+                        });
 
-                    return {
-                        id: rt.id,
-                        name: typeName,
-                        price: rt.basePrice || rt.price || 0,
-                        images: rt.images || [],
-                        availableCount: available, // 스마트 계산값 적용!
-                        roomConfig: rt.roomConfig || {},
-                        maxGuests: rt.roomConfig?.maxGuests || 2,
-                        size: rt.roomConfig?.size || '',
-                        description: rt.roomConfig?.description || '',
-                        hotelCode: rt.hotel_code || effectiveHotelCode
-                    };
-                }).filter(r => r.availableCount > 0); // 0개 남은 방은 숨김
+                        // 4. 타입별로 실제 방 개수(totalPhysical) - 겹치는 예약(totalBooked) 계산
+                        roomTypes.forEach(rt => {
+                            const typeName = typeof rt.name === 'object' ? rt.name.en : rt.name;
+                            
+                            const totalPhysical = roomsList.filter(pr => 
+                                (pr.type || '').toLowerCase() === typeName.toLowerCase() && 
+                                pr.status !== 'MAINTENANCE'
+                            ).length;
+                            
+                            const totalBooked = overlappingRsv.filter(r => 
+                                (r.room_type || '').toLowerCase() === typeName.toLowerCase()
+                            ).length;
+                            
+                            // 💡 [정답] 201호를 빈 방으로 인식하는 실시간 계산식 적용!
+                            let available = 0;
+                            if (roomsList.length > 0) {
+                                available = Math.max(0, totalPhysical - totalBooked);
+                            } else {
+                                // 물리적 방 세팅을 아직 안 한 지점이면 기본수량으로 계산 (안전장치)
+                                available = rt.availableCount || 0; 
+                            }
 
-                setFetchedRooms(smartRooms);
+                            if (available > 0) {
+                                allSmartRooms.push({
+                                    id: `${hCode}_${rt.id || typeName}`, // 구분을 위한 고유 ID
+                                    name: typeName,
+                                    price: rt.basePrice || rt.price || 0,
+                                    images: rt.images || [],
+                                    availableCount: available,
+                                    roomConfig: rt.roomConfig || {},
+                                    maxGuests: rt.roomConfig?.maxGuests || 2,
+                                    size: rt.roomConfig?.size || '',
+                                    description: rt.roomConfig?.description || '',
+                                    hotelCode: hCode
+                                });
+                            }
+                        });
+                    } catch (err) {
+                        console.warn(`Failed to fetch smart data for ${hCode}`);
+                    }
+                }
+
+                if (hasSuccess) {
+                    setFetchedRooms(allSmartRooms);
+                } else {
+                    // 모든 지점이 보안에 막혔다면 낡은 방식으로 최후의 폴백
+                    throw new Error("API Auth blocked. Trying fallback.");
+                }
+
             } catch (error) {
                 console.warn("Smart Search fallback triggered:", error);
-                // 💡 만약 권한 에러 등으로 위 로직이 막히면 낡은 API로 안전하게 롤백
                 const res = await fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
