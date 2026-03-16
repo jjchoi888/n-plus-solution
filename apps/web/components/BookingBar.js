@@ -241,7 +241,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                     value={selectedRegion} 
                     onChange={handleRegionChange}
                   >
-                    <option value="">🗺️ Select Region (도/주)</option>
+                    <option value="">🗺️ Select Region </option>
                     {PH_LOCATIONS.map(loc => (
                       <option key={loc.region} value={loc.region}>{loc.region}</option>
                     ))}
@@ -253,7 +253,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                     onChange={handleCityChange} 
                     disabled={!selectedRegion}
                   >
-                    <option value="">🏙️ Select City/Municipal (시/군)</option>
+                    <option value="">🏙️ Select City/Municipal </option>
                     {availableCities.map(c => (
                       <option key={c.name} value={c.name}>{c.name}</option>
                     ))}

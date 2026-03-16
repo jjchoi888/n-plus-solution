@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // 💡 useRef 추가
 import Navbar from "./Navbar";
 import BookingBar from "./BookingBar";
 import RoomList from "./RoomList";
@@ -11,10 +11,11 @@ const heroImages = [
 ];
 
 const partnerHotels = [
-  { code: "NPLUS01", name: "Metro Manila Hotel", img: "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Smart PMS" },
-  { code: "NPLUS02", name: "Seoul Boutique", img: "https://images.unsplash.com/photo-1538626606363-47201e74bf0e?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Kiosk" },
-  { code: "NPLUS03", name: "Busan Ocean Resort", img: "https://images.unsplash.com/photo-1620800720456-11f84dfcc021?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Channel Manager" },
-  { code: "CEBU", name: "Cebu Tropical", img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Direct Booking" }
+  { code: "NPLUS01", name: "Metro Manila Hotel", img: "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Smart PMS", url: "http://localhost:3000" },
+  { code: "NPLUS02", name: "Seoul Boutique", img: "https://images.unsplash.com/photo-1538626606363-47201e74bf0e?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Kiosk", url: "http://seoul.localhost:3000" },
+  { code: "NPLUS03", name: "Busan Ocean Resort", img: "https://images.unsplash.com/photo-1620800720456-11f84dfcc021?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Channel Manager", url: "http://busan.localhost:3000" },
+  { code: "CEBU", name: "Cebu Tropical", img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Direct Booking", url: "#" },
+  { code: "BORACAY", name: "Boracay Paradise", img: "https://images.unsplash.com/photo-1523592322629-416113c2e171?auto=format&fit=crop&q=80&w=800", desc: "Powered by n+ Smart PMS", url: "#" } // 슬라이드 테스트용 추가
 ];
 
 const saasFeatures = [
@@ -29,6 +30,14 @@ export default function MainPortal() {
   const [searchData, setSearchData] = useState(null); 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [alertMessage, setAlertMessage] = useState("");
+  // 💡 가로 슬라이더 참조 및 이동 함수
+  const sliderRef = useRef(null);
+  const slideLeft = () => {
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: -350, behavior: 'smooth' });
+  };
+  const slideRight = () => {
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: 350, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -113,6 +122,7 @@ export default function MainPortal() {
           </section>
 
           {/* 🌟 3. 가맹 호텔 네트워크 */}
+          {/* 🌟 3. B2C/B2B 시너지: 가맹 호텔 네트워크 (슬라이더 및 링크 적용) */}
           <section className="w-full max-w-7xl mx-auto py-24 px-6 animate-fade-in-up">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
               <div>
@@ -124,29 +134,50 @@ export default function MainPortal() {
               <button className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors uppercase tracking-widest text-sm border-b-2 border-emerald-600 pb-1">View All Partners</button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {partnerHotels.map((dest, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                      setAlertMessage(`[ ${dest.name} ] is powered by n+ Hotel Solution.\nUse the booking bar above to find available rooms.`);
-                  }}
-                  className="group relative h-[350px] rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
-                >
-                  <img src={dest.img} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
-                    <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-2">Partner Hotel</p>
-                    <h3 className="text-xl font-black mb-2">{dest.name}</h3>
-                    <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
-                       <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
-                         <span>⚡</span> {dest.desc}
-                       </p>
-                    </div>
+            {/* 💡 슬라이더 컨테이너 */}
+            <div className="relative group/slider">
+              {/* 왼쪽 화살표 버튼 */}
+              <button onClick={slideLeft} className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-emerald-600 font-black text-xl hover:bg-emerald-50 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100">
+                ❮
+              </button>
+
+              {/* 가로 스크롤 영역 */}
+              <div 
+                ref={sliderRef} 
+                className="flex overflow-x-auto gap-6 snap-x pb-8 pt-4 px-2"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // 스크롤바 숨김
+              >
+                {partnerHotels.map((dest, idx) => (
+                  <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
+                    {/* 💡 클릭 시 해당 호텔의 웹사이트(url)로 새 창 열림 */}
+                    <a 
+                      href={dest.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
+                    >
+                      <img src={dest.img} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
+                        <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-2 flex items-center gap-1">
+                          Partner Hotel <span className="opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
+                        </p>
+                        <h3 className="text-xl font-black mb-2">{dest.name}</h3>
+                        <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
+                           <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
+                             <span>⚡</span> {dest.desc}
+                           </p>
+                        </div>
+                      </div>
+                    </a>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* 오른쪽 화살표 버튼 */}
+              <button onClick={slideRight} className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-emerald-600 font-black text-xl hover:bg-emerald-50 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100">
+                ❯
+              </button>
             </div>
           </section>
 
