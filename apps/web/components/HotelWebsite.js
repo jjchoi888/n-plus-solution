@@ -4,6 +4,17 @@ import RoomList from "./RoomList";
 
 const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
 
+// 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
+const getHotelDate = (offsetDays = 0) => {
+    const now = new Date();
+    if (now.getHours() < 12) now.setDate(now.getDate() - 1);
+    now.setDate(now.getDate() + offsetDays);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // 💡 [신규] 장바구니(RoomList) 하얀 화면 원인 추적기
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
@@ -318,11 +329,11 @@ export default function HotelWebsite({ domain }) {
                       
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
-                          <input type="date" value={checkIn} min={new Date().toLocaleDateString('en-CA')} onChange={e=>{
+                          {/* 💡 min 속성에 getHotelDate(0) 적용 */}
+                          <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e=>{
                               const newIn = e.target.value;
                               setCheckIn(newIn); 
                               setHasSearched(false);
-                              // 💡 체크인 날짜를 선택했을 때, 체크아웃이 비어있거나 체크인보다 앞서면 자동으로 다음 날로 세팅!
                               if (!checkOut || newIn >= checkOut) {
                                   const d = new Date(newIn); d.setDate(d.getDate() + 1);
                                   setCheckOut(d.toISOString().split('T')[0]);
@@ -332,7 +343,8 @@ export default function HotelWebsite({ domain }) {
                       
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
-                          <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : new Date().toLocaleDateString('en-CA')} onChange={e=>{setCheckOut(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                          {/* 💡 min 속성에 getHotelDate(0) 적용 */}
+                          <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>{setCheckOut(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
                       </div>
                       
                       <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
@@ -440,10 +452,10 @@ export default function HotelWebsite({ domain }) {
                                 <div className="flex flex-col gap-4">
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
-                                        <input type="date" value={checkIn} min={new Date().toLocaleDateString('en-CA')} onChange={e=>{
+                                        {/* 💡 min 속성에 getHotelDate(0) 적용 */}
+                                        <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e=>{
                                             const newIn = e.target.value;
                                             setCheckIn(newIn);
-                                            // 💡 체크인 선택 시 자동 보정
                                             if (!checkOut || newIn >= checkOut) {
                                                 const d = new Date(newIn); d.setDate(d.getDate() + 1);
                                                 setCheckOut(d.toISOString().split('T')[0]);
@@ -452,7 +464,8 @@ export default function HotelWebsite({ domain }) {
                                     </div>
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkOut}</label>
-                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : new Date().toLocaleDateString('en-CA')} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
+                                        {/* 💡 min 속성에 getHotelDate(0) 적용 */}
+                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                     </div>
                                 </div>
 
