@@ -13,12 +13,43 @@ const heroImages = [
   "/hero6.png"
 ];
 
+// 💡 마닐라와 바기오 이미지를 public 폴더의 로컬 파일로 교체 완료!
 const partnerHotels = [
-  { code: "NPLUS01", name: "Metro Manila Hotel", img: "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&q=80&w=800", descKey: "pms", url: "http://localhost:3000" },
-  { code: "NPLUS02", name: "Baguio Mountain Hotel", img: "https://images.unsplash.com/photo-1538626606363-47201e74bf0e?auto=format&fit=crop&q=80&w=800", descKey: "kiosk", url: "http://seoul.localhost:3000" },
-  { code: "NPLUS03", name: "Tagaytay Resort", img: "https://images.unsplash.com/photo-1620800720456-11f84dfcc021?auto=format&fit=crop&q=80&w=800", descKey: "cm", url: "http://busan.localhost:3000" },
-  { code: "CEBU", name: "Cebu Tropical", img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=800", descKey: "db", url: "#" },
-  { code: "BORACAY", name: "Boracay Paradise", img: "https://images.unsplash.com/photo-1523592322629-416113c2e171?auto=format&fit=crop&q=80&w=800", descKey: "pms", url: "#" }
+  { 
+    code: "NPLUS01", 
+    name: "Metro Manila Hotel", 
+    img: "/manila.png", // 💡 로컬 이미지 적용
+    descKey: "pms", 
+    url: "http://localhost:3000" 
+  },
+  { 
+    code: "NPLUS02", 
+    name: "Baguio Mountain Hotel", 
+    img: "/baguio.png", // 💡 로컬 이미지 적용
+    descKey: "kiosk", 
+    url: "http://seoul.localhost:3000" 
+  },
+  { 
+    code: "NPLUS03", 
+    name: "Tagaytay Resort", 
+    img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800", 
+    descKey: "cm", 
+    url: "http://busan.localhost:3000" 
+  },
+  { 
+    code: "CEBU", 
+    name: "Cebu Tropical", 
+    img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=800", 
+    descKey: "db", 
+    url: "#" 
+  },
+  { 
+    code: "BORACAY", 
+    name: "Boracay Paradise", 
+    img: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&q=80&w=800", 
+    descKey: "pms", 
+    url: "#" 
+  }
 ];
 
 // 💡 [수정] 다국어 사전에 도입 문의(Contact) 관련 텍스트 추가
@@ -175,6 +206,22 @@ export default function MainPortal() {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
     }, 5000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // ========================================================
+  // 💡 [신규 추가] 사이트 전체 오른쪽 마우스(우클릭) 금지 로직
+  // ========================================================
+  useEffect(() => {
+    const preventRightClick = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", preventRightClick);
+    return () => document.removeEventListener("contextmenu", preventRightClick);
   }, []);
 
   const handleMenuClick = (action) => {
