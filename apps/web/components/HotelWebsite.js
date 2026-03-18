@@ -146,27 +146,54 @@ export default function HotelWebsite({ domain }) {
 
   const [availableCount, setAvailableCount] = useState(null);
 
-  const getHotelCodeFromDomain = (hostname) => {
+  const getEffectiveHotelCode = () => {
+    if (typeof window === 'undefined') return domain || 'NPLUS01';
+    
+    const params = new URLSearchParams(window.location.search);
+    const hotelParam = params.get('hotel');
+    
+    // 1순위: URL에 ?hotel=sample 이 있는 경우 (테스트 및 직접 접근)
+    if (hotelParam) return hotelParam;
+    
+    // 2순위: 부모 컴포넌트(DomainRouter)에서 넘겨준 domain 값이 있는 경우
+    if (domain && domain !== 'PORTAL') return domain;
+    
+    // 3순위: 도메인 텍스트 분석 (기존 로직 유지)
+    const hostname = window.location.hostname;
     if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
     if (hostname.includes('busan')) return 'NPLUS03';
-    return 'NPLUS01';
+    
+    return 'NPLUS01'; // 기본값
   };
 
-  const hotelCode = getHotelCodeFromDomain(domain);
+  const hotelCode = getEffectiveHotelCode();
 
   useEffect(() => {
+    // 💡 로딩 상태 시작
+    setLoading(true);
+
+    // 1. 웹사이트 설정 로드
     fetch(`${BASE_URL}/api/settings/website?hotel=${hotelCode}`)
       .then(res => res.json())
-      .then(data => { if (data && data.success && data.config) setConfig(data.config); })
+      .then(data => { 
+        if (data && data.success && data.config) {
+          setConfig(data.config); 
+        } 
+      })
       .catch(err => console.error("Failed to load config", err));
 
+    // 2. 객실 타입 로드
     fetch(`${BASE_URL}/api/admin/room-types?hotel=${hotelCode}`)
       .then(r => r.json())
       .then(adminData => {
-          if(adminData.success) {
+          if(adminData.success && adminData.rooms) {
               const formattedRooms = adminData.rooms.map(r => ({
-                  id: r.id, name: typeof r.name === 'object' ? r.name.en : r.name,
-                  price: r.basePrice, images: r.images || [], availableCount: 5, roomConfig: r.roomConfig,
+                  id: r.id, 
+                  name: typeof r.name === 'object' ? r.name.en : r.name,
+                  price: r.basePrice, 
+                  images: r.images || [], 
+                  availableCount: 5, 
+                  roomConfig: r.roomConfig,
                   maxGuests: r.roomConfig?.maxGuests || 2,
                   size: r.roomConfig?.size || '',
                   description: r.roomConfig?.description || ''
@@ -175,8 +202,10 @@ export default function HotelWebsite({ domain }) {
               if(formattedRooms.length > 0) setSelectedRoomId(formattedRooms[0].id);
           }
       })
+      .catch(err => console.error("Failed to load room types", err))
       .finally(() => setLoading(false));
-  }, [domain, hotelCode]);
+      
+  }, [hotelCode]); //
 
   const safeConfig = config || {};
   let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch(e){}
