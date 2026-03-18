@@ -21,9 +21,10 @@ const partnerHotels = [
   { code: "BORACAY", name: "Boracay Paradise", img: "https://images.unsplash.com/photo-1523592322629-416113c2e171?auto=format&fit=crop&q=80&w=800", descKey: "pms", url: "#" }
 ];
 
+// 💡 [수정] 다국어 사전에 도입 문의(Contact) 관련 텍스트 추가
 const translations = {
   en: {
-    heroBadge: "THE ALL-IN-ONE HOTEL SOFTWARE", heroTitle: <>Empowering Hotels.<br/>Delighting Guests.</>, heroDesc: <>n+ is a next-generation Cloud PMS designed to maximize hotel revenue and streamline operations. <br className="hidden md:block"/>Guests can easily book our partner hotels directly below.</>,
+    heroBadge: "THE ALL-IN-ONE HOTEL SOFTWARE", heroTitle: <>Empowering Hotels.<br/>Delighting Guests.</>, heroDesc: <>n+ is a next-generation Cloud PMS designed to <br/> maximize hotel revenue and streamline operations. <br className="hidden md:block"/>Guests can easily book our partner hotels directly below.</>,
     bookPartner: "Book with n+ Partner Hotels", zeroComm: "Zero Commission", searchResults: "Search Results", whyChoose: "Why Hoteliers Choose n+", whyDesc: "Our comprehensive suite of tools helps you reduce operational costs, increase direct bookings, and elevate the guest experience.",
     saasFeatures: [
       { icon: "☁️", title: "Cloud-based PMS", desc: "Manage your property anywhere, anytime with our lightning-fast cloud architecture." },
@@ -34,7 +35,7 @@ const translations = {
     partnerNetwork: "Our Partner Network", partnerDesc: "Join hundreds of properties globally powered by n+. By joining our network, your hotel gains direct exposure to our unified booking portal.", viewAll: "View All Partners", partnerHotel: "Partner Hotel",
     poweredBy: { pms: "Powered by n+ Smart PMS", kiosk: "Powered by n+ Kiosk", cm: "Powered by n+ Channel Manager", db: "Powered by n+ Direct Booking" },
     ctaTitle: "Ready to Transform Your Hotel?", ctaDesc: "Stop paying high OTA commissions. Empower your staff and delight your guests with the ultimate Cloud PMS.", reqDemo: "Request a Demo", partnerLogin: "Partner Login",
-    footerSaaS: "n+ SaaS", footerDesc: "The operating system for modern hoteliers. Streamline operations, boost direct bookings, and maximize revenue globally.", fSolutions: "Solutions", fCompany: "Company", fStayUpdated: "Stay Updated",
+    footerSaaS: "n+ Solutions", footerDesc: "The operating system for modern hoteliers. Streamline operations, boost direct bookings, and maximize revenue globally.", fSolutions: "Solutions", fCompany: "Company", fStayUpdated: "Stay Updated",
     fCloudPMS: "Cloud PMS", fChanMgr: "Channel Manager", fDirectBook: "Direct Booking Engine", fKiosk: "Smart Kiosk API", fAbout: "About n+", fPartners: "Partner Hotels", fPricing: "Pricing", fContact: "Contact Sales", fNews: "Get the latest hospitality tech news.", fEmail: "Work email", fJoin: "Join", fRights: "All rights reserved.", fPrivacy: "Privacy Policy", fTerms: "Terms of Service", fSecurity: "Security",
     alertDest: "is powered by n+ Hotel Solution.\nUse the booking bar above to find available rooms.", alertDemo: "Thank you for your interest! Our sales team will contact you shortly.", close: "Close",
     pmsPageTitle: "Cloud PMS Solutions", pmsPageSubtitle: "The Ultimate Operating System for Modern Hotels", pmsPageDesc: "Discover the powerful tools integrated into n+ to automate operations, connect with global OTAs, and drive revenue.",
@@ -45,10 +46,11 @@ const translations = {
     dbDomain: "Domain Settings", dbDomainDesc: "Link your custom domain for direct bookings.", dbDomainStatus: "Status", dbLinked: "Linked", dbDomainBtn: "Save Domain",
     dbCode: "Hotel Code Settings", dbCodeDesc: "6-character alphanumeric code for PMS sync.", dbCodeBtn: "Update Code",
     dbPlan: "Current Plan", dbPlanName: "n+ Enterprise Suite", dbPlanNext: "Next billing date", logoutBtn: "Logout",
-    // 💡 [신규] 2, 3, 4번 추가 기능 번역 (영어)
     dbAnalytics: "Performance Overview", dbBookings: "Monthly Direct Bookings", dbSaved: "Commission Saved", dbOcc: "Current Occupancy",
     dbProfile: "Portal Profile Settings", dbProfileDesc: "Manage how your hotel appears on the n+ booking portal.", dbProfileImg: "Main Image URL", dbProfileText: "Short Description", dbProfileBtn: "Save Profile",
-    dbSupport: "Support & Helpdesk", dbInquiry: "1:1 Inquiry", dbApiGuide: "API Integration Guide", dbNotices: "System Notices"
+    dbSupport: "Support & Helpdesk", dbInquiry: "1:1 Inquiry", dbApiGuide: "API Integration Guide", dbNotices: "System Notices",
+    contactSalesTitle: "Contact Sales", sendEmail: "Send an Email", whatsapp: "WhatsApp", emailLabel: "Your Email", msgLabel: "Message", sendBtn: "Send Message", backBtn: "Back", successMsg: "Your message has been sent successfully!",
+    specialOffers: "Special Offers & Packages", promoCode: "Promo Code", validUntil: "Valid until", bookNow: "Book Now"
   },
   ko: {
     heroBadge: "올인원 호텔 소프트웨어", heroTitle: <>호텔의 혁신.<br/>고객의 감동.</>, heroDesc: <>n+는 호텔 수익을 극대화하고 운영을 간소화하는 차세대 클라우드 PMS입니다. <br className="hidden md:block"/>고객은 아래에서 파트너 호텔을 수수료 없이 다이렉트로 예약할 수 있습니다.</>,
@@ -73,10 +75,11 @@ const translations = {
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
     dbCode: "호텔 코드 설정", dbCodeDesc: "시스템 연동을 위한 6자리 영어/숫자 조합 코드", dbCodeBtn: "코드 변경",
     dbPlan: "현재 구독 플랜", dbPlanName: "n+ 엔터프라이즈 스위트", dbPlanNext: "다음 결제일", logoutBtn: "로그아웃",
-    // 💡 [신규] 2, 3, 4번 추가 기능 번역 (한국어)
     dbAnalytics: "다이렉트 예약 성과 요약", dbBookings: "이번 달 다이렉트 예약", dbSaved: "절감한 수수료", dbOcc: "현재 객실 가동률",
     dbProfile: "포털 프로필 관리", dbProfileDesc: "n+ 통합 포털에 노출될 호텔 사진과 소개글을 관리하세요.", dbProfileImg: "대표 이미지 URL", dbProfileText: "한 줄 소개글", dbProfileBtn: "프로필 저장",
-    dbSupport: "기술 지원 및 헬프데스크", dbInquiry: "1:1 문의하기", dbApiGuide: "API 연동 가이드", dbNotices: "시스템 공지사항"
+    dbSupport: "기술 지원 및 헬프데스크", dbInquiry: "1:1 문의하기", dbApiGuide: "API 연동 가이드", dbNotices: "시스템 공지사항",
+    contactSalesTitle: "도입 문의", sendEmail: "이메일 보내기", whatsapp: "WhatsApp 문의", emailLabel: "이메일 주소", msgLabel: "문의 내용", sendBtn: "메시지 전송", backBtn: "뒤로 가기", successMsg: "메시지가 성공적으로 전송되었습니다!",
+    specialOffers: "스페셜 프로모션 & 패키지", promoCode: "할인 코드", validUntil: "유효기간", bookNow: "지금 예약하기"
   },
   ja: {
     heroBadge: "オールインワン ホテルソフトウェア", heroTitle: <>ホテルの革新。<br/>ゲストの感動。</>, heroDesc: <>n+は、ホテルの収益を最大化し、運営を合理化する次世代クラウドPMSです。<br className="hidden md:block"/>ゲストは以下のパートナーホテルを直接予約できます。</>,
@@ -103,7 +106,9 @@ const translations = {
     dbPlan: "現在のプラン", dbPlanName: "n+ エンタープライズ スイート", dbPlanNext: "次回の請求日", logoutBtn: "ログアウト",
     dbAnalytics: "パフォーマンス概要", dbBookings: "今月の直接予約", dbSaved: "節約した手数料", dbOcc: "現在の稼働率",
     dbProfile: "ポータルプロファイル設定", dbProfileDesc: "n+ポータルでのホテルの表示を管理します。", dbProfileImg: "画像 URL", dbProfileText: "短い説明", dbProfileBtn: "プロファイルを保存",
-    dbSupport: "サポートとヘルプデスク", dbInquiry: "1:1 お問い合わせ", dbApiGuide: "API ガイド", dbNotices: "システム通知"
+    dbSupport: "サポートとヘルプデスク", dbInquiry: "1:1 お問い合わせ", dbApiGuide: "API ガイド", dbNotices: "システム通知",
+    contactSalesTitle: "お問い合わせ", sendEmail: "メールを送信", whatsapp: "WhatsApp", emailLabel: "メールアドレス", msgLabel: "メッセージ", sendBtn: "送信", backBtn: "戻る", successMsg: "メッセージが正常に送信されました！",
+    specialOffers: "特別プロモーション＆パッケージ", promoCode: "プロモコード", validUntil: "有効期限", bookNow: "今すぐ予約"
   },
   zh: {
     heroBadge: "一体化酒店软件", heroTitle: <>赋能酒店。<br/>愉悦宾客。</>, heroDesc: <>n+ 是下一代云端 PMS，旨在最大化酒店收入并简化运营。<br className="hidden md:block"/>宾客可以在下方轻松直接预订我们的合作伙伴酒店。</>,
@@ -130,7 +135,9 @@ const translations = {
     dbPlan: "当前计划", dbPlanName: "n+ 企业套件", dbPlanNext: "下一个计费日期", logoutBtn: "登出",
     dbAnalytics: "业绩概览", dbBookings: "本月直接预订", dbSaved: "节省的佣金", dbOcc: "当前入住率",
     dbProfile: "门户资料设置", dbProfileDesc: "管理您的酒店在 n+ 预订门户上的显示方式。", dbProfileImg: "图片网址", dbProfileText: "简短说明", dbProfileBtn: "保存资料",
-    dbSupport: "支持与帮助", dbInquiry: "1:1 咨询", dbApiGuide: "API 集成指南", dbNotices: "系统通知"
+    dbSupport: "支持与帮助", dbInquiry: "1:1 咨询", dbApiGuide: "API 集成指南", dbNotices: "系统通知",
+    contactSalesTitle: "联系销售", sendEmail: "发送电子邮件", whatsapp: "WhatsApp", emailLabel: "您的电子邮箱", msgLabel: "留言", sendBtn: "发送消息", backBtn: "返回", successMsg: "您的消息已成功发送！",
+    specialOffers: "特别优惠与套餐", promoCode: "优惠码", validUntil: "有效期至", bookNow: "立即预订"
   }
 };
 
@@ -146,14 +153,16 @@ export default function MainPortal() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPw, setLoginPw] = useState("");
   
-  // 💡 기존 폼 상태
   const [partnerDomain, setPartnerDomain] = useState("www.myhotel.com");
   const [partnerCode, setPartnerCode] = useState("NPLUS1");
   const [partnerCard, setPartnerCard] = useState("**** **** **** 1234");
   
-  // 💡 [신규] 3번 기능 (프로필) 폼 상태
   const [profileImg, setProfileImg] = useState("");
   const [profileDesc, setProfileDesc] = useState("Powered by n+ Smart PMS");
+
+  // 💡 [신규 추가] Contact Sales 팝업창 관리를 위한 상태
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const [contactMode, setContactMode] = useState('CHOICE'); // 'CHOICE' 또는 'EMAIL'
 
   const t = translations[lang] || translations.en;
 
@@ -180,8 +189,14 @@ export default function MainPortal() {
       setActiveView("LOGIN"); 
       setSearchData(null);
     } else if (action === 'CONTACT') {
-      setAlertMessage(t.alertDemo);
+      // 💡 [핵심 연동] 이제 CONTACT 액션이 들어오면 알림창 대신 세련된 모달창을 엽니다!
+      setIsContactOpen(true); 
     }
+  };
+
+  const closeContactModal = () => {
+    setIsContactOpen(false);
+    setTimeout(() => setContactMode('CHOICE'), 300); // 모달 닫힐 때 초기 화면으로 리셋
   };
 
   const handleUpdateHotelCode = () => {
@@ -230,7 +245,7 @@ export default function MainPortal() {
             <div className="w-full max-w-md mx-auto my-32 px-6">
               <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
                 <div className="text-center mb-8">
-                  <div className="text-4xl font-black text-emerald-600 mb-4">n+</div>
+                  <img src="/logo.png" alt="Hotel Logo" className="h-16 md:h-20 w-auto mx-auto mb-4 object-contain" />
                   <h2 className="text-2xl font-black text-slate-800">{t.loginTitle}</h2>
                 </div>
                 <form onSubmit={handleLogin} className="space-y-5">
@@ -250,7 +265,7 @@ export default function MainPortal() {
             </div>
           ) : (
             
-            // 💡 --- 파트너 대시보드 화면 ---
+            // 파트너 대시보드 화면
             <div className="w-full max-w-6xl mx-auto py-12 px-4 md:px-6 space-y-8">
               
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-6">
@@ -263,7 +278,7 @@ export default function MainPortal() {
                 </button>
               </div>
 
-              {/* 💡 2번: 성과 요약 위젯 (Mini Analytics) */}
+              {/* 성과 요약 위젯 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
@@ -291,7 +306,7 @@ export default function MainPortal() {
               {/* 메인 2단 컬럼 레이아웃 */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 
-                {/* 💡 왼쪽 열 */}
+                {/* 왼쪽 열 */}
                 <div className="lg:col-span-1 space-y-6">
                   
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
@@ -331,11 +346,12 @@ export default function MainPortal() {
                     </div>
                   </div>
 
-                  {/* 💡 4번: 기술 지원 및 헬프데스크 */}
+                  {/* 기술 지원 및 헬프데스크 */}
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbSupport}</h3>
                     <div className="space-y-3">
-                      <button onClick={()=>setAlertMessage("Support module opening...")} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
+                      {/* 💡 [핵심 연동] 파트너 대시보드의 문의 버튼도 새 모달창으로 연결! */}
+                      <button onClick={()=>setIsContactOpen(true)} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
                         <span className="text-sm font-bold text-slate-700">🎧 {t.dbInquiry}</span>
                         <span className="text-slate-400">→</span>
                       </button>
@@ -352,10 +368,10 @@ export default function MainPortal() {
 
                 </div>
 
-                {/* 💡 오른쪽 열 */}
+                {/* 오른쪽 열 */}
                 <div className="lg:col-span-2 space-y-6">
                   
-                  {/* 💡 3번: 포털 프로필 관리 */}
+                  {/* 3번: 포털 프로필 관리 */}
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbProfile}</h3>
                     <p className="text-sm text-slate-500 mb-6">{t.dbProfileDesc}</p>
@@ -509,6 +525,62 @@ export default function MainPortal() {
             </div>
           </section>
 
+          {/* ====================================================
+              💡 [신규] 예약 검색바 바로 밑 - 스페셜 프로모션 섹션
+          ==================================================== */}
+          <section className="w-full bg-slate-50 pt-40 md:pt-48 pb-16 px-6 -mt-10">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex justify-between items-end mb-8">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span className="text-emerald-500">🎁</span> {t.specialOffers}
+                </h2>
+              </div>
+              
+              <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
+                {/* 💡 백오피스(Admin)에서 받아온 데이터를 매핑하는 구조. 일단 하드코딩된 예시 2개로 연출 */}
+                <div className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
+                    <div className="h-48 relative">
+                        <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=600&q=80" alt="Summer Promo" className="w-full h-full object-cover" />
+                        <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">20% OFF</div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">Summer Early Bird</h3>
+                    </div>
+                    <div className="p-6">
+                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">Book 30 days in advance and get 20% off your entire stay.</p>
+                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
+                            <span className="font-mono font-black text-emerald-600 text-lg">SUMMER20</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: Aug 31</span>
+                            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
+                    <div className="h-48 relative">
+                        <img src="https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=600&q=80" alt="Family Promo" className="w-full h-full object-cover" />
+                        <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">Free Breakfast</div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">Family Weekend Getaway</h3>
+                    </div>
+                    <div className="p-6">
+                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">Enjoy complimentary breakfast for 4 and late check-out on weekends.</p>
+                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
+                            <span className="font-mono font-black text-emerald-600 text-lg">FAMILYFUN</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: Dec 31</span>
+                            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section className="w-full bg-white mt-20 md:mt-32 pt-24 pb-20 px-6 border-b border-slate-100">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
@@ -602,41 +674,56 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 🌟 5. B2B SaaS Footer */}
+      {/* 🌟 5. B2B SaaS Footer (푸터 업데이트 완료) */}
       <footer className="w-full bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-900 mt-auto">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="lg:col-span-1">
-            <h2 className="text-2xl font-black text-white mb-6 tracking-widest uppercase">{t.footerSaaS}</h2>
+            <img src="/logo.png" alt="n+ Solutions Logo" className="h-10 mb-6 object-contain" />
             <p className="text-sm leading-relaxed mb-6">{t.footerDesc}</p>
           </div>
+          
           <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">{t.fSolutions}</h4>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Solutions</h4>
             <ul className="space-y-3 text-sm">
-              <li><button onClick={()=>handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">{t.fCloudPMS}</button></li>
-              <li><button onClick={()=>handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">{t.fChanMgr}</button></li>
-              <li><button onClick={()=>handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">{t.fDirectBook}</button></li>
-              <li><button onClick={()=>handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">{t.fKiosk}</button></li>
+              <li><button onClick={()=>handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">Cloud PMS</button></li>
+              <li><button className="hover:text-emerald-400 transition-colors">Table Order & Pay</button></li>
+              <li><button className="hover:text-emerald-400 transition-colors">Fintech Solutions</button></li>
             </ul>
           </div>
+          
           <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">{t.fCompany}</h4>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Company</h4>
             <ul className="space-y-3 text-sm">
-              <li><button onClick={()=>handleMenuClick('HOME')} className="hover:text-emerald-400 transition-colors">{t.fAbout}</button></li>
-              <li><button onClick={()=>handleMenuClick('LOGIN')} className="hover:text-emerald-400 transition-colors">{t.fPartners}</button></li>
-              <li><button onClick={()=>handleMenuClick('CONTACT')} className="hover:text-emerald-400 transition-colors">{t.fContact}</button></li>
+              <li><button onClick={()=>handleMenuClick('HOME')} className="hover:text-emerald-400 transition-colors">About n+</button></li>
+              {/* 💡 [핵심] 푸터의 Contact Us 버튼도 팝업창을 엽니다! */}
+              <li><button onClick={()=>handleMenuClick('CONTACT')} className="hover:text-emerald-400 transition-colors">Contact Us</button></li>
             </ul>
           </div>
+          
           <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">{t.fStayUpdated}</h4>
-            <p className="text-sm mb-4">{t.fNews}</p>
-            <div className="flex">
-              <input type="email" placeholder={t.fEmail} className="bg-slate-900 border border-slate-700 text-white px-4 py-2 rounded-l-lg w-full outline-none focus:border-emerald-500 text-sm" />
-              <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-r-lg font-bold transition-colors text-sm">{t.fJoin}</button>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Stay Updated</h4>
+            <p className="text-sm mb-6">Get the latest our solutions news.</p>
+            <div className="flex gap-4">
+              <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.604 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+              <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                </svg>
+              </a>
+              <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
+                </svg>
+              </a>
             </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <p>&copy; {new Date().getFullYear()} n+ HOTEL SOLUTION. {t.fRights}</p>
+          <p>&copy; {new Date().getFullYear()} n+ Solutions Inc. {t.fRights}</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">{t.fPrivacy}</a>
             <a href="#" className="hover:text-white transition-colors">{t.fTerms}</a>
@@ -645,7 +732,59 @@ export default function MainPortal() {
         </div>
       </footer>
 
-      {/* 💡 전역 알림 모달 */}
+      {/* 💡 [신규] Contact Sales 모달창 (Email 폼 & WhatsApp 링크) */}
+      {isContactOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={closeContactModal}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
+            <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white">
+              <h2 className="text-xl font-bold">{t.contactSalesTitle}</h2>
+              <button onClick={closeContactModal} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
+            </div>
+            
+            <div className="p-8">
+              {contactMode === 'CHOICE' ? (
+                <div className="flex flex-col gap-4">
+                  {/* 이메일 버튼 -> 이메일 폼으로 화면 전환 */}
+                  <button onClick={() => setContactMode('EMAIL')} className="flex items-center justify-center gap-3 w-full py-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-700 transition-colors shadow-sm">
+                    <span className="text-2xl">✉️</span> {t.sendEmail}
+                  </button>
+                  
+                  {/* WhatsApp 버튼 -> WhatsApp 링크로 바로 이동 (전화번호는 임시로 세팅) */}
+                  <a href="https://wa.me/639123456789" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 w-full py-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 rounded-xl font-bold text-[#075E54] transition-colors shadow-sm">
+                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.394 0 0 5.394 0 12.031c0 2.155.564 4.246 1.638 6.096L.18 24l5.986-1.45A11.968 11.968 0 0012.031 24c6.637 0 12.031-5.394 12.031-12.031S18.668 0 12.031 0zm0 22.012c-1.84 0-3.64-.49-5.21-1.42l-.37-.22-3.87.94 1.03-3.77-.24-.38a10.021 10.021 0 01-1.54-5.402c0-5.541 4.509-10.051 10.051-10.051s10.051 4.51 10.051 10.051-4.51 10.051-10.051 10.051zm5.51-7.53c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.17.2-.34.22-.64.07-.3-.15-1.28-.47-2.44-1.5-.9-.8-1.51-1.79-1.69-2.09-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.64-.93-2.25-.25-.59-.5-.51-.68-.52h-.58c-.2 0-.53.08-.8.38-.28.3-1.05 1.03-1.05 2.5 0 1.48 1.08 2.9 1.23 3.1.15.2 2.11 3.22 5.11 4.52.71.3 1.27.48 1.7.62.72.23 1.38.2 1.89.12.58-.09 1.79-.73 2.04-1.44.25-.71.25-1.32.18-1.44-.08-.13-.28-.2-.58-.35z"/></svg>
+                    {t.whatsapp}
+                  </a>
+                </div>
+              ) : (
+                <form onSubmit={(e) => { 
+                    e.preventDefault(); 
+                    setAlertMessage(t.successMsg); 
+                    closeContactModal(); 
+                }} className="space-y-4 animate-fade-in">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.emailLabel}</label>
+                    <input type="email" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="name@company.com" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.msgLabel}</label>
+                    <textarea required rows="4" className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none resize-none" placeholder="How can we help you?"></textarea>
+                  </div>
+                  <div className="pt-2 flex flex-col gap-2">
+                    <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md">
+                        {t.sendBtn}
+                    </button>
+                    <button type="button" onClick={() => setContactMode('CHOICE')} className="w-full text-slate-500 font-bold py-2 hover:text-slate-700 text-sm transition-colors">
+                        ← {t.backBtn}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 전역 알림 모달 */}
       {alertMessage && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
