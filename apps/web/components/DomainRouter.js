@@ -1,23 +1,34 @@
-import { headers } from 'next/headers';
-import DomainRouter from '../components/DomainRouter';
+"use client";
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 
-export default function RootPage({ searchParams }) {
-  const headersList = headers();
-  const host = headersList.get('host') || '';
+const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
+const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
 
-  // 💡 1. 통합웹(Main Portal) 판별 로직
-  // 로컬호스트(localhost:3000)이거나, Vercel 도메인이면서 'sample'이라는 단어가 없으면 통합웹으로 간주!
-  let isMainPortal = host.includes('localhost:3000') || (host.includes('vercel.app') && !host.includes('sample'));
+export default function DomainRouter({ initialHotel }) {
+  const [isMainPortal, setIsMainPortal] = useState(true);
+  const [targetHotel, setTargetHotel] = useState(null);
 
-  // 💡 2. 개별웹 테스트를 위한 강제 분기 (Query Parameter 사용)
-  // 주소 끝에 ?hotel=sample 을 붙여서 접속하면 강제로 개별웹 화면을 띄웁니다.
-  let domain = host;
-  
-  if (searchParams?.hotel === 'sample' || host.includes('sample')) {
-      isMainPortal = false;
-      domain = 'sample'; // 호텔 코드를 'sample'로 고정
+  useEffect(() => {
+    const host = window.location.hostname; // 접속한 주소 (예: n-plus-solution.vercel.app)
+
+    // 💡 [핵심 로직] 
+    // 1. URL 뒤에 ?hotel=sample 이 붙어있으면 무조건 개별웹!
+    // 2. 주소에 'sample' 이라는 글자가 포함되어 있으면 개별웹!
+    // 3. 그 외 Vercel 주소나 localhost는 모두 '통합웹'으로 실행!
+    if (initialHotel === 'sample' || host.includes('sample')) {
+      setIsMainPortal(false);
+      setTargetHotel('sample');
+    } else {
+      setIsMainPortal(true);
+      setTargetHotel(null);
+    }
+  }, [initialHotel]);
+
+  // 화면 렌더링
+  if (isMainPortal) {
+    return <MainPortal />;
+  } else {
+    return <HotelWebsite domain={targetHotel} />;
   }
-
-  // DomainRouter로 최종 결과 전달
-  return <DomainRouter isMainPortal={isMainPortal} domain={domain} />;
 }

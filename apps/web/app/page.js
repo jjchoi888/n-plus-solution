@@ -1,15 +1,16 @@
-import { headers } from 'next/headers';
 import DomainRouter from '../components/DomainRouter';
 
-// 💡 [수정1] 함수 앞에 'async'를 붙여 비동기 함수로 만듭니다.
-export default async function RootPage() {
-  // 💡 [수정2] headers() 앞에 'await'를 붙여 데이터를 다 가져올 때까지 기다리게 합니다.
-  const headersList = await headers();
-  const host = headersList.get('host') || '';
+// 💡 Next.js의 고질적인 서버 사이드 에러를 방지하기 위해 
+// 렌더링 방식을 '강제 동적(force-dynamic)'으로 설정합니다.
+export const dynamic = 'force-dynamic';
 
-  // 2. 통합 포털 도메인인지 확인합니다. (로컬 테스트용 localhost 포함)
-  const isMainPortal = host.includes('nplus-booking.com') || host.includes('localhost:3000');
-
-  // 3. 판별한 결과(isMainPortal)와 도메인(host)을 클라이언트 라우터로 넘깁니다!
-  return <DomainRouter isMainPortal={isMainPortal} domain={host} />;
+export default function RootPage({ searchParams }) {
+  // 💡 서버에서 헤더를 복잡하게 읽는 대신, searchParams만 DomainRouter로 넘깁니다.
+  // 실제 도메인 판별 로직은 DomainRouter 안에서 처리하도록 구조를 변경했습니다.
+  
+  return (
+    <DomainRouter 
+      initialHotel={searchParams?.hotel || null} 
+    />
+  );
 }
