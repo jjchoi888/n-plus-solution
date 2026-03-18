@@ -6,29 +6,35 @@ const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
 const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
 
 export default function DomainRouter({ initialHotel }) {
-  const [isMainPortal, setIsMainPortal] = useState(true);
+  const [view, setView] = useState(null); // 'PORTAL' 또는 'HOTEL'
   const [targetHotel, setTargetHotel] = useState(null);
 
   useEffect(() => {
-    const host = window.location.hostname; // 접속한 주소 (예: n-plus-solution.vercel.app)
+    const host = window.location.hostname;
+    const params = new URLSearchParams(window.location.search);
+    const hotelParam = params.get('hotel');
 
-    // 💡 [핵심 로직] 
-    // 1. URL 뒤에 ?hotel=sample 이 붙어있으면 무조건 개별웹!
-    // 2. 주소에 'sample' 이라는 글자가 포함되어 있으면 개별웹!
-    // 3. 그 외 Vercel 주소나 localhost는 모두 '통합웹'으로 실행!
-    if (initialHotel === 'sample' || host.includes('sample')) {
-      setIsMainPortal(false);
-      setTargetHotel('sample');
-    } else {
-      setIsMainPortal(true);
+    // 💡 [판별 로직 우선순위]
+    // 1순위: URL 파라미터에 hotel=sample 등이 있는가? (테스트용)
+    // 2순위: 도메인 주소 자체에 sample 등 호텔 키워드가 포함되어 있는가?
+    if (hotelParam || initialHotel || host.includes('sample')) {
+      setView('HOTEL');
+      setTargetHotel(hotelParam || initialHotel || 'sample');
+    } 
+    // 3순위: 그 외 (localhost나 vcl 주소 기본 접속)
+    else {
+      setView('PORTAL');
       setTargetHotel(null);
     }
   }, [initialHotel]);
 
-  // 화면 렌더링
-  if (isMainPortal) {
-    return <MainPortal />;
-  } else {
+  // 로딩 중 깜빡임 방지
+  if (!view) return <div className="min-h-screen bg-white" />;
+
+  // 💡 결정된 뷰에 따라 컴포넌트 렌더링
+  if (view === 'HOTEL') {
     return <HotelWebsite domain={targetHotel} />;
+  } else {
+    return <MainPortal />;
   }
 }
