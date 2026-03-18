@@ -1,15 +1,23 @@
-"use client"; // 💡 여긴 클라이언트 컴포넌트이므로 ssr: false 사용이 가능합니다!
-import dynamic from 'next/dynamic';
+import { headers } from 'next/headers';
+import DomainRouter from '../components/DomainRouter';
 
-// AOS 에러를 막기 위해 클라이언트에서만 렌더링하도록 설정
-const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
-const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
+export default function RootPage({ searchParams }) {
+  const headersList = headers();
+  const host = headersList.get('host') || '';
 
-export default function DomainRouter({ isMainPortal, domain }) {
-  // 전달받은 결과에 따라 안전하게 화면을 띄워줍니다.
-  if (isMainPortal) {
-    return <MainPortal />;
-  } else {
-    return <HotelWebsite domain={domain} />;
+  // 💡 1. 통합웹(Main Portal) 판별 로직
+  // 로컬호스트(localhost:3000)이거나, Vercel 도메인이면서 'sample'이라는 단어가 없으면 통합웹으로 간주!
+  let isMainPortal = host.includes('localhost:3000') || (host.includes('vercel.app') && !host.includes('sample'));
+
+  // 💡 2. 개별웹 테스트를 위한 강제 분기 (Query Parameter 사용)
+  // 주소 끝에 ?hotel=sample 을 붙여서 접속하면 강제로 개별웹 화면을 띄웁니다.
+  let domain = host;
+  
+  if (searchParams?.hotel === 'sample' || host.includes('sample')) {
+      isMainPortal = false;
+      domain = 'sample'; // 호텔 코드를 'sample'로 고정
   }
+
+  // DomainRouter로 최종 결과 전달
+  return <DomainRouter isMainPortal={isMainPortal} domain={domain} />;
 }
