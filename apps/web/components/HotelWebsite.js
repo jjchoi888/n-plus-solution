@@ -23,12 +23,12 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="p-10 bg-red-50 border border-red-200 rounded-3xl text-center max-w-3xl mx-auto mt-20 shadow-xl">
-          <h2 className="text-red-600 font-black text-2xl mb-4">🚨 장바구니(RoomList) 화면 에러 발생!</h2>
-          <p className="text-slate-700 text-sm font-bold mb-2">RoomList.js 파일 내부에 문제가 있어 화면이 하얗게 변했습니다.</p>
-          <pre className="text-left bg-white p-4 rounded-xl border border-red-100 text-xs text-red-500 overflow-x-auto whitespace-pre-wrap">
-            {this.state.error.message}
+          <h2 className="text-2xl font-black text-red-600 mb-4">Oops! A rendering error occurred 🚨</h2>
+          <p className="text-slate-700 font-bold mb-2">Error Details:</p>
+          <pre className="bg-white p-4 rounded-xl text-sm text-left overflow-auto border border-red-100 text-red-800">
+            {this.state.error.toString()}
           </pre>
-          <p className="mt-4 text-xs text-slate-500">이 에러 메시지를 복사해서 알려주시면 즉시 고쳐드립니다!</p>
+          <p className="text-slate-500 mt-6 text-sm font-bold">Please refresh the page or contact the administrator.</p>
         </div>
       );
     }
@@ -147,23 +147,31 @@ export default function HotelWebsite({ domain }) {
   const [availableCount, setAvailableCount] = useState(null);
 
   const getEffectiveHotelCode = () => {
-    if (typeof window === 'undefined') return domain || 'NPLUS01';
+    // 서버 사이드 렌더링(SSR) 대응 및 기본값 설정
+    if (typeof window === 'undefined') return domain || 'sample001';
     
     const params = new URLSearchParams(window.location.search);
     const hotelParam = params.get('hotel');
     
-    // 1순위: URL에 ?hotel=sample 이 있는 경우 (테스트 및 직접 접근)
+    // 1순위: URL에 직접 ?hotel=sample001 처럼 파라미터가 있는 경우 (강제 지정)
     if (hotelParam) return hotelParam;
     
-    // 2순위: 부모 컴포넌트(DomainRouter)에서 넘겨준 domain 값이 있는 경우
+    // 2순위: 부모 컴포넌트나 환경 설정에서 넘겨준 domain 값이 있는 경우
     if (domain && domain !== 'PORTAL') return domain;
     
-    // 3순위: 도메인 텍스트 분석 (기존 로직 유지)
+    // 3순위: 도메인 주소(hostname)에 따른 자동 매칭
     const hostname = window.location.hostname;
-    if (hostname.includes('seoul') || hostname.includes('127.0.0.1')) return 'NPLUS02'; 
-    if (hostname.includes('busan')) return 'NPLUS03';
     
-    return 'NPLUS01'; // 기본값
+    // 로컬 테스트나 특정 키워드가 포함된 경우 sample001로 연결
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('sample')) {
+      return 'sample001'; 
+    }
+    
+    // 4순위: 향후 추가될 지점들에 대한 분기 (예시)
+    // if (hostname.includes('manila')) return 'MANILA01';
+    
+    // 최종 기본값 (과거 NPLUS01 대신 우리 시스템의 기본 샘플 코드로 설정)
+    return 'sample001'; 
   };
 
   const hotelCode = getEffectiveHotelCode();
