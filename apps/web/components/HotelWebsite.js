@@ -147,30 +147,21 @@ export default function HotelWebsite({ domain }) {
   const [availableCount, setAvailableCount] = useState(null);
 
   const getEffectiveHotelCode = () => {
-    // 서버 사이드 렌더링(SSR) 대응 및 기본값 설정
     if (typeof window === 'undefined') return domain || 'sample001';
     
     const params = new URLSearchParams(window.location.search);
     const hotelParam = params.get('hotel');
     
-    // 1순위: URL에 직접 ?hotel=sample001 처럼 파라미터가 있는 경우 (강제 지정)
+    // 1순위: URL 파라미터 (?hotel=sample001)
     if (hotelParam) return hotelParam;
     
-    // 2순위: 부모 컴포넌트나 환경 설정에서 넘겨준 domain 값이 있는 경우
-    if (domain && domain !== 'PORTAL') return domain;
-    
-    // 3순위: 도메인 주소(hostname)에 따른 자동 매칭
+    // 2순위: 도메인 분석 (로컬 환경 대응)
     const hostname = window.location.hostname;
-    
-    // 로컬 테스트나 특정 키워드가 포함된 경우 sample001로 연결
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('sample')) {
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
       return 'sample001'; 
     }
     
-    // 4순위: 향후 추가될 지점들에 대한 분기 (예시)
-    // if (hostname.includes('manila')) return 'MANILA01';
-    
-    // 최종 기본값 (과거 NPLUS01 대신 우리 시스템의 기본 샘플 코드로 설정)
+    // 3순위: 기본값 (매우 중요)
     return 'sample001'; 
   };
 
