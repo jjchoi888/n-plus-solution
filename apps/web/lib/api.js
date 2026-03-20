@@ -1,5 +1,5 @@
 // 1. Local 백엔드 서버 주소
-const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app';
+const BASE_URL = 'https://anxious-camille-nplus-b7117ae6.koyeb.app';
 
 // 💡 [삭제] 더 이상 단일 호텔 코드에 묶이지 않으므로 환경 변수(HOTEL_CODE)를 고정하지 않습니다.
 

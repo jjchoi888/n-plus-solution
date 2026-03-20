@@ -1,5 +1,5 @@
 // 기본 API 클라이언트 설정
-const BASE_URL = 'https://hotel-pms-backend-production.up.railway.app'; // j.j님의 Railway 백엔드 주소
+const BASE_URL = 'https://anxious-camille-nplus-b7117ae6.koyeb.app'; // j.j님의  백엔드 주소
 
 export const apiClient = async (endpoint, options = {}) => {
   const { lang, ...customOptions } = options;
