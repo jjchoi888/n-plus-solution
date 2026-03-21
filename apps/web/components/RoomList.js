@@ -43,6 +43,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   const [fetchedRooms, setFetchedRooms] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [cart, setCart] = useState({});
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -94,7 +95,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         })
         .finally(() => setIsFetching(false));
     }
-  }, [rooms, effectiveCheckIn, effectiveCheckOut, effectiveHotelCode, lang]);
+  }, [rooms, effectiveCheckIn, effectiveCheckOut, effectiveHotelCode, lang, refreshKey]);
 
   const actualRooms = (rooms && rooms.length > 0) ? rooms : fetchedRooms;
   
@@ -201,7 +202,22 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     <>
       <div className="w-full max-w-5xl mx-auto mt-8 animate-fade-in-up pb-32 relative">
         <div className="flex justify-between items-end border-b pb-2 mb-6 text-left">
-          <h3 className="text-2xl font-bold text-gray-800">{t.searchResults} <span className="text-emerald">({actualRooms.length})</span></h3>
+          {/* 💡 [수정 완료] 제목과 새로고침 버튼을 나란히(flex) 배치했습니다! */}
+          <div className="flex items-center gap-3">
+            <h3 className="text-2xl font-bold text-gray-800">
+              {t.searchResults} <span className="text-emerald">({actualRooms.length})</span>
+            </h3>
+            {/* 💡 [신규 추가] 클릭 시 객실을 다시 검색하는 앙증맞은 새로고침 버튼 */}
+            <button
+              onClick={() => setRefreshKey(prev => prev + 1)}
+              className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-emerald-600 rounded-full transition-all active:scale-90 shadow-sm"
+              title="Refresh Search"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

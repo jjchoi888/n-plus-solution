@@ -280,9 +280,7 @@ export default function MainPortal() {
 
       {searchData ? (
         <section className="w-full max-w-6xl mx-auto mt-28 px-4 animate-fade-in-up relative z-10 pb-20 flex-grow">
-           <h3 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-200 pb-3 flex items-center gap-2 mt-[72px]">
-             <span className="text-emerald-600">📍</span> {t.searchResults}
-           </h3>
+           {/* 💡 중복되던 📍 Search Results 제목과 밑줄을 완전히 삭제했습니다! */}
            <RoomList hotelCode={searchData.destination} lang={lang} checkIn={searchData.checkIn} checkOut={searchData.checkOut} adults={searchData.adults} kids={searchData.kids} />
         </section>
       ) : activeView === "LOGIN" ? (
