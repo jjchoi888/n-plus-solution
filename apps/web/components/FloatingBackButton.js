@@ -9,8 +9,8 @@ export default function FloatingBackButton() {
     <button
       onClick={() => router.back()}
       // md:hidden -> 모바일에서만 보임
-      // fixed top-4 right-4 -> 우측 상단 고정
-      className="md:hidden fixed top-4 right-4 z-[9999] w-10 h-10 flex items-center justify-center rounded-full bg-slate-900/40 backdrop-blur-md text-white shadow-lg active:scale-95 hover:bg-slate-900/60 transition-all border border-white/20"
+      // fixed top-6 right-4 -> 우측 상단 고정
+      className="md:hidden fixed top-6 right-4 z-[9999] w-10 h-10 flex items-center justify-center rounded-full bg-slate-900/40 backdrop-blur-md text-white shadow-lg active:scale-95 hover:bg-slate-900/60 transition-all border border-white/20"
       aria-label="Go Back"
     >
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
