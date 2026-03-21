@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const BASE_URL = 'https://anxious-camille-nplus-b7117ae6.koyeb.app';
+const BASE_URL = 'http://136.117.49.111:5000';
 
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
 const ALL_COUNTRIES = [

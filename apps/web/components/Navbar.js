@@ -9,7 +9,7 @@ const translations = {
   zh: { menuHome: "首页", findBooking: "查找预订", resId: "预订编号", email: "电子邮箱", search: "搜索", close: "关闭", status: "状态", checkIn: "入住", checkOut: "退房", room: "客房类型", notFound: "未找到匹配的预订。", enterDetails: "请输入您的预订信息。", searching: "搜索中...", guest: "预订人", menuPms: "云端 PMS 解决方案", menuLogin: "合作伙伴登录", menuContact: "联系销售", contactSalesTitle: "联系销售", sendEmail: "发送电子邮件", whatsapp: "WhatsApp", emailLabel: "您的电子邮箱", msgLabel: "留言", sendBtn: "发送消息", backBtn: "返回", successMsg: "您的消息已成功发送！" }
 };
 
-const BASE_URL = 'https://anxious-camille-nplus-b7117ae6.koyeb.app';
+const BASE_URL = 'http://136.117.49.111:5000';
 
 export default function Navbar({ currentLang, setLang, onMenuClick }) {
   const t = translations[currentLang] || translations.en;

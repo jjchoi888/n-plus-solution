@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const BASE_URL = 'https://anxious-camille-nplus-b7117ae6.koyeb.app'; 
+const BASE_URL = 'http://136.117.49.111:5000'; 
 
 // 💡 [핵심] Vercel 환경 변수에서 호텔 코드 가져오기
 const HOTEL_CODE = process.env.NEXT_PUBLIC_HOTEL_CODE || 'NPLUS01';
