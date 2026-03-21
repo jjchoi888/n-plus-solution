@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 // 💡 1. 방금 만든 플로팅 뒤로 가기 버튼을 정확한 경로에서 불러옵니다.
-import FloatingBackButton from "../components/FloatingBackButton";
+import FloatingBackButton from "@/components/FloatingBackButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
