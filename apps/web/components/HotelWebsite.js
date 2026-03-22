@@ -320,34 +320,34 @@ export default function HotelWebsite({ domain }) {
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                   ))}
                   
-                  {/* 💡 타이틀 박스 (데이터베이스에서 불러온 사용자의 개성 적용) */}
-                  <div className="absolute z-20 w-full px-4 transition-all duration-500 ease-out" 
+                  {/* 💡 타이틀 박스 */}
+                  <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                        style={{ 
                            left: `${textPos.title?.x ?? 10}%`, 
                            top: `${textPos.title?.y ?? 20}%`, 
-                           width: textPos.title?.w ? `${textPos.title.w}px` : '300px',
-                           /* 박스 정렬은 무조건 사용자가 설정한 값(Left/Center/Right)을 따릅니다 */
+                           width: 'max-content', /* 💡 좁은 px 너비 제한 해제! */
                            textAlign: safeConfig.welcome_title_text_align || 'center'
                        }}>
-                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap"
+                    {/* 💡 whitespace-pre-wrap을 whitespace-pre로 변경 (엔터 친 곳만 줄바꿈) */}
+                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre"
                         style={{ fontSize: `${safeConfig.welcome_title_font_size || 64}px` }}>
                         {safeConfig.welcome_title || "Welcome"}
                     </h1>
                   </div>
 
                   {/* 💡 서브타이틀 박스 */}
-                  <div className="absolute z-20 w-full px-4 transition-all duration-500 ease-out" 
+                  <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                        style={{ 
                            left: `${textPos.subtitle?.x ?? 30}%`, 
                            top: `${textPos.subtitle?.y ?? 50}%`, 
-                           width: textPos.subtitle?.w ? `${textPos.subtitle.w}px` : '250px',
+                           width: 'max-content', /* 💡 좁은 px 너비 제한 해제! */
                            textAlign: safeConfig.welcome_subtitle_text_align || 'center'
                        }}>
-                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap"
+                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre"
                        style={{ fontSize: `${safeConfig.welcome_subtitle_font_size || 24}px` }}>
                         {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
                     </p>
-                  </div>
+                  </div>                 
                 </section>
                 
                 <section className="py-24 px-8 bg-white text-center">
