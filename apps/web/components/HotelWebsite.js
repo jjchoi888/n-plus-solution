@@ -320,30 +320,31 @@ export default function HotelWebsite({ domain }) {
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                   ))}
                   
-                  {/* 💡 [완벽 동기화 1] 타이틀 박스 */}
-                  <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
+                  {/* 💡 타이틀 박스 (데이터베이스에서 불러온 사용자의 개성 적용) */}
+                  <div className="absolute z-20 w-full px-4 transition-all duration-500 ease-out" 
                        style={{ 
-                           left: `${textPos.title?.x ?? 50}%`, 
-                           top: `${textPos.title?.y ?? 30}%`, 
-                           width: textPos.title?.w ? `${textPos.title.w}%` : '80%', /* 너비(%) 동기화 */
-                           transform: 'translate(-50%, -50%)', /* 축 고정 동기화 */
-                           textAlign: (textPos.title?.x ?? 50) < 35 ? 'left' : (textPos.title?.x ?? 50) > 65 ? 'right' : 'center' 
+                           left: `${textPos.title?.x ?? 10}%`, 
+                           top: `${textPos.title?.y ?? 20}%`, 
+                           width: textPos.title?.w ? `${textPos.title.w}px` : '300px',
+                           /* 박스 정렬은 무조건 사용자가 설정한 값(Left/Center/Right)을 따릅니다 */
+                           textAlign: safeConfig.welcome_title_text_align || 'center'
                        }}>
-                    <h1 className="text-5xl md:text-7xl text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap">
+                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap"
+                        style={{ fontSize: `${safeConfig.welcome_title_font_size || 64}px` }}>
                         {safeConfig.welcome_title || "Welcome"}
                     </h1>
                   </div>
 
-                  {/* 💡 [완벽 동기화 2] 서브타이틀 박스 */}
-                  <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
+                  {/* 💡 서브타이틀 박스 */}
+                  <div className="absolute z-20 w-full px-4 transition-all duration-500 ease-out" 
                        style={{ 
-                           left: `${textPos.subtitle?.x ?? 50}%`, 
-                           top: `${textPos.subtitle?.y ?? 60}%`, 
-                           width: textPos.subtitle?.w ? `${textPos.subtitle.w}%` : '80%', /* 너비(%) 동기화 */
-                           transform: 'translate(-50%, -50%)', /* 축 고정 동기화 */
-                           textAlign: (textPos.subtitle?.x ?? 50) < 35 ? 'left' : (textPos.subtitle?.x ?? 50) > 65 ? 'right' : 'center' 
+                           left: `${textPos.subtitle?.x ?? 30}%`, 
+                           top: `${textPos.subtitle?.y ?? 50}%`, 
+                           width: textPos.subtitle?.w ? `${textPos.subtitle.w}px` : '250px',
+                           textAlign: safeConfig.welcome_subtitle_text_align || 'center'
                        }}>
-                    <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap">
+                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap"
+                       style={{ fontSize: `${safeConfig.welcome_subtitle_font_size || 24}px` }}>
                         {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
                     </p>
                   </div>
