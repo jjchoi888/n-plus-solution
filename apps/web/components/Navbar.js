@@ -10,7 +10,7 @@ const translations = {
 };
 
 // 💡 [Cleaned] Updated port to 8000 to match the main PMS backend server
-const BASE_URL = 'http://136.117.49.111:8000';
+const BASE_URL = '';
 
 export default function Navbar({ currentLang, setLang, onMenuClick }) {
   const t = translations[currentLang] || translations.en;

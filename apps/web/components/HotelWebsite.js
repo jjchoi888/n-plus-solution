@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 
-const BASE_URL = 'http://136.117.49.111:8000';
+const BASE_URL = '';
 
 // 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {

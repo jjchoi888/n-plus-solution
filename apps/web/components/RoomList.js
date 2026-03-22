@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const BASE_URL = 'http://136.117.49.111:8000';
+const BASE_URL = '';
 
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
 const ALL_COUNTRIES = [
