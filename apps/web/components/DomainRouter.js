@@ -18,13 +18,21 @@ export default function DomainRouter({ initialHotel }) {
     // 1순위: URL 파라미터에 hotel=sample 등이 있는가? (테스트용)
     // 2순위: 도메인 주소 자체에 sample 등 호텔 키워드가 포함되어 있는가?
     if (hotelParam || initialHotel || host.includes('sample')) {
+      const matchedHotel = hotelParam || initialHotel || 'sample';
       setView('HOTEL');
-      setTargetHotel(hotelParam || initialHotel || 'sample');
+      setTargetHotel(matchedHotel);
+      
+      // 💡 [핵심 보강] 하위 컴포넌트(BookingBar 등)가 호텔 코드를 잃어버리지 않도록 
+      // 최상위 라우터에서 로컬 스토리지에 확실하게 박제해 줍니다!
+      localStorage.setItem('hotelCode', matchedHotel);
     } 
     // 3순위: 그 외 (localhost나 vcl 주소 기본 접속)
     else {
       setView('PORTAL');
       setTargetHotel(null);
+      
+      // 💡 [핵심 보강] 포털(메인)로 접속 시 엉뚱한 호텔 코드가 남아있지 않도록 청소
+      localStorage.removeItem('hotelCode');
     }
   }, [initialHotel]);
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const BASE_URL = 'http://136.117.49.111:5000';
+const BASE_URL = 'http://136.117.49.111:8000';
 
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
 const ALL_COUNTRIES = [
@@ -237,7 +237,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                      </div>
                   )}
 
-                  {currentCount > 0 && (<div className="absolute top-3 right-3 bg-emerald text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} {lang === 'ko' ? '개 선택됨' : 'Selected'}</div>)}
+                  {/* 💡 [Cleaned] Standardized alert message to English */}
+                  {currentCount > 0 && (<div className="absolute top-3 right-3 bg-emerald text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
                 </div>
                 <div className="p-6 flex flex-col flex-grow text-left">
                   <h4 className="text-xl font-black text-gray-900 mb-3">{room.name}</h4>

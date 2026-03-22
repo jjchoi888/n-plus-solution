@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 
-const BASE_URL = 'http://136.117.49.111:5000';
+const BASE_URL = 'http://136.117.49.111:8000';
 
 // 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {
@@ -472,9 +472,10 @@ export default function HotelWebsite({ domain }) {
                             
                             <form className="space-y-4 relative mt-2" onSubmit={(e) => { 
                                 e.preventDefault(); 
-                                if (!checkIn || !checkOut) return setAlertMessage(lang === 'ko' ? "체크인/체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
-                                if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage(lang === 'ko' ? "체크아웃은 체크인 이후여야 합니다." : "Check-out must be after check-in.");
-                                if (availableCount !== null && availableCount < roomCount) return setAlertMessage(lang === 'ko' ? "선택하신 날짜에 방이 부족합니다." : "Not enough rooms available.");
+                                // 💡 [Cleaned] Standardized alert messages to English
+                                if (!checkIn || !checkOut) return setAlertMessage("Please select valid dates.");
+                                if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage("Check-out must be after check-in.");
+                                if (availableCount !== null && availableCount < roomCount) return setAlertMessage("Not enough rooms available.");
                                 setShowBookingModal(true); 
                             }}>
                                 <div className="flex flex-col gap-4">
@@ -641,8 +642,9 @@ export default function HotelWebsite({ domain }) {
             const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
 
             const handleConfirmBooking = async () => {
+                // 💡 [Cleaned] Standardized alert messages to English
                 if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
-                    return setAlertMessage(lang === 'ko' ? "필수 정보를 모두 입력해주세요." : "Please fill in all required details.");
+                    return setAlertMessage("Please fill in all required details.");
                 }
                 setIsBooking(true);
                 try {
@@ -665,7 +667,7 @@ export default function HotelWebsite({ domain }) {
                     
                     const data = await res.json();
                     if (res.ok || data.success) {
-                        setAlertMessage(lang === 'ko' ? "✅ 예약이 확정되었습니다!\n이메일과 영수증이 성공적으로 발송되었습니다." : "✅ Booking Confirmed!\nEmail and receipt have been sent.");
+                        setAlertMessage("✅ Booking Confirmed!\nEmail and receipt have been sent.");
                         setShowBookingModal(false);
                         setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
                         setCardNum(''); setCardExp(''); setCardCvv(''); setExtraBed(0);
@@ -675,7 +677,7 @@ export default function HotelWebsite({ domain }) {
                     }
                 } catch (error) {
                     console.error("Booking Error:", error);
-                    setAlertMessage(lang === 'ko' ? "서버 연결에 실패했습니다.\n잠시 후 다시 시도해주세요." : "Error connecting to the server.");
+                    setAlertMessage("Error connecting to the server.");
                 } finally {
                     setIsBooking(false);
                 }
@@ -822,7 +824,7 @@ export default function HotelWebsite({ domain }) {
                     </div>
                     <div className="p-4 bg-slate-50 border-t border-slate-100">
                         <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
-                            OK / 확인
+                            OK
                         </button>
                     </div>
                 </div>

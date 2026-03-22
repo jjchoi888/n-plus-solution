@@ -201,13 +201,7 @@ export default function MainPortal() {
   const slideLeft = () => { if (sliderRef.current) sliderRef.current.scrollBy({ left: -350, behavior: 'smooth' }); };
   const slideRight = () => { if (sliderRef.current) sliderRef.current.scrollBy({ left: 350, behavior: 'smooth' }); };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
+  // 💡 [Cleaned] Fixed duplicate slider interval bug
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -249,18 +243,19 @@ export default function MainPortal() {
   const handleUpdateHotelCode = () => {
     const regex = /^[A-Za-z0-9]{6}$/;
     if (!regex.test(partnerCode)) {
-      setAlertMessage(lang === 'ko' ? "호텔 코드는 정확히 6자리의 영문/숫자 조합이어야 합니다." : "Hotel code must be exactly 6 alphanumeric characters.");
+      // 💡 [Cleaned] Standardized alert messages to English
+      setAlertMessage("Hotel code must be exactly 6 alphanumeric characters.");
       return;
     }
-    setAlertMessage(lang === 'ko' ? `호텔 코드가 [${partnerCode.toUpperCase()}]로 업데이트 및 연동되었습니다.` : `Hotel code successfully linked to [${partnerCode.toUpperCase()}].`);
+    setAlertMessage(`Hotel code successfully linked to [${partnerCode.toUpperCase()}].`);
   };
 
   const handleUpdateDomain = () => {
-    setAlertMessage(lang === 'ko' ? `도메인 [${partnerDomain}]이(가) 성공적으로 연동되었습니다.` : `Domain [${partnerDomain}] successfully linked.`);
+    setAlertMessage(`Domain [${partnerDomain}] successfully linked.`);
   };
 
   const handleUpdateProfile = () => {
-    setAlertMessage(lang === 'ko' ? `호텔 프로필이 성공적으로 저장되어 포털에 반영됩니다.` : `Profile saved successfully and updated on the portal.`);
+    setAlertMessage(`Profile saved successfully and updated on the portal.`);
   };
 
   const handleLogin = (e) => {
