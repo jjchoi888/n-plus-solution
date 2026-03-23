@@ -522,7 +522,7 @@ export default function HotelWebsite({ domain }) {
                                 if (!checkIn || !checkOut) return setAlertMessage("Please select valid dates.");
                                 if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage("Check-out must be after check-in.");
                                 
-                                // 💡 [예약 진행 버그 완벽 해결] 글자와 숫자가 헷갈리지 않도록 명확하게 '숫자(Number)'로 변환하여 에러를 원천 차단합니다!
+                                // 💡 [예약 진행 버그 완벽 해결] 글자와 숫자가 헷갈리지 않도록 명확하게 '숫자(Number)'로 변환
                                 if (availableCount !== null && Number(availableCount) < Number(roomCount)) {
                                     return setAlertMessage("Not enough rooms available.");
                                 }
@@ -533,7 +533,7 @@ export default function HotelWebsite({ domain }) {
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-black md:font-bold text-slate-800 md:text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
                                         
-                                        {/* 💡 [글자 겹침 해결] pr-10 (오른쪽 여백 40px)을 추가하여 달력 아이콘이 글자를 가리지 않게 공간을 확보했습니다! */}
+                                        {/* 💡 [글자 겹침 해결] pr-10 (오른쪽 여백)을 추가하여 달력 아이콘 공간 확보 */}
                                         <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e=>{
                                             const newIn = e.target.value;
                                             setCheckIn(newIn);
