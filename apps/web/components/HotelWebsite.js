@@ -521,12 +521,19 @@ export default function HotelWebsite({ domain }) {
                                 e.preventDefault(); 
                                 if (!checkIn || !checkOut) return setAlertMessage("Please select valid dates.");
                                 if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage("Check-out must be after check-in.");
-                                if (availableCount !== null && availableCount < roomCount) return setAlertMessage("Not enough rooms available.");
+                                
+                                // 💡 [예약 진행 버그 완벽 해결] 글자와 숫자가 헷갈리지 않도록 명확하게 '숫자(Number)'로 변환하여 에러를 원천 차단합니다!
+                                if (availableCount !== null && Number(availableCount) < Number(roomCount)) {
+                                    return setAlertMessage("Not enough rooms available.");
+                                }
+                                
                                 setShowBookingModal(true); 
                             }}>
                                 <div className="flex flex-col gap-4">
                                     <div className="w-full">
-                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
+                                        <label className="text-[10px] md:text-xs font-black md:font-bold text-slate-800 md:text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
+                                        
+                                        {/* 💡 [글자 겹침 해결] pr-10 (오른쪽 여백 40px)을 추가하여 달력 아이콘이 글자를 가리지 않게 공간을 확보했습니다! */}
                                         <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e=>{
                                             const newIn = e.target.value;
                                             setCheckIn(newIn);
@@ -534,19 +541,21 @@ export default function HotelWebsite({ domain }) {
                                                 const d = new Date(newIn); d.setDate(d.getDate() + 1);
                                                 setCheckOut(d.toISOString().split('T')[0]);
                                             }
-                                        }} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
+                                        }} className="w-full p-2.5 pr-10 md:p-3 md:pr-12 border border-slate-200 rounded-xl bg-white shadow-sm font-black md:font-bold text-xs md:text-sm text-slate-900 md:text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                     </div>
                                     <div className="w-full">
-                                        <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkOut}</label>
-                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
+                                        <label className="text-[10px] md:text-xs font-black md:font-bold text-slate-800 md:text-slate-600 uppercase mb-1 block">{t.checkOut}</label>
+                                        
+                                        {/* 💡 [글자 겹침 해결] 여기에도 pr-10 추가 */}
+                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 pr-10 md:p-3 md:pr-12 border border-slate-200 rounded-xl bg-white shadow-sm font-black md:font-bold text-xs md:text-sm text-slate-900 md:text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                     </div>
                                 </div>
 
                                 <div className="relative mt-2">
-                                    <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase block mb-1">{t.guestsRooms}</label>
-                                    <div onClick={() => setShowGuestPicker(!showGuestPicker)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 cursor-pointer flex justify-between items-center select-none hover:bg-blue-50 transition-colors">
+                                    <label className="text-[10px] md:text-xs font-black md:font-bold text-slate-800 md:text-slate-600 uppercase block mb-1">{t.guestsRooms}</label>
+                                    <div onClick={() => setShowGuestPicker(!showGuestPicker)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-black md:font-bold text-xs md:text-sm text-slate-900 md:text-slate-700 cursor-pointer flex justify-between items-center select-none hover:bg-blue-50 transition-colors">
                                         <span className="truncate pr-2">{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''}{infants > 0 ? `, ${infants} ${t.infants}` : ''} · {roomCount} {t.room}</span>
-                                        <span className="text-slate-600 md:text-slate-400 font-bold md:font-normal shrink-0">▼</span>
+                                        <span className="text-slate-800 md:text-slate-400 font-black md:font-normal shrink-0">▼</span>
                                     </div>
 
                                     {showGuestPicker && (
@@ -573,12 +582,12 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                                 
                                 {availableCount !== null && checkIn && checkOut && (
-                                    <div className="mt-4 p-3 rounded-xl text-center font-black text-sm border shadow-sm transition-all" style={{ backgroundColor: availableCount >= roomCount ? '#f0fdf4' : '#fef2f2', borderColor: availableCount >= roomCount ? '#bbf7d0' : '#fecaca', color: availableCount >= roomCount ? '#166534' : '#991b1b' }}>
-                                        {availableCount >= roomCount ? `✅ ${availableCount} ${t.rooms} ${t.available}` : `❌ ${t.soldOut}`}
+                                    <div className="mt-4 p-3 rounded-xl text-center font-black text-sm border shadow-sm transition-all" style={{ backgroundColor: Number(availableCount) >= Number(roomCount) ? '#f0fdf4' : '#fef2f2', borderColor: Number(availableCount) >= Number(roomCount) ? '#bbf7d0' : '#fecaca', color: Number(availableCount) >= Number(roomCount) ? '#166534' : '#991b1b' }}>
+                                        {Number(availableCount) >= Number(roomCount) ? `✅ ${availableCount} ${t.rooms} ${t.available}` : `❌ ${t.soldOut}`}
                                     </div>
                                 )}
 
-                                <button type="submit" disabled={availableCount !== null && availableCount < roomCount} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="submit" disabled={availableCount !== null && Number(availableCount) < Number(roomCount)} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                                     {t.reserveNow}
                                 </button>
                             </form>
