@@ -320,39 +320,60 @@ export default function HotelWebsite({ domain }) {
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                   ))}
                   
-                  {/* 💡 타이틀 박스 (퍼센트 반응형 + 강제 중앙정렬 삭제!) */}
-                  <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
-                       style={{ 
-                           left: `${(textPos?.title?.x > 100) ? 10 : (textPos?.title?.x ?? 10)}%`, 
-                           top: `${(textPos?.title?.y > 100) ? 20 : (textPos?.title?.y ?? 20)}%`, 
-                           width: `${(textPos?.title?.w > 100) ? 80 : (textPos?.title?.w ?? 80)}%`, // px에러를 방어하고 % 적용
-                           maxWidth: '90vw'
-                       }}>
-                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap w-full"
-                        style={{ 
-                            textAlign: safeConfig.welcome_title_text_align || 'center', // 💡 DB의 좌/중/우 정렬 100% 우선 적용
-                            fontSize: `clamp(1.5rem, ${(safeConfig.welcome_title_font_size || 64) * 0.08}vw, ${safeConfig.welcome_title_font_size || 64}px)` 
-                        }}>
-                        {safeConfig.welcome_title || "Welcome"}
-                    </h1>
-                  </div>
+                  {/* 💡 [최종 해결] JSON 보따리 안전 해체 및 렌더링 */}
+                  {(() => {
+                      let finalPos = { 
+                          title: {x:10, y:20, w:80, size:64, align:'center'}, 
+                          subtitle: {x:30, y:50, w:80, size:24, align:'center'} 
+                      };
+                      try { 
+                          if (safeConfig.welcome_text_pos) {
+                              const parsed = typeof safeConfig.welcome_text_pos === 'string' 
+                                  ? JSON.parse(safeConfig.welcome_text_pos) 
+                                  : safeConfig.welcome_text_pos;
+                              if(parsed.title) finalPos.title = { ...finalPos.title, ...parsed.title };
+                              if(parsed.subtitle) finalPos.subtitle = { ...finalPos.subtitle, ...parsed.subtitle };
+                          }
+                      } catch(e){}
 
-                  {/* 💡 서브타이틀 박스 */}
-                  <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
-                       style={{ 
-                           left: `${(textPos?.subtitle?.x > 100) ? 30 : (textPos?.subtitle?.x ?? 30)}%`, 
-                           top: `${(textPos?.subtitle?.y > 100) ? 50 : (textPos?.subtitle?.y ?? 50)}%`, 
-                           width: `${(textPos?.subtitle?.w > 100) ? 80 : (textPos?.subtitle?.w ?? 80)}%`,
-                           maxWidth: '90vw'
-                       }}>
-                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap w-full"
-                       style={{ 
-                           textAlign: safeConfig.welcome_subtitle_text_align || 'center',
-                           fontSize: `clamp(0.9rem, ${(safeConfig.welcome_subtitle_font_size || 24) * 0.08}vw, ${safeConfig.welcome_subtitle_font_size || 24}px)` 
-                       }}>
-                        {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
-                    </p>
-                  </div>
+                      return (
+                          <>
+                              {/* 💡 타이틀 박스 */}
+                              <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
+                                   style={{ 
+                                       left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`, 
+                                       top: `${Math.max(0, Math.min(90, finalPos.title.y))}%`, 
+                                       width: `${Math.max(20, Math.min(100, finalPos.title.w))}%`,
+                                       maxWidth: '100vw'
+                                   }}>
+                                <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap w-full"
+                                    style={{ 
+                                        textAlign: finalPos.title.align, // 보따리에서 꺼낸 정렬
+                                        fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` // 보따리에서 꺼낸 폰트 크기
+                                    }}>
+                                    {safeConfig.welcome_title || "Welcome"}
+                                </h1>
+                              </div>
+
+                              {/* 💡 서브타이틀 박스 */}
+                              <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
+                                   style={{ 
+                                       left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`, 
+                                       top: `${Math.max(0, Math.min(90, finalPos.subtitle.y))}%`, 
+                                       width: `${Math.max(20, Math.min(100, finalPos.subtitle.w))}%`,
+                                       maxWidth: '100vw'
+                                   }}>
+                                <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap w-full"
+                                   style={{ 
+                                       textAlign: finalPos.subtitle.align,
+                                       fontSize: `clamp(0.9rem, ${finalPos.subtitle.size * 0.08}vw, ${finalPos.subtitle.size}px)` 
+                                   }}>
+                                    {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
+                                </p>
+                              </div>
+                          </>
+                      );
+                  })()}
                 </section>
                 
                 <section className="py-24 px-8 bg-white text-center">
