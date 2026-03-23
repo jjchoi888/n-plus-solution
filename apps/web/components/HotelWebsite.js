@@ -320,17 +320,15 @@ export default function HotelWebsite({ domain }) {
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                   ))}
                   
-                  {/* 💡 [최종 해결] JSON 보따리 안전 해체 및 렌더링 */}
+                  {/* 💡 [최종 렌더링] DB 에러를 우회하여 보따리에서 직접 꺼내 씁니다. */}
                   {(() => {
                       let finalPos = { 
-                          title: {x:10, y:20, w:80, size:64, align:'center'}, 
-                          subtitle: {x:30, y:50, w:80, size:24, align:'center'} 
+                          title: {x:10, y:20, w:80, size:48, align:'center'}, 
+                          subtitle: {x:30, y:50, w:80, size:18, align:'center'} 
                       };
                       try { 
                           if (safeConfig.welcome_text_pos) {
-                              const parsed = typeof safeConfig.welcome_text_pos === 'string' 
-                                  ? JSON.parse(safeConfig.welcome_text_pos) 
-                                  : safeConfig.welcome_text_pos;
+                              const parsed = typeof safeConfig.welcome_text_pos === 'string' ? JSON.parse(safeConfig.welcome_text_pos) : safeConfig.welcome_text_pos;
                               if(parsed.title) finalPos.title = { ...finalPos.title, ...parsed.title };
                               if(parsed.subtitle) finalPos.subtitle = { ...finalPos.subtitle, ...parsed.subtitle };
                           }
@@ -338,7 +336,7 @@ export default function HotelWebsite({ domain }) {
 
                       return (
                           <>
-                              {/* 💡 타이틀 박스 */}
+                              {/* 타이틀 박스 */}
                               <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                                    style={{ 
                                        left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`, 
@@ -348,14 +346,14 @@ export default function HotelWebsite({ domain }) {
                                    }}>
                                 <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap w-full"
                                     style={{ 
-                                        textAlign: finalPos.title.align, // 보따리에서 꺼낸 정렬
-                                        fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` // 보따리에서 꺼낸 폰트 크기
+                                        textAlign: finalPos.title.align,
+                                        fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` 
                                     }}>
                                     {safeConfig.welcome_title || "Welcome"}
                                 </h1>
                               </div>
 
-                              {/* 💡 서브타이틀 박스 */}
+                              {/* 서브타이틀 박스 */}
                               <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                                    style={{ 
                                        left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`, 
