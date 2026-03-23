@@ -696,31 +696,42 @@ export default function HotelWebsite({ domain }) {
             const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
 
             const handleConfirmBooking = async () => {
-                // 💡 [Cleaned] Standardized alert messages to English
                 if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
                     return setAlertMessage("Please fill in all required details.");
                 }
                 setIsBooking(true);
                 try {
-                    const res = await fetch(`${BASE_URL}/api/public/reservations/create`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
+                    // 💡 [버그 완벽 해결] 홈 화면(RoomList)과 100% 동일하게 다중 예약(batch-create) API를 사용합니다!
+                    const dividedGrandTotal = finalTotal / roomCount;
+                    let bookingPayloads = [];
+
+                    // 선택한 객실 수만큼 예약 데이터를 쪼개서 배열에 담습니다.
+                    for (let i = 0; i < roomCount; i++) {
+                        const fullName = `${firstName} ${lastName}`.trim();
+                        bookingPayloads.push({
                             hotel_code: hotelCode,
                             room_type: activeRoom.name,
                             check_in_date: checkIn,
                             check_out_date: checkOut,
-                            guest_name: `${firstName} ${lastName}`, 
+                            guest_name: roomCount > 1 ? `${fullName} (Room ${i + 1})` : fullName, 
                             email: guestEmail,
                             phone: guestPhone,
                             nationality: nationality,
-                            total_price: finalTotal,
-                            room_count: roomCount 
-                        })
+                            total_price: dividedGrandTotal,
+                            payment_method: "Credit Card"
+                        });
+                    }
+
+                    // /create 대신 /batch-create로 묶어서 한 번에 보냅니다!
+                    const res = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bookings: bookingPayloads })
                     });
                     
                     const data = await res.json();
-                    if (res.ok || data.success) {
+                    
+                    if (data.success) {
                         setAlertMessage("✅ Booking Confirmed!\nEmail and receipt have been sent.");
                         setShowBookingModal(false);
                         setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
