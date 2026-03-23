@@ -325,14 +325,13 @@ export default function HotelWebsite({ domain }) {
                        style={{ 
                            left: `${textPos.title?.x ?? 10}%`, 
                            top: `${textPos.title?.y ?? 20}%`, 
-                           // Width는 %로 설정하되 모바일 밖으로 나가지 않도록 max-width 설정
-                           width: `${(textPos.title?.w > 100) ? 80 : (textPos.title?.w ?? 80)}%`,
+                           width: `${(textPos.title?.w > 100) ? 80 : (textPos.title?.w ?? 80)}%`, // px에러 80%로 방어
                            maxWidth: '90vw' 
                        }}>
+                    {/* 💡 구형 고정 클래스 완전 삭제, clamp를 이용해 모바일에서 자동 축소 */}
                     <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap break-words"
                         style={{ 
                             textAlign: safeConfig.welcome_title_text_align || 'center',
-                            // 💡 핵심! 모바일에서는 폰트가 자동으로 줄어들고 PC에서는 원래 크기 유지
                             fontSize: `clamp(1.5rem, ${(safeConfig.welcome_title_font_size || 64) * 0.08}vw, ${safeConfig.welcome_title_font_size || 64}px)` 
                         }}>
                         {safeConfig.welcome_title || "Welcome"}
