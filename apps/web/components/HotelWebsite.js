@@ -320,18 +320,17 @@ export default function HotelWebsite({ domain }) {
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                   ))}
                   
-                  {/* 💡 타이틀 박스 (모바일 완벽 대응 반응형) */}
+                  {/* 💡 타이틀 박스 (퍼센트 반응형 + 강제 중앙정렬 삭제!) */}
                   <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                        style={{ 
-                           left: `${textPos.title?.x ?? 10}%`, 
-                           top: `${textPos.title?.y ?? 20}%`, 
-                           width: `${(textPos.title?.w > 100) ? 80 : (textPos.title?.w ?? 80)}%`, // px에러 80%로 방어
-                           maxWidth: '90vw' 
+                           left: `${(textPos?.title?.x > 100) ? 10 : (textPos?.title?.x ?? 10)}%`, 
+                           top: `${(textPos?.title?.y > 100) ? 20 : (textPos?.title?.y ?? 20)}%`, 
+                           width: `${(textPos?.title?.w > 100) ? 80 : (textPos?.title?.w ?? 80)}%`, // px에러를 방어하고 % 적용
+                           maxWidth: '90vw'
                        }}>
-                    {/* 💡 구형 고정 클래스 완전 삭제, clamp를 이용해 모바일에서 자동 축소 */}
-                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap break-words"
+                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap w-full"
                         style={{ 
-                            textAlign: safeConfig.welcome_title_text_align || 'center',
+                            textAlign: safeConfig.welcome_title_text_align || 'center', // 💡 DB의 좌/중/우 정렬 100% 우선 적용
                             fontSize: `clamp(1.5rem, ${(safeConfig.welcome_title_font_size || 64) * 0.08}vw, ${safeConfig.welcome_title_font_size || 64}px)` 
                         }}>
                         {safeConfig.welcome_title || "Welcome"}
@@ -341,12 +340,12 @@ export default function HotelWebsite({ domain }) {
                   {/* 💡 서브타이틀 박스 */}
                   <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                        style={{ 
-                           left: `${textPos.subtitle?.x ?? 30}%`, 
-                           top: `${textPos.subtitle?.y ?? 50}%`, 
-                           width: `${(textPos.subtitle?.w > 100) ? 80 : (textPos.subtitle?.w ?? 80)}%`,
+                           left: `${(textPos?.subtitle?.x > 100) ? 30 : (textPos?.subtitle?.x ?? 30)}%`, 
+                           top: `${(textPos?.subtitle?.y > 100) ? 50 : (textPos?.subtitle?.y ?? 50)}%`, 
+                           width: `${(textPos?.subtitle?.w > 100) ? 80 : (textPos?.subtitle?.w ?? 80)}%`,
                            maxWidth: '90vw'
                        }}>
-                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap break-words"
+                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap w-full"
                        style={{ 
                            textAlign: safeConfig.welcome_subtitle_text_align || 'center',
                            fontSize: `clamp(0.9rem, ${(safeConfig.welcome_subtitle_font_size || 24) * 0.08}vw, ${safeConfig.welcome_subtitle_font_size || 24}px)` 
