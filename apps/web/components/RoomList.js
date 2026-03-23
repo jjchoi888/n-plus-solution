@@ -291,20 +291,19 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
                 <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">&times;</button>
               </div>
-              <form onSubmit={submitBooking} className="p-6 md:p-8 flex flex-col lg:flex-row gap-8">
+              <form onSubmit={submitBooking} className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
-                <div className="flex-1 space-y-6 text-left">
+                {/* 💡 [모바일 1순위] Guest Details & Extra Options */}
+                <div className="lg:col-span-8 space-y-6 text-left order-1">
                   
+                  {/* Guest Details */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{t.guestDetails}</h3>
-                    
                     <div className="grid grid-cols-2 gap-4 text-left">
                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none" placeholder="e.g. Alice" /></div>
                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name</label><input type="text" required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none" placeholder="e.g. Smith" /></div>
                     </div>
-
                     <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none" /></div>
-
                     <div className="grid grid-cols-2 gap-4 text-left">
                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label><input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none" /></div>
                       <div>
@@ -319,6 +318,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
+                  {/* Extra Options */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.extraOptions}</h3>
                     <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
@@ -334,23 +334,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
-                      <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" required placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={e => setFormData({...formData, cardNumber: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none font-mono" /></div>
-                      <div className="grid grid-cols-2 gap-4 text-left">
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" required placeholder="MM/YY" value={formData.expiry} onChange={e => setFormData({...formData, expiry: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center" /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({...formData, cvv: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center tracking-widest" /></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button type="submit" disabled={isBooking} className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
-                    {isBooking ? t.processing : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
-                  </button>
                 </div>
 
-                <div className="w-full lg:w-80 bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left">
+                {/* 💡 [모바일 2순위] Booking Summary (PC에서는 우측 고정) */}
+                <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
                   <h3 className="text-lg font-bold text-emerald-900 mb-4 border-b border-emerald-200 pb-2 text-left">{t.summary}</h3>
                   
                   <div className="space-y-4 text-sm text-emerald-800 flex-grow">
@@ -405,7 +392,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                         </div>
                       )}
                     </div>
-
                   </div>
 
                   <div className="mt-6 border-t-4 border-emerald-200 pt-4">
@@ -414,6 +400,25 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       <span>₱{grandTotal.toLocaleString()}</span>
                     </p>
                   </div>
+                </div>
+
+                {/* 💡 [모바일 3순위] Payment Method & Submit Button */}
+                <div className="lg:col-span-8 space-y-6 text-left order-3">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                      <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" required placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={e => setFormData({...formData, cardNumber: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none font-mono" /></div>
+                      <div className="grid grid-cols-2 gap-4 text-left">
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" required placeholder="MM/YY" value={formData.expiry} onChange={e => setFormData({...formData, expiry: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center" /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({...formData, cvv: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center tracking-widest" /></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 💡 모바일/PC 모두 항상 요약창 아래/마지막에 위치하게 됨 */}
+                  <button type="submit" disabled={isBooking} className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
+                    {isBooking ? t.processing : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
+                  </button>
                 </div>
 
               </form>

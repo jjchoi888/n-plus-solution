@@ -396,12 +396,13 @@ export default function HotelWebsite({ domain }) {
               </div>
 
               {/* 2. 💡 [핵심 수정] 검색 필터 전체를 완전히 독립된 높은 레이어(z-[100]) 박스로 분리했습니다! */}
+              {/* 2. 💡 [핵심 수정] 검색 필터 전체를 완전히 독립된 높은 레이어(z-[100]) 박스로 분리했습니다! */}
               <div className="relative z-[100] w-full max-w-5xl flex flex-col items-center mt-4">
                   <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
                       
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
-                          {/* 💡 min 속성에 getHotelDate(0) 적용 */}
+                          {/* 💡 [진한 회색 적용] 라벨은 slate-600, 입력값은 slate-700으로 부드럽게 선명하게! */}
+                          <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
                           <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e=>{
                               const newIn = e.target.value;
                               setCheckIn(newIn); 
@@ -410,20 +411,23 @@ export default function HotelWebsite({ domain }) {
                                   const d = new Date(newIn); d.setDate(d.getDate() + 1);
                                   setCheckOut(d.toISOString().split('T')[0]);
                               }
-                          }} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                          }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
                       </div>
                       
                       <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
-                          {/* 💡 min 속성에 getHotelDate(0) 적용 */}
-                          <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>{setCheckOut(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-black text-slate-800 outline-none text-base md:text-lg cursor-pointer" />
+                          <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
+                          <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>{setCheckOut(e.target.value); setHasSearched(false);}} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
                       </div>
                       
                       <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">{t.guestsRooms}</label>
-                          <div className="font-black text-slate-800 text-base md:text-lg truncate">{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''} · {roomCount} {t.room}</div>
+                          <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.guestsRooms}</label>
+                          <div className="font-bold text-slate-700 md:text-slate-600 text-base md:text-lg truncate flex justify-between items-center">
+                              <span>{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''} · {roomCount} {t.room}</span>
+                              {/* 💡 ▼ 화살표도 동일한 진한 회색으로 통일 */}
+                              <span className="text-slate-600 md:hidden text-xs">▼</span>
+                          </div>
                           
-                          {/* 💡 드롭다운 내부 z-index 강화 */}
+                          {/* 드롭다운 내부 */}
                           {showGuestPicker && (
                               <div className="absolute top-full left-0 md:left-auto md:right-0 w-[300px] mt-4 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-[200] animate-fade-in space-y-5 text-slate-800 cursor-default" onClick={e => e.stopPropagation()}>
                                   <div className="flex justify-between items-center">
@@ -435,7 +439,6 @@ export default function HotelWebsite({ domain }) {
                                       <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setKids(Math.max(0, kids-1)); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setKids(kids+1); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                   </div>
                                   
-                                  {/* 💡 영유아(Free) 표시 */}
                                   <div className="flex justify-between items-center bg-emerald-50/50 p-2 -mx-2 rounded-lg border border-emerald-100/50">
                                       <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] text-emerald-600/80">{t.under2}</p></div>
                                       <div className="font-black text-emerald-600 bg-white px-3 py-1 rounded-full text-xs border border-emerald-100 shadow-sm uppercase tracking-widest">Free</div>
@@ -516,7 +519,6 @@ export default function HotelWebsite({ domain }) {
                             
                             <form className="space-y-4 relative mt-2" onSubmit={(e) => { 
                                 e.preventDefault(); 
-                                // 💡 [Cleaned] Standardized alert messages to English
                                 if (!checkIn || !checkOut) return setAlertMessage("Please select valid dates.");
                                 if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage("Check-out must be after check-in.");
                                 if (availableCount !== null && availableCount < roomCount) return setAlertMessage("Not enough rooms available.");
@@ -525,7 +527,6 @@ export default function HotelWebsite({ domain }) {
                                 <div className="flex flex-col gap-4">
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
-                                        {/* 💡 min 속성에 getHotelDate(0) 적용 */}
                                         <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e=>{
                                             const newIn = e.target.value;
                                             setCheckIn(newIn);
@@ -537,7 +538,6 @@ export default function HotelWebsite({ domain }) {
                                     </div>
                                     <div className="w-full">
                                         <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase mb-1 block">{t.checkOut}</label>
-                                        {/* 💡 min 속성에 getHotelDate(0) 적용 */}
                                         <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e=>setCheckOut(e.target.value)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                     </div>
                                 </div>
@@ -546,7 +546,7 @@ export default function HotelWebsite({ domain }) {
                                     <label className="text-[10px] md:text-xs font-bold text-slate-600 uppercase block mb-1">{t.guestsRooms}</label>
                                     <div onClick={() => setShowGuestPicker(!showGuestPicker)} className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white shadow-sm font-bold text-xs md:text-sm text-slate-700 cursor-pointer flex justify-between items-center select-none hover:bg-blue-50 transition-colors">
                                         <span className="truncate pr-2">{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''}{infants > 0 ? `, ${infants} ${t.infants}` : ''} · {roomCount} {t.room}</span>
-                                        <span className="text-slate-400 shrink-0">▼</span>
+                                        <span className="text-slate-600 md:text-slate-400 font-bold md:font-normal shrink-0">▼</span>
                                     </div>
 
                                     {showGuestPicker && (
@@ -578,7 +578,6 @@ export default function HotelWebsite({ domain }) {
                                     </div>
                                 )}
 
-                                {/* 💡 [요청 반영] Reserve Now 변경 */}
                                 <button type="submit" disabled={availableCount !== null && availableCount < roomCount} className="w-full theme-bg theme-hover text-white py-3.5 md:py-4 rounded-xl font-black md:text-lg mt-2 shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                                     {t.reserveNow}
                                 </button>
