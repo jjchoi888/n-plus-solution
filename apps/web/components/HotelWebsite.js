@@ -320,17 +320,21 @@ export default function HotelWebsite({ domain }) {
                       <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                   ))}
                   
-                  {/* 💡 타이틀 박스 */}
+                  {/* 💡 타이틀 박스 (모바일 완벽 대응 반응형) */}
                   <div className="absolute z-20 px-4 transition-all duration-500 ease-out" 
                        style={{ 
                            left: `${textPos.title?.x ?? 10}%`, 
                            top: `${textPos.title?.y ?? 20}%`, 
-                           width: 'max-content', /* 💡 좁은 px 너비 제한 해제! */
-                           textAlign: safeConfig.welcome_title_text_align || 'center'
+                           // Width는 %로 설정하되 모바일 밖으로 나가지 않도록 max-width 설정
+                           width: `${(textPos.title?.w > 100) ? 80 : (textPos.title?.w ?? 80)}%`,
+                           maxWidth: '90vw' 
                        }}>
-                    {/* 💡 whitespace-pre-wrap을 whitespace-pre로 변경 (엔터 친 곳만 줄바꿈) */}
-                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre"
-                        style={{ fontSize: `${safeConfig.welcome_title_font_size || 64}px` }}>
+                    <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap break-words"
+                        style={{ 
+                            textAlign: safeConfig.welcome_title_text_align || 'center',
+                            // 💡 핵심! 모바일에서는 폰트가 자동으로 줄어들고 PC에서는 원래 크기 유지
+                            fontSize: `clamp(1.5rem, ${(safeConfig.welcome_title_font_size || 64) * 0.08}vw, ${safeConfig.welcome_title_font_size || 64}px)` 
+                        }}>
                         {safeConfig.welcome_title || "Welcome"}
                     </h1>
                   </div>
@@ -340,14 +344,17 @@ export default function HotelWebsite({ domain }) {
                        style={{ 
                            left: `${textPos.subtitle?.x ?? 30}%`, 
                            top: `${textPos.subtitle?.y ?? 50}%`, 
-                           width: 'max-content', /* 💡 좁은 px 너비 제한 해제! */
-                           textAlign: safeConfig.welcome_subtitle_text_align || 'center'
+                           width: `${(textPos.subtitle?.w > 100) ? 80 : (textPos.subtitle?.w ?? 80)}%`,
+                           maxWidth: '90vw'
                        }}>
-                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre"
-                       style={{ fontSize: `${safeConfig.welcome_subtitle_font_size || 24}px` }}>
+                    <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap break-words"
+                       style={{ 
+                           textAlign: safeConfig.welcome_subtitle_text_align || 'center',
+                           fontSize: `clamp(0.9rem, ${(safeConfig.welcome_subtitle_font_size || 24) * 0.08}vw, ${safeConfig.welcome_subtitle_font_size || 24}px)` 
+                       }}>
                         {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
                     </p>
-                  </div>                 
+                  </div>
                 </section>
                 
                 <section className="py-24 px-8 bg-white text-center">
