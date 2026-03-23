@@ -661,7 +661,9 @@ export default function HotelWebsite({ domain }) {
                     <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
                     <div className="space-y-4 md:space-y-6 text-slate-600 flex-1">
                         <div>
-                            <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{safeConfig.welcome_title || "Our Hotel"}</p>
+                            {/* 💡 [핵심 교체] welcome_title 대신 백오피스에서 우리가 새로 만든 sns 보따리의 title을 불러옵니다! */}
+                            <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{sns?.title || "Contact Us"}</p>
+                            
                             {sns?.address && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">🏠</span> <span className="whitespace-pre-wrap">{sns.address}</span></p>}
                             {sns?.phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{sns.phone}</span></p>}
                             {sns?.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{sns.email}</span></p>}
