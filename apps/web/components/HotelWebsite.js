@@ -167,31 +167,24 @@ export default function HotelWebsite({ domain }) {
 
     const hotelCode = getEffectiveHotelCode();
 
-    // 💡 [연동] 위에서 만든 hotelCode를 바탕으로 프로모션을 불러옵니다.
+    // 💡 [상용화 완료] 로컬 스토리지 대신 서버(DB)에서 프로모션을 직접 가져옵니다! (도메인 달라도 100% 뚫림)
     useEffect(() => {
-        const loadPromotions = () => {
-            const saved = localStorage.getItem(`promotions_${hotelCode}`);
-            let validPromos = [];
+        const fetchLivePromotions = async () => {
+            try {
+                const res = await fetch(`/api/promotions?hotel=${hotelCode}`);
+                const data = await res.json();
 
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
+                if (Array.isArray(data)) {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    // 만료되지 않고 활성화된 진짜 데이터만 필터링
-                    validPromos = parsed.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
-                } catch (e) { console.error(e); }
-            }
-
-            // 💡 [가짜 데이터 완전 삭제] 오직 실제 로컬 스토리지에 있는 데이터만 적용합니다.
-            setActivePromos(validPromos);
+                    // 활성화 상태이고 만료되지 않은 진짜 프로모션만 적용
+                    const validPromos = data.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
+                    setActivePromos(validPromos);
+                }
+            } catch (e) { console.error("Live promo fetch failed", e); }
         };
 
-        loadPromotions(); // 첫 로딩 시 실행
-
-        // 💡 백오피스에서 프로모션 저장 시 새로고침 없이 즉시 반영!
-        window.addEventListener('storage', loadPromotions);
-        return () => window.removeEventListener('storage', loadPromotions);
+        fetchLivePromotions();
     }, [hotelCode]);
 
     useEffect(() => {

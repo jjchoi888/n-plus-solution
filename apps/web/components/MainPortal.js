@@ -196,39 +196,26 @@ export default function MainPortal() {
   const [contactMode, setContactMode] = useState('CHOICE');
 
   // 💡 [연동 완료 & 가짜 데이터 완전 삭제] 모든 브랜치의 실제 프로모션만 수집
+  // 💡 [상용화 완료] 서버에 등록된 "모든 지점"의 라이브 프로모션을 긁어옵니다. (도메인 격리 완전 무효화)
   const [promotions, setPromotions] = useState([]);
 
   useEffect(() => {
-    const loadPromotions = () => {
-      let allPromos = [];
+    const fetchAllPromotions = async () => {
+      try {
+        // 서버에 'ALL'을 요청하면 모든 호텔의 프로모션을 리턴하도록 세팅해 두었습니다.
+        const res = await fetch('/api/promotions?hotel=ALL');
+        const data = await res.json();
 
-      // 스토리지에 있는 '모든' 브랜치(promotions_ 로 시작하는 모든 키)의 프로모션을 순회하며 수집합니다.
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('promotions_')) {
-          try {
-            const parsed = JSON.parse(localStorage.getItem(key));
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // 활성화 상태(is_active)이며, 기한이 만료되지 않은 '진짜' 데이터만 필터링
-            const validPromos = parsed.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
-            allPromos = [...allPromos, ...validPromos];
-          } catch (e) {
-            console.error("Promo parse error", e);
-          }
+        if (Array.isArray(data)) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const validPromos = data.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
+          setPromotions(validPromos);
         }
-      }
-
-      // 가짜 데이터 삽입 로직을 완전히 제거하고, 오직 수집된 실제 데이터만 세팅합니다.
-      setPromotions(allPromos);
+      } catch (e) { console.error("Failed to load global promotions", e); }
     };
 
-    loadPromotions(); // 첫 로딩 시 실행
-
-    // 💡 [핵심] 백오피스에서 저장버튼을 누르는 순간, 통합웹이 새로고침 없이 즉시 감지하고 업데이트합니다.
-    window.addEventListener('storage', loadPromotions);
-    return () => window.removeEventListener('storage', loadPromotions);
+    fetchAllPromotions();
   }, []);
 
   const t = translations[lang] || translations.en;
