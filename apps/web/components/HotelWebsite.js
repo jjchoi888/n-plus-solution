@@ -144,34 +144,30 @@ export default function HotelWebsite({ domain }) {
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
 
-    // 💡 [핵심 복구] 이전 복사 과정에서 날아갔던 필수 상태값들을 다시 살려냈습니다! (하얀 화면 해결)
+    // 💡 [복구 완료] 필수 상태값들
     const [availableCount, setAvailableCount] = useState(null);
     const [showPromoModal, setShowPromoModal] = useState(false);
     const [activePromos, setActivePromos] = useState([]);
+    const [selectedPromo, setSelectedPromo] = useState(null);
+    const [appliedPromo, setAppliedPromo] = useState(null);
 
-    const [selectedPromo, setSelectedPromo] = useState(null); // 모달창에 띄울 1개
-    const [appliedPromo, setAppliedPromo] = useState(null); // 결제창에 성공적으로 '적용된' 할인
-
-    // 💡 [버그 완벽 해결] hotelCode 변수를 먼저 정의해야 아래의 useEffect에서 에러 없이 사용할 수 있습니다.
+    // 💡 [핵심] hotelCode가 '가장 먼저' 정의되어야 에러가 발생하지 않습니다!
     const getEffectiveHotelCode = () => {
-        if (typeof window === 'undefined') return domain || 'sample001';
-
+        if (typeof window === 'undefined') return 'sample001';
         const params = new URLSearchParams(window.location.search);
         const hotelParam = params.get('hotel');
-
-        // 1순위: URL 파라미터 (?hotel=sample001)
         if (hotelParam) return hotelParam;
 
-        // 2순위: 도메인 분석 (로컬 환경 대응)
         const hostname = window.location.hostname;
         if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
             return 'sample001';
         }
-
-        // 3순위: 기본값 (매우 중요)
         return 'sample001';
     };
 
+    const hotelCode = getEffectiveHotelCode();
+
+    // 💡 [연동] 위에서 만든 hotelCode를 바탕으로 프로모션을 불러옵니다.
     useEffect(() => {
         const loadPromotions = () => {
             const saved = localStorage.getItem(`promotions_${hotelCode}`);
@@ -182,10 +178,12 @@ export default function HotelWebsite({ domain }) {
                     const parsed = JSON.parse(saved);
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
+                    // 만료되지 않고 활성화된 진짜 데이터만 필터링
                     validPromos = parsed.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
                 } catch (e) { console.error(e); }
             }
 
+            // 만약 받아온 데이터가 없으면 빈 화면 대신 기본(Default) 풍선을 띄워줍니다.
             if (validPromos.length === 0) {
                 validPromos = [
                     { id: 'def1', title: "Summer Early Bird", description: "Enjoy exclusive early bird savings on your summer getaway when you book ahead.", code: "SUM20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80", target_room_type: ["All Rooms"] }
@@ -196,7 +194,7 @@ export default function HotelWebsite({ domain }) {
 
         loadPromotions(); // 첫 로딩 시 실행
 
-        // 💡 [핵심] 다른 탭(백오피스)에서 프로모션을 저장할 때 '새로고침 없이' 즉시 감지하여 풍선을 띄웁니다!
+        // 💡 백오피스에서 프로모션 저장 시 새로고침 없이 즉시 반영!
         window.addEventListener('storage', loadPromotions);
         return () => window.removeEventListener('storage', loadPromotions);
     }, [hotelCode]);
