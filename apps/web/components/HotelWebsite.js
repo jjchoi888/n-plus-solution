@@ -144,26 +144,13 @@ export default function HotelWebsite({ domain }) {
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
 
-    const [availableCount, setAvailableCount] = useState(null);
-
     // 💡 [추가] 개별웹 바운스 풍선 및 모달창 상태
     const [showPromoModal, setShowPromoModal] = useState(false);
     const [activePromos, setActivePromos] = useState([]); // 다중 프로모션 배열
     const [selectedPromo, setSelectedPromo] = useState(null); // 모달창에 띄울 1개
     const [appliedPromo, setAppliedPromo] = useState(null); // 결제창에 성공적으로 '적용된' 할인
 
-    useEffect(() => {
-        // 💡 백오피스 데이터 불러와서 자폭(유효기간) 필터링
-        const saved = localStorage.getItem(`promotions_${hotelCode}`);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
-            setActivePromos(validPromos);
-        }
-    }, [hotelCode]);  
-
+    // 💡 [버그 완벽 해결] hotelCode 변수를 먼저 정의해야 아래의 useEffect에서 에러 없이 사용할 수 있습니다.
     const getEffectiveHotelCode = () => {
         if (typeof window === 'undefined') return domain || 'sample001';
 
@@ -184,6 +171,18 @@ export default function HotelWebsite({ domain }) {
     };
 
     const hotelCode = getEffectiveHotelCode();
+
+    useEffect(() => {
+        // 💡 이제 hotelCode가 위에서 안전하게 준비되었으므로 프로모션 데이터를 정상적으로 불러옵니다!
+        const saved = localStorage.getItem(`promotions_${hotelCode}`);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
+            setActivePromos(validPromos);
+        }
+    }, [hotelCode]);
 
     useEffect(() => {
         // 💡 로딩 상태 시작
