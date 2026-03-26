@@ -143,8 +143,12 @@ export default function HotelWebsite({ domain }) {
     const [cardCvv, setCardCvv] = useState('');
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
-    
-    
+
+    // 💡 [핵심 복구] 이전 복사 과정에서 날아갔던 필수 상태값들을 다시 살려냈습니다! (하얀 화면 해결)
+    const [availableCount, setAvailableCount] = useState(null);
+    const [showPromoModal, setShowPromoModal] = useState(false);
+    const [activePromos, setActivePromos] = useState([]);
+
     const [selectedPromo, setSelectedPromo] = useState(null); // 모달창에 띄울 1개
     const [appliedPromo, setAppliedPromo] = useState(null); // 결제창에 성공적으로 '적용된' 할인
 
