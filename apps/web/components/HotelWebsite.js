@@ -171,13 +171,13 @@ export default function HotelWebsite({ domain }) {
     useEffect(() => {
         const fetchLivePromotions = async () => {
             try {
-                const API_BASE = import.meta.env.VITE_API_URL || '';
-                const res = await fetch(`${API_BASE}/api/promotions?hotel=${hotelCode}`);
+                // 💡 대표님 세팅대로 깔끔하게 /api 로직으로 원상 복구했습니다!
+                const res = await fetch(`/api/promotions?hotel=${hotelCode}`);
+                const data = await res.json();
 
                 if (Array.isArray(data)) {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    // 활성화 상태이고 만료되지 않은 진짜 프로모션만 적용
                     const validPromos = data.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
                     setActivePromos(validPromos);
                 }
