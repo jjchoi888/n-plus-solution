@@ -195,27 +195,41 @@ export default function MainPortal() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [contactMode, setContactMode] = useState('CHOICE');
 
-  // 💡 [연동 완료] 로컬 스토리지에 저장된 "모든 호텔"의 프로모션을 싹 다 긁어옵니다.
+  // 💡 [연동 완료 & 실시간 자동 동기화 적용]
   const [promotions, setPromotions] = useState([]);
   useEffect(() => {
-    let allPromos = [];
-    // 스토리지에 있는 모든 키를 검사해서 promotions_ 로 시작하는 데이터를 다 가져옵니다.
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('promotions_')) {
-        try {
-          const parsed = JSON.parse(localStorage.getItem(key));
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          // Active 상태이면서 오늘 날짜 기준으로 만료되지 않은 것만 필터링
-          const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
-          allPromos = [...allPromos, ...validPromos];
-        } catch (e) {
-          console.error("Promo parse error", e);
+    const loadPromotions = () => {
+      let allPromos = [];
+      let foundInStorage = false;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('promotions_')) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(key));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const validPromos = parsed.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
+            allPromos = [...allPromos, ...validPromos];
+            if (validPromos.length > 0) foundInStorage = true;
+          } catch (e) { console.error("Promo parse error", e); }
         }
       }
-    }
-    setPromotions(allPromos);
+
+      if (!foundInStorage) {
+        allPromos = [
+          { id: 'def1', title: "Summer Early Bird", description: "Book 30 days in advance and get 20% off your entire stay.", code: "SUMMER20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=600&q=80", target_room_type: ["All Rooms"] },
+          { id: 'def2', title: "Family Weekend Getaway", description: "Enjoy complimentary breakfast for 4 and late check-out on weekends.", code: "FAMILYFUN", discount_pct: 15, end_date: "2026-12-31", image_url: "https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=600&q=80", target_room_type: ["Suite Only"] }
+        ];
+      }
+      setPromotions(allPromos);
+    };
+
+    loadPromotions(); // 첫 로딩 시 실행
+
+    // 💡 [핵심] 백오피스에서 저장버튼을 누르는 순간, 통합웹이 새로고침 없이 즉시 감지하고 업데이트합니다.
+    window.addEventListener('storage', loadPromotions);
+    return () => window.removeEventListener('storage', loadPromotions);
   }, []);
 
   const t = translations[lang] || translations.en;
