@@ -195,19 +195,27 @@ export default function MainPortal() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [contactMode, setContactMode] = useState('CHOICE');
 
-  // 💡 [연동 완료] 백오피스에서 저장한 실제 데이터를 불러오고, 기간 만료된 것은 폭파시킵니다.
+  // 💡 [연동 완료] 로컬 스토리지에 저장된 "모든 호텔"의 프로모션을 싹 다 긁어옵니다.
   const [promotions, setPromotions] = useState([]);
   useEffect(() => {
-    // 통합웹에서는 편의상 'sample001' 호텔의 프로모션을 대표로 가져옵니다.
-    const saved = localStorage.getItem(`promotions_sample001`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      // Active 상태이면서 오늘 날짜 기준으로 만료되지 않은 것만 필터링
-      const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
-      setPromotions(validPromos);
+    let allPromos = [];
+    // 스토리지에 있는 모든 키를 검사해서 promotions_ 로 시작하는 데이터를 다 가져옵니다.
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('promotions_')) {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(key));
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          // Active 상태이면서 오늘 날짜 기준으로 만료되지 않은 것만 필터링
+          const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
+          allPromos = [...allPromos, ...validPromos];
+        } catch (e) {
+          console.error("Promo parse error", e);
+        }
+      }
     }
+    setPromotions(allPromos);
   }, []);
 
   const t = translations[lang] || translations.en;

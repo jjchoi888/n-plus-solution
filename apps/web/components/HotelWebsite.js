@@ -143,10 +143,12 @@ export default function HotelWebsite({ domain }) {
     const [cardCvv, setCardCvv] = useState('');
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
+    const [availableCount, setAvailableCount] = useState(null); // 💡 실수로 지워졌던 코드 복구 완료!
 
     // 💡 [추가] 개별웹 바운스 풍선 및 모달창 상태
     const [showPromoModal, setShowPromoModal] = useState(false);
     const [activePromos, setActivePromos] = useState([]); // 다중 프로모션 배열
+    
     const [selectedPromo, setSelectedPromo] = useState(null); // 모달창에 띄울 1개
     const [appliedPromo, setAppliedPromo] = useState(null); // 결제창에 성공적으로 '적용된' 할인
 
