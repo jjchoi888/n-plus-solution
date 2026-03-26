@@ -195,13 +195,14 @@ export default function MainPortal() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [contactMode, setContactMode] = useState('CHOICE');
 
-  // 💡 [연동 완료 & 실시간 자동 동기화 적용]
+  // 💡 [연동 완료 & 가짜 데이터 완전 삭제] 모든 브랜치의 실제 프로모션만 수집
   const [promotions, setPromotions] = useState([]);
+
   useEffect(() => {
     const loadPromotions = () => {
       let allPromos = [];
-      let foundInStorage = false;
 
+      // 스토리지에 있는 '모든' 브랜치(promotions_ 로 시작하는 모든 키)의 프로모션을 순회하며 수집합니다.
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('promotions_')) {
@@ -209,19 +210,17 @@ export default function MainPortal() {
             const parsed = JSON.parse(localStorage.getItem(key));
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+
+            // 활성화 상태(is_active)이며, 기한이 만료되지 않은 '진짜' 데이터만 필터링
             const validPromos = parsed.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
             allPromos = [...allPromos, ...validPromos];
-            if (validPromos.length > 0) foundInStorage = true;
-          } catch (e) { console.error("Promo parse error", e); }
+          } catch (e) {
+            console.error("Promo parse error", e);
+          }
         }
       }
 
-      if (!foundInStorage) {
-        allPromos = [
-          { id: 'def1', title: "Summer Early Bird", description: "Book 30 days in advance and get 20% off your entire stay.", code: "SUMMER20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=600&q=80", target_room_type: ["All Rooms"] },
-          { id: 'def2', title: "Family Weekend Getaway", description: "Enjoy complimentary breakfast for 4 and late check-out on weekends.", code: "FAMILYFUN", discount_pct: 15, end_date: "2026-12-31", image_url: "https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=600&q=80", target_room_type: ["Suite Only"] }
-        ];
-      }
+      // 가짜 데이터 삽입 로직을 완전히 제거하고, 오직 수집된 실제 데이터만 세팅합니다.
       setPromotions(allPromos);
     };
 
