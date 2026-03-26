@@ -143,11 +143,7 @@ export default function HotelWebsite({ domain }) {
     const [cardCvv, setCardCvv] = useState('');
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
-    const [availableCount, setAvailableCount] = useState(null); // 💡 실수로 지워졌던 코드 복구 완료!
-
-    // 💡 [추가] 개별웹 바운스 풍선 및 모달창 상태
-    const [showPromoModal, setShowPromoModal] = useState(false);
-    const [activePromos, setActivePromos] = useState([]); // 다중 프로모션 배열
+    
     
     const [selectedPromo, setSelectedPromo] = useState(null); // 모달창에 띄울 1개
     const [appliedPromo, setAppliedPromo] = useState(null); // 결제창에 성공적으로 '적용된' 할인
@@ -172,18 +168,33 @@ export default function HotelWebsite({ domain }) {
         return 'sample001';
     };
 
-    const hotelCode = getEffectiveHotelCode();
-
     useEffect(() => {
-        // 💡 이제 hotelCode가 위에서 안전하게 준비되었으므로 프로모션 데이터를 정상적으로 불러옵니다!
-        const saved = localStorage.getItem(`promotions_${hotelCode}`);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
+        const loadPromotions = () => {
+            const saved = localStorage.getItem(`promotions_${hotelCode}`);
+            let validPromos = [];
+
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    validPromos = parsed.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
+                } catch (e) { console.error(e); }
+            }
+
+            if (validPromos.length === 0) {
+                validPromos = [
+                    { id: 'def1', title: "Summer Early Bird", description: "Enjoy exclusive early bird savings on your summer getaway when you book ahead.", code: "SUM20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80", target_room_type: ["All Rooms"] }
+                ];
+            }
             setActivePromos(validPromos);
-        }
+        };
+
+        loadPromotions(); // 첫 로딩 시 실행
+
+        // 💡 [핵심] 다른 탭(백오피스)에서 프로모션을 저장할 때 '새로고침 없이' 즉시 감지하여 풍선을 띄웁니다!
+        window.addEventListener('storage', loadPromotions);
+        return () => window.removeEventListener('storage', loadPromotions);
     }, [hotelCode]);
 
     useEffect(() => {
@@ -960,15 +971,11 @@ export default function HotelWebsite({ domain }) {
                                 <button onClick={() => setShowPromoModal(false)} className="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-md hover:bg-red-600 flex items-center justify-center">✕</button>
                             </div>
                             <div className="p-6 text-left">
-                                <h2 className="text-xl font-black text-slate-800 mb-2">{selectedPromo.title}</h2>
-
-                                <div className="mb-3 flex flex-wrap gap-1">
+                                <div className="mb-4 flex flex-wrap gap-1">
                                     {Array.isArray(selectedPromo.target_room_type) ? selectedPromo.target_room_type.map(r => (
                                         <span key={`modal_${r}`} className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ {r}</span>
                                     )) : <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ All Rooms</span>}
                                 </div>
-
-                                <p className="text-sm text-slate-500 mb-6">{selectedPromo.description}</p>
 
                                 <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border border-emerald-100 mb-6">
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Code</span>
