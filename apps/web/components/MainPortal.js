@@ -193,20 +193,21 @@ export default function MainPortal() {
 
   // 💡 [신규 추가] Contact Sales 팝업창 관리를 위한 상태
   const [isContactOpen, setIsContactOpen] = useState(false);
-  
   const [contactMode, setContactMode] = useState('CHOICE');
 
-  // 💡 [연동] DB API 호출 대체용 더미 데이터 세팅 & 자폭(만료) 필터링
+  // 💡 [연동 완료] 백오피스에서 저장한 실제 데이터를 불러오고, 기간 만료된 것은 폭파시킵니다.
   const [promotions, setPromotions] = useState([]);
   useEffect(() => {
-    const dummyPromos = [
-      { id: 1, title: "Summer Early Bird", description: "Book 30 days in advance and get 20% off your entire stay.", code: "SUMMER20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=600&q=80", target_room_type: "All Rooms" },
-      { id: 2, title: "Family Weekend Getaway", description: "Enjoy complimentary breakfast for 4 and late check-out on weekends.", code: "FAMILYFUN", discount_pct: 15, end_date: "2026-12-31", image_url: "https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=600&q=80", target_room_type: "Suite Only" }
-    ];
-    // 날짜 폭탄: 오늘 날짜가 end_date를 지났으면 목록에서 완전히 삭제
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    setPromotions(dummyPromos.filter(p => new Date(p.end_date) >= today));
+    // 통합웹에서는 편의상 'sample001' 호텔의 프로모션을 대표로 가져옵니다.
+    const saved = localStorage.getItem(`promotions_sample001`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      // Active 상태이면서 오늘 날짜 기준으로 만료되지 않은 것만 필터링
+      const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
+      setPromotions(validPromos);
+    }
   }, []);
 
   const t = translations[lang] || translations.en;

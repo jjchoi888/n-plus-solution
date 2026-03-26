@@ -148,29 +148,21 @@ export default function HotelWebsite({ domain }) {
 
     // 💡 [추가] 개별웹 바운스 풍선 및 모달창 상태
     const [showPromoModal, setShowPromoModal] = useState(false);
-    const [activePromo, setActivePromo] = useState(null);
+    const [activePromos, setActivePromos] = useState([]); // 다중 프로모션 배열
+    const [selectedPromo, setSelectedPromo] = useState(null); // 모달창에 띄울 1개
+    const [appliedPromo, setAppliedPromo] = useState(null); // 결제창에 성공적으로 '적용된' 할인
 
     useEffect(() => {
-        // 실제 환경에서는 fetch('/api/public/promotions') 호출 후 가장 최신 활성 프로모션 가져오기
-        const dummyPromo = {
-            title: "Summer Early Bird",
-            description: "Enjoy exclusive early bird savings on your summer getaway when you book ahead.",
-            code: "SUM20",
-            discount_pct: 20,
-            end_date: "2026-08-31",
-            image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
-            target_room_type: "All Rooms"
-        };
-
-        // 💣 자폭 폭탄 로직 (기간 만료 시 아예 안 보이게 처리)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (new Date(dummyPromo.end_date) >= today) {
-            setActivePromo(dummyPromo);
+        // 💡 백오피스 데이터 불러와서 자폭(유효기간) 필터링
+        const saved = localStorage.getItem(`promotions_${hotelCode}`);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const validPromos = parsed.filter(p => p.is_active === 1 && new Date(p.end_date) >= today);
+            setActivePromos(validPromos);
         }
-    }, []);
-
-
+    }, [hotelCode]);  
 
     const getEffectiveHotelCode = () => {
         if (typeof window === 'undefined') return domain || 'sample001';
@@ -717,7 +709,24 @@ export default function HotelWebsite({ domain }) {
 
                     const basePrice = (activeRoom?.price || 0) * nights * roomCount;
                     const extraBedPrice = extraBed * 1000 * nights;
-                    const finalTotal = basePrice + extraBedPrice;
+
+                    // 💡 [핵심] 적용된 프로모션이 있으면 실제 할인을 계산해서 최종 금액(finalTotal)에서 뺍니다!
+                    const discountAmount = appliedPromo ? (basePrice * (appliedPromo.discount_pct / 100)) : 0;
+                    const finalTotal = basePrice + extraBedPrice - discountAmount;
+
+                    // 프로모션 검증 및 적용 함수
+                    const handleApplyPromo = () => {
+                        const promo = activePromos.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
+                        if (!promo) return setAlertMessage(lang === 'ko' ? "존재하지 않거나 만료된 코드입니다." : "Invalid or expired promo code.");
+
+                        // 타겟 객실 검증 (All Rooms가 아니고, 현재 예약하려는 방 이름이 포함되어 있지 않으면 튕겨냄)
+                        if (!promo.target_room_type.includes('All Rooms') && !promo.target_room_type.includes(activeRoom?.name)) {
+                            return setAlertMessage(lang === 'ko' ? `이 코드는 다음 객실에만 적용됩니다: ${promo.target_room_type.join(', ')}` : `This code is only valid for: ${promo.target_room_type.join(', ')}`);
+                        }
+
+                        setAppliedPromo(promo);
+                        setAlertMessage(`🎉 Promo applied successfully! You get ${promo.discount_pct}% OFF!`);
+                    };
 
                     const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
                     const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
@@ -883,9 +892,20 @@ export default function HotelWebsite({ domain }) {
                                         <div className="mb-6">
                                             <label className="text-[10px] font-bold theme-text uppercase mb-1 block">{t.promoCode}</label>
                                             <div className="flex gap-2">
-                                                <input value={promoCode} onChange={e => setPromoCode(e.target.value)} disabled={isBooking} className="flex-1 p-2.5 border theme-border rounded-xl text-sm outline-none theme-focus" placeholder="E.G. WELCOME10" />
-                                                <button type="button" disabled={isBooking} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm">{t.apply}</button>
+                                                <input value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} disabled={isBooking || appliedPromo} className="flex-1 p-2.5 border theme-border rounded-xl text-sm outline-none theme-focus uppercase" placeholder="E.G. WELCOME10" />
+                                                {!appliedPromo ? (
+                                                    <button type="button" onClick={handleApplyPromo} disabled={isBooking || !promoCode} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm disabled:opacity-50">{t.apply}</button>
+                                                ) : (
+                                                    <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm">Cancel</button>
+                                                )}
                                             </div>
+                                            {/* 할인 적용 시 화면에 표시 */}
+                                            {appliedPromo && (
+                                                <div className="mt-3 bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex justify-between items-center animate-fade-in text-emerald-700 font-bold text-sm">
+                                                    <span>🎉 {appliedPromo.discount_pct}% Discount</span>
+                                                    <span>- ₱{discountAmount.toLocaleString()}</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="mt-auto pt-6 border-t theme-border">
@@ -904,48 +924,67 @@ export default function HotelWebsite({ domain }) {
                     );
                 })()}
 
-                {/* 🎈 우측 상단 바운스 대화 풍선 (기간이 유효할 때만 보임) */}
-                {activePromo && (
-                    <button
-                        onClick={() => setShowPromoModal(true)}
-                        className="fixed top-24 right-6 bg-red-600 text-white font-black text-xs px-4 py-3 rounded-full shadow-2xl animate-bounce z-40 flex items-center justify-center border-2 border-white transition-transform hover:scale-110"
-                    >
-                        PROMO
-                        <div className="absolute -bottom-2 right-1/2 translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-red-600 border-r-[6px] border-r-transparent"></div>
-                    </button>
+                {/* 🎈 우측 상단 바운스 대화 풍선 (다중 배열 & 완벽한 원형) */}
+                {activePromos.length > 0 && (
+                    // 모바일은 세로(flex-col), 데스크탑은 가로(flex-row)로 배치
+                    <div className="fixed top-24 right-6 z-40 flex flex-col md:flex-row gap-4 items-end md:items-center">
+                        {activePromos.map((promo, idx) => {
+                            // 다중 프로모션 색상 로테이션 배열
+                            const colors = ['bg-red-600', 'bg-blue-600', 'bg-emerald-600', 'bg-purple-600'];
+                            const colorClass = colors[idx % colors.length];
+
+                            return (
+                                <button
+                                    key={`balloon_${promo.id}`}
+                                    onClick={() => { setSelectedPromo(promo); setShowPromoModal(true); }}
+                                    className={`relative ${colorClass} text-white font-black text-[10px] sm:text-xs w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl animate-bounce flex flex-col items-center justify-center border-2 border-white transition-transform hover:scale-110 shrink-0`}
+                                >
+                                    <span>{promo.discount_pct}%</span>
+                                    <span>OFF</span>
+                                    {/* 풍선 꼬리 */}
+                                    <div className={`absolute -bottom-2 right-1/2 translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-current border-r-[6px] border-r-transparent ${colorClass.replace('bg-', 'text-')}`}></div>
+                                </button>
+                            );
+                        })}
+                    </div>
                 )}
 
-                {/* 🎁 스페셜 오퍼 팝업 모달창 */}
-                {showPromoModal && activePromo && (
+                {/* 🎁 스페셜 오퍼 팝업 모달창 (선택된 1개만 띄움) */}
+                {showPromoModal && selectedPromo && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
                         <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative flex flex-col">
                             <div className="h-48 w-full relative">
-                                <img src={activePromo.image_url} alt="Promo" className="w-full h-full object-cover" />
-                                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-lg font-black text-emerald-600 shadow-sm">{activePromo.discount_pct}% OFF</div>
+                                <img src={selectedPromo.image_url} alt="Promo" className="w-full h-full object-cover" />
+                                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-lg font-black text-emerald-600 shadow-sm">{selectedPromo.discount_pct}% OFF</div>
                                 <button onClick={() => setShowPromoModal(false)} className="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-md hover:bg-red-600 flex items-center justify-center">✕</button>
                             </div>
                             <div className="p-6 text-left">
-                                <h2 className="text-xl font-black text-slate-800 mb-2">{activePromo.title}</h2>
-                                <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100 mb-3">🛏️ {activePromo.target_room_type}</span>
-                                <p className="text-sm text-slate-500 mb-6">{activePromo.description}</p>
+                                <h2 className="text-xl font-black text-slate-800 mb-2">{selectedPromo.title}</h2>
+
+                                <div className="mb-3 flex flex-wrap gap-1">
+                                    {Array.isArray(selectedPromo.target_room_type) ? selectedPromo.target_room_type.map(r => (
+                                        <span key={`modal_${r}`} className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ {r}</span>
+                                    )) : <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ All Rooms</span>}
+                                </div>
+
+                                <p className="text-sm text-slate-500 mb-6">{selectedPromo.description}</p>
 
                                 <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border border-emerald-100 mb-6">
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Code</span>
-                                    <span className="font-mono font-black text-emerald-700 tracking-wider text-lg bg-white px-3 py-1 rounded shadow-sm">{activePromo.code}</span>
+                                    <span className="font-mono font-black text-emerald-700 tracking-wider text-lg bg-white px-3 py-1 rounded shadow-sm">{selectedPromo.code}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center mb-6">
-                                    <span className="text-[10px] font-bold text-red-500">Ends: {activePromo.end_date}</span>
+                                    <span className="text-[10px] font-bold text-red-500">Ends: {selectedPromo.end_date}</span>
                                     <span className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-1">✅ Active</span>
                                 </div>
 
-                                {/* 💡 예약창 자동 연동: 모달 닫기 -> 탭 이동 -> 코드 자동 세팅 -> 알림 */}
                                 <button onClick={() => {
                                     setShowPromoModal(false);
-                                    setPromoCode(activePromo.code); // 결제창 Promo Code 입력란에 코드 쏴주기
-                                    setActiveMenu('ROOMS'); // 방 고르는 곳으로 이동
+                                    setPromoCode(selectedPromo.code);
+                                    setActiveMenu('ROOMS');
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    setAlertMessage(`🎁 '${activePromo.code}' 코드가 자동 적용되었습니다!\n원하시는 날짜와 객실을 선택 후 예약(Reserve Now)을 진행해 주세요.`);
+                                    setAlertMessage(`🎁 '${selectedPromo.code}' 코드가 복사되었습니다!\n원하시는 날짜와 객실(Target Room)을 선택 후 결제창에서 적용(Apply)을 눌러주세요.`);
                                 }} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg">
                                     RESERVE NOW
                                 </button>
