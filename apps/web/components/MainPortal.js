@@ -203,8 +203,8 @@ export default function MainPortal() {
     const fetchAllPromotions = async () => {
       try {
         // 서버에 'ALL'을 요청하면 모든 호텔의 프로모션을 리턴하도록 세팅해 두었습니다.
-        const res = await fetch('/api/promotions?hotel=ALL');
-        const data = await res.json();
+        const API_BASE = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${API_BASE}/api/promotions?hotel=ALL`);
 
         if (Array.isArray(data)) {
           const today = new Date();

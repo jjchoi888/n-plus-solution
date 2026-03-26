@@ -171,8 +171,8 @@ export default function HotelWebsite({ domain }) {
     useEffect(() => {
         const fetchLivePromotions = async () => {
             try {
-                const res = await fetch(`/api/promotions?hotel=${hotelCode}`);
-                const data = await res.json();
+                const API_BASE = import.meta.env.VITE_API_URL || '';
+                const res = await fetch(`${API_BASE}/api/promotions?hotel=${hotelCode}`);
 
                 if (Array.isArray(data)) {
                     const today = new Date();
