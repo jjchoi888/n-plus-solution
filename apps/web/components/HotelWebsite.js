@@ -183,12 +183,7 @@ export default function HotelWebsite({ domain }) {
                 } catch (e) { console.error(e); }
             }
 
-            // 만약 받아온 데이터가 없으면 빈 화면 대신 기본(Default) 풍선을 띄워줍니다.
-            if (validPromos.length === 0) {
-                validPromos = [
-                    { id: 'def1', title: "Summer Early Bird", description: "Enjoy exclusive early bird savings on your summer getaway when you book ahead.", code: "SUM20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80", target_room_type: ["All Rooms"] }
-                ];
-            }
+            // 💡 [가짜 데이터 완전 삭제] 오직 실제 로컬 스토리지에 있는 데이터만 적용합니다.
             setActivePromos(validPromos);
         };
 
