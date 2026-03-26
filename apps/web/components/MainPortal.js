@@ -193,7 +193,21 @@ export default function MainPortal() {
 
   // 💡 [신규 추가] Contact Sales 팝업창 관리를 위한 상태
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const [contactMode, setContactMode] = useState('CHOICE'); // 'CHOICE' 또는 'EMAIL'
+  
+  const [contactMode, setContactMode] = useState('CHOICE');
+
+  // 💡 [연동] DB API 호출 대체용 더미 데이터 세팅 & 자폭(만료) 필터링
+  const [promotions, setPromotions] = useState([]);
+  useEffect(() => {
+    const dummyPromos = [
+      { id: 1, title: "Summer Early Bird", description: "Book 30 days in advance and get 20% off your entire stay.", code: "SUMMER20", discount_pct: 20, end_date: "2026-08-31", image_url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=600&q=80", target_room_type: "All Rooms" },
+      { id: 2, title: "Family Weekend Getaway", description: "Enjoy complimentary breakfast for 4 and late check-out on weekends.", code: "FAMILYFUN", discount_pct: 15, end_date: "2026-12-31", image_url: "https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=600&q=80", target_room_type: "Suite Only" }
+    ];
+    // 날짜 폭탄: 오늘 날짜가 end_date를 지났으면 목록에서 완전히 삭제
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setPromotions(dummyPromos.filter(p => new Date(p.end_date) >= today));
+  }, []);
 
   const t = translations[lang] || translations.en;
 
@@ -576,50 +590,36 @@ export default function MainPortal() {
                 </h2>
               </div>
               
-              <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
-                {/* 💡 백오피스(Admin)에서 받아온 데이터를 매핑하는 구조. 일단 하드코딩된 예시 2개로 연출 */}
-                <div className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
-                    <div className="h-48 relative">
-                        <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=600&q=80" alt="Summer Promo" className="w-full h-full object-cover" />
-                        <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">20% OFF</div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">Summer Early Bird</h3>
+                    <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
+                      {promotions.length === 0 ? (
+                        <p className="text-slate-400 font-bold p-4">No active promotions at this time.</p>
+                      ) : (
+                        promotions.map(promo => (
+                          <div key={promo.id} className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
+                            <div className="h-48 relative">
+                              <img src={promo.image_url} alt="Promo" className="w-full h-full object-cover" />
+                              <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">{promo.discount_pct}% OFF</div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                              <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">{promo.title}</h3>
+                            </div>
+                            <div className="p-6">
+                              <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100 mb-3">🛏️ {promo.target_room_type}</span>
+                              <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">{promo.description}</p>
+                              <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
+                                <span className="font-mono font-black text-emerald-600 text-lg">{promo.code}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: {promo.end_date}</span>
+                                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
-                    <div className="p-6">
-                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">Book 30 days in advance and get 20% off your entire stay.</p>
-                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
-                            <span className="font-mono font-black text-emerald-600 text-lg">SUMMER20</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: Aug 31</span>
-                            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
-                    <div className="h-48 relative">
-                        <img src="https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=600&q=80" alt="Family Promo" className="w-full h-full object-cover" />
-                        <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">Free Breakfast</div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">Family Weekend Getaway</h3>
-                    </div>
-                    <div className="p-6">
-                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">Enjoy complimentary breakfast for 4 and late check-out on weekends.</p>
-                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
-                            <span className="font-mono font-black text-emerald-600 text-lg">FAMILYFUN</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: Dec 31</span>
-                            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
-                        </div>
-                    </div>
-                </div>
-              </div>
-            </div>
-          </section>
+                  </div>
+                </section>
 
           <section className="w-full bg-white mt-20 md:mt-32 pt-24 pb-20 px-6 border-b border-slate-100">
             <div className="max-w-7xl mx-auto">
