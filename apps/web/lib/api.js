@@ -1,5 +1,5 @@
-// 1. Local 백엔드 서버 주소
-const BASE_URL = '';
+// 1. 💡 [수정] Vercel 환경변수를 먼저 찾고, 없으면 우리가 만든 보안 주소(HTTPS)로 직접 찾아갑니다!
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || import.meta.env.VITE_API_URL || 'https://api.hotelnplus.com';
 
 // 💡 [삭제] 더 이상 단일 호텔 코드에 묶이지 않으므로 환경 변수(HOTEL_CODE)를 고정하지 않습니다.
 
