@@ -577,12 +577,11 @@ export default function MainPortal() {
 
             <div className="relative z-[60] w-full max-w-6xl px-4 mt-6 md:mt-12 md:-mb-32">
                <div className="bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-4 md:p-6 border border-slate-100 flex flex-col gap-4">
-                 <div className="flex justify-between items-center px-2">
-                    <h3 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
-                      <span className="text-emerald-600">✨</span> {t.bookPartner}
-                    </h3>
-                    <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 md:px-3 py-1 rounded-full">{t.zeroComm}</span>
-                 </div>
+                      <div className="flex justify-between items-center px-2">
+                        <h3 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
+                          <span className="text-emerald-600">✨</span> {t.bookPartner}
+                        </h3>
+                      </div>
                  <BookingBar lang={lang} onSearchResults={setSearchData} />
                </div>
             </div>
