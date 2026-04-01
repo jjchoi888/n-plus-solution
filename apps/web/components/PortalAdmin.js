@@ -2,20 +2,56 @@
 import React, { useState, useEffect } from "react";
 
 export default function PortalAdmin() {
+    // 💡 [신규] 로그인 관련 상태
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [loginId, setLoginId] = useState("");
+    const [loginPw, setLoginPw] = useState("");
+    const [loginError, setLoginError] = useState("");
+    const [isAuthenticating, setIsAuthenticating] = useState(false);
+
     const [activeTab, setActiveTab] = useState("DASHBOARD");
     const [searchQuery, setSearchQuery] = useState("");
     const [partners, setPartners] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 💡 [API 연동] 백엔드에서 실제 파트너 호텔 현황 데이터를 불러옵니다.
+    // 💡 [API 연동] HQ 마스터 로그인 처리
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoginError("");
+        setIsAuthenticating(true);
+
+        try {
+            // 🚨 기존 /api/login 대신 방금 만든 HQ 전용 /api/hq-login 으로 쏩니다!
+            const res = await fetch('/api/hq-login', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                // 개별 호텔 코드는 필요 없으므로 본사 마스터 아이디와 비밀번호만 보냅니다.
+                body: JSON.stringify({ user_id: loginId, password: loginPw })
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.role === 'SUPER_ADMIN') {
+                setIsLoggedIn(true);
+            } else {
+                setLoginError("Invalid HQ credentials or insufficient permissions.");
+            }
+        } catch (err) {
+            setLoginError("Failed to connect to the HQ server.");
+        } finally {
+            setIsAuthenticating(false);
+        }
+    };
+
+    // 파트너 데이터 로드 (로그인 성공 후에만 실행)
     useEffect(() => {
+        if (!isLoggedIn) return;
+
         const fetchPartners = async () => {
             try {
                 const res = await fetch('/api/admin/partners');
                 const data = await res.json();
-                if (Array.isArray(data)) {
-                    setPartners(data);
-                }
+                if (Array.isArray(data)) setPartners(data);
             } catch (error) {
                 console.error("Failed to fetch partners:", error);
             } finally {
@@ -24,25 +60,87 @@ export default function PortalAdmin() {
         };
 
         fetchPartners();
-    }, []);
+    }, [isLoggedIn]);
+
+    // 🔒 로그인되지 않은 상태면 HQ 로그인 화면 출력
+    if (!isLoggedIn) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden">
+                {/* 배경 장식 효과 */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-emerald-500/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+                <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 relative z-10 animate-fade-in-up">
+                    <div className="text-center mb-10">
+                        <div className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-1 mb-2">
+                            <span className="text-emerald-500">n+</span> Portal HQ
+                        </div>
+                        <p className="text-slate-400 text-sm font-bold tracking-widest uppercase">Master Administration</p>
+                    </div>
+
+                    {loginError && (
+                        <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm font-bold text-center p-3 rounded-xl mb-6">
+                            {loginError}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleLogin} className="space-y-6">
+                        <div>
+                            <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Master ID</label>
+                            <input
+                                type="text"
+                                required
+                                value={loginId}
+                                onChange={(e) => setLoginId(e.target.value)}
+                                className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors"
+                                placeholder="Admin ID"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Password</label>
+                            <input
+                                type="password"
+                                required
+                                value={loginPw}
+                                onChange={(e) => setLoginPw(e.target.value)}
+                                className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors tracking-widest"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isAuthenticating}
+                            className="w-full bg-emerald-600 text-white font-black py-4 rounded-xl hover:bg-emerald-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                        >
+                            {isAuthenticating ? "AUTHENTICATING..." : "ACCESS HQ PORTAL"}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 text-center border-t border-slate-800 pt-6">
+                        <p className="text-[10px] text-slate-500 font-bold">UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 데이터 로딩 중 화면
+    if (isLoading) {
+        return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading HQ Dashboard...</div>;
+    }
 
     // 상단 요약 통계 계산
     const totalPartners = partners.length;
     const activePartners = partners.filter(p => p.status === "Active").length;
     const totalMRR = partners.filter(p => p.status === "Active").reduce((sum, p) => sum + p.mrr, 0);
-    const totalBookings = partners.reduce((sum, p) => sum + (p.bookings || 0), 0); // 실제 예약 건수 합산
+    const totalBookings = partners.reduce((sum, p) => sum + (p.bookings || 0), 0);
 
     const filteredPartners = partners.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.code.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (isLoading) {
-        return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading HQ Dashboard...</div>;
-    }
-
     return (
-        <div className="flex h-screen bg-slate-50 font-sans font-medium selection:bg-emerald-500 selection:text-white">
+        <div className="flex h-screen bg-slate-50 font-sans font-medium selection:bg-emerald-500 selection:text-white animate-fade-in">
 
             {/* 📌 좌측 다크 사이드바 (마스터 관리자용) */}
             <aside className="w-64 bg-slate-950 text-slate-300 flex flex-col shadow-2xl z-20 shrink-0">
@@ -52,7 +150,7 @@ export default function PortalAdmin() {
                     </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 flex-1 overflow-y-auto">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-4">Main Menu</p>
                     <nav className="space-y-2">
                         <button onClick={() => setActiveTab("DASHBOARD")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === "DASHBOARD" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "hover:bg-slate-900 hover:text-white"}`}>
@@ -71,12 +169,18 @@ export default function PortalAdmin() {
                 </div>
 
                 <div className="mt-auto p-6 border-t border-slate-800">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-white">HQ</div>
-                        <div>
-                            <p className="text-sm font-bold text-white">System Admin</p>
-                            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Super User</p>
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-black text-white shadow-lg">HQ</div>
+                            <div>
+                                <p className="text-sm font-bold text-white truncate max-w-[100px]">{loginId}</p>
+                                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Super User</p>
+                            </div>
                         </div>
+                        {/* 💡 [신규] 로그아웃 버튼 */}
+                        <button onClick={() => setIsLoggedIn(false)} className="text-slate-500 hover:text-red-400 transition-colors p-2" title="Logout">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
                     </div>
                 </div>
             </aside>
@@ -92,7 +196,7 @@ export default function PortalAdmin() {
                         {activeTab === "DOMAINS" && "Custom Domain Requests"}
                     </h1>
                     <div className="flex items-center gap-4">
-                        <button className="relative w-10 h-10 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                        <button className="relative w-10 h-10 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors text-xl">
                             🔔
                             <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
                         </button>
@@ -121,7 +225,6 @@ export default function PortalAdmin() {
                                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Global Direct Bookings</p>
-                                        {/* 💡 [수정] 가짜 데이터 대신 DB에서 불러온 진짜 예약 건수 총합을 보여줍니다 */}
                                         <h3 className="text-4xl font-black text-slate-800">{totalBookings.toLocaleString()}</h3>
                                     </div>
                                     <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl">⚡</div>
@@ -212,7 +315,6 @@ export default function PortalAdmin() {
                                                         )}
                                                     </td>
                                                     <td className="p-5 text-center">
-                                                        {/* 💡 [신규] DB에서 불러온 실제 예약 건수 표시 */}
                                                         <div className="text-slate-800">{p.bookings}</div>
                                                     </td>
                                                     <td className="p-5 text-center">
@@ -221,9 +323,9 @@ export default function PortalAdmin() {
                                                             {p.status}
                                                         </span>
                                                     </td>
-                                                    <td className="p-5 text-right space-x-2">
-                                                        <button className="text-slate-400 hover:text-emerald-600 p-2 transition-colors tooltip" title="Edit Settings">⚙️</button>
-                                                        <button className="text-slate-400 hover:text-blue-600 p-2 transition-colors tooltip" title="View PMS Data">🖥️</button>
+                                                    <td className="p-5 text-right space-x-2 flex justify-end">
+                                                        <button className="text-slate-400 hover:text-emerald-600 p-2 transition-colors" title="Edit Settings">⚙️</button>
+                                                        <button className="text-slate-400 hover:text-blue-600 p-2 transition-colors" title="View PMS Data">🖥️</button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -249,7 +351,6 @@ export default function PortalAdmin() {
 
                 </div>
             </main>
-
         </div>
     );
 }
