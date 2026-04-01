@@ -4,7 +4,7 @@ import RoomList from "./RoomList";
 
 const BASE_URL = '';
 
-// 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
+// 💡 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {
     const now = new Date();
     if (now.getHours() < 12) now.setDate(now.getDate() - 1);
@@ -15,7 +15,7 @@ const getHotelDate = (offsetDays = 0) => {
     return `${year}-${month}-${day}`;
 };
 
-// 💡 [신규] 장바구니(RoomList) 하얀 화면 원인 추적기
+// 장바구니(RoomList) 하얀 화면 원인 추적기
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false, error: null }; }
     static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -129,7 +129,7 @@ export default function HotelWebsite({ domain }) {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false); // 💡 모달 대신 검색창 바로 밑에 띄우기 위한 스위치
+    const [hasSearched, setHasSearched] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
 
     const [firstName, setFirstName] = useState('');
@@ -144,14 +144,13 @@ export default function HotelWebsite({ domain }) {
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
 
-    // 💡 [복구 완료] 필수 상태값들
     const [availableCount, setAvailableCount] = useState(null);
     const [showPromoModal, setShowPromoModal] = useState(false);
     const [activePromos, setActivePromos] = useState([]);
     const [selectedPromo, setSelectedPromo] = useState(null);
     const [appliedPromo, setAppliedPromo] = useState(null);
 
-    // 💡 [핵심] hotelCode가 '가장 먼저' 정의되어야 에러가 발생하지 않습니다!
+    // hotelCode 추출기
     const getEffectiveHotelCode = () => {
         if (typeof window === 'undefined') return 'sample001';
         const params = new URLSearchParams(window.location.search);
@@ -167,11 +166,10 @@ export default function HotelWebsite({ domain }) {
 
     const hotelCode = getEffectiveHotelCode();
 
-    // 💡 [상용화 완료] 로컬 스토리지 대신 서버(DB)에서 프로모션을 직접 가져옵니다! (도메인 달라도 100% 뚫림)
+    // 1. 프로모션 데이터 로드
     useEffect(() => {
         const fetchLivePromotions = async () => {
             try {
-                // 💡 대표님 세팅대로 깔끔하게 /api 로직으로 원상 복구했습니다!
                 const res = await fetch(`/api/promotions?hotel=${hotelCode}`);
                 const data = await res.json();
 
@@ -187,11 +185,10 @@ export default function HotelWebsite({ domain }) {
         fetchLivePromotions();
     }, [hotelCode]);
 
+    // 2. 기본 세팅 및 객실 정보 로드
     useEffect(() => {
-        // 💡 로딩 상태 시작
         setLoading(true);
 
-        // 1. 웹사이트 설정 로드
         fetch(`${BASE_URL}/api/settings/website?hotel=${hotelCode}`)
             .then(res => res.json())
             .then(data => {
@@ -201,7 +198,6 @@ export default function HotelWebsite({ domain }) {
             })
             .catch(err => console.error("Failed to load config", err));
 
-        // 2. 객실 타입 로드
         fetch(`${BASE_URL}/api/admin/room-types?hotel=${hotelCode}`)
             .then(r => r.json())
             .then(adminData => {
@@ -224,7 +220,52 @@ export default function HotelWebsite({ domain }) {
             .catch(err => console.error("Failed to load room types", err))
             .finally(() => setLoading(false));
 
-    }, [hotelCode]); //
+    }, [hotelCode]);
+
+    // =========================================================================
+    // 💡 [핵심 UX 혁신] 딥링크 수신 로직 (Deep Link Receiver)
+    // URL에 promo, roomType 파라미터가 있으면 즉시 낚아채어 자동 적용합니다.
+    // =========================================================================
+    useEffect(() => {
+        if (typeof window !== 'undefined' && activePromos.length > 0 && rooms.length > 0) {
+            const params = new URLSearchParams(window.location.search);
+            const promoParam = params.get('promo');
+            const roomTypeParam = params.get('roomType');
+
+            if (promoParam) {
+                const promoObj = activePromos.find(p => p.code.toUpperCase() === promoParam.toUpperCase());
+
+                if (promoObj) {
+                    // 1. 타겟 객실이 명시되어 있다면 해당 객실을 찾아 포커스를 맞춥니다.
+                    if (roomTypeParam) {
+                        const targetRoom = rooms.find(r => r.name.toLowerCase() === roomTypeParam.toLowerCase());
+                        if (targetRoom) setSelectedRoomId(targetRoom.id);
+                    }
+
+                    // 2. 할인 코드를 세팅하고, 할인을 즉시 활성화합니다.
+                    setPromoCode(promoObj.code);
+                    setAppliedPromo(promoObj);
+
+                    // 3. 화면을 '객실(ROOMS)' 탭으로 즉시 강제 전환합니다.
+                    setActiveMenu('ROOMS');
+
+                    // 4. 고객에게 친절한 안내 메시지를 띄우고, 날짜 선택 영역으로 살짝 스크롤해줍니다.
+                    setAlertMessage(lang === 'ko'
+                        ? `🎁 [ ${promoObj.code} ] 프로모션 혜택이 자동 적용되었습니다!\n아래 화면에서 원하시는 '체크인/체크아웃 날짜'를 선택하고 예약을 진행해 주세요.`
+                        : `🎁 Promo [ ${promoObj.code} ] has been applied automatically!\nPlease select your check-in/check-out dates below to proceed.`);
+
+                    setTimeout(() => {
+                        window.scrollTo({ top: 300, behavior: 'smooth' });
+                    }, 300);
+
+                    // 5. 새로고침 시 무한 반복 적용을 막기 위해 주소창의 꼬리표를 깔끔하게 지워줍니다.
+                    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?hotel=${hotelCode}`;
+                    window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+                }
+            }
+        }
+    }, [activePromos, rooms, hotelCode, lang]);
+    // =========================================================================
 
     const safeConfig = config || {};
     let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch (e) { }
@@ -341,7 +382,6 @@ export default function HotelWebsite({ domain }) {
                                 <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
                             ))}
 
-                            {/* 💡 [최종 렌더링] DB 에러를 우회하여 보따리에서 직접 꺼내 씁니다. */}
                             {(() => {
                                 let finalPos = {
                                     title: { x: 10, y: 20, w: 80, size: 48, align: 'center' },
@@ -404,7 +444,7 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-                {/* 💡 [완벽 복구] 인라인 장바구니 검색 화면 (모달 아님!) */}
+                {/* 💡 [완벽 복구] 인라인 장바구니 검색 화면 */}
                 {activeMenu === 'BOOK' && (
                     <section className="relative pt-32 pb-20 px-4 md:px-6 w-full flex-grow min-h-[85vh] flex flex-col items-center justify-start animate-fade-in-up">
 
@@ -416,13 +456,11 @@ export default function HotelWebsite({ domain }) {
                             <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
                         </div>
 
-                        {/* 2. 💡 [핵심 수정] 검색 필터 전체를 완전히 독립된 높은 레이어(z-[100]) 박스로 분리했습니다! */}
-                        {/* 2. 💡 [핵심 수정] 검색 필터 전체를 완전히 독립된 높은 레이어(z-[100]) 박스로 분리했습니다! */}
+                        {/* 2. 검색 필터 */}
                         <div className="relative z-[100] w-full max-w-5xl flex flex-col items-center mt-4">
                             <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
 
                                 <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
-                                    {/* 💡 [진한 회색 적용] 라벨은 slate-600, 입력값은 slate-700으로 부드럽게 선명하게! */}
                                     <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
                                     <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e => {
                                         const newIn = e.target.value;
@@ -444,7 +482,6 @@ export default function HotelWebsite({ domain }) {
                                     <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.guestsRooms}</label>
                                     <div className="font-bold text-slate-700 md:text-slate-600 text-base md:text-lg truncate flex justify-between items-center">
                                         <span>{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''} · {roomCount} {t.room}</span>
-                                        {/* 💡 ▼ 화살표도 동일한 진한 회색으로 통일 */}
                                         <span className="text-slate-600 md:hidden text-xs">▼</span>
                                     </div>
 
@@ -483,7 +520,7 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
 
-                        {/* 3. 💡 [핵심 수정] 검색 결과창을 필터 박스 밖으로 완전히 분리하여 낮은 레이어(z-10)로 깔아줍니다! */}
+                        {/* 3. 검색 결과창 */}
                         {hasSearched && (
                             <div className="w-full max-w-5xl relative z-10 mt-8">
                                 <ErrorBoundary>
@@ -526,7 +563,6 @@ export default function HotelWebsite({ domain }) {
                                         <div>
                                             <h3 className="text-2xl md:text-3xl font-black mb-3 text-slate-800">{activeRoom.name}</h3>
                                             <div className="flex flex-wrap gap-2 md:gap-4 mb-4">
-                                                {/* 💡 [수정] 데이터 경로를 완벽하게 찾아 사이즈를 띄워줍니다. */}
                                                 {(activeRoom.size || activeRoom.roomConfig?.size) && <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">📏 {activeRoom.size || activeRoom.roomConfig?.size} sq.m</span>}
                                                 <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">🛏️ {activeRoom.roomConfig?.bedType || t.standardBed}</span>
                                                 <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs md:text-sm font-bold">👥 {t.maxGuests} {activeRoom.maxGuests || 2} {t.guests}</span>
@@ -543,7 +579,6 @@ export default function HotelWebsite({ domain }) {
                                             if (!checkIn || !checkOut) return setAlertMessage("Please select valid dates.");
                                             if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage("Check-out must be after check-in.");
 
-                                            // 💡 [예약 진행 버그 완벽 해결] 글자와 숫자가 헷갈리지 않도록 명확하게 '숫자(Number)'로 변환
                                             if (availableCount !== null && Number(availableCount) < Number(roomCount)) {
                                                 return setAlertMessage("Not enough rooms available.");
                                             }
@@ -553,8 +588,6 @@ export default function HotelWebsite({ domain }) {
                                             <div className="flex flex-col gap-4">
                                                 <div className="w-full">
                                                     <label className="text-[10px] md:text-xs font-black md:font-bold text-slate-800 md:text-slate-600 uppercase mb-1 block">{t.checkIn}</label>
-
-                                                    {/* 💡 [글자 겹침 해결] pr-10 (오른쪽 여백)을 추가하여 달력 아이콘 공간 확보 */}
                                                     <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e => {
                                                         const newIn = e.target.value;
                                                         setCheckIn(newIn);
@@ -566,8 +599,6 @@ export default function HotelWebsite({ domain }) {
                                                 </div>
                                                 <div className="w-full">
                                                     <label className="text-[10px] md:text-xs font-black md:font-bold text-slate-800 md:text-slate-600 uppercase mb-1 block">{t.checkOut}</label>
-
-                                                    {/* 💡 [글자 겹침 해결] 여기에도 pr-10 추가 */}
                                                     <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e => setCheckOut(e.target.value)} className="w-full p-2.5 pr-10 md:p-3 md:pr-12 border border-slate-200 rounded-xl bg-white shadow-sm font-black md:font-bold text-xs md:text-sm text-slate-900 md:text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" required />
                                                 </div>
                                             </div>
@@ -690,10 +721,7 @@ export default function HotelWebsite({ domain }) {
                                 <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
                                 <div className="space-y-4 md:space-y-6 text-slate-600 flex-1">
                                     <div>
-                                        {/* 💡 [복구 완료] 다시 sns 보따리에서 꺼내옵니다. */}
                                         <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{sns?.title || "Contact Us"}</p>
-
-                                        {/* 💡 [핵심] 기존 주소(sns.address)와 새 데이터(city, province)를 모두 쉼표로 예쁘게 연결합니다. */}
                                         {(sns?.address || sns?.city || sns?.province) && (
                                             <p className="flex items-start gap-3 mb-3 text-sm font-medium">
                                                 <span className="shrink-0 mt-0.5 text-base">🏠</span>
@@ -702,8 +730,6 @@ export default function HotelWebsite({ domain }) {
                                                 </span>
                                             </p>
                                         )}
-
-                                        {/* 연락처 및 이메일 복구 */}
                                         {sns?.phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{sns.phone}</span></p>}
                                         {sns?.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{sns.email}</span></p>}
                                     </div>
@@ -722,7 +748,6 @@ export default function HotelWebsite({ domain }) {
                     const basePrice = (activeRoom?.price || 0) * nights * roomCount;
                     const extraBedPrice = extraBed * 1000 * nights;
 
-                    // 💡 [핵심] 적용된 프로모션이 있으면 실제 할인을 계산해서 최종 금액(finalTotal)에서 뺍니다!
                     const discountAmount = appliedPromo ? (basePrice * (appliedPromo.discount_pct / 100)) : 0;
                     const finalTotal = basePrice + extraBedPrice - discountAmount;
 
@@ -731,7 +756,7 @@ export default function HotelWebsite({ domain }) {
                         const promo = activePromos.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
                         if (!promo) return setAlertMessage(lang === 'ko' ? "존재하지 않거나 만료된 코드입니다." : "Invalid or expired promo code.");
 
-                        // 타겟 객실 검증 (All Rooms가 아니고, 현재 예약하려는 방 이름이 포함되어 있지 않으면 튕겨냄)
+                        // 타겟 객실 검증
                         if (!promo.target_room_type.includes('All Rooms') && !promo.target_room_type.includes(activeRoom?.name)) {
                             return setAlertMessage(lang === 'ko' ? `이 코드는 다음 객실에만 적용됩니다: ${promo.target_room_type.join(', ')}` : `This code is only valid for: ${promo.target_room_type.join(', ')}`);
                         }
@@ -749,11 +774,9 @@ export default function HotelWebsite({ domain }) {
                         }
                         setIsBooking(true);
                         try {
-                            // 💡 [버그 완벽 해결] 홈 화면(RoomList)과 100% 동일하게 다중 예약(batch-create) API를 사용합니다!
                             const dividedGrandTotal = finalTotal / roomCount;
                             let bookingPayloads = [];
 
-                            // 선택한 객실 수만큼 예약 데이터를 쪼개서 배열에 담습니다.
                             for (let i = 0; i < roomCount; i++) {
                                 const fullName = `${firstName} ${lastName}`.trim();
                                 bookingPayloads.push({
@@ -770,7 +793,6 @@ export default function HotelWebsite({ domain }) {
                                 });
                             }
 
-                            // /create 대신 /batch-create로 묶어서 한 번에 보냅니다!
                             const res = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -936,12 +958,10 @@ export default function HotelWebsite({ domain }) {
                     );
                 })()}
 
-                {/* 🎈 우측 상단 바운스 대화 풍선 (다중 배열 & 완벽한 원형) */}
+                {/* 🎈 우측 상단 바운스 대화 풍선 */}
                 {activePromos.length > 0 && (
-                    // 모바일은 세로(flex-col), 데스크탑은 가로(flex-row)로 배치
                     <div className="fixed top-24 right-6 z-40 flex flex-col md:flex-row gap-4 items-end md:items-center">
                         {activePromos.map((promo, idx) => {
-                            // 다중 프로모션 색상 로테이션 배열
                             const colors = ['bg-red-600', 'bg-blue-600', 'bg-emerald-600', 'bg-purple-600'];
                             const colorClass = colors[idx % colors.length];
 
@@ -953,7 +973,6 @@ export default function HotelWebsite({ domain }) {
                                 >
                                     <span>{promo.discount_pct}%</span>
                                     <span>OFF</span>
-                                    {/* 풍선 꼬리 */}
                                     <div className={`absolute -bottom-2 right-1/2 translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-current border-r-[6px] border-r-transparent ${colorClass.replace('bg-', 'text-')}`}></div>
                                 </button>
                             );
@@ -961,7 +980,7 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-                {/* 🎁 스페셜 오퍼 팝업 모달창 (선택된 1개만 띄움) */}
+                {/* 🎁 스페셜 오퍼 팝업 모달창 */}
                 {showPromoModal && selectedPromo && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
                         <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative flex flex-col">
@@ -1001,7 +1020,7 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-                {/* 💡 전역 알림(Alert) 커스텀 모달창 */}
+                {/* 💡 전역 알림(Alert) 모달창 */}
                 {alertMessage && (
                     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
@@ -1020,7 +1039,7 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-                {/* 📱 푸터 (예약 장바구니가 열려있지 않을 때만 표시) */}
+                {/* 📱 푸터 */}
                 {!hasSearched && (
                     <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
                         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
