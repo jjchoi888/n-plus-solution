@@ -690,21 +690,22 @@ export default function HotelWebsite({ domain }) {
                                 <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
                                 <div className="space-y-4 md:space-y-6 text-slate-600 flex-1">
                                     <div>
-                                        {/* 💡 [수정 완료] 호텔 이름 출력 (입력 안 했으면 Contact Us 기본값) */}
-                                        <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{safeConfig.hotel_name || "Contact Us"}</p>
+                                        {/* 💡 [복구 완료] 다시 sns 보따리에서 꺼내옵니다. */}
+                                        <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{sns?.title || "Contact Us"}</p>
 
-                                        {/* 💡 [수정 완료] 연락처 주소 조립 (상세주소 + 도시 + 주 + Philippines) */}
-                                        {(safeConfig.contact_address || safeConfig.city || safeConfig.province) && (
+                                        {/* 💡 [핵심] 기존 주소(sns.address)와 새 데이터(city, province)를 모두 쉼표로 예쁘게 연결합니다. */}
+                                        {(sns?.address || sns?.city || sns?.province) && (
                                             <p className="flex items-start gap-3 mb-3 text-sm font-medium">
                                                 <span className="shrink-0 mt-0.5 text-base">🏠</span>
                                                 <span className="whitespace-pre-wrap">
-                                                    {[safeConfig.contact_address, safeConfig.city, safeConfig.province, "Philippines"].filter(Boolean).join(", ")}
+                                                    {[sns?.address, sns?.city, sns?.province, "Philippines"].filter(Boolean).join(", ")}
                                                 </span>
                                             </p>
                                         )}
 
-                                        {safeConfig.contact_phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{safeConfig.contact_phone}</span></p>}
-                                        {safeConfig.contact_email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{safeConfig.contact_email}</span></p>}
+                                        {/* 연락처 및 이메일 복구 */}
+                                        {sns?.phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{sns.phone}</span></p>}
+                                        {sns?.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{sns.email}</span></p>}
                                     </div>
                                 </div>
                             </div>
