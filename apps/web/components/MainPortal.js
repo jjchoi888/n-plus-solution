@@ -711,8 +711,24 @@ export default function MainPortal() {
                   {t.partnerDesc}
                 </p>
               </div>
-              <button className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors uppercase tracking-widest text-sm border-b-2 border-emerald-600 pb-1">{t.viewAll}</button>
-            </div>
+              <button
+                onClick={() => {
+                  // 1. 예약바가 있는 화면 상단으로 부드럽게 스크롤 이동
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                  // 2. 약간의 딜레이 후 BookingBar의 목적지(Destination) 버튼 강제 클릭
+                  setTimeout(() => {
+                    const destInput = document.getElementById("destination-trigger");
+                    if (destInput) {
+                      destInput.click();
+                    }
+                  }, 300); // 스크롤하는 시간을 고려해 0.3초 후 창 열기
+                }}
+                className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors uppercase tracking-widest text-sm border-b-2 border-emerald-600 pb-1"
+              >
+                {t.viewAll}
+              </button>
+            </div> {/* 💡 [수정] 이 부분에 닫는 </div> 태그가 빠져있었습니다! */}
 
             <div className="relative group/slider">
               <button onClick={slideLeft} className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-emerald-600 font-black text-xl hover:bg-emerald-50 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100">

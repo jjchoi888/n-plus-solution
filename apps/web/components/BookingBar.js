@@ -154,7 +154,8 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
       <div className="mt-4 w-full max-w-6xl bg-white rounded-full shadow-lg p-3 border border-gray-100 relative z-40 animate-fade-in-up">
         <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-center justify-between gap-2">
           
-          <div onClick={() => setIsMapOpen(true)} className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[25%] cursor-pointer group">
+          {/* 💡 [수정] id="destination-trigger" 추가 완료 */}
+          <div id="destination-trigger" onClick={() => setIsMapOpen(true)} className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[25%] cursor-pointer group">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 group-hover:text-emerald-600 transition-colors">{t.destination}</label>
             <div className="text-gray-800 font-bold text-base truncate">{destination.name}</div>
           </div>
