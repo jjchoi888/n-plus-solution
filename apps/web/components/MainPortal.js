@@ -642,13 +642,33 @@ export default function MainPortal() {
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
                           <span className="font-mono font-black text-emerald-600 text-lg">{promo.code}</span>
                         </div>
+                        {/* 프로모션 카드 하단 버튼 영역 */}
                         <div className="flex justify-between items-center shrink-0">
-                          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: <br className="sm:hidden" />{promo.end_date}</span>
-                          {/* 💡 [수정 완료] Book Now 클릭 시 해당 프로모션의 호텔 코드를 BookingBar로 넘깁니다. */}
-                          <button onClick={() => {
-                            setSelectedPromoHotel(promo.hotel_code);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }} className="bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-md">{t.bookNow}</button>
+                          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
+                            {t.validUntil}: <br className="sm:hidden" />{promo.end_date}
+                          </span>
+
+                          <button
+                            onClick={() => {
+                              // 💡 [혁신 UX: 다이렉트 딥링킹] 검색바를 거치지 않고 개별 호텔 예약창으로 직행합니다.
+                              const matchedHotel = partnerHotels.find(h => h.code === promo.hotel_code);
+
+                              // 1. 호텔의 독립 도메인이 있으면 거기로, 없으면 통합 포털의 개별 주소로 설정
+                              const baseUrl = matchedHotel?.domain
+                                ? `https://${matchedHotel.domain}`
+                                : `/?hotel=${promo.hotel_code}`;
+
+                              // 2. 주소 뒤에 프로모션 코드와 타겟 객실 타입 꼬리표(Query Parameter) 부착
+                              const separator = baseUrl.includes('?') ? '&' : '?';
+                              const deepLink = `${baseUrl}${separator}promo=${promo.code}&roomType=${encodeURIComponent(promo.target_room_type)}`;
+
+                              // 3. 고객을 맞춤형 혜택이 세팅된 페이지로 즉시 안내 (새 창)
+                              window.open(deepLink, '_blank');
+                            }}
+                            className="bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-md"
+                          >
+                            {t.bookNow}
+                          </button>
                         </div>
                       </div>
                     </div>
