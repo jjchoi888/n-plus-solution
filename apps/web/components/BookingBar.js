@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { roomApi } from "../lib/api";
 
 const translations = {
@@ -9,7 +9,6 @@ const translations = {
 
 const BASE_URL = '';
 
-// 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {
   const now = new Date();
   if (now.getHours() < 12) now.setDate(now.getDate() - 1);
@@ -20,11 +19,41 @@ const getHotelDate = (offsetDays = 0) => {
   return `${year}-${month}-${day}`;
 };
 
-// 💡 [수정] 하드코딩된 PH_LOCATIONS 배열을 삭제하고 부모로부터 받은 hotels 데이터를 사용합니다.
-export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }) {
+const PH_LOCATIONS = [
+  {
+    region: "NCR (Metro Manila)",
+    cities: [
+      { name: "Makati City", hotels: [{ code: "NPLUS01", name: "NPLUS Manila Premier", address: "Makati, Metro Manila, Philippines" }] },
+      { name: "Taguig City (BGC)", hotels: [{ code: "NPLUS05", name: "NPLUS BGC Boutique", address: "BGC, Taguig, Metro Manila, Philippines" }] },
+      { name: "Quezon City", hotels: [{ code: "NPLUS06", name: "NPLUS QC Suites", address: "Quezon City, Metro Manila, Philippines" }] }
+    ]
+  },
+  {
+    region: "Central Visayas",
+    cities: [
+      { name: "Cebu City", hotels: [{ code: "NPLUS02", name: "NPLUS Cebu Resort & Spa", address: "Cebu City, Cebu, Philippines" }] },
+      { name: "Lapu-Lapu City", hotels: [{ code: "NPLUS07", name: "NPLUS Mactan Ocean", address: "Lapu-Lapu City, Cebu, Philippines" }] }
+    ]
+  },
+  {
+    region: "Western Visayas",
+    cities: [
+      { name: "Malay (Boracay)", hotels: [{ code: "NPLUS03", name: "NPLUS Boracay Beachfront", address: "Boracay Island, Malay, Aklan, Philippines" }] }
+    ]
+  },
+  {
+    region: "MIMAROPA",
+    cities: [
+      { name: "El Nido", hotels: [{ code: "NPLUS04", name: "NPLUS Palawan Eco Lodge", address: "El Nido, Palawan, Philippines" }] },
+      { name: "Puerto Princesa", hotels: [{ code: "NPLUS08", name: "NPLUS Puerto City Hotel", address: "Puerto Princesa, Palawan, Philippines" }] }
+    ]
+  }
+];
+
+// 💡 [수정] preselectedHotelCode (특가 혜택 선택 시 해당 호텔)와 hotels를 props로 받습니다.
+export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], preselectedHotelCode = null }) {
   const t = translations[lang] || translations.en;
 
-  // 기본 예약 상태 관리
   const [destination, setDestination] = useState({ code: "ALL", name: t.allHotels });
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -34,12 +63,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
   const guestRef = useRef(null);
   const [modal, setModal] = useState({ show: false, title: '', message: '', type: 'default', availableRoomsData: null });
 
-  // 🗺️ 모달 & 구글맵 상태 관리
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [mapQuery, setMapQuery] = useState("Philippines"); // 구글맵 Iframe 검색어
-  const [activeMapHotel, setActiveMapHotel] = useState(null); // 지도에 포커스된 호텔
+  const [mapQuery, setMapQuery] = useState("Philippines");
+  const [activeMapHotel, setActiveMapHotel] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -48,6 +76,16 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 💡 [핵심] 외부에서 특정 호텔을 예약하도록 신호(preselectedHotelCode)가 오면 목적지를 자동 지정합니다.
+  useEffect(() => {
+    if (preselectedHotelCode && hotels.length > 0) {
+      const targetHotel = hotels.find(h => h.code === preselectedHotelCode);
+      if (targetHotel) {
+        setDestination({ code: targetHotel.code, name: targetHotel.name });
+      }
+    }
+  }, [preselectedHotelCode, hotels]);
 
   const handleCheckInChange = (e) => {
     const selectedDate = e.target.value;
@@ -67,16 +105,14 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
     });
   };
 
-  // 💡 [드롭다운 로직] Region 선택 시
   const handleRegionChange = (e) => {
     const val = e.target.value;
     setSelectedRegion(val);
-    setSelectedCity(""); // Region이 바뀌면 City 초기화
+    setSelectedCity("");
     setActiveMapHotel(null);
     setMapQuery(val ? `${val}, Philippines` : "Philippines");
   };
 
-  // 💡 [드롭다운 로직] City 선택 시
   const handleCityChange = (e) => {
     const val = e.target.value;
     setSelectedCity(val);
@@ -84,17 +120,14 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
     setMapQuery(val ? `${val}, ${selectedRegion}, Philippines` : `${selectedRegion}, Philippines`);
   };
 
-  // 💡 호텔 리스트 클릭 시 (지도 뷰어 이동용)
   const handleHotelFocus = (hotel) => {
     setActiveMapHotel(hotel);
-    // 호텔의 전체 주소 또는 이름으로 지도 검색
-    setMapQuery(hotel.address ? `${hotel.name}, ${hotel.address}` : hotel.name);
+    setMapQuery(hotel.address);
   };
 
-  // 💡 최종 호텔(지점) 선택 적용
   const handleSelectHotel = (code, name) => {
     setDestination({ code, name });
-    setIsMapOpen(false); // 모달 닫기
+    setIsMapOpen(false);
   };
 
   const handleSearch = (e) => {
@@ -108,48 +141,14 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
     });
   };
 
-  // ==========================================
-  // 💡 [API 연동 핵심 로직] 부모가 넘겨준 hotels를 그룹화합니다.
-  // ==========================================
-  const dynamicLocations = useMemo(() => {
-    const grouped = {};
-
-    hotels.forEach(hotel => {
-      // Province가 비어있으면 "Other Regions"로 분류
-      const region = hotel.province || "Other Regions";
-      // City가 비어있으면 "Other Cities"로 분류
-      const city = hotel.city || "Other Cities";
-
-      if (!grouped[region]) grouped[region] = {};
-      if (!grouped[region][city]) grouped[region][city] = [];
-
-      grouped[region][city].push({
-        code: hotel.code,
-        name: hotel.name,
-        // 화면에 보여줄 주소 포맷 구성
-        address: [hotel.address, city, region].filter(Boolean).join(", ")
-      });
-    });
-
-    // select box와 리스트 매핑을 위해 배열 구조로 변환
-    return Object.keys(grouped).map(region => ({
-      region,
-      cities: Object.keys(grouped[region]).map(city => ({
-        name: city,
-        hotels: grouped[region][city]
-      }))
-    }));
-  }, [hotels]);
-
-  // 💡 그룹화된 데이터를 바탕으로 필터링된 호텔 리스트 계산
-  const availableCities = selectedRegion ? dynamicLocations.find(r => r.region === selectedRegion)?.cities || [] : [];
+  const availableCities = selectedRegion ? PH_LOCATIONS.find(r => r.region === selectedRegion)?.cities || [] : [];
   let filteredHotels = [];
   if (selectedCity) {
     filteredHotels = availableCities.find(c => c.name === selectedCity)?.hotels || [];
   } else if (selectedRegion) {
     availableCities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; });
   } else {
-    dynamicLocations.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
+    PH_LOCATIONS.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
   }
 
   return (
@@ -164,13 +163,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
 
           <div className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[22%]">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{t.checkIn}</label>
-            {/* 💡 min 속성을 getHotelDate(0)으로 변경하여 낮 12시 이전에는 어제 날짜도 선택 가능하도록 허용 */}
             <input type="date" className="w-full text-gray-800 font-bold focus:outline-none bg-transparent cursor-pointer" required value={checkIn} min={getHotelDate(0)} onChange={handleCheckInChange} />
           </div>
 
           <div className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[22%]">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{t.checkOut}</label>
-            {/* 💡 여기도 기본 min 값을 getHotelDate(0)으로 적용 */}
             <input type="date" className="w-full text-gray-800 font-bold focus:outline-none bg-transparent cursor-pointer" required value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={(e) => setCheckOut(e.target.value)} />
           </div>
 
@@ -228,9 +225,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
         </form>
       </div>
 
-      {/* ==========================================
-          🗺️ GOOGLE MAPS & DYNAMIC FILTERS MODAL
-      ========================================== */}
       {isMapOpen && (
         <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsMapOpen(false)}>
           <div className="bg-slate-50 w-full max-w-6xl h-[85vh] rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-2xl relative" onClick={e => e.stopPropagation()}>
@@ -239,27 +233,23 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
               ✕
             </button>
 
-            {/* 왼쪽 패널: 지역(Region) -> 도시(City) 필터 & 리스트 */}
             <div className="w-full md:w-1/3 bg-white border-r border-slate-200 flex flex-col h-full shadow-lg z-10">
 
               <div className="p-6 pb-4 border-b border-slate-100">
                 <h2 className="text-2xl font-black text-slate-900 mb-4">{t.mapTitle}</h2>
 
-                {/* 1. 맨 위로 올린 전체 지역 검색 버튼 */}
                 <button onClick={() => handleSelectHotel('ALL', t.allHotels)} className="w-full py-3.5 mb-5 rounded-xl bg-slate-900 text-white font-black hover:bg-slate-800 transition-colors shadow-md flex items-center justify-center gap-2">
                   🌍 Search All Regions
                 </button>
 
-                {/* 2. 연동형 드롭다운 필터 */}
                 <div className="space-y-3">
                   <select
                     className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer"
                     value={selectedRegion}
                     onChange={handleRegionChange}
                   >
-                    <option value="">🗺️ Select Province </option>
-                    {/* 💡 [API 연동] 동적으로 생성된 지역(Province) 리스트 */}
-                    {dynamicLocations.map(loc => (
+                    <option value="">🗺️ Select Region </option>
+                    {PH_LOCATIONS.map(loc => (
                       <option key={loc.region} value={loc.region}>{loc.region}</option>
                     ))}
                   </select>
@@ -278,7 +268,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
                 </div>
               </div>
 
-              {/* 3. 필터링된 호텔 리스트 (스크롤) */}
               <div className="overflow-y-auto flex-1 p-4 space-y-3 bg-slate-50">
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Available Hotels ({filteredHotels.length})</div>
 
@@ -310,13 +299,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
               </div>
             </div>
 
-            {/* 오른쪽 패널: 🗺️ 동적 구글맵 Iframe 연동 */}
             <div className="w-full md:w-2/3 h-[50vh] md:h-full relative bg-slate-200 flex items-center justify-center overflow-hidden">
               <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-md font-bold text-sm text-slate-700 border border-slate-200 flex items-center gap-2 pointer-events-none">
                 <span className="animate-pulse text-red-500">🔴</span> Live Google Maps
               </div>
 
-              {/* API 키가 필요 없는 구글맵 주소 검색 Iframe */}
               <iframe
                 title="Google Maps Location"
                 src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`}
@@ -334,7 +321,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }
         </div>
       )}
 
-      {/* 기본 알림/에러 모달 */}
       {modal.show && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4 animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center transform transition-all scale-100 border border-slate-100">

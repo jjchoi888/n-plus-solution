@@ -13,10 +13,8 @@ const heroImages = [
   "/hero6.png"
 ];
 
-// 💡 [수정] 4군데 교체를 위한 로고 변수 선언 (logo192.png 사용)
 const nLogo = <img src="/logo192.png" alt="n+" className="h-[1.2em] w-auto inline-block transform -translate-y-[10%] mx-1" />;
 
-// 💡 [수정] 지정하신 4곳(heroDesc, bookPartner, whyChoose, partnerDesc)에만 nLogo 적용
 const translations = {
   en: {
     heroBadge: "THE ALL-IN-ONE HOTEL SOFTWARE", heroTitle: <>Empowering Hotels.<br />Delighting Guests.</>, heroDesc: <>{nLogo} is a next-generation Cloud PMS designed to <br /> maximize hotel revenue and streamline operations. <br className="hidden md:block" />Guests can easily book our partner hotels directly below.</>,
@@ -159,30 +157,29 @@ export default function MainPortal() {
   const [contactMode, setContactMode] = useState('CHOICE');
 
   const [promotions, setPromotions] = useState([]);
-
-  // 💡 [API 연동] 파트너 호텔 상태 추가
   const [partnerHotels, setPartnerHotels] = useState([]);
+
+  // 💡 [핵심] Book Now 클릭 시 BookingBar에 전달할 호텔 코드 상태
+  const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        // 프로모션 로드
         const resPromo = await fetch('/api/promotions?hotel=ALL');
         const dataPromo = await resPromo.json();
+
+        const resHotels = await fetch('/api/hotels');
+        const dataHotels = await resHotels.json();
+
+        if (Array.isArray(dataHotels)) {
+          setPartnerHotels(dataHotels);
+        }
 
         if (Array.isArray(dataPromo)) {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const validPromos = dataPromo.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
           setPromotions(validPromos);
-        }
-
-        // 💡 [API 연동] 호텔 리스트 로드
-        const resHotels = await fetch('/api/hotels');
-        const dataHotels = await resHotels.json();
-
-        if (Array.isArray(dataHotels)) {
-          setPartnerHotels(dataHotels);
         }
       } catch (e) { console.error("Failed to load portal data", e); }
     };
@@ -193,9 +190,20 @@ export default function MainPortal() {
   const [promoRegion, setPromoRegion] = useState("ALL");
   const [promoSearch, setPromoSearch] = useState("");
 
-  const availableRegions = ["ALL", ...Array.from(new Set(promotions.map(p => p.province).filter(Boolean)))];
+  // 💡 [핵심] 프로모션 데이터에 호텔 이름과 주소 정보(city, province)를 조인(Join)하여 병합합니다!
+  const enrichedPromotions = promotions.map(promo => {
+    const matchedHotel = partnerHotels.find(h => h.code === promo.hotel_code) || {};
+    return {
+      ...promo,
+      hotel_name: promo.hotel_name || matchedHotel.name || "Partner Hotel",
+      city: promo.city || matchedHotel.city || "City",
+      province: promo.province || matchedHotel.province || "Province",
+    };
+  });
 
-  const filteredPromos = promotions.filter(promo => {
+  const availableRegions = ["ALL", ...Array.from(new Set(enrichedPromotions.map(p => p.province).filter(Boolean)))];
+
+  const filteredPromos = enrichedPromotions.filter(promo => {
     const matchRegion = promoRegion === "ALL" || promo.province === promoRegion;
     const searchLower = promoSearch.toLowerCase();
     const matchSearch = promoSearch === "" ||
@@ -554,8 +562,8 @@ export default function MainPortal() {
                     <span className="text-emerald-600">✨</span> {t.bookPartner}
                   </h3>
                 </div>
-                {/* 💡 [API 연동] 부모(MainPortal)에서 받은 진짜 호텔 데이터를 자식(BookingBar)으로 넘겨줍니다. */}
-                <BookingBar lang={lang} onSearchResults={setSearchData} hotels={partnerHotels} />
+                {/* 💡 [수정] BookingBar에 API로 가져온 호텔 정보와 프로모 클릭 시 받은 선택된 호텔(preselectedHotelCode) 전달 */}
+                <BookingBar lang={lang} onSearchResults={setSearchData} hotels={partnerHotels} preselectedHotelCode={selectedPromoHotel} />
               </div>
             </div>
           </section>
@@ -615,15 +623,16 @@ export default function MainPortal() {
                       </div>
                       <div className="p-6 flex-grow flex flex-col">
 
+                        {/* 💡 [수정 완료] 조인된 호텔 이름 및 지역 정보 출력 */}
                         <div className="mb-4 pb-4 border-b border-slate-100">
                           <h4 className="text-slate-900 font-black text-lg leading-tight line-clamp-1 hover:text-emerald-600 transition-colors cursor-pointer">
-                            {promo.hotel_name || "Partner Hotel"}
+                            {promo.hotel_name}
                           </h4>
                           <p className="text-slate-500 text-xs font-bold mt-1.5 flex items-center gap-1.5 line-clamp-1">
                             <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                             </svg>
-                            {promo.city || "City"}, {promo.province || "Province"}
+                            {promo.city}, {promo.province}
                           </p>
                         </div>
 
@@ -635,7 +644,11 @@ export default function MainPortal() {
                         </div>
                         <div className="flex justify-between items-center shrink-0">
                           <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: <br className="sm:hidden" />{promo.end_date}</span>
-                          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-md">{t.bookNow}</button>
+                          {/* 💡 [수정 완료] Book Now 클릭 시 해당 프로모션의 호텔 코드를 BookingBar로 넘깁니다. */}
+                          <button onClick={() => {
+                            setSelectedPromoHotel(promo.hotel_code);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }} className="bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-md">{t.bookNow}</button>
                         </div>
                       </div>
                     </div>
@@ -696,16 +709,11 @@ export default function MainPortal() {
                 ❮
               </button>
 
-              {/* 💡 [API 연동] DB에서 불러온 실제 파트너 호텔 목록을 렌더링합니다! */}
               <div ref={sliderRef} className="flex overflow-x-auto gap-6 snap-x pb-8 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {partnerHotels.length > 0 ? partnerHotels.map((dest, idx) => {
-
-                  // 💡 [핵심: 링크 로직 수정 & 미래 확장성]
                   // DB에 개별 도메인(dest.domain)이 등록되어 있으면 해당 도메인으로, 
                   // 없으면 현재의 쿼리 파라미터(/?hotel=) 방식으로 자동 연결됩니다.
-                  const hotelLink = dest.domain
-                    ? `https://${dest.domain}`
-                    : `/?hotel=${dest.code}`;
+                  const hotelLink = dest.domain ? `https://${dest.domain}` : `/?hotel=${dest.code}`;
 
                   return (
                     <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
@@ -726,7 +734,6 @@ export default function MainPortal() {
                           </p>
                           <h3 className="text-xl font-black mb-1 leading-tight">{dest.name}</h3>
 
-                          {/* 💡 [신규 추가] 지역(City, Province) 표시 */}
                           <p className="text-sm font-medium text-slate-300 mb-2 flex items-center gap-1.5">
                             <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -802,19 +809,13 @@ export default function MainPortal() {
             <p className="text-sm mb-6">Get the latest our solutions news.</p>
             <div className="flex gap-4">
               <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.604 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.604 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
               </a>
               <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                </svg>
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" /></svg>
               </a>
               <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
-                </svg>
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" /></svg>
               </a>
             </div>
           </div>
