@@ -13,19 +13,18 @@ const heroImages = [
   "/hero6.png"
 ];
 
-// 💡 마닐라와 바기오 이미지를 public 폴더의 로컬 파일로 교체 완료!
 const partnerHotels = [
   {
     code: "NPLUS01",
     name: "Metro Manila Hotel",
-    img: "/manila.png", // 💡 로컬 이미지 적용
+    img: "/manila.png",
     descKey: "pms",
     url: "http://localhost:3000"
   },
   {
     code: "NPLUS02",
     name: "Baguio Mountain Hotel",
-    img: "/baguio.png", // 💡 로컬 이미지 적용
+    img: "/baguio.png",
     descKey: "kiosk",
     url: "http://seoul.localhost:3000"
   },
@@ -52,10 +51,10 @@ const partnerHotels = [
   }
 ];
 
-// 💡 [수정] 반복 사용되는 로고 이미지를 변수로 선언하여 텍스트 사이즈에 맞게 자동 조절되도록 설정
-const nLogo = <img src="/logo.png" alt="n+" className="h-[1.2em] w-auto inline-block transform -translate-y-[10%] mx-1" />;
+// 💡 [수정] 4군데 교체를 위한 로고 변수 선언 (logo192.png 사용)
+const nLogo = <img src="/logo192.png" alt="n+" className="h-[1.2em] w-auto inline-block transform -translate-y-[10%] mx-1" />;
 
-// 💡 [수정] 요청하신 4가지 포인트에 문자열 대신 nLogo 컴포넌트를 직접 삽입
+// 💡 [수정] 지정하신 4곳(heroDesc, bookPartner, whyChoose, partnerDesc)에만 nLogo 적용
 const translations = {
   en: {
     heroBadge: "THE ALL-IN-ONE HOTEL SOFTWARE", heroTitle: <>Empowering Hotels.<br />Delighting Guests.</>, heroDesc: <>{nLogo} is a next-generation Cloud PMS designed to <br /> maximize hotel revenue and streamline operations. <br className="hidden md:block" />Guests can easily book our partner hotels directly below.</>,
@@ -194,11 +193,9 @@ export default function MainPortal() {
   const [profileImg, setProfileImg] = useState("");
   const [profileDesc, setProfileDesc] = useState("Powered by n+ Smart PMS");
 
-  // 💡 [신규 추가] Contact Sales 팝업창 관리를 위한 상태
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [contactMode, setContactMode] = useState('CHOICE');
 
-  // 💡 [연동 완료 & 가짜 데이터 완전 삭제] 모든 브랜치의 실제 프로모션만 수집
   const [promotions, setPromotions] = useState([]);
 
   useEffect(() => {
@@ -225,7 +222,6 @@ export default function MainPortal() {
   const slideLeft = () => { if (sliderRef.current) sliderRef.current.scrollBy({ left: -350, behavior: 'smooth' }); };
   const slideRight = () => { if (sliderRef.current) sliderRef.current.scrollBy({ left: 350, behavior: 'smooth' }); };
 
-  // 💡 [Cleaned] Fixed duplicate slider interval bug
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -233,9 +229,6 @@ export default function MainPortal() {
     return () => clearInterval(timer);
   }, []);
 
-  // ========================================================
-  // 💡 [신규 추가] 사이트 전체 오른쪽 마우스(우클릭) 금지 로직
-  // ========================================================
   useEffect(() => {
     const preventRightClick = (e) => e.preventDefault();
     document.addEventListener("contextmenu", preventRightClick);
@@ -260,7 +253,7 @@ export default function MainPortal() {
 
   const closeContactModal = () => {
     setIsContactOpen(false);
-    setTimeout(() => setContactMode('CHOICE'), 300); // 모달 닫힐 때 초기 화면으로 리셋
+    setTimeout(() => setContactMode('CHOICE'), 300);
   };
 
   const handleUpdateHotelCode = () => {
@@ -306,6 +299,7 @@ export default function MainPortal() {
             <div className="w-full max-w-md mx-auto my-32 px-6">
               <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
                 <div className="text-center mb-8">
+                  {/* 💡 [수정] 로그인 창 로고는 원래 코드 그대로 logo.png 유지 */}
                   <img src="/logo.png" alt="Hotel Logo" className="h-16 md:h-20 w-auto mx-auto mb-4 object-contain" />
                   <h2 className="text-2xl font-black text-slate-800">{t.loginTitle}</h2>
                 </div>
@@ -712,6 +706,7 @@ export default function MainPortal() {
       <footer className="w-full bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-900 mt-auto">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="lg:col-span-1">
+            {/* 💡 [수정] 푸터 로고 원래 코드인 logo.png 로 복원 */}
             <img src="/logo.png" alt="n+ Solutions Logo" className="h-10 mb-6 object-contain" />
             <p className="text-sm leading-relaxed mb-6">{t.footerDesc}</p>
           </div>
