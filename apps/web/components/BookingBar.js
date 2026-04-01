@@ -1,6 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { roomApi } from "../lib/api"; 
+import { useState, useRef, useEffect, useMemo } from "react";
+import { roomApi } from "../lib/api";
 
 const translations = {
   en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Region & Hotel", allHotels: "All Philippines", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel" },
@@ -11,48 +11,17 @@ const BASE_URL = '';
 
 // 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {
-    const now = new Date();
-    if (now.getHours() < 12) now.setDate(now.getDate() - 1);
-    now.setDate(now.getDate() + offsetDays);
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const now = new Date();
+  if (now.getHours() < 12) now.setDate(now.getDate() - 1);
+  now.setDate(now.getDate() + offsetDays);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
-// 🗺️ 1. 필리핀 Region -> City/Municipal 계층형 데이터 (호텔 주소 포함)
-const PH_LOCATIONS = [
-  {
-    region: "NCR (Metro Manila)",
-    cities: [
-      { name: "Makati City", hotels: [{ code: "NPLUS01", name: "NPLUS Manila Premier", address: "Makati, Metro Manila, Philippines" }] },
-      { name: "Taguig City (BGC)", hotels: [{ code: "NPLUS05", name: "NPLUS BGC Boutique", address: "BGC, Taguig, Metro Manila, Philippines" }] },
-      { name: "Quezon City", hotels: [{ code: "NPLUS06", name: "NPLUS QC Suites", address: "Quezon City, Metro Manila, Philippines" }] }
-    ]
-  },
-  {
-    region: "Central Visayas",
-    cities: [
-      { name: "Cebu City", hotels: [{ code: "NPLUS02", name: "NPLUS Cebu Resort & Spa", address: "Cebu City, Cebu, Philippines" }] },
-      { name: "Lapu-Lapu City", hotels: [{ code: "NPLUS07", name: "NPLUS Mactan Ocean", address: "Lapu-Lapu City, Cebu, Philippines" }] }
-    ]
-  },
-  {
-    region: "Western Visayas",
-    cities: [
-      { name: "Malay (Boracay)", hotels: [{ code: "NPLUS03", name: "NPLUS Boracay Beachfront", address: "Boracay Island, Malay, Aklan, Philippines" }] }
-    ]
-  },
-  {
-    region: "MIMAROPA",
-    cities: [
-      { name: "El Nido", hotels: [{ code: "NPLUS04", name: "NPLUS Palawan Eco Lodge", address: "El Nido, Palawan, Philippines" }] },
-      { name: "Puerto Princesa", hotels: [{ code: "NPLUS08", name: "NPLUS Puerto City Hotel", address: "Puerto Princesa, Palawan, Philippines" }] }
-    ]
-  }
-];
-
-export default function BookingBar({ lang = 'en', onSearchResults }) {
+// 💡 [수정] 하드코딩된 PH_LOCATIONS 배열을 삭제하고 부모로부터 받은 hotels 데이터를 사용합니다.
+export default function BookingBar({ lang = 'en', onSearchResults, hotels = [] }) {
   const t = translations[lang] || translations.en;
 
   // 기본 예약 상태 관리
@@ -118,7 +87,8 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
   // 💡 호텔 리스트 클릭 시 (지도 뷰어 이동용)
   const handleHotelFocus = (hotel) => {
     setActiveMapHotel(hotel);
-    setMapQuery(hotel.address);
+    // 호텔의 전체 주소 또는 이름으로 지도 검색
+    setMapQuery(hotel.address ? `${hotel.name}, ${hotel.address}` : hotel.name);
   };
 
   // 💡 최종 호텔(지점) 선택 적용
@@ -138,23 +108,55 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
     });
   };
 
-  // 💡 필터링된 호탤 리스트 계산
-  const availableCities = selectedRegion ? PH_LOCATIONS.find(r => r.region === selectedRegion)?.cities || [] : [];
+  // ==========================================
+  // 💡 [API 연동 핵심 로직] 부모가 넘겨준 hotels를 그룹화합니다.
+  // ==========================================
+  const dynamicLocations = useMemo(() => {
+    const grouped = {};
+
+    hotels.forEach(hotel => {
+      // Province가 비어있으면 "Other Regions"로 분류
+      const region = hotel.province || "Other Regions";
+      // City가 비어있으면 "Other Cities"로 분류
+      const city = hotel.city || "Other Cities";
+
+      if (!grouped[region]) grouped[region] = {};
+      if (!grouped[region][city]) grouped[region][city] = [];
+
+      grouped[region][city].push({
+        code: hotel.code,
+        name: hotel.name,
+        // 화면에 보여줄 주소 포맷 구성
+        address: [hotel.address, city, region].filter(Boolean).join(", ")
+      });
+    });
+
+    // select box와 리스트 매핑을 위해 배열 구조로 변환
+    return Object.keys(grouped).map(region => ({
+      region,
+      cities: Object.keys(grouped[region]).map(city => ({
+        name: city,
+        hotels: grouped[region][city]
+      }))
+    }));
+  }, [hotels]);
+
+  // 💡 그룹화된 데이터를 바탕으로 필터링된 호텔 리스트 계산
+  const availableCities = selectedRegion ? dynamicLocations.find(r => r.region === selectedRegion)?.cities || [] : [];
   let filteredHotels = [];
   if (selectedCity) {
     filteredHotels = availableCities.find(c => c.name === selectedCity)?.hotels || [];
   } else if (selectedRegion) {
     availableCities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; });
   } else {
-    PH_LOCATIONS.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
+    dynamicLocations.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
   }
 
   return (
     <>
       <div className="mt-4 w-full max-w-6xl bg-white rounded-full shadow-lg p-3 border border-gray-100 relative z-40 animate-fade-in-up">
         <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-center justify-between gap-2">
-          
-          {/* 💡 [수정] id="destination-trigger" 추가 완료 */}
+
           <div id="destination-trigger" onClick={() => setIsMapOpen(true)} className="flex flex-col px-6 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-[25%] cursor-pointer group">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 group-hover:text-emerald-600 transition-colors">{t.destination}</label>
             <div className="text-gray-800 font-bold text-base truncate">{destination.name}</div>
@@ -232,17 +234,17 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
       {isMapOpen && (
         <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsMapOpen(false)}>
           <div className="bg-slate-50 w-full max-w-6xl h-[85vh] rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            
+
             <button onClick={() => setIsMapOpen(false)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-800 font-bold text-xl">
               ✕
             </button>
 
             {/* 왼쪽 패널: 지역(Region) -> 도시(City) 필터 & 리스트 */}
             <div className="w-full md:w-1/3 bg-white border-r border-slate-200 flex flex-col h-full shadow-lg z-10">
-              
+
               <div className="p-6 pb-4 border-b border-slate-100">
                 <h2 className="text-2xl font-black text-slate-900 mb-4">{t.mapTitle}</h2>
-                
+
                 {/* 1. 맨 위로 올린 전체 지역 검색 버튼 */}
                 <button onClick={() => handleSelectHotel('ALL', t.allHotels)} className="w-full py-3.5 mb-5 rounded-xl bg-slate-900 text-white font-black hover:bg-slate-800 transition-colors shadow-md flex items-center justify-center gap-2">
                   🌍 Search All Regions
@@ -250,21 +252,22 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
                 {/* 2. 연동형 드롭다운 필터 */}
                 <div className="space-y-3">
-                  <select 
-                    className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer" 
-                    value={selectedRegion} 
+                  <select
+                    className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer"
+                    value={selectedRegion}
                     onChange={handleRegionChange}
                   >
-                    <option value="">🗺️ Select Region </option>
-                    {PH_LOCATIONS.map(loc => (
+                    <option value="">🗺️ Select Province </option>
+                    {/* 💡 [API 연동] 동적으로 생성된 지역(Province) 리스트 */}
+                    {dynamicLocations.map(loc => (
                       <option key={loc.region} value={loc.region}>{loc.region}</option>
                     ))}
                   </select>
 
-                  <select 
-                    className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
-                    value={selectedCity} 
-                    onChange={handleCityChange} 
+                  <select
+                    className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    value={selectedCity}
+                    onChange={handleCityChange}
                     disabled={!selectedRegion}
                   >
                     <option value="">🏙️ Select City/Municipal </option>
@@ -278,11 +281,11 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
               {/* 3. 필터링된 호텔 리스트 (스크롤) */}
               <div className="overflow-y-auto flex-1 p-4 space-y-3 bg-slate-50">
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Available Hotels ({filteredHotels.length})</div>
-                
+
                 {filteredHotels.length > 0 ? filteredHotels.map(hotel => (
-                  <div 
-                    key={hotel.code} 
-                    className={`p-5 rounded-2xl cursor-pointer transition-all border shadow-sm ${activeMapHotel?.code === hotel.code ? 'bg-emerald-50 border-emerald-500 shadow-md ring-2 ring-emerald-200' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md'}`} 
+                  <div
+                    key={hotel.code}
+                    className={`p-5 rounded-2xl cursor-pointer transition-all border shadow-sm ${activeMapHotel?.code === hotel.code ? 'bg-emerald-50 border-emerald-500 shadow-md ring-2 ring-emerald-200' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md'}`}
                     onClick={() => handleHotelFocus(hotel)}
                   >
                     <h3 className="font-black text-lg text-slate-800 mb-1">{hotel.name}</h3>
@@ -310,21 +313,21 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
             {/* 오른쪽 패널: 🗺️ 동적 구글맵 Iframe 연동 */}
             <div className="w-full md:w-2/3 h-[50vh] md:h-full relative bg-slate-200 flex items-center justify-center overflow-hidden">
               <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-md font-bold text-sm text-slate-700 border border-slate-200 flex items-center gap-2 pointer-events-none">
-                 <span className="animate-pulse text-red-500">🔴</span> Live Google Maps
+                <span className="animate-pulse text-red-500">🔴</span> Live Google Maps
               </div>
-              
+
               {/* API 키가 필요 없는 구글맵 주소 검색 Iframe */}
-              <iframe 
-                  title="Google Maps Location"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`} 
-                  width="100%"
-                  height="100%" 
-                  frameBorder="0" 
-                  style={{ border: 0 }} 
-                  allowFullScreen="" 
-                  aria-hidden="false" 
-                  tabIndex="0"
-                  className="absolute inset-0 w-full h-full bg-slate-100"
+              <iframe
+                title="Google Maps Location"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                aria-hidden="false"
+                tabIndex="0"
+                className="absolute inset-0 w-full h-full bg-slate-100"
               ></iframe>
             </div>
           </div>

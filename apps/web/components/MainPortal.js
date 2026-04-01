@@ -13,44 +13,6 @@ const heroImages = [
   "/hero6.png"
 ];
 
-const partnerHotels = [
-  {
-    code: "NPLUS01",
-    name: "Metro Manila Hotel",
-    img: "/manila.png",
-    descKey: "pms",
-    url: "http://localhost:3000"
-  },
-  {
-    code: "NPLUS02",
-    name: "Baguio Mountain Hotel",
-    img: "/baguio.png",
-    descKey: "kiosk",
-    url: "http://seoul.localhost:3000"
-  },
-  {
-    code: "NPLUS03",
-    name: "Tagaytay Resort",
-    img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800",
-    descKey: "cm",
-    url: "http://busan.localhost:3000"
-  },
-  {
-    code: "CEBU",
-    name: "Cebu Tropical",
-    img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=800",
-    descKey: "db",
-    url: "#"
-  },
-  {
-    code: "BORACAY",
-    name: "Boracay Paradise",
-    img: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&q=80&w=800",
-    descKey: "pms",
-    url: "#"
-  }
-];
-
 // 💡 [수정] 4군데 교체를 위한 로고 변수 선언 (logo192.png 사용)
 const nLogo = <img src="/logo192.png" alt="n+" className="h-[1.2em] w-auto inline-block transform -translate-y-[10%] mx-1" />;
 
@@ -198,32 +160,41 @@ export default function MainPortal() {
 
   const [promotions, setPromotions] = useState([]);
 
-  useEffect(() => {
-    const fetchAllPromotions = async () => {
-      try {
-        const res = await fetch('/api/promotions?hotel=ALL');
-        const data = await res.json();
+  // 💡 [API 연동] 파트너 호텔 상태 추가
+  const [partnerHotels, setPartnerHotels] = useState([]);
 
-        if (Array.isArray(data)) {
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        // 프로모션 로드
+        const resPromo = await fetch('/api/promotions?hotel=ALL');
+        const dataPromo = await resPromo.json();
+
+        if (Array.isArray(dataPromo)) {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          const validPromos = data.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
+          const validPromos = dataPromo.filter(p => p.is_active === 1 && (!p.end_date || new Date(p.end_date) >= today));
           setPromotions(validPromos);
         }
-      } catch (e) { console.error("Failed to load global promotions", e); }
+
+        // 💡 [API 연동] 호텔 리스트 로드
+        const resHotels = await fetch('/api/hotels');
+        const dataHotels = await resHotels.json();
+
+        if (Array.isArray(dataHotels)) {
+          setPartnerHotels(dataHotels);
+        }
+      } catch (e) { console.error("Failed to load portal data", e); }
     };
 
-    fetchAllPromotions();
+    fetchAllData();
   }, []);
 
-  // 💡 [신규 추가] 프로모션 필터링을 위한 상태
   const [promoRegion, setPromoRegion] = useState("ALL");
   const [promoSearch, setPromoSearch] = useState("");
 
-  // 💡 [신규 추가] API로 불러온 프로모션 데이터에서 중복 없는 지역(Province) 목록 추출
   const availableRegions = ["ALL", ...Array.from(new Set(promotions.map(p => p.province).filter(Boolean)))];
 
-  // 💡 [신규 추가] 지역 탭과 검색어에 맞춰 프로모션 필터링
   const filteredPromos = promotions.filter(promo => {
     const matchRegion = promoRegion === "ALL" || promo.province === promoRegion;
     const searchLower = promoSearch.toLowerCase();
@@ -317,7 +288,6 @@ export default function MainPortal() {
             <div className="w-full max-w-md mx-auto my-32 px-6">
               <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
                 <div className="text-center mb-8">
-                  {/* 💡 [수정] 로그인 창 로고는 원래 코드 그대로 logo.png 유지 */}
                   <img src="/logo.png" alt="Hotel Logo" className="h-16 md:h-20 w-auto mx-auto mb-4 object-contain" />
                   <h2 className="text-2xl font-black text-slate-800">{t.loginTitle}</h2>
                 </div>
@@ -584,14 +554,12 @@ export default function MainPortal() {
                     <span className="text-emerald-600">✨</span> {t.bookPartner}
                   </h3>
                 </div>
-                <BookingBar lang={lang} onSearchResults={setSearchData} />
+                {/* 💡 [API 연동] 부모(MainPortal)에서 받은 진짜 호텔 데이터를 자식(BookingBar)으로 넘겨줍니다. */}
+                <BookingBar lang={lang} onSearchResults={setSearchData} hotels={partnerHotels} />
               </div>
             </div>
           </section>
 
-          {/* ====================================================
-    💡 [수정] 스페셜 프로모션 섹션 (검색 필터 + 호텔 정보 표시 적용)
-==================================================== */}
           <section className="w-full bg-slate-50 pt-40 md:pt-48 pb-16 px-6 -mt-10">
             <div className="max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
@@ -599,7 +567,6 @@ export default function MainPortal() {
                   <span className="text-emerald-500">🎁</span> {t.specialOffers}
                 </h2>
 
-                {/* 💡 [신규] 텍스트 검색바 */}
                 <div className="relative w-full md:w-72 shrink-0">
                   <input
                     type="text"
@@ -614,7 +581,6 @@ export default function MainPortal() {
                 </div>
               </div>
 
-              {/* 💡 [신규] 지역별 퀵 필터 탭 (가로 스크롤) */}
               <div className="flex overflow-x-auto gap-2 pb-6 mb-2 scrollbar-hide">
                 {availableRegions.map((region, idx) => (
                   <button
@@ -632,7 +598,6 @@ export default function MainPortal() {
               </div>
 
               <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
-                {/* 💡 [수정] promotions 대신 filteredPromos 배열을 렌더링합니다. */}
                 {filteredPromos.length === 0 ? (
                   <div className="w-full flex flex-col items-center justify-center py-12 text-center bg-white rounded-3xl border border-slate-100 border-dashed">
                     <span className="text-4xl mb-4">🔍</span>
@@ -650,7 +615,6 @@ export default function MainPortal() {
                       </div>
                       <div className="p-6 flex-grow flex flex-col">
 
-                        {/* 💡 [신규] 호텔 이름 및 지역 정보 영역 */}
                         <div className="mb-4 pb-4 border-b border-slate-100">
                           <h4 className="text-slate-900 font-black text-lg leading-tight line-clamp-1 hover:text-emerald-600 transition-colors cursor-pointer">
                             {promo.hotel_name || "Partner Hotel"}
@@ -713,22 +677,19 @@ export default function MainPortal() {
               </div>
               <button
                 onClick={() => {
-                  // 1. 예약바가 있는 화면 상단으로 부드럽게 스크롤 이동
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                  // 2. 약간의 딜레이 후 BookingBar의 목적지(Destination) 버튼 강제 클릭
                   setTimeout(() => {
                     const destInput = document.getElementById("destination-trigger");
                     if (destInput) {
                       destInput.click();
                     }
-                  }, 300); // 스크롤하는 시간을 고려해 0.3초 후 창 열기
+                  }, 300);
                 }}
                 className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors uppercase tracking-widest text-sm border-b-2 border-emerald-600 pb-1"
               >
                 {t.viewAll}
               </button>
-            </div> {/* 💡 [수정] 이 부분에 닫는 </div> 태그가 빠져있었습니다! */}
+            </div>
 
             <div className="relative group/slider">
               <button onClick={slideLeft} className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-emerald-600 font-black text-xl hover:bg-emerald-50 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100">
@@ -736,18 +697,21 @@ export default function MainPortal() {
               </button>
 
               <div ref={sliderRef} className="flex overflow-x-auto gap-6 snap-x pb-8 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {partnerHotels.map((dest, idx) => (
+
+                {/* 💡 [API 연동] DB에서 불러온 실제 파트너 호텔 목록을 렌더링합니다! */}
+                {partnerHotels.length > 0 ? partnerHotels.map((dest, idx) => (
                   <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
-                    <a href={dest.url} target="_blank" rel="noopener noreferrer" className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
+                    <a href={`/hotel/${dest.code}`} target="_blank" rel="noopener noreferrer" className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
                       onClick={(e) => {
-                        if (dest.url === '#') {
+                        // 호텔 상세페이지 URL이 없는 경우 예외 처리
+                        if (!dest.code || dest.code === '#') {
                           e.preventDefault();
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                           setAlertMessage(`[ ${dest.name} ] ${t.alertDest}`);
                         }
                       }}
                     >
-                      <img src={dest.img} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img src={dest.image_url} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
                         <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-2 flex items-center gap-1">
@@ -756,13 +720,15 @@ export default function MainPortal() {
                         <h3 className="text-xl font-black mb-2">{dest.name}</h3>
                         <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
                           <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
-                            <span>⚡</span> {t.poweredBy[dest.descKey]}
+                            <span>⚡</span> {t.poweredBy[dest.descKey || 'pms']}
                           </p>
                         </div>
                       </div>
                     </a>
                   </div>
-                ))}
+                )) : (
+                  <div className="w-full text-center py-10 text-slate-500 font-bold">No partner hotels found.</div>
+                )}
               </div>
 
               <button onClick={slideRight} className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-emerald-600 font-black text-xl hover:bg-emerald-50 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100">
@@ -793,7 +759,6 @@ export default function MainPortal() {
       <footer className="w-full bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-900 mt-auto">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="lg:col-span-1">
-            {/* 💡 [수정] 푸터 로고 원래 코드인 logo.png 로 복원 */}
             <img src="/logo.png" alt="n+ Solutions Logo" className="h-10 mb-6 object-contain" />
             <p className="text-sm leading-relaxed mb-6">{t.footerDesc}</p>
           </div>
