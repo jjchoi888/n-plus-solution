@@ -696,37 +696,54 @@ export default function MainPortal() {
                 ❮
               </button>
 
+              {/* 💡 [API 연동] DB에서 불러온 실제 파트너 호텔 목록을 렌더링합니다! */}
               <div ref={sliderRef} className="flex overflow-x-auto gap-6 snap-x pb-8 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {partnerHotels.length > 0 ? partnerHotels.map((dest, idx) => {
 
-                {/* 💡 [API 연동] DB에서 불러온 실제 파트너 호텔 목록을 렌더링합니다! */}
-                {partnerHotels.length > 0 ? partnerHotels.map((dest, idx) => (
-                  <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
-                    <a href={`/hotel/${dest.code}`} target="_blank" rel="noopener noreferrer" className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
-                      onClick={(e) => {
-                        // 호텔 상세페이지 URL이 없는 경우 예외 처리
-                        if (!dest.code || dest.code === '#') {
-                          e.preventDefault();
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                          setAlertMessage(`[ ${dest.name} ] ${t.alertDest}`);
-                        }
-                      }}
-                    >
-                      <img src={dest.image_url} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
-                        <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-2 flex items-center gap-1">
-                          {t.partnerHotel} <span className="opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
-                        </p>
-                        <h3 className="text-xl font-black mb-2">{dest.name}</h3>
-                        <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
-                          <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
-                            <span>⚡</span> {t.poweredBy[dest.descKey || 'pms']}
+                  // 💡 [핵심: 링크 로직 수정 & 미래 확장성]
+                  // DB에 개별 도메인(dest.domain)이 등록되어 있으면 해당 도메인으로, 
+                  // 없으면 현재의 쿼리 파라미터(/?hotel=) 방식으로 자동 연결됩니다.
+                  const hotelLink = dest.domain
+                    ? `https://${dest.domain}`
+                    : `/?hotel=${dest.code}`;
+
+                  return (
+                    <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
+                      <a href={hotelLink} target="_blank" rel="noopener noreferrer" className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
+                        onClick={(e) => {
+                          if (!dest.code) {
+                            e.preventDefault();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            setAlertMessage(`[ ${dest.name} ] ${t.alertDest}`);
+                          }
+                        }}
+                      >
+                        <img src={dest.image_url} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
+                          <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-1 flex items-center gap-1">
+                            {t.partnerHotel} <span className="opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
                           </p>
+                          <h3 className="text-xl font-black mb-1 leading-tight">{dest.name}</h3>
+
+                          {/* 💡 [신규 추가] 지역(City, Province) 표시 */}
+                          <p className="text-sm font-medium text-slate-300 mb-2 flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="line-clamp-1">{[dest.city, dest.province].filter(Boolean).join(", ") || "Philippines"}</span>
+                          </p>
+
+                          <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
+                            <p className="text-xs text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
+                              <span>⚡</span> {t.poweredBy[dest.descKey || 'pms']}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  </div>
-                )) : (
+                      </a>
+                    </div>
+                  );
+                }) : (
                   <div className="w-full text-center py-10 text-slate-500 font-bold">No partner hotels found.</div>
                 )}
               </div>
