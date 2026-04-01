@@ -15,55 +15,58 @@ const heroImages = [
 
 // 💡 마닐라와 바기오 이미지를 public 폴더의 로컬 파일로 교체 완료!
 const partnerHotels = [
-  { 
-    code: "NPLUS01", 
-    name: "Metro Manila Hotel", 
+  {
+    code: "NPLUS01",
+    name: "Metro Manila Hotel",
     img: "/manila.png", // 💡 로컬 이미지 적용
-    descKey: "pms", 
-    url: "http://localhost:3000" 
+    descKey: "pms",
+    url: "http://localhost:3000"
   },
-  { 
-    code: "NPLUS02", 
-    name: "Baguio Mountain Hotel", 
+  {
+    code: "NPLUS02",
+    name: "Baguio Mountain Hotel",
     img: "/baguio.png", // 💡 로컬 이미지 적용
-    descKey: "kiosk", 
-    url: "http://seoul.localhost:3000" 
+    descKey: "kiosk",
+    url: "http://seoul.localhost:3000"
   },
-  { 
-    code: "NPLUS03", 
-    name: "Tagaytay Resort", 
-    img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800", 
-    descKey: "cm", 
-    url: "http://busan.localhost:3000" 
+  {
+    code: "NPLUS03",
+    name: "Tagaytay Resort",
+    img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800",
+    descKey: "cm",
+    url: "http://busan.localhost:3000"
   },
-  { 
-    code: "CEBU", 
-    name: "Cebu Tropical", 
-    img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=800", 
-    descKey: "db", 
-    url: "#" 
+  {
+    code: "CEBU",
+    name: "Cebu Tropical",
+    img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=800",
+    descKey: "db",
+    url: "#"
   },
-  { 
-    code: "BORACAY", 
-    name: "Boracay Paradise", 
-    img: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&q=80&w=800", 
-    descKey: "pms", 
-    url: "#" 
+  {
+    code: "BORACAY",
+    name: "Boracay Paradise",
+    img: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&q=80&w=800",
+    descKey: "pms",
+    url: "#"
   }
 ];
 
-// 💡 [수정] 수수료 0%(Zero Commission) 내용을 삭제하고, "업계 최저 1.5% 수수료"를 강조하는 현실적이고 매력적인 마케팅 문구로 대체
+// 💡 [수정] 반복 사용되는 로고 이미지를 변수로 선언하여 텍스트 사이즈에 맞게 자동 조절되도록 설정
+const nLogo = <img src="/logo.png" alt="n+" className="h-[1.2em] w-auto inline-block transform -translate-y-[10%] mx-1" />;
+
+// 💡 [수정] 요청하신 4가지 포인트에 문자열 대신 nLogo 컴포넌트를 직접 삽입
 const translations = {
   en: {
-    heroBadge: "THE ALL-IN-ONE HOTEL SOFTWARE", heroTitle: <>Empowering Hotels.<br />Delighting Guests.</>, heroDesc: <>n+ is a next-generation Cloud PMS designed to <br /> maximize hotel revenue and streamline operations. <br className="hidden md:block" />Guests can easily book our partner hotels directly below.</>,
-    bookPartner: "Book with n+ Partner Hotels", zeroComm: "Low 1.5% Commission", searchResults: "Search Results", whyChoose: "Why Hoteliers Choose n+", whyDesc: "Our comprehensive suite of tools helps you reduce operational costs, increase direct bookings, and elevate the guest experience.",
+    heroBadge: "THE ALL-IN-ONE HOTEL SOFTWARE", heroTitle: <>Empowering Hotels.<br />Delighting Guests.</>, heroDesc: <>{nLogo} is a next-generation Cloud PMS designed to <br /> maximize hotel revenue and streamline operations. <br className="hidden md:block" />Guests can easily book our partner hotels directly below.</>,
+    bookPartner: <>Book with {nLogo} Partner Hotels</>, zeroComm: "Low 1.5% Commission", searchResults: "Search Results", whyChoose: <>Why Hoteliers Choose {nLogo}</>, whyDesc: "Our comprehensive suite of tools helps you reduce operational costs, increase direct bookings, and elevate the guest experience.",
     saasFeatures: [
       { icon: "📉", title: "Drastic Cost Reduction", desc: "Powerful analysis algorithms optimize workforce management, significantly reducing the need for high-cost accounting or administrative personnel." },
       { icon: "🌐", title: "Native Direct Booking Engine", desc: "Elevate your brand with a custom webpage featuring a powerful, real-time automatic booking engine to drive reservations with an industry-low 1.5% fee." },
       { icon: "☁️", title: "Cloud-Based Total Solution", desc: "Seamlessly integrate payment, POS, booking, and management into a single, intuitive cloud platform—designed for effortless operation without IT experts." },
       { icon: "🌱", title: "Sustainable Paperless Operations", desc: "Lead the way in environmental protection. Utilize infinite cloud storage to digitize vast amounts of documents, achieving a 100% paperless workflow." }
     ],
-    partnerNetwork: "Our Partner Network", partnerDesc: "Join hundreds of properties globally powered by n+. By joining our network, your hotel gains direct exposure to our unified booking portal.", viewAll: "View All Partners", partnerHotel: "Partner Hotel",
+    partnerNetwork: "Our Partner Network", partnerDesc: <>Join hundreds of properties globally powered by {nLogo}. By joining our network, your hotel gains direct exposure to our unified booking portal.</>, viewAll: "View All Partners", partnerHotel: "Partner Hotel",
     poweredBy: { pms: "Powered by n+ Smart PMS", kiosk: "Powered by n+ Kiosk", cm: "Powered by n+ Channel Manager", db: "Powered by n+ Direct Booking" },
     ctaTitle: "Ready to Transform Your Hotel?", ctaDesc: "Stop paying exorbitant 15-20% OTA commissions. Boost your revenue with our industry-leading 1.5% low-rate platform and ultimate Cloud PMS.", reqDemo: "Request a Demo", partnerLogin: "Partner Login",
     footerSaaS: "n+ Solutions", footerDesc: "The operating system for modern hoteliers. Streamline operations, boost direct bookings, and maximize revenue globally.", fSolutions: "Solutions", fCompany: "Company", fStayUpdated: "Stay Updated",
@@ -84,15 +87,15 @@ const translations = {
     specialOffers: "Special Offers & Packages", promoCode: "Promo Code", validUntil: "Valid until", bookNow: "Book Now"
   },
   ko: {
-    heroBadge: "올인원 호텔 소프트웨어", heroTitle: <>호텔의 혁신.<br />고객의 감동.</>, heroDesc: <>n+는 호텔 수익을 극대화하고 운영을 간소화하는 차세대 클라우드 PMS입니다. <br className="hidden md:block" />고객은 아래에서 파트너 호텔을 쉽고 빠르게 다이렉트로 예약할 수 있습니다.</>,
-    bookPartner: "n+ 파트너 호텔 예약", zeroComm: "업계 최저 1.5% 수수료", searchResults: "검색 결과", whyChoose: "왜 n+를 선택해야 할까요?", whyDesc: "n+의 통합 솔루션은 호텔의 운영 비용을 줄이고, 다이렉트 예약을 늘리며, 고객 경험을 향상시킵니다.",
+    heroBadge: "올인원 호텔 소프트웨어", heroTitle: <>호텔의 혁신.<br />고객의 감동.</>, heroDesc: <>{nLogo}는 호텔 수익을 극대화하고 운영을 간소화하는 차세대 클라우드 PMS입니다. <br className="hidden md:block" />고객은 아래에서 파트너 호텔을 쉽고 빠르게 다이렉트로 예약할 수 있습니다.</>,
+    bookPartner: <>{nLogo} 파트너 호텔 예약</>, zeroComm: "업계 최저 1.5% 수수료", searchResults: "검색 결과", whyChoose: <>왜 {nLogo}를 선택해야 할까요?</>, whyDesc: "n+의 통합 솔루션은 호텔의 운영 비용을 줄이고, 다이렉트 예약을 늘리며, 고객 경험을 향상시킵니다.",
     saasFeatures: [
       { icon: "📉", title: "획기적인 비용 절감", desc: "강력한 분석 알고리즘으로 인력 관리를 최적화하여 고비용의 회계 및 관리 인력 수요를 획기적으로 대체합니다." },
       { icon: "🌐", title: "자체 웹사이트 & 다이렉트 예약 엔진", desc: "실시간 자동 예약 엔진이 탑재된 맞춤형 웹사이트를 통해 1.5%의 합리적인 수수료로 다이렉트 예약을 유도합니다." },
       { icon: "☁️", title: "클라우드 기반 통합 솔루션", desc: "결제, POS, 예약 및 객실 관리 시스템을 단일 클라우드 플랫폼으로 통합하여 전문가 없이도 누구나 쉽게 운영할 수 있습니다." },
       { icon: "🌱", title: "친환경 페이퍼리스 운영", desc: "무제한 클라우드 스토리지를 제공하여 방대한 문서를 종이 없이 안전하게 보관하며, 친환경 호텔 운영을 선도합니다." }
     ],
-    partnerNetwork: "파트너 네트워크", partnerDesc: "전 세계 수백 개의 호텔이 n+와 함께하고 있습니다. n+ 네트워크에 합류하여 통합 예약 포털에 호텔을 직접 노출하세요.", viewAll: "모든 파트너 보기", partnerHotel: "파트너 호텔",
+    partnerNetwork: "파트너 네트워크", partnerDesc: <>전 세계 수백 개의 호텔이 {nLogo}와 함께하고 있습니다. {nLogo} 네트워크에 합류하여 통합 예약 포털에 호텔을 직접 노출하세요.</>, viewAll: "모든 파트너 보기", partnerHotel: "파트너 호텔",
     poweredBy: { pms: "n+ 스마트 PMS 적용", kiosk: "n+ 스마트 키오스크 적용", cm: "n+ 채널 매니저 적용", db: "n+ 다이렉트 예약 적용" },
     ctaTitle: "호텔을 혁신할 준비가 되셨나요?", ctaDesc: "15~20%에 달하는 높은 OTA 수수료는 이제 그만. 업계 최저 1.5% 수수료 플랫폼과 최고의 클라우드 PMS로 수익을 극대화하세요.", reqDemo: "데모 신청하기", partnerLogin: "파트너 로그인",
     footerSaaS: "n+ SaaS", footerDesc: "현대 호텔리어를 위한 운영 체제. 운영을 간소화하고 다이렉트 예약을 늘려 전 세계적으로 수익을 극대화하세요.", fSolutions: "솔루션", fCompany: "회사 소개", fStayUpdated: "최신 소식 받기",
@@ -113,15 +116,15 @@ const translations = {
     specialOffers: "스페셜 프로모션 & 패키지", promoCode: "할인 코드", validUntil: "유효기간", bookNow: "지금 예약하기"
   },
   ja: {
-    heroBadge: "オールインワン ホテルソフトウェア", heroTitle: <>ホテルの革新。<br />ゲストの感動。</>, heroDesc: <>n+は、ホテルの収益を最大化し、運営を合理化する次世代クラウドPMSです。<br className="hidden md:block" />ゲストは以下のパートナーホテルを直接予約できます。</>,
-    bookPartner: "n+ パートナーホテルを予約", zeroComm: "業界最安水準 1.5% 手数料", searchResults: "検索結果", whyChoose: "n+ が選ばれる理由", whyDesc: "当社の包括的なツールは、運用コストの削減、直接予約の増加、ゲスト体験の向上をサポートします。",
+    heroBadge: "オールインワン ホテルソフトウェア", heroTitle: <>ホテルの革新。<br />ゲストの感動。</>, heroDesc: <>{nLogo}は、ホテルの収益を最大化し、運営を合理化する次世代クラウドPMSです。<br className="hidden md:block" />ゲストは以下のパートナーホテルを直接予約できます。</>,
+    bookPartner: <>{nLogo} パートナーホテルを予約</>, zeroComm: "業界最安水準 1.5% 手数料", searchResults: "検索結果", whyChoose: <>{nLogo} が選ばれる理由</>, whyDesc: "当社の包括的なツールは、運用コストの削減、直接予約の増加、ゲスト体験の向上をサポートします。",
     saasFeatures: [
       { icon: "📉", title: "大幅なコスト削減", desc: "強力な分析アルゴリズムにより労働力管理を最適化し、高コストな経理や管理スタッフの必要性を大幅に削減します。" },
       { icon: "🌐", title: "自社ウェブサイト＆ダイレクト予約エンジン", desc: "リアルタイム自動予約エンジンを搭載したカスタムウェブサイトにより、わずか1.5%の手数料で直接予約を促進します。" },
       { icon: "☁️", title: "クラウド型トータルソリューション", desc: "決済、POS、予約、管理システムを単一のクラウドプラットフォームに統合し、ITの専門家不要で簡単に運用できます。" },
       { icon: "🌱", title: "環境に配慮したペーパーレス運営", desc: "無限のクラウドストレージを活用して膨大な文書をデジタル化し、環境保護をリードするペーパーレス運用を実現します。" }
     ],
-    partnerNetwork: "パートナーネットワーク", partnerDesc: "世界中の何百ものホテルがn+を導入しています。私たちのネットワークに参加し、統合予約ポータルで直接露出を高めましょう。", viewAll: "すべてのパートナーを見る", partnerHotel: "パートナーホテル",
+    partnerNetwork: "パートナーネットワーク", partnerDesc: <>世界中の何百ものホテルが{nLogo}を導入しています。私たちのネットワークに参加し、統合予約ポータルで直接露出を高めましょう。</>, viewAll: "すべてのパートナーを見る", partnerHotel: "パートナーホテル",
     poweredBy: { pms: "n+ スマートPMS 導入", kiosk: "n+ スマートキオスク 導入", cm: "n+ チャネルマネージャー 導入", db: "n+ ダイレクト予約 導入" },
     ctaTitle: "ホテルを革新する準備はできましたか？", ctaDesc: "高額なOTA手数料（15〜20%）はもう不要です。わずか1.5%の低手数料プラットフォームと最高のクラウドPMSで収益を最大化しましょう。", reqDemo: "デモをリクエスト", partnerLogin: "パートナーログイン",
     footerSaaS: "n+ SaaS", footerDesc: "現代のホテリエのためのオペレーティングシステム。運営を合理化し、直接予約を増やし、収益を最大化します。", fSolutions: "ソリューション", fCompany: "会社情報", fStayUpdated: "最新情報",
@@ -142,15 +145,15 @@ const translations = {
     specialOffers: "特別プロモーション＆パッケージ", promoCode: "プロモコード", validUntil: "有効期限", bookNow: "今すぐ予約"
   },
   zh: {
-    heroBadge: "一体化酒店软件", heroTitle: <>赋能酒店。<br />愉悦宾客。</>, heroDesc: <>n+ 是下一代云端 PMS，旨在最大化酒店收入并简化运营。<br className="hidden md:block" />宾客可以在下方轻松直接预订我们的合作伙伴酒店。</>,
-    bookPartner: "预订 n+ 合作伙伴酒店", zeroComm: "超低 1.5% 佣金", searchResults: "搜索结果", whyChoose: "为什么选择 n+", whyDesc: "我们全面的工具套件可帮助您降低运营成本、增加直接预订并提升宾客体验。",
+    heroBadge: "一体化酒店软件", heroTitle: <>赋能酒店。<br />愉悦宾客。</>, heroDesc: <>{nLogo} 是下一代云端 PMS，旨在最大化酒店收入并简化运营。<br className="hidden md:block" />宾客可以在下方轻松直接预订我们的合作伙伴酒店。</>,
+    bookPartner: <>预订 {nLogo} 合作伙伴酒店</>, zeroComm: "超低 1.5% 佣金", searchResults: "搜索结果", whyChoose: <>为什么选择 {nLogo}</>, whyDesc: "我们全面的工具套件可帮助您降低运营成本、增加直接预订并提升宾客体验。",
     saasFeatures: [
       { icon: "📉", title: "显著降低成本", desc: "强大的分析算法优化了劳动力管理，大幅减少了对高成本会计和行政人员的需求。" },
       { icon: "🌐", title: "专属网站与直连预订引擎", desc: "借助配备实时自动预订引擎的定制网站，以 1.5% 的行业超低费率推动直接预订。" },
       { icon: "☁️", title: "基于云端的全面解决方案", desc: "将支付、POS、预订和管理系统无缝集成到一个云平台中，无需 IT 专业人员即可轻松操作。" },
       { icon: "🌱", title: "环保无纸化运营", desc: "利用无限的云存储空间将海量文档数字化，实现 100% 无纸化工作流程，引领环保潮流。" }
     ],
-    partnerNetwork: "合作伙伴网络", partnerDesc: "全球数百家酒店均由 n+ 提供支持。加入我们的网络，让您的酒店在统一的预订门户中获得直接曝光。", viewAll: "查看所有合作伙伴", partnerHotel: "合作伙伴酒店",
+    partnerNetwork: "合作伙伴网络", partnerDesc: <>全球数百家酒店均由 {nLogo} 提供支持。加入我们的网络，让您的酒店在统一的预订门户中获得直接曝光。</>, viewAll: "查看所有合作伙伴", partnerHotel: "合作伙伴酒店",
     poweredBy: { pms: "由 n+ 智能 PMS 提供支持", kiosk: "由 n+ 自助终端 提供支持", cm: "由 n+ 渠道管理 提供支持", db: "由 n+ 直接预订 提供支持" },
     ctaTitle: "准备好转型您的酒店了吗？", ctaDesc: "告别高达 15-20% 的 OTA 佣金。借助我们 1.5% 超低费率平台和终极云端 PMS 提升您的收入。", reqDemo: "申请演示", partnerLogin: "合作伙伴登录",
     footerSaaS: "n+ SaaS", footerDesc: "现代酒店经营者的操作系统。简化运营、提高直接预订并最大化全球收入。", fSolutions: "解决方案", fCompany: "公司", fStayUpdated: "获取最新动态",
@@ -173,21 +176,21 @@ const translations = {
 };
 
 export default function MainPortal() {
-  const [lang, setLang] = useState("en"); 
-  const [searchData, setSearchData] = useState(null); 
+  const [lang, setLang] = useState("en");
+  const [searchData, setSearchData] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [alertMessage, setAlertMessage] = useState("");
 
   const [activeView, setActiveView] = useState("HOME");
-  
+
   const [isPartnerLoggedIn, setIsPartnerLoggedIn] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPw, setLoginPw] = useState("");
-  
+
   const [partnerDomain, setPartnerDomain] = useState("www.myhotel.com");
   const [partnerCode, setPartnerCode] = useState("NPLUS1");
   const [partnerCard, setPartnerCard] = useState("**** **** **** 1234");
-  
+
   const [profileImg, setProfileImg] = useState("");
   const [profileDesc, setProfileDesc] = useState("Powered by n+ Smart PMS");
 
@@ -196,13 +199,11 @@ export default function MainPortal() {
   const [contactMode, setContactMode] = useState('CHOICE');
 
   // 💡 [연동 완료 & 가짜 데이터 완전 삭제] 모든 브랜치의 실제 프로모션만 수집
-  // 💡 [상용화 완료] 서버에 등록된 "모든 지점"의 라이브 프로모션을 긁어옵니다. (도메인 격리 완전 무효화)
   const [promotions, setPromotions] = useState([]);
 
   useEffect(() => {
     const fetchAllPromotions = async () => {
       try {
-        // 💡 대표님 세팅대로 깔끔하게 /api 로직으로 원상 복구했습니다!
         const res = await fetch('/api/promotions?hotel=ALL');
         const data = await res.json();
 
@@ -250,11 +251,10 @@ export default function MainPortal() {
       setActiveView("PMS");
       setSearchData(null);
     } else if (action === 'LOGIN') {
-      setActiveView("LOGIN"); 
+      setActiveView("LOGIN");
       setSearchData(null);
     } else if (action === 'CONTACT') {
-      // 💡 [핵심 연동] 이제 CONTACT 액션이 들어오면 알림창 대신 세련된 모달창을 엽니다!
-      setIsContactOpen(true); 
+      setIsContactOpen(true);
     }
   };
 
@@ -266,7 +266,6 @@ export default function MainPortal() {
   const handleUpdateHotelCode = () => {
     const regex = /^[A-Za-z0-9]{6}$/;
     if (!regex.test(partnerCode)) {
-      // 💡 [Cleaned] Standardized alert messages to English
       setAlertMessage("Hotel code must be exactly 6 alphanumeric characters.");
       return;
     }
@@ -283,7 +282,7 @@ export default function MainPortal() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if(loginEmail && loginPw) {
+    if (loginEmail && loginPw) {
       setIsPartnerLoggedIn(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -293,16 +292,15 @@ export default function MainPortal() {
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
-      
+
       <Navbar currentLang={lang} setLang={setLang} onMenuClick={handleMenuClick} />
 
       {searchData ? (
         <section className="w-full max-w-6xl mx-auto mt-28 px-4 animate-fade-in-up relative z-10 pb-20 flex-grow">
-           {/* 💡 중복되던 📍 Search Results 제목과 밑줄을 완전히 삭제했습니다! */}
-           <RoomList hotelCode={searchData.destination} lang={lang} checkIn={searchData.checkIn} checkOut={searchData.checkOut} adults={searchData.adults} kids={searchData.kids} />
+          <RoomList hotelCode={searchData.destination} lang={lang} checkIn={searchData.checkIn} checkOut={searchData.checkOut} adults={searchData.adults} kids={searchData.kids} />
         </section>
       ) : activeView === "LOGIN" ? (
-        
+
         <div className="w-full flex-grow flex flex-col items-center mt-[72px] animate-fade-in bg-slate-50">
           {!isPartnerLoggedIn ? (
             <div className="w-full max-w-md mx-auto my-32 px-6">
@@ -314,11 +312,11 @@ export default function MainPortal() {
                 <form onSubmit={handleLogin} className="space-y-5">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.emailStr}</label>
-                    <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="partner@hotel.com" />
+                    <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="partner@hotel.com" />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.pwStr}</label>
-                    <input type="password" value={loginPw} onChange={e=>setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="••••••••" />
+                    <input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="••••••••" />
                   </div>
                   <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 transition-colors mt-4">
                     {t.loginBtn}
@@ -327,21 +325,19 @@ export default function MainPortal() {
               </div>
             </div>
           ) : (
-            
-            // 파트너 대시보드 화면
+
             <div className="w-full max-w-6xl mx-auto py-12 px-4 md:px-6 space-y-8">
-              
+
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-6">
                 <div>
                   <h1 className="text-3xl font-black text-slate-900">{t.dashTitle}</h1>
                   <p className="text-slate-500 font-bold">{t.dashSub}</p>
                 </div>
-                <button onClick={()=>{setIsPartnerLoggedIn(false); setLoginPw('');}} className="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm">
+                <button onClick={() => { setIsPartnerLoggedIn(false); setLoginPw(''); }} className="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm">
                   {t.logoutBtn}
                 </button>
               </div>
 
-              {/* 성과 요약 위젯 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
@@ -366,12 +362,10 @@ export default function MainPortal() {
                 </div>
               </div>
 
-              {/* 메인 2단 컬럼 레이아웃 */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                
-                {/* 왼쪽 열 */}
+
                 <div className="lg:col-span-1 space-y-6">
-                  
+
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbPlan}</h3>
                     <div className="text-xl font-black text-slate-800 mb-2">{t.dbPlanName}</div>
@@ -385,7 +379,7 @@ export default function MainPortal() {
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
                       <div className="flex gap-2">
                         <input type="text" value={partnerCard} readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono text-slate-600 bg-slate-50" />
-                        <button onClick={()=>setAlertMessage("Card update module opening...")} className="bg-slate-800 text-white px-4 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-700">{t.dbCardRegBtn}</button>
+                        <button onClick={() => setAlertMessage("Card update module opening...")} className="bg-slate-800 text-white px-4 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-700">{t.dbCardRegBtn}</button>
                       </div>
                     </div>
                     <div>
@@ -396,33 +390,31 @@ export default function MainPortal() {
                             <p className="text-xs font-bold text-slate-800">Sep 2026</p>
                             <p className="text-[10px] text-slate-500">₱15,000</p>
                           </div>
-                          <button onClick={()=>setAlertMessage("Downloading receipt...")} className="text-xs font-bold text-emerald-600 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-100">📄 {t.dbReceipt}</button>
+                          <button onClick={() => setAlertMessage("Downloading receipt...")} className="text-xs font-bold text-emerald-600 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-100">📄 {t.dbReceipt}</button>
                         </div>
                         <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                           <div>
                             <p className="text-xs font-bold text-slate-800">Aug 2026</p>
                             <p className="text-[10px] text-slate-500">₱15,000</p>
                           </div>
-                          <button onClick={()=>setAlertMessage("Downloading receipt...")} className="text-xs font-bold text-emerald-600 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-100">📄 {t.dbReceipt}</button>
+                          <button onClick={() => setAlertMessage("Downloading receipt...")} className="text-xs font-bold text-emerald-600 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-100">📄 {t.dbReceipt}</button>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* 기술 지원 및 헬프데스크 */}
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbSupport}</h3>
                     <div className="space-y-3">
-                      {/* 💡 [핵심 연동] 파트너 대시보드의 문의 버튼도 새 모달창으로 연결! */}
-                      <button onClick={()=>setIsContactOpen(true)} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
+                      <button onClick={() => setIsContactOpen(true)} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
                         <span className="text-sm font-bold text-slate-700">🎧 {t.dbInquiry}</span>
                         <span className="text-slate-400">→</span>
                       </button>
-                      <button onClick={()=>setAlertMessage("Opening API Guide...")} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
+                      <button onClick={() => setAlertMessage("Opening API Guide...")} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
                         <span className="text-sm font-bold text-slate-700">📖 {t.dbApiGuide}</span>
                         <span className="text-slate-400">→</span>
                       </button>
-                      <button onClick={()=>setAlertMessage("No new notices at this time.")} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
+                      <button onClick={() => setAlertMessage("No new notices at this time.")} className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors">
                         <span className="text-sm font-bold text-slate-700">📢 {t.dbNotices}</span>
                         <span className="text-emerald-600 text-[10px] font-black bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-widest">New</span>
                       </button>
@@ -431,23 +423,21 @@ export default function MainPortal() {
 
                 </div>
 
-                {/* 오른쪽 열 */}
                 <div className="lg:col-span-2 space-y-6">
-                  
-                  {/* 3번: 포털 프로필 관리 */}
+
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbProfile}</h3>
                     <p className="text-sm text-slate-500 mb-6">{t.dbProfileDesc}</p>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <label className="text-xs font-bold text-slate-500 block mb-1">{t.dbProfileImg}</label>
-                        <input type="text" placeholder="https://..." value={profileImg} onChange={e=>setProfileImg(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500" />
+                        <input type="text" placeholder="https://..." value={profileImg} onChange={e => setProfileImg(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500" />
                       </div>
                       <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1">
                           <label className="text-xs font-bold text-slate-500 block mb-1">{t.dbProfileText}</label>
-                          <input type="text" value={profileDesc} onChange={e=>setProfileDesc(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500" />
+                          <input type="text" value={profileDesc} onChange={e => setProfileDesc(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500" />
                         </div>
                         <div className="flex items-end shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                           <button onClick={handleUpdateProfile} className="bg-emerald-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-emerald-700 shadow-md transition-colors whitespace-nowrap w-full sm:w-auto">
@@ -461,10 +451,10 @@ export default function MainPortal() {
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbCode}</h3>
                     <p className="text-sm text-slate-500 mb-6">{t.dbCodeDesc}</p>
-                    
+
                     <div className="flex flex-col sm:flex-row gap-3">
                       <div className="flex-1 relative">
-                        <input type="text" maxLength={6} value={partnerCode} onChange={e=>setPartnerCode(e.target.value.toUpperCase())} className="w-full p-3 border-2 border-slate-200 rounded-xl font-black text-lg text-slate-700 focus:border-emerald-500 outline-none uppercase tracking-widest" placeholder="EXMPL1" />
+                        <input type="text" maxLength={6} value={partnerCode} onChange={e => setPartnerCode(e.target.value.toUpperCase())} className="w-full p-3 border-2 border-slate-200 rounded-xl font-black text-lg text-slate-700 focus:border-emerald-500 outline-none uppercase tracking-widest" placeholder="EXMPL1" />
                         {partnerCode.length === 6 && <span className="absolute right-4 top-4 text-emerald-500 font-bold text-sm">✅</span>}
                       </div>
                       <button onClick={handleUpdateHotelCode} className="bg-emerald-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-emerald-700 shadow-md transition-colors whitespace-nowrap">
@@ -477,11 +467,11 @@ export default function MainPortal() {
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbDomain}</h3>
                     <p className="text-sm text-slate-500 mb-6">{t.dbDomainDesc}</p>
-                    
+
                     <div className="flex flex-col sm:flex-row gap-3">
                       <div className="flex-1 flex items-center bg-slate-50 border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-emerald-500 transition-colors">
                         <span className="pl-4 text-slate-400 font-bold">https://</span>
-                        <input type="text" value={partnerDomain} onChange={e=>setPartnerDomain(e.target.value)} className="w-full p-3 bg-transparent font-bold text-slate-700 outline-none" placeholder="www.yourhotel.com" />
+                        <input type="text" value={partnerDomain} onChange={e => setPartnerDomain(e.target.value)} className="w-full p-3 bg-transparent font-bold text-slate-700 outline-none" placeholder="www.yourhotel.com" />
                       </div>
                       <button onClick={handleUpdateDomain} className="bg-emerald-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-emerald-700 shadow-md transition-colors whitespace-nowrap">
                         {t.dbDomainBtn}
@@ -500,7 +490,7 @@ export default function MainPortal() {
         </div>
 
       ) : activeView === "PMS" ? (
-        
+
         <div className="w-full flex-grow flex flex-col items-center mt-[72px] animate-fade-in">
           <section className="w-full bg-slate-900 py-24 md:py-32 px-6 border-b border-slate-800">
             <div className="max-w-4xl mx-auto text-center">
@@ -562,7 +552,7 @@ export default function MainPortal() {
                 <div className="absolute inset-0 bg-slate-900/60"></div>
               </div>
             ))}
-            
+
             <div className="relative z-10 text-center px-4 max-w-5xl mt-8 md:mt-0">
               <div className="inline-block bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 font-bold tracking-widest text-xs md:text-sm px-4 py-1.5 rounded-full mb-6">
                 {t.heroBadge}
@@ -576,58 +566,55 @@ export default function MainPortal() {
             </div>
 
             <div className="relative z-[60] w-full max-w-6xl px-4 mt-6 md:mt-12 md:-mb-32">
-               <div className="bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-4 md:p-6 border border-slate-100 flex flex-col gap-4">
-                      <div className="flex justify-between items-center px-2">
-                        <h3 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
-                          <span className="text-emerald-600">✨</span> {t.bookPartner}
-                        </h3>
-                      </div>
-                 <BookingBar lang={lang} onSearchResults={setSearchData} />
-               </div>
+              <div className="bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-4 md:p-6 border border-slate-100 flex flex-col gap-4">
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
+                    <span className="text-emerald-600">✨</span> {t.bookPartner}
+                  </h3>
+                </div>
+                <BookingBar lang={lang} onSearchResults={setSearchData} />
+              </div>
             </div>
           </section>
 
-          {/* ====================================================
-              💡 [신규] 예약 검색바 바로 밑 - 스페셜 프로모션 섹션
-          ==================================================== */}
           <section className="w-full bg-slate-50 pt-40 md:pt-48 pb-16 px-6 -mt-10">
             <div className="max-w-7xl mx-auto">
               <div className="flex justify-between items-end mb-8">
                 <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <span className="text-emerald-500">🎁</span> {t.specialOffers}
+                  <span className="text-emerald-500">🎁</span> {t.specialOffers}
                 </h2>
               </div>
-              
-                    <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
-                      {promotions.length === 0 ? (
-                        <p className="text-slate-400 font-bold p-4">No active promotions at this time.</p>
-                      ) : (
-                        promotions.map(promo => (
-                          <div key={promo.id} className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
-                            <div className="h-48 relative">
-                              <img src={promo.image_url} alt="Promo" className="w-full h-full object-cover" />
-                              <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">{promo.discount_pct}% OFF</div>
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                              <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">{promo.title}</h3>
-                            </div>
-                            <div className="p-6">
-                              <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100 mb-3">🛏️ {promo.target_room_type}</span>
-                              <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">{promo.description}</p>
-                              <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
-                                <span className="font-mono font-black text-emerald-600 text-lg">{promo.code}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: {promo.end_date}</span>
-                                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
+
+              <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
+                {promotions.length === 0 ? (
+                  <p className="text-slate-400 font-bold p-4">No active promotions at this time.</p>
+                ) : (
+                  promotions.map(promo => (
+                    <div key={promo.id} className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
+                      <div className="h-48 relative">
+                        <img src={promo.image_url} alt="Promo" className="w-full h-full object-cover" />
+                        <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">{promo.discount_pct}% OFF</div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">{promo.title}</h3>
+                      </div>
+                      <div className="p-6">
+                        <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100 mb-3">🛏️ {promo.target_room_type}</span>
+                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">{promo.description}</p>
+                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
+                          <span className="font-mono font-black text-emerald-600 text-lg">{promo.code}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: {promo.end_date}</span>
+                          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </section>
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
 
           <section className="w-full bg-white mt-20 md:mt-32 pt-24 pb-20 px-6 border-b border-slate-100">
             <div className="max-w-7xl mx-auto">
@@ -661,7 +648,7 @@ export default function MainPortal() {
               </div>
               <button className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors uppercase tracking-widest text-sm border-b-2 border-emerald-600 pb-1">{t.viewAll}</button>
             </div>
-            
+
             <div className="relative group/slider">
               <button onClick={slideLeft} className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-emerald-600 font-black text-xl hover:bg-emerald-50 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100">
                 ❮
@@ -671,13 +658,13 @@ export default function MainPortal() {
                 {partnerHotels.map((dest, idx) => (
                   <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
                     <a href={dest.url} target="_blank" rel="noopener noreferrer" className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200"
-                        onClick={(e) => {
-                          if(dest.url === '#') {
-                              e.preventDefault();
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                              setAlertMessage(`[ ${dest.name} ] ${t.alertDest}`);
-                          }
-                        }}
+                      onClick={(e) => {
+                        if (dest.url === '#') {
+                          e.preventDefault();
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          setAlertMessage(`[ ${dest.name} ] ${t.alertDest}`);
+                        }
+                      }}
                     >
                       <img src={dest.img} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -687,9 +674,9 @@ export default function MainPortal() {
                         </p>
                         <h3 className="text-xl font-black mb-2">{dest.name}</h3>
                         <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
-                           <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
-                             <span>⚡</span> {t.poweredBy[dest.descKey]}
-                           </p>
+                          <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
+                            <span>⚡</span> {t.poweredBy[dest.descKey]}
+                          </p>
                         </div>
                       </div>
                     </a>
@@ -722,39 +709,37 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 🌟 5. B2B SaaS Footer (푸터 업데이트 완료) */}
       <footer className="w-full bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-900 mt-auto">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="lg:col-span-1">
             <img src="/logo.png" alt="n+ Solutions Logo" className="h-10 mb-6 object-contain" />
             <p className="text-sm leading-relaxed mb-6">{t.footerDesc}</p>
           </div>
-          
+
           <div>
             <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Solutions</h4>
             <ul className="space-y-3 text-sm">
-              <li><button onClick={()=>handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">Cloud PMS</button></li>
+              <li><button onClick={() => handleMenuClick('PMS')} className="hover:text-emerald-400 transition-colors">Cloud PMS</button></li>
               <li><button className="hover:text-emerald-400 transition-colors">Table Order & Pay</button></li>
               <li><button className="hover:text-emerald-400 transition-colors">Fintech Solutions</button></li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Company</h4>
             <ul className="space-y-3 text-sm">
-              <li><button onClick={()=>handleMenuClick('HOME')} className="hover:text-emerald-400 transition-colors">About n+</button></li>
-              {/* 💡 [핵심] 푸터의 Contact Us 버튼도 팝업창을 엽니다! */}
-              <li><button onClick={()=>handleMenuClick('CONTACT')} className="hover:text-emerald-400 transition-colors">Contact Us</button></li>
+              <li><button onClick={() => handleMenuClick('HOME')} className="hover:text-emerald-400 transition-colors">About n+</button></li>
+              <li><button onClick={() => handleMenuClick('CONTACT')} className="hover:text-emerald-400 transition-colors">Contact Us</button></li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Stay Updated</h4>
             <p className="text-sm mb-6">Get the latest our solutions news.</p>
             <div className="flex gap-4">
               <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.604 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.604 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                 </svg>
               </a>
               <a href="#" className="text-slate-400 hover:text-white hover:scale-110 transition-all">
@@ -780,7 +765,6 @@ export default function MainPortal() {
         </div>
       </footer>
 
-      {/* 💡 [신규] Contact Sales 모달창 (Email 폼 & WhatsApp 링크) */}
       {isContactOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={closeContactModal}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
@@ -788,26 +772,24 @@ export default function MainPortal() {
               <h2 className="text-xl font-bold">{t.contactSalesTitle}</h2>
               <button onClick={closeContactModal} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
             </div>
-            
+
             <div className="p-8">
               {contactMode === 'CHOICE' ? (
                 <div className="flex flex-col gap-4">
-                  {/* 이메일 버튼 -> 이메일 폼으로 화면 전환 */}
                   <button onClick={() => setContactMode('EMAIL')} className="flex items-center justify-center gap-3 w-full py-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-700 transition-colors shadow-sm">
                     <span className="text-2xl">✉️</span> {t.sendEmail}
                   </button>
-                  
-                  {/* WhatsApp 버튼 -> WhatsApp 링크로 바로 이동 (전화번호는 임시로 세팅) */}
+
                   <a href="https://wa.me/639123456789" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 w-full py-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 rounded-xl font-bold text-[#075E54] transition-colors shadow-sm">
-                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.394 0 0 5.394 0 12.031c0 2.155.564 4.246 1.638 6.096L.18 24l5.986-1.45A11.968 11.968 0 0012.031 24c6.637 0 12.031-5.394 12.031-12.031S18.668 0 12.031 0zm0 22.012c-1.84 0-3.64-.49-5.21-1.42l-.37-.22-3.87.94 1.03-3.77-.24-.38a10.021 10.021 0 01-1.54-5.402c0-5.541 4.509-10.051 10.051-10.051s10.051 4.51 10.051 10.051-4.51 10.051-10.051 10.051zm5.51-7.53c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.17.2-.34.22-.64.07-.3-.15-1.28-.47-2.44-1.5-.9-.8-1.51-1.79-1.69-2.09-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.64-.93-2.25-.25-.59-.5-.51-.68-.52h-.58c-.2 0-.53.08-.8.38-.28.3-1.05 1.03-1.05 2.5 0 1.48 1.08 2.9 1.23 3.1.15.2 2.11 3.22 5.11 4.52.71.3 1.27.48 1.7.62.72.23 1.38.2 1.89.12.58-.09 1.79-.73 2.04-1.44.25-.71.25-1.32.18-1.44-.08-.13-.28-.2-.58-.35z"/></svg>
+                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.394 0 0 5.394 0 12.031c0 2.155.564 4.246 1.638 6.096L.18 24l5.986-1.45A11.968 11.968 0 0012.031 24c6.637 0 12.031-5.394 12.031-12.031S18.668 0 12.031 0zm0 22.012c-1.84 0-3.64-.49-5.21-1.42l-.37-.22-3.87.94 1.03-3.77-.24-.38a10.021 10.021 0 01-1.54-5.402c0-5.541 4.509-10.051 10.051-10.051s10.051 4.51 10.051 10.051-4.51 10.051-10.051 10.051zm5.51-7.53c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.17.2-.34.22-.64.07-.3-.15-1.28-.47-2.44-1.5-.9-.8-1.51-1.79-1.69-2.09-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.64-.93-2.25-.25-.59-.5-.51-.68-.52h-.58c-.2 0-.53.08-.8.38-.28.3-1.05 1.03-1.05 2.5 0 1.48 1.08 2.9 1.23 3.1.15.2 2.11 3.22 5.11 4.52.71.3 1.27.48 1.7.62.72.23 1.38.2 1.89.12.58-.09 1.79-.73 2.04-1.44.25-.71.25-1.32.18-1.44-.08-.13-.28-.2-.58-.35z" /></svg>
                     {t.whatsapp}
                   </a>
                 </div>
               ) : (
-                <form onSubmit={(e) => { 
-                    e.preventDefault(); 
-                    setAlertMessage(t.successMsg); 
-                    closeContactModal(); 
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setAlertMessage(t.successMsg);
+                  closeContactModal();
                 }} className="space-y-4 animate-fade-in">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.emailLabel}</label>
@@ -819,10 +801,10 @@ export default function MainPortal() {
                   </div>
                   <div className="pt-2 flex flex-col gap-2">
                     <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md">
-                        {t.sendBtn}
+                      {t.sendBtn}
                     </button>
                     <button type="button" onClick={() => setContactMode('CHOICE')} className="w-full text-slate-500 font-bold py-2 hover:text-slate-700 text-sm transition-colors">
-                        ← {t.backBtn}
+                      ← {t.backBtn}
                     </button>
                   </div>
                 </form>
@@ -832,23 +814,22 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 전역 알림 모달 */}
       {alertMessage && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
-              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-                  <div className="bg-emerald-600 p-4 text-white flex justify-center items-center">
-                      <h3 className="font-black text-lg">Notification</h3>
-                  </div>
-                  <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
-                      {alertMessage}
-                  </div>
-                  <div className="p-4 bg-slate-50 border-t border-slate-100">
-                      <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
-                          {t.close}
-                      </button>
-                  </div>
-              </div>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
+            <div className="bg-emerald-600 p-4 text-white flex justify-center items-center">
+              <h3 className="font-black text-lg">Notification</h3>
+            </div>
+            <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
+              {alertMessage}
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100">
+              <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+                {t.close}
+              </button>
+            </div>
           </div>
+        </div>
       )}
     </main>
   );
