@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
+const BASE_URL = '';
+
 export default function PortalAdmin() {
     // 💡 [신규] 로그인 관련 상태
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,11 +23,10 @@ export default function PortalAdmin() {
         setIsAuthenticating(true);
 
         try {
-            // 🚨 기존 /api/login 대신 방금 만든 HQ 전용 /api/hq-login 으로 쏩니다!
-            const res = await fetch('/api/hq-login', {
+            // 💡 BASE_URL을 붙여서 정확하게 백엔드로 라우팅되도록 수정
+            const res = await fetch(`${BASE_URL}/api/hq-login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // 개별 호텔 코드는 필요 없으므로 본사 마스터 아이디와 비밀번호만 보냅니다.
                 body: JSON.stringify({ user_id: loginId, password: loginPw })
             });
 
