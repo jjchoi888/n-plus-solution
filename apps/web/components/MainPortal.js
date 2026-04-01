@@ -216,6 +216,24 @@ export default function MainPortal() {
     fetchAllPromotions();
   }, []);
 
+  // 💡 [신규 추가] 프로모션 필터링을 위한 상태
+  const [promoRegion, setPromoRegion] = useState("ALL");
+  const [promoSearch, setPromoSearch] = useState("");
+
+  // 💡 [신규 추가] API로 불러온 프로모션 데이터에서 중복 없는 지역(Province) 목록 추출
+  const availableRegions = ["ALL", ...Array.from(new Set(promotions.map(p => p.province).filter(Boolean)))];
+
+  // 💡 [신규 추가] 지역 탭과 검색어에 맞춰 프로모션 필터링
+  const filteredPromos = promotions.filter(promo => {
+    const matchRegion = promoRegion === "ALL" || promo.province === promoRegion;
+    const searchLower = promoSearch.toLowerCase();
+    const matchSearch = promoSearch === "" ||
+      (promo.hotel_name && promo.hotel_name.toLowerCase().includes(searchLower)) ||
+      (promo.city && promo.city.toLowerCase().includes(searchLower)) ||
+      (promo.title && promo.title.toLowerCase().includes(searchLower));
+    return matchRegion && matchSearch;
+  });
+
   const t = translations[lang] || translations.en;
 
   const sliderRef = useRef(null);
@@ -571,36 +589,89 @@ export default function MainPortal() {
             </div>
           </section>
 
+          {/* ====================================================
+    💡 [수정] 스페셜 프로모션 섹션 (검색 필터 + 호텔 정보 표시 적용)
+==================================================== */}
           <section className="w-full bg-slate-50 pt-40 md:pt-48 pb-16 px-6 -mt-10">
             <div className="max-w-7xl mx-auto">
-              <div className="flex justify-between items-end mb-8">
-                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2 shrink-0">
                   <span className="text-emerald-500">🎁</span> {t.specialOffers}
                 </h2>
+
+                {/* 💡 [신규] 텍스트 검색바 */}
+                <div className="relative w-full md:w-72 shrink-0">
+                  <input
+                    type="text"
+                    value={promoSearch}
+                    onChange={(e) => setPromoSearch(e.target.value)}
+                    placeholder="Search hotel or city..."
+                    className="w-full py-2.5 pl-10 pr-4 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm"
+                  />
+                  <svg className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+              </div>
+
+              {/* 💡 [신규] 지역별 퀵 필터 탭 (가로 스크롤) */}
+              <div className="flex overflow-x-auto gap-2 pb-6 mb-2 scrollbar-hide">
+                {availableRegions.map((region, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setPromoRegion(region)}
+                    className={`whitespace-nowrap px-5 py-2 rounded-full text-xs font-black tracking-wide transition-all duration-300 border shadow-sm
+            ${promoRegion === region
+                        ? "bg-slate-900 text-white border-slate-900 scale-105"
+                        : "bg-white text-slate-500 border-slate-200 hover:border-emerald-500 hover:text-emerald-600"
+                      }`}
+                  >
+                    {region === "ALL" ? "All Locations" : region}
+                  </button>
+                ))}
               </div>
 
               <div className="flex overflow-x-auto gap-6 pb-6 snap-x scrollbar-hide px-2">
-                {promotions.length === 0 ? (
-                  <p className="text-slate-400 font-bold p-4">No active promotions at this time.</p>
+                {/* 💡 [수정] promotions 대신 filteredPromos 배열을 렌더링합니다. */}
+                {filteredPromos.length === 0 ? (
+                  <div className="w-full flex flex-col items-center justify-center py-12 text-center bg-white rounded-3xl border border-slate-100 border-dashed">
+                    <span className="text-4xl mb-4">🔍</span>
+                    <p className="text-slate-500 font-bold text-lg">No promotions found.</p>
+                    <p className="text-slate-400 text-sm mt-1">Try adjusting your search or region filter.</p>
+                  </div>
                 ) : (
-                  promotions.map(promo => (
-                    <div key={promo.id} className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300">
-                      <div className="h-48 relative">
+                  filteredPromos.map(promo => (
+                    <div key={promo.id} className="snap-start shrink-0 w-[300px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 transform hover:-translate-y-2 transition-transform duration-300 flex flex-col">
+                      <div className="h-48 relative shrink-0">
                         <img src={promo.image_url} alt="Promo" className="w-full h-full object-cover" />
                         <div className="absolute top-4 left-4 bg-red-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">{promo.discount_pct}% OFF</div>
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl">{promo.title}</h3>
+                        <h3 className="absolute bottom-4 left-4 text-white font-black text-xl line-clamp-1 pr-4">{promo.title}</h3>
                       </div>
-                      <div className="p-6">
-                        <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100 mb-3">🛏️ {promo.target_room_type}</span>
-                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2">{promo.description}</p>
-                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4">
+                      <div className="p-6 flex-grow flex flex-col">
+
+                        {/* 💡 [신규] 호텔 이름 및 지역 정보 영역 */}
+                        <div className="mb-4 pb-4 border-b border-slate-100">
+                          <h4 className="text-slate-900 font-black text-lg leading-tight line-clamp-1 hover:text-emerald-600 transition-colors cursor-pointer">
+                            {promo.hotel_name || "Partner Hotel"}
+                          </h4>
+                          <p className="text-slate-500 text-xs font-bold mt-1.5 flex items-center gap-1.5 line-clamp-1">
+                            <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            {promo.city || "City"}, {promo.province || "Province"}
+                          </p>
+                        </div>
+
+                        <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100 mb-3 w-fit">🛏️ {promo.target_room_type}</span>
+                        <p className="text-sm text-slate-500 mb-4 h-10 line-clamp-2 flex-grow">{promo.description}</p>
+                        <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl mb-4 shrink-0">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
                           <span className="font-mono font-black text-emerald-600 text-lg">{promo.code}</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: {promo.end_date}</span>
-                          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">{t.bookNow}</button>
+                        <div className="flex justify-between items-center shrink-0">
+                          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{t.validUntil}: <br className="sm:hidden" />{promo.end_date}</span>
+                          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-md">{t.bookNow}</button>
                         </div>
                       </div>
                     </div>
