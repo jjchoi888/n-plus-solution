@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 
 // 💡 백엔드 포트 직접 지정 (클라우드 환경 대응)
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'http://136.117.49.111:8000';
 
 export default function PortalAdmin() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,6 +30,7 @@ export default function PortalAdmin() {
         setIsAuthenticating(true);
 
         try {
+            console.log(`[HQ Auth] Attempting login...`);
             const res = await fetch(`${BASE_URL}/api/hq-login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -50,12 +51,18 @@ export default function PortalAdmin() {
     };
 
     const fetchPartners = async () => {
+        setIsLoading(true);
         try {
             const res = await fetch(`${BASE_URL}/api/admin/partners`);
             const data = await res.json();
-            if (Array.isArray(data)) setPartners(data);
+            if (Array.isArray(data)) {
+                setPartners(data);
+            } else {
+                console.error("Data received is not an array:", data);
+            }
         } catch (error) {
             console.error("Failed to fetch partners:", error);
+            showToast("❌ Failed to load partner data from server.");
         } finally {
             setIsLoading(false);
         }
@@ -85,11 +92,11 @@ export default function PortalAdmin() {
             });
             const data = await res.json();
             if (data.success) {
-                showToast(`✅ ${partner.code} billing updated successfully!`);
+                showToast(`✅ [${partner.code}] Billing updated successfully!`);
                 fetchPartners(); // 새로고침
             } else showToast("❌ Failed to update billing.");
         } catch (e) {
-            showToast("❌ Network Error.");
+            showToast("❌ Network Error while saving billing.");
         }
     };
 
@@ -106,14 +113,13 @@ export default function PortalAdmin() {
             });
             const data = await res.json();
             if (data.success) {
-                showToast(`🌐 ${partner.code} domain linked successfully!`);
+                showToast(`🌐 [${partner.code}] Domain linked successfully!`);
                 fetchPartners(); // 새로고침
             } else showToast("❌ Failed to link domain.");
         } catch (e) {
-            showToast("❌ Network Error.");
+            showToast("❌ Network Error while linking domain.");
         }
     };
-
 
     if (!isLoggedIn) {
         return (
@@ -152,6 +158,7 @@ export default function PortalAdmin() {
     const totalMRR = partners.filter(p => p.status === "Active").reduce((sum, p) => sum + Number(p.mrr || 0), 0);
     const totalBookings = partners.reduce((sum, p) => sum + (p.bookings || 0), 0);
 
+    // 검색 필터링 적용
     const filteredPartners = partners.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -212,12 +219,26 @@ export default function PortalAdmin() {
                         {activeTab === "BILLING" && "Subscription Billing Management"}
                         {activeTab === "DOMAINS" && "Custom Domain Assignments"}
                     </h1>
+
+                    {/* 💡 검색창 (모든 탭에서 사용 가능하도록 헤더 우측에 배치) */}
+                    {activeTab !== "DASHBOARD" && (
+                        <div className="relative w-64">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                            <input
+                                type="text"
+                                placeholder="Search property..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm bg-slate-50"
+                            />
+                        </div>
+                    )}
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
 
                     {/* ========================================================= */}
-                    {/* DASHBOARD & PARTNERS (기존 코드와 동일) */}
+                    {/* DASHBOARD */}
                     {/* ========================================================= */}
                     {activeTab === "DASHBOARD" && (
                         <div className="animate-fade-in space-y-8 max-w-6xl mx-auto">
@@ -247,6 +268,9 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
+                    {/* ========================================================= */}
+                    {/* PARTNERS */}
+                    {/* ========================================================= */}
                     {activeTab === "PARTNERS" && (
                         <div className="animate-fade-in max-w-6xl mx-auto">
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-8 text-center text-slate-500 font-bold">
@@ -255,9 +279,8 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
-
                     {/* ========================================================= */}
-                    {/* 💡 [신규 구현] 과금 및 플랜 관리 (BILLING) */}
+                    {/* 💡 과금 및 플랜 관리 (BILLING) */}
                     {/* ========================================================= */}
                     {activeTab === "BILLING" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
@@ -278,55 +301,61 @@ export default function PortalAdmin() {
                                             </tr>
                                         </thead>
                                         <tbody className="text-sm font-bold text-slate-800">
-                                            {partners.map(p => (
-                                                <tr key={`bill_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4">
-                                                        <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
-                                                        <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <select
-                                                            value={p.plan}
-                                                            onChange={(e) => handleLocalChange(p.code, 'plan', e.target.value)}
-                                                            className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm cursor-pointer"
-                                                        >
-                                                            <option value="Basic PMS">Basic PMS</option>
-                                                            <option value="Pro Cloud">Pro Cloud</option>
-                                                            <option value="Enterprise Suite">Enterprise Suite</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <input
-                                                            type="number"
-                                                            value={p.mrr}
-                                                            onChange={(e) => handleLocalChange(p.code, 'mrr', e.target.value)}
-                                                            className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 w-32 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm"
-                                                        />
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <select
-                                                            value={p.status}
-                                                            onChange={(e) => handleLocalChange(p.code, 'status', e.target.value)}
-                                                            className={`border rounded-lg px-3 py-2 text-sm outline-none shadow-sm cursor-pointer font-black
-                                ${p.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                                                                    p.status === 'Overdue' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-50 border-slate-300 text-slate-600'}`}
-                                                        >
-                                                            <option value="Active">Active</option>
-                                                            <option value="Onboarding">Onboarding</option>
-                                                            <option value="Overdue">Overdue (Lock System)</option>
-                                                            <option value="Cancelled">Cancelled</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <button
-                                                            onClick={() => handleSaveBilling(p)}
-                                                            className="bg-slate-900 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
-                                                        >
-                                                            Save 💾
-                                                        </button>
-                                                    </td>
+                                            {filteredPartners.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" className="p-8 text-center text-slate-400 font-bold">No partners found. Register a hotel first or clear your search.</td>
                                                 </tr>
-                                            ))}
+                                            ) : (
+                                                filteredPartners.map(p => (
+                                                    <tr key={`bill_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                        <td className="p-4">
+                                                            <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
+                                                            <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <select
+                                                                value={p.plan}
+                                                                onChange={(e) => handleLocalChange(p.code, 'plan', e.target.value)}
+                                                                className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm cursor-pointer w-full max-w-[200px]"
+                                                            >
+                                                                <option value="Basic PMS">Basic PMS</option>
+                                                                <option value="Pro Cloud">Pro Cloud</option>
+                                                                <option value="Enterprise Suite">Enterprise Suite</option>
+                                                            </select>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <input
+                                                                type="number"
+                                                                value={p.mrr}
+                                                                onChange={(e) => handleLocalChange(p.code, 'mrr', e.target.value)}
+                                                                className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 w-28 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm"
+                                                            />
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <select
+                                                                value={p.status}
+                                                                onChange={(e) => handleLocalChange(p.code, 'status', e.target.value)}
+                                                                className={`border rounded-lg px-3 py-2 text-sm outline-none shadow-sm cursor-pointer font-black w-full max-w-[180px]
+                                                                    ${p.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                                                        p.status === 'Overdue' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-50 border-slate-300 text-slate-600'}`}
+                                                            >
+                                                                <option value="Active">Active</option>
+                                                                <option value="Onboarding">Onboarding</option>
+                                                                <option value="Overdue">Overdue (Lock System)</option>
+                                                                <option value="Cancelled">Cancelled</option>
+                                                            </select>
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <button
+                                                                onClick={() => handleSaveBilling(p)}
+                                                                className="bg-slate-900 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
+                                                            >
+                                                                Save 💾
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -334,9 +363,8 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
-
                     {/* ========================================================= */}
-                    {/* 💡 [신규 구현] 도메인 연결 관리 (DOMAINS) */}
+                    {/* 💡 도메인 연결 관리 (DOMAINS) */}
                     {/* ========================================================= */}
                     {activeTab === "DOMAINS" && (
                         <div className="animate-fade-in max-w-5xl mx-auto">
@@ -355,39 +383,45 @@ export default function PortalAdmin() {
                                             </tr>
                                         </thead>
                                         <tbody className="text-sm font-bold text-slate-800">
-                                            {partners.map(p => (
-                                                <tr key={`dom_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4">
-                                                        <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
-                                                        <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="relative flex items-center">
-                                                            <span className="absolute left-3 text-slate-400">🌐</span>
-                                                            <input
-                                                                type="text"
-                                                                value={p.domain === "Pending" ? "" : p.domain}
-                                                                onChange={(e) => handleLocalChange(p.code, 'domain', e.target.value)}
-                                                                placeholder="e.g. www.hotelname.com"
-                                                                className="bg-white border border-slate-300 text-blue-600 font-mono tracking-tight rounded-lg pl-9 pr-3 py-2.5 w-full text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
-                                                            />
-                                                        </div>
-                                                        {p.domain && p.domain !== "Pending" && (
-                                                            <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
-                                                                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Linked and Active
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <button
-                                                            onClick={() => handleSaveDomain(p)}
-                                                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
-                                                        >
-                                                            Link Domain
-                                                        </button>
-                                                    </td>
+                                            {filteredPartners.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="3" className="p-8 text-center text-slate-400 font-bold">No partners found.</td>
                                                 </tr>
-                                            ))}
+                                            ) : (
+                                                filteredPartners.map(p => (
+                                                    <tr key={`dom_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                        <td className="p-4">
+                                                            <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
+                                                            <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <div className="relative flex items-center">
+                                                                <span className="absolute left-3 text-slate-400">🌐</span>
+                                                                <input
+                                                                    type="text"
+                                                                    value={p.domain === "Pending" ? "" : p.domain}
+                                                                    onChange={(e) => handleLocalChange(p.code, 'domain', e.target.value)}
+                                                                    placeholder="e.g. www.hotelname.com"
+                                                                    className="bg-white border border-slate-300 text-blue-600 font-mono tracking-tight rounded-lg pl-9 pr-3 py-2.5 w-full text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
+                                                                />
+                                                            </div>
+                                                            {p.domain && p.domain !== "Pending" && (
+                                                                <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
+                                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Linked and Active
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <button
+                                                                onClick={() => handleSaveDomain(p)}
+                                                                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
+                                                            >
+                                                                Link Domain
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
