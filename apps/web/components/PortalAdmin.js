@@ -7,9 +7,19 @@ const TAB_TITLES = {
     DASHBOARD: "HQ Overview",
     PARTNERS: "Partner Management",
     AGENTS: "Sales Representatives (Commissions)",
+    SETTLEMENT: "Commission Settlement", // 💡 신규 추가
     BILLING: "Billing & Commission Management",
     DOMAINS: "Custom Domain Assignments"
 };
+
+const SIDEBAR_MENUS = [
+    { id: "DASHBOARD", label: "HQ Overview", icon: "📊" },
+    { id: "PARTNERS", label: "Partner Hotels", icon: "🏨" },
+    { id: "AGENTS", label: "Sales Agents", icon: "🤝" },
+    { id: "SETTLEMENT", label: "Commissions", icon: "💰" }, // 💡 신규 추가
+    { id: "BILLING", label: "Billing & Plans", icon: "💳" },
+    { id: "DOMAINS", label: "Domain Settings", icon: "🌐" }
+];
 
 // 💡 [신규 추가 1] 재귀적으로 트리를 그려주는 컴포넌트 (파일 탐색기 스타일)
 const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
@@ -20,8 +30,8 @@ const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
         <div className="select-none">
             <div
                 className={`flex items-center py-2 px-3 rounded-xl cursor-pointer transition-all border border-transparent ${selectedId === node.agent_id
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
-                        : 'hover:bg-slate-100 text-slate-700'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+                    : 'hover:bg-slate-100 text-slate-700'
                     }`}
                 style={{ marginLeft: `${level * 16}px` }}
                 onClick={() => onSelect(node)}
@@ -36,7 +46,7 @@ const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
                     <span className="text-sm font-bold truncate leading-tight">{node.name}</span>
                     <div className="flex items-center gap-2 mt-0.5">
                         <span className={`text-[9px] px-1.5 rounded-sm font-black uppercase tracking-wider ${node.tier === 'Master' ? 'bg-blue-100 text-blue-700' :
-                                node.tier === 'Branch' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'
+                            node.tier === 'Branch' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'
                             }`}>{node.tier}</span>
                         <span className="text-[10px] font-mono text-slate-400 truncate">{node.agent_id}</span>
                     </div>
@@ -90,6 +100,56 @@ export default function PortalAdmin() {
                 fetchData(); // DB 저장 후 전체 데이터 새로고침
             } else showToast(`❌ Update Failed.`);
         } catch (error) { showToast("❌ Network Error."); }
+    };
+
+    // 💡 [신규] 에이전트 삭제 핸들러
+    const handleDeleteAgent = async (agentId) => {
+        if (!window.confirm(`Are you sure you want to delete Agent [${agentId}]?\n\n* Agents with sub-agents or active hotels cannot be deleted.`)) return;
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/${agentId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) { showToast("✅ Agent deleted successfully!"); setSelectedAgent(null); fetchData(); }
+            else { showToast(`❌ Delete Failed: ${data.message}`); }
+        } catch (e) { showToast("❌ Network Error."); }
+    };
+
+    // 💡 [신규] 롤업(차등) 커미션 정산 알고리즘 로직
+    const calculateSettlement = (targetAgentId) => {
+        const agentMap = {};
+        agents.forEach(a => agentMap[a.agent_id] = a);
+
+        let totalGross = 0; let totalNet = 0; let myCommission = 0; let hotelDetails = [];
+
+        partners.filter(p => p.status === 'Active' && Number(p.mrr) > 0).forEach(hotel => {
+            if (!hotel.agent_id || hotel.agent_id === 'HQ Direct') return;
+
+            let currentAgentId = hotel.agent_id;
+            let currentRate = 0;
+            let pathPayouts = {};
+
+            // 호텔부터 상위 본사(HQ)까지 올라가며 각 계층이 먹을 커미션 차액(%)을 계산
+            while (currentAgentId && agentMap[currentAgentId]) {
+                const agent = agentMap[currentAgentId];
+                let payoutRate = agent.commission_rate - currentRate;
+                if (payoutRate < 0) payoutRate = 0; // 역마진 방지
+
+                pathPayouts[agent.agent_id] = payoutRate;
+                currentRate = agent.commission_rate;
+                currentAgentId = agent.parent_agent_id;
+            }
+
+            // 만약 내가 선택한 에이전트가 이 호텔의 커미션 라인에 포함되어 있다면?
+            if (pathPayouts[targetAgentId] !== undefined) {
+                const gross = Number(hotel.mrr);
+                const net = gross * 0.88; // 💡 12% E.VAT 공제 (정산 원금)
+                const targetPayoutRate = pathPayouts[targetAgentId]; // 내가 먹을 차액 %
+                const targetEarned = net * (targetPayoutRate / 100);
+
+                totalGross += gross; totalNet += net; myCommission += targetEarned;
+                hotelDetails.push({ hotelCode: hotel.code, hotelName: hotel.name, directAgent: hotel.agent_id, gross, net, myRate: targetPayoutRate, earned: targetEarned });
+            }
+        });
+        return { totalGross, totalNet, myCommission, hotelDetails };
     };
 
     // 💡 [신규 추가 2-3] 트리 구조 빌드 함수 (return문 바로 위쯤에 추가)
@@ -338,7 +398,7 @@ export default function PortalAdmin() {
                                         value={newAgent.agent_id}
                                         onChange={e => { setNewAgent({ ...newAgent, agent_id: e.target.value }); setIsIdAvailable(null); }}
                                         className={`w-full border rounded-xl px-4 py-2 outline-none focus:ring-1 transition-colors ${isIdAvailable === true ? "border-emerald-500 focus:ring-emerald-500" :
-                                                isIdAvailable === false ? "border-red-500 focus:ring-red-500" : "focus:border-blue-500 focus:ring-blue-500"
+                                            isIdAvailable === false ? "border-red-500 focus:ring-red-500" : "focus:border-blue-500 focus:ring-blue-500"
                                             }`}
                                         placeholder="e.g. MS-045"
                                     />
@@ -415,8 +475,8 @@ export default function PortalAdmin() {
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left outline-none transition-colors duration-300 ease-in-out ${activeTab === item.id
-                                        ? "bg-emerald-500/20 text-emerald-400"
-                                        : "bg-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                                     }`}
                             >
                                 <span className="text-lg w-6 text-center">{item.icon}</span>
@@ -530,7 +590,7 @@ export default function PortalAdmin() {
                                                         </td>
                                                         <td className="p-4 text-right">
                                                             <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-black border ${p.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                                    p.status === 'Overdue' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                                                p.status === 'Overdue' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-600 border-slate-200'
                                                                 }`}>
                                                                 {p.status}
                                                             </span>
@@ -599,12 +659,15 @@ export default function PortalAdmin() {
                                                     {isEditingAgent ? "Edit Agent Profile" : "Agent Details"}
                                                 </h3>
                                                 {!isEditingAgent && (
-                                                    <button
-                                                        onClick={() => { setEditAgentData({ ...selectedAgent }); setIsEditingAgent(true); }}
-                                                        className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm"
-                                                    >
-                                                        Edit ⚙️
-                                                    </button>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => { setEditAgentData({ ...selectedAgent }); setIsEditingAgent(true); }} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm">
+                                                            Edit ⚙️
+                                                        </button>
+                                                        {/* 💡 삭제 버튼 추가 */}
+                                                        <button onClick={() => handleDeleteAgent(selectedAgent.agent_id)} className="px-4 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-bold text-red-600 hover:bg-red-100 shadow-sm transition-colors">
+                                                            Delete 🗑️
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
 
@@ -675,6 +738,106 @@ export default function PortalAdmin() {
                                             </div>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* 💡 [신규] SETTLEMENT 탭 - 12% E.VAT 공제 및 롤업 커미션 정산 */}
+                    {/* ========================================================= */}
+                    {activeTab === "SETTLEMENT" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+                            <div className="flex justify-between items-end mb-6 shrink-0">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800">Commission Settlement</h2>
+                                    <p className="text-sm font-bold text-slate-500 mt-1">Net Revenue = Gross - 12% E.VAT (Differential Roll-up Payout)</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex gap-6 min-h-0 pb-6">
+                                {/* 📌 좌측: 에이전트 트리 (AGENTS 탭과 동일한 컴포넌트 재사용) */}
+                                <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Agency</h3>
+                                    </div>
+                                    <div className="p-4 overflow-y-auto flex-1 space-y-1">
+                                        {agents.length === 0 ? <p className="text-center text-sm text-slate-400 mt-10">No agents found.</p> :
+                                            agentTree.map(rootNode => (
+                                                <AgentTreeNode key={`stl_${rootNode.agent_id}`} node={rootNode} selectedId={selectedAgent?.agent_id} onSelect={setSelectedAgent} />
+                                            ))
+                                        }
+                                    </div>
+                                </div>
+
+                                {/* 📌 우측: 정산 데이터 대시보드 */}
+                                <div className="w-2/3 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    {!selectedAgent ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10 bg-white">
+                                            <div className="text-6xl mb-4 opacity-20">💰</div>
+                                            <p className="font-bold">Select an agent from the tree to view their settlement report.</p>
+                                        </div>
+                                    ) : (() => {
+                                        // 💡 정산 로직 실행
+                                        const settlement = calculateSettlement(selectedAgent.agent_id);
+
+                                        return (
+                                            <div className="flex flex-col h-full">
+                                                <div className="p-6 border-b border-slate-200 bg-white shrink-0">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <h3 className="text-xl font-black text-slate-800">{selectedAgent.name}</h3>
+                                                        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-black border border-emerald-200">
+                                                            Tier: {selectedAgent.tier} (Set Rate: {selectedAgent.commission_rate}%)
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 font-mono">Agent ID: {selectedAgent.agent_id}</p>
+                                                </div>
+
+                                                {/* 요약 지표 */}
+                                                <div className="p-6 shrink-0 grid grid-cols-3 gap-4">
+                                                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                                                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Total Gross Vol.</p>
+                                                        <p className="text-xl font-black text-slate-800">₱{settlement.totalGross.toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 bg-red-50 text-red-500 text-[9px] font-black px-2 py-0.5 rounded-bl-lg border-b border-l border-red-100">-12% E.VAT</div>
+                                                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Net Revenue (Base)</p>
+                                                        <p className="text-xl font-black text-slate-700">₱{settlement.totalNet.toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="bg-emerald-600 p-4 rounded-2xl shadow-md text-white relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 bg-emerald-700 text-emerald-100 text-[9px] font-black px-2 py-0.5 rounded-bl-lg">Roll-up Applied</div>
+                                                        <p className="text-[9px] text-emerald-200 font-black uppercase tracking-widest mb-1">Total Payout</p>
+                                                        <p className="text-2xl font-black">₱{settlement.myCommission.toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* 파생 매출 출처 리스트 */}
+                                                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Revenue Sources (Hotel Breakdown)</h4>
+                                                    {settlement.hotelDetails.length === 0 ? (
+                                                        <p className="text-sm text-slate-400 text-center py-10 bg-white rounded-xl border border-slate-200 border-dashed">No active revenue sources found for this agent.</p>
+                                                    ) : (
+                                                        <div className="space-y-3">
+                                                            {settlement.hotelDetails.map((h, i) => (
+                                                                <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-emerald-300 transition-colors">
+                                                                    <div>
+                                                                        <p className="font-bold text-slate-800 text-sm">{h.hotelName} <span className="text-xs text-slate-400 font-normal">({h.hotelCode})</span></p>
+                                                                        <p className="text-[10px] text-slate-500 mt-1">Direct Agent: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{h.directAgent}</span></p>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <p className="text-[10px] text-slate-400 mb-0.5">
+                                                                            Net ₱{h.net.toLocaleString()} × <span className="text-emerald-500 font-black">{h.myRate}%</span> <span className="text-slate-300">(Diff)</span>
+                                                                        </p>
+                                                                        <p className="font-black text-emerald-600 text-base">₱{h.earned.toLocaleString()}</p>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         </div>
