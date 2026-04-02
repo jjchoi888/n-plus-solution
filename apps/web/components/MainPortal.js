@@ -146,9 +146,14 @@ export default function MainPortal() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPw, setLoginPw] = useState("");
 
-  const [partnerDomain, setPartnerDomain] = useState("www.myhotel.com");
-  const [partnerCode, setPartnerCode] = useState("NPLUS1");
-  const [partnerCard, setPartnerCard] = useState("**** **** **** 1234");
+  const [partnerDomain, setPartnerDomain] = useState("");
+  const [partnerCode, setPartnerCode] = useState("");
+  const [partnerCard, setPartnerCard] = useState("");
+
+  // 👇👇👇 [신규 추가] 결제 카드 변경 모달용 상태
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [isCardUpdating, setIsCardUpdating] = useState(false);
+  const [cardForm, setCardForm] = useState({ number: '', expiry: '', cvc: '', name: '' });
 
   const [profileImg, setProfileImg] = useState("");
   const [profileDesc, setProfileDesc] = useState("Powered by n+ Smart PMS");
@@ -247,6 +252,24 @@ export default function MainPortal() {
     } else if (action === 'CONTACT') {
       setIsContactOpen(true);
     }
+  };
+
+  // 👇👇👇 [신규 추가] 카드 정보 업데이트 핸들러
+  const handleCardSave = (e) => {
+    e.preventDefault();
+    setIsCardUpdating(true);
+
+    // 가상의 결제사(PG) API 통신 딜레이 (1.5초)
+    setTimeout(() => {
+      // 입력된 카드의 마지막 4자리를 추출하여 대시보드 화면에 반영
+      const last4 = cardForm.number.slice(-4).padStart(4, '0');
+      setPartnerCard(`**** **** **** ${last4}`);
+
+      setIsCardUpdating(false);
+      setIsCardModalOpen(false);
+      setAlertMessage("Payment card updated successfully! (결제 카드가 성공적으로 업데이트되었습니다.)");
+      setCardForm({ number: '', expiry: '', cvc: '', name: '' }); // 폼 초기화
+    }, 1500);
   };
 
   const closeContactModal = () => {
@@ -370,7 +393,7 @@ export default function MainPortal() {
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
                       <div className="flex gap-2">
                         <input type="text" value={partnerCard} readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono text-slate-600 bg-slate-50" />
-                        <button onClick={() => setAlertMessage("Card update module opening...")} className="bg-slate-800 text-white px-4 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-700">{t.dbCardRegBtn}</button>
+                        <button onClick={() => setIsCardModalOpen(true)} className="bg-slate-800 text-white px-4 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-700 transition-colors shadow-sm">{t.dbCardRegBtn}</button>
                       </div>
                     </div>
                     <div>
@@ -914,6 +937,57 @@ export default function MainPortal() {
                 {t.close}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 💡 [신규 추가] 결제 카드 업데이트 모달창 */}
+      {/* ========================================================= */}
+      {isCardModalOpen && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isCardUpdating && setIsCardModalOpen(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 transform transition-all" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-900 p-5 flex justify-between items-center">
+              <h3 className="font-black text-white text-lg flex items-center gap-2">💳 Update Payment Method</h3>
+              {!isCardUpdating && (
+                <button onClick={() => setIsCardModalOpen(false)} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">&times;</button>
+              )}
+            </div>
+
+            <form onSubmit={handleCardSave} className="p-6 md:p-8 space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Card Number</label>
+                <div className="relative">
+                  <input type="text" required maxLength="16" value={cardForm.number} onChange={e => setCardForm({ ...cardForm, number: e.target.value.replace(/[^0-9]/g, '') })} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" placeholder="0000 0000 0000 0000" />
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">💳</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Expiry Date</label>
+                  <input type="text" required maxLength="5" value={cardForm.expiry} onChange={e => setCardForm({ ...cardForm, expiry: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" placeholder="MM/YY" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">CVC / CVV</label>
+                  <input type="password" required maxLength="4" value={cardForm.cvc} onChange={e => setCardForm({ ...cardForm, cvc: e.target.value.replace(/[^0-9]/g, '') })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" placeholder="•••" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Cardholder Name</label>
+                <input type="text" required value={cardForm.name} onChange={e => setCardForm({ ...cardForm, name: e.target.value.toUpperCase() })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all uppercase" placeholder="JOHN DOE" />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" disabled={isCardUpdating} onClick={() => setIsCardModalOpen(false)} className="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50">Cancel</button>
+                <button type="submit" disabled={isCardUpdating || cardForm.number.length < 15} className="flex-1 px-4 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2">
+                  {isCardUpdating ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Verifying...</>
+                  ) : "Save Card"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
