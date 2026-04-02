@@ -163,7 +163,7 @@ export default function MainPortal() {
 
   const [promotions, setPromotions] = useState([]);
   const [partnerHotels, setPartnerHotels] = useState([]);
-  
+
 
   // 💡 [핵심] Book Now 클릭 시 BookingBar에 전달할 호텔 코드 상태
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
@@ -238,6 +238,12 @@ export default function MainPortal() {
     return () => document.removeEventListener("contextmenu", preventRightClick);
   }, []);
 
+  useEffect(() => {
+    if (sessionStorage.getItem("partner_logged_in") === "true") {
+      setIsPartnerLoggedIn(true);
+    }
+  }, []);
+
   const handleMenuClick = (action) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (action === 'HOME') {
@@ -296,7 +302,9 @@ export default function MainPortal() {
 
   const handleLogin = (e) => {
     e.preventDefault();
+    // (향후 실제 API 통신이 붙기 전까지의 임시 로직)
     if (loginEmail && loginPw) {
+      sessionStorage.setItem("partner_logged_in", "true"); // 💡 세션에 저장!
       setIsPartnerLoggedIn(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -347,7 +355,11 @@ export default function MainPortal() {
                   <h1 className="text-3xl font-black text-slate-900">{t.dashTitle}</h1>
                   <p className="text-slate-500 font-bold">{t.dashSub}</p>
                 </div>
-                <button onClick={() => { setIsPartnerLoggedIn(false); setLoginPw(''); }} className="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm">
+                <button onClick={() => {
+                  sessionStorage.removeItem("partner_logged_in"); // 💡 세션 지우기!
+                  setIsPartnerLoggedIn(false);
+                  setLoginPw('');
+                }} className="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm">
                   {t.logoutBtn}
                 </button>
               </div>
