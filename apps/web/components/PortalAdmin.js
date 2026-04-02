@@ -1,8 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-// 💡 백엔드 포트 직접 지정 (클라우드 환경 대응)
 const BASE_URL = 'http://136.117.49.111:8000';
+
+// 💡 [해결 1] 깜빡임 방지용 타이틀 매핑 객체
+const TAB_TITLES = {
+    DASHBOARD: "HQ Overview",
+    PARTNERS: "Partner Management",
+    BILLING: "Billing & Commission Management",
+    DOMAINS: "Custom Domain Assignments",
+    AGENTS: "Sales Representatives (Commissions)" // 추후 추가될 탭
+};
 
 export default function PortalAdmin() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,8 +23,6 @@ export default function PortalAdmin() {
     const [searchQuery, setSearchQuery] = useState("");
     const [partners, setPartners] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    // 성공/에러 알림 토스트 메시지 상태
     const [toastMessage, setToastMessage] = useState("");
 
     const showToast = (msg) => {
@@ -30,7 +36,6 @@ export default function PortalAdmin() {
         setIsAuthenticating(true);
 
         try {
-            console.log(`[HQ Auth] Attempting login...`);
             const res = await fetch(`${BASE_URL}/api/hq-login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -41,10 +46,10 @@ export default function PortalAdmin() {
             if (data.success && data.role === 'SUPER_ADMIN') {
                 setIsLoggedIn(true);
             } else {
-                setLoginError("Invalid HQ credentials or insufficient permissions.");
+                setLoginError("Invalid HQ credentials.");
             }
         } catch (err) {
-            setLoginError("Failed to connect to the HQ server.");
+            setLoginError("Failed to connect to HQ server.");
         } finally {
             setIsAuthenticating(false);
         }
@@ -55,14 +60,9 @@ export default function PortalAdmin() {
         try {
             const res = await fetch(`${BASE_URL}/api/admin/partners`);
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setPartners(data);
-            } else {
-                console.error("Data received is not an array:", data);
-            }
+            if (Array.isArray(data)) setPartners(data);
         } catch (error) {
-            console.error("Failed to fetch partners:", error);
-            showToast("❌ Failed to load partner data from server.");
+            showToast("❌ Failed to load data.");
         } finally {
             setIsLoading(false);
         }
@@ -72,12 +72,10 @@ export default function PortalAdmin() {
         if (isLoggedIn) fetchPartners();
     }, [isLoggedIn]);
 
-    // 💡 인라인 수정 핸들러 (입력 시 로컬 상태만 우선 변경)
     const handleLocalChange = (code, field, value) => {
         setPartners(prev => prev.map(p => p.code === code ? { ...p, [field]: value } : p));
     };
 
-    // 💡 [기능 1] 과금/구독 정보 DB 저장 (Save Billing)
     const handleSaveBilling = async (partner) => {
         try {
             const res = await fetch(`${BASE_URL}/api/admin/billing/update`, {
@@ -85,22 +83,21 @@ export default function PortalAdmin() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     hotel_code: partner.code,
-                    plan: partner.plan,
+                    plan: "Enterprise Suite", // 💡 [해결 2] 단일 과금 모델로 강제 고정
                     status: partner.status,
                     mrr: partner.mrr
                 })
             });
             const data = await res.json();
             if (data.success) {
-                showToast(`✅ [${partner.code}] Billing updated successfully!`);
-                fetchPartners(); // 새로고침
+                showToast(`✅ [${partner.code}] Billing updated!`);
+                fetchPartners();
             } else showToast("❌ Failed to update billing.");
         } catch (e) {
-            showToast("❌ Network Error while saving billing.");
+            showToast("❌ Network Error.");
         }
     };
 
-    // 💡 [기능 2] 도메인 정보 DB 저장 (Save Domain)
     const handleSaveDomain = async (partner) => {
         try {
             const res = await fetch(`${BASE_URL}/api/admin/domains/update`, {
@@ -113,11 +110,11 @@ export default function PortalAdmin() {
             });
             const data = await res.json();
             if (data.success) {
-                showToast(`🌐 [${partner.code}] Domain linked successfully!`);
-                fetchPartners(); // 새로고침
+                showToast(`🌐 [${partner.code}] Domain linked!`);
+                fetchPartners();
             } else showToast("❌ Failed to link domain.");
         } catch (e) {
-            showToast("❌ Network Error while linking domain.");
+            showToast("❌ Network Error.");
         }
     };
 
@@ -158,7 +155,6 @@ export default function PortalAdmin() {
     const totalMRR = partners.filter(p => p.status === "Active").reduce((sum, p) => sum + Number(p.mrr || 0), 0);
     const totalBookings = partners.reduce((sum, p) => sum + (p.bookings || 0), 0);
 
-    // 검색 필터링 적용
     const filteredPartners = partners.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -166,8 +162,6 @@ export default function PortalAdmin() {
 
     return (
         <div className="flex h-screen bg-slate-50 font-sans font-medium selection:bg-emerald-500 selection:text-white animate-fade-in relative">
-
-            {/* 💡 전역 토스트 알림창 */}
             {toastMessage && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 animate-fade-in-up border border-slate-700">
                     {toastMessage}
@@ -188,7 +182,7 @@ export default function PortalAdmin() {
                         {["DASHBOARD", "PARTNERS", "BILLING", "DOMAINS"].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "hover:bg-slate-900 hover:text-white"}`}>
                                 <span className="text-lg">{tab === "DASHBOARD" ? "📊" : tab === "PARTNERS" ? "🏨" : tab === "BILLING" ? "💳" : "🌐"}</span>
-                                {tab === "DASHBOARD" ? "Dashboard" : tab === "PARTNERS" ? "Partner Hotels" : tab === "BILLING" ? "Billing & Plans" : "Domain Settings"}
+                                {TAB_TITLES[tab]} {/* 💡 짧은 이름 대신 매핑 객체 활용 */}
                             </button>
                         ))}
                     </nav>
@@ -213,14 +207,11 @@ export default function PortalAdmin() {
             {/* 📌 메인 콘텐츠 영역 */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden">
                 <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
-                    <h1 className="text-xl font-black text-slate-800">
-                        {activeTab === "DASHBOARD" && "HQ Overview"}
-                        {activeTab === "PARTNERS" && "Partner Management"}
-                        {activeTab === "BILLING" && "Subscription Billing Management"}
-                        {activeTab === "DOMAINS" && "Custom Domain Assignments"}
+                    {/* 💡 [해결 1] 텍스트가 깜빡이는 현상을 방지하기 위해 매핑 객체에서 곧바로 타이틀을 꺼냅니다. */}
+                    <h1 className="text-xl font-black text-slate-800 transition-none">
+                        {TAB_TITLES[activeTab]}
                     </h1>
 
-                    {/* 💡 검색창 (모든 탭에서 사용 가능하도록 헤더 우측에 배치) */}
                     {activeTab !== "DASHBOARD" && (
                         <div className="relative w-64">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
@@ -280,13 +271,13 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 과금 및 플랜 관리 (BILLING) */}
+                    {/* 💡 [해결 2] 단일 과금 및 영업 에이전트 매핑 (BILLING) */}
                     {/* ========================================================= */}
                     {activeTab === "BILLING" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                    <h2 className="text-lg font-black text-slate-800">Subscription Control Panel</h2>
+                                    <h2 className="text-lg font-black text-slate-800">Billing & Commission Control</h2>
                                     <span className="text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">Changes apply immediately to partner systems.</span>
                                 </div>
                                 <div className="overflow-x-auto">
@@ -294,7 +285,7 @@ export default function PortalAdmin() {
                                         <thead>
                                             <tr className="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-200">
                                                 <th className="p-4 font-black">Property Code</th>
-                                                <th className="p-4 font-black">Subscription Plan</th>
+                                                <th className="p-4 font-black">System Plan</th>
                                                 <th className="p-4 font-black">MRR (₱)</th>
                                                 <th className="p-4 font-black">Account Status</th>
                                                 <th className="p-4 font-black text-right">Action</th>
@@ -313,15 +304,13 @@ export default function PortalAdmin() {
                                                             <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
                                                         </td>
                                                         <td className="p-4">
-                                                            <select
-                                                                value={p.plan}
-                                                                onChange={(e) => handleLocalChange(p.code, 'plan', e.target.value)}
-                                                                className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm cursor-pointer w-full max-w-[200px]"
-                                                            >
-                                                                <option value="Basic PMS">Basic PMS</option>
-                                                                <option value="Pro Cloud">Pro Cloud</option>
-                                                                <option value="Enterprise Suite">Enterprise Suite</option>
-                                                            </select>
+                                                            {/* 💡 요금제 드롭다운 제거, Enterprise Suite 단일 고정 & 영업 사원 표시 */}
+                                                            <div className="flex flex-col">
+                                                                <span className="text-emerald-700 font-black text-sm mb-1">Enterprise Suite</span>
+                                                                <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded w-fit border border-slate-200">
+                                                                    Agent: {p.agent_id || 'Direct (HQ)'}
+                                                                </span>
+                                                            </div>
                                                         </td>
                                                         <td className="p-4">
                                                             <input
@@ -364,7 +353,7 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 도메인 연결 관리 (DOMAINS) */}
+                    {/* DOMAINS */}
                     {/* ========================================================= */}
                     {activeTab === "DOMAINS" && (
                         <div className="animate-fade-in max-w-5xl mx-auto">
