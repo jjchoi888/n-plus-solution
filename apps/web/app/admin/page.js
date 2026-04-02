@@ -61,20 +61,35 @@ export default function AdminRoomManager() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError("");
+
+    // 💡 [프리패스 하드코딩] 테스트 계정 입력 시 백엔드를 거치지 않고 강제 로그인!
+    if (loginData.hotel_code === "test" && loginData.user_id === "test" && loginData.password === "1234") {
+      setActiveHotelCode("sample001"); // 실제 DB에 있는 sample001 데이터를 불러오도록 맵핑
+      setIsLoggedIn(true);
+      return; // 여기서 바로 함수를 종료시킵니다.
+    }
+
+    // 아래는 기존의 진짜 백엔드 통신 로직 (추후 진짜 서버가 연결될 때 작동)
     try {
       const res = await fetch(`${BASE_URL}/api/login`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData) // 💡 입력받은 hotel_code, user_id, password 통째로 전송
+        body: JSON.stringify({
+          hotel_code: loginData.hotel_code.trim(),
+          user_id: loginData.user_id.trim(),
+          password: loginData.password.trim()
+        })
       });
       const data = await res.json();
 
       if (data.success && (data.role === 'Master' || data.role === 'FrontDesk')) {
-        setActiveHotelCode(loginData.hotel_code); // 로그인 성공 시 호텔 코드 확정
+        setActiveHotelCode(loginData.hotel_code.trim());
         setIsLoggedIn(true);
       } else {
         setLoginError("Invalid Hotel Code, User ID, or insufficient permissions.");
       }
-    } catch (err) { setLoginError("Failed to connect to the PMS server."); }
+    } catch (err) {
+      setLoginError("Failed to connect to the PMS server.");
+    }
   };
 
   const handleInputChange = (e) => {
