@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-const BASE_URL = 'http://136.117.49.111:8000';
+const BASE_URL = '';
 
 const TAB_TITLES = {
     DASHBOARD: "HQ Overview",
@@ -71,6 +71,39 @@ export default function PortalAdmin() {
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [newAgent, setNewAgent] = useState({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
     const [isIdAvailable, setIsIdAvailable] = useState(null); // 중복 확인 상태
+
+    const [selectedAgent, setSelectedAgent] = useState(null);
+    const [isEditingAgent, setIsEditingAgent] = useState(false);
+    const [editAgentData, setEditAgentData] = useState(null);
+
+    // 💡 [신규 추가 2-2] 에이전트 정보 업데이트 (수정) 핸들러
+    const handleUpdateAgent = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/update`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editAgentData)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("✅ Agent info updated successfully!");
+                setIsEditingAgent(false);
+                fetchData(); // DB 저장 후 전체 데이터 새로고침
+            } else showToast(`❌ Update Failed.`);
+        } catch (error) { showToast("❌ Network Error."); }
+    };
+
+    // 💡 [신규 추가 2-3] 트리 구조 빌드 함수 (return문 바로 위쯤에 추가)
+    const buildAgentTree = () => {
+        const agentMap = {};
+        const roots = [];
+        agents.forEach(ag => { agentMap[ag.agent_id] = { ...ag, children: [] }; });
+        agents.forEach(ag => {
+            if (ag.parent_agent_id === 'HQ' || !agentMap[ag.parent_agent_id]) roots.push(agentMap[ag.agent_id]);
+            else agentMap[ag.parent_agent_id].children.push(agentMap[ag.agent_id]);
+        });
+        return roots;
+    };
+    const agentTree = buildAgentTree();
 
     const showToast = (msg) => {
         setToastMessage(msg);
@@ -258,40 +291,6 @@ export default function PortalAdmin() {
     }
 
     if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading HQ Dashboard...</div>;
-
-    // 💡 [신규 추가 2-1] 우측 상세 패널 및 트리용 상태
-    const [selectedAgent, setSelectedAgent] = useState(null);
-    const [isEditingAgent, setIsEditingAgent] = useState(false);
-    const [editAgentData, setEditAgentData] = useState(null);
-
-    // 💡 [신규 추가 2-2] 에이전트 정보 업데이트 (수정) 핸들러
-    const handleUpdateAgent = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await fetch(`${BASE_URL}/api/admin/agents/update`, {
-                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editAgentData)
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast("✅ Agent info updated successfully!");
-                setIsEditingAgent(false);
-                fetchData(); // DB 저장 후 전체 데이터 새로고침
-            } else showToast(`❌ Update Failed.`);
-        } catch (error) { showToast("❌ Network Error."); }
-    };
-
-    // 💡 [신규 추가 2-3] 트리 구조 빌드 함수 (return문 바로 위쯤에 추가)
-    const buildAgentTree = () => {
-        const agentMap = {};
-        const roots = [];
-        agents.forEach(ag => { agentMap[ag.agent_id] = { ...ag, children: [] }; });
-        agents.forEach(ag => {
-            if (ag.parent_agent_id === 'HQ' || !agentMap[ag.parent_agent_id]) roots.push(agentMap[ag.agent_id]);
-            else agentMap[ag.parent_agent_id].children.push(agentMap[ag.agent_id]);
-        });
-        return roots;
-    };
-    const agentTree = buildAgentTree();
 
     const totalPartners = partners.length;
     const activePartners = partners.filter(p => p.status === "Active").length;
