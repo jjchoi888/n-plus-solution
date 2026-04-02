@@ -363,10 +363,22 @@ export default function MainPortal() {
                   <h2 className="text-2xl font-black text-slate-800">{t.loginTitle}</h2>
                 </div>
                 <form onSubmit={handleLogin} className="space-y-5">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.IDStr}</label>
-                    <input type="email" value={loginID} onChange={e => setLoginEmail(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="" />
-                  </div>
+                    <div>
+                      {/* 💡 1. t.IDStr 번역을 사용 (만약 번역 객체에 없으면 "User ID" 출력) */}
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+                        {t.IDStr || "User ID"}
+                      </label>
+
+                      {/* 💡 2. type을 "text"로 변경하고, value를 loginEmail로 통일 */}
+                      <input
+                        type="text"
+                        value={loginEmail}
+                        onChange={e => setLoginEmail(e.target.value)}
+                        required
+                        className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none"
+                        placeholder="e.g. MA001"
+                      />
+                    </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.pwStr}</label>
                     <input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="" />
