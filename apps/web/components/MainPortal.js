@@ -309,15 +309,37 @@ export default function MainPortal() {
     setAlertMessage(`Profile saved successfully and updated on the portal.`);
   };
 
-  const handleLogin = (e) => {
+  // ✅ [수정] 진짜 DB와 연동되는 파트너(오너) 로그인 핸들러
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // (향후 실제 API 통신이 붙기 전까지의 임시 로직)
-    if (loginEmail && loginPw) {
-      sessionStorage.setItem("partner_logged_in", "true"); // 💡 세션에 저장!
-      setIsPartnerLoggedIn(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      setAlertMessage(t.loginErr);
+
+    try {
+      // Vercel 프록시를 통해 백엔드의 /api/portal-login 호출
+      const res = await fetch(`/api/portal-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: loginEmail.trim().toUpperCase(), // 입력값을 User ID로 사용
+          password: loginPw.trim()
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // 💡 로그인 성공: 세션에 로그인 증표 및 소속 호텔 코드 저장
+        sessionStorage.setItem("partner_logged_in", "true");
+        sessionStorage.setItem("partner_hotel_code", data.hotel_code); // 어떤 호텔인지 기억!
+
+        setIsPartnerLoggedIn(true);
+        setActiveView("LOGIN");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // 백엔드에서 거절당했을 때 (비밀번호 오류, 권한 없음 등)
+        setAlertMessage(`로그인 실패: ${data.message}`);
+      }
+    } catch (error) {
+      setAlertMessage("서버와의 통신에 실패했습니다. 네트워크를 확인해 주세요.");
     }
   };
 
