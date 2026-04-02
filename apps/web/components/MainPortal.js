@@ -364,12 +364,12 @@ export default function MainPortal() {
                 </div>
                 <form onSubmit={handleLogin} className="space-y-5">
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.emailStr}</label>
-                    <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="partner@hotel.com" />
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.IDStr}</label>
+                    <input type="email" value={loginID} onChange={e => setLoginEmail(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="" />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.pwStr}</label>
-                    <input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="••••••••" />
+                    <input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="" />
                   </div>
                   <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 transition-colors mt-4">
                     {t.loginBtn}
