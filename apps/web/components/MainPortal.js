@@ -241,6 +241,14 @@ export default function MainPortal() {
   useEffect(() => {
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
+      setActiveView("LOGIN");
+    }
+  }, []);
+
+  useEffect(() => {
+    const savedCard = localStorage.getItem("mock_partner_card");
+    if (savedCard) {
+      setPartnerCard(savedCard);
     }
   }, []);
 
@@ -260,21 +268,22 @@ export default function MainPortal() {
     }
   };
 
-  // 👇👇👇 [신규 추가] 카드 정보 업데이트 핸들러
+  // ✅ [수정] 카드 정보 업데이트 핸들러
   const handleCardSave = (e) => {
     e.preventDefault();
     setIsCardUpdating(true);
 
-    // 가상의 결제사(PG) API 통신 딜레이 (1.5초)
     setTimeout(() => {
-      // 입력된 카드의 마지막 4자리를 추출하여 대시보드 화면에 반영
       const last4 = cardForm.number.slice(-4).padStart(4, '0');
-      setPartnerCard(`**** **** **** ${last4}`);
+      const maskedCard = `**** **** **** ${last4}`;
+
+      setPartnerCard(maskedCard); // 화면에 즉시 반영
+      localStorage.setItem("mock_partner_card", maskedCard); // 💡 [추가] 새로고침해도 안 날아가도록 브라우저에 임시 저장!
 
       setIsCardUpdating(false);
       setIsCardModalOpen(false);
-      setAlertMessage("Payment card updated successfully! (결제 카드가 성공적으로 업데이트되었습니다.)");
-      setCardForm({ number: '', expiry: '', cvc: '', name: '' }); // 폼 초기화
+      setAlertMessage("Payment card updated successfully!");
+      setCardForm({ number: '', expiry: '', cvc: '', name: '' });
     }, 1500);
   };
 
