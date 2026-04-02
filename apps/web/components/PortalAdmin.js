@@ -11,6 +11,48 @@ const TAB_TITLES = {
     DOMAINS: "Custom Domain Assignments"
 };
 
+// 💡 [신규 추가 1] 재귀적으로 트리를 그려주는 컴포넌트 (파일 탐색기 스타일)
+const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+    const hasChildren = node.children && node.children.length > 0;
+
+    return (
+        <div className="select-none">
+            <div
+                className={`flex items-center py-2 px-3 rounded-xl cursor-pointer transition-all border border-transparent ${selectedId === node.agent_id
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+                        : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                style={{ marginLeft: `${level * 16}px` }}
+                onClick={() => onSelect(node)}
+            >
+                <div
+                    onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                    className="w-5 h-5 flex items-center justify-center mr-2 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200 transition-colors"
+                >
+                    {hasChildren ? (isExpanded ? '▾' : '▸') : '•'}
+                </div>
+                <div className="flex-1 flex flex-col min-w-0">
+                    <span className="text-sm font-bold truncate leading-tight">{node.name}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[9px] px-1.5 rounded-sm font-black uppercase tracking-wider ${node.tier === 'Master' ? 'bg-blue-100 text-blue-700' :
+                                node.tier === 'Branch' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'
+                            }`}>{node.tier}</span>
+                        <span className="text-[10px] font-mono text-slate-400 truncate">{node.agent_id}</span>
+                    </div>
+                </div>
+            </div>
+            {hasChildren && isExpanded && (
+                <div className="mt-1 border-l-2 border-slate-100 ml-4 pl-2 space-y-1">
+                    {node.children.map(child => (
+                        <AgentTreeNode key={child.agent_id} node={child} level={0} selectedId={selectedId} onSelect={onSelect} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 export default function PortalAdmin() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loginId, setLoginId] = useState("");
@@ -216,6 +258,40 @@ export default function PortalAdmin() {
     }
 
     if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading HQ Dashboard...</div>;
+
+    // 💡 [신규 추가 2-1] 우측 상세 패널 및 트리용 상태
+    const [selectedAgent, setSelectedAgent] = useState(null);
+    const [isEditingAgent, setIsEditingAgent] = useState(false);
+    const [editAgentData, setEditAgentData] = useState(null);
+
+    // 💡 [신규 추가 2-2] 에이전트 정보 업데이트 (수정) 핸들러
+    const handleUpdateAgent = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/update`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editAgentData)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("✅ Agent info updated successfully!");
+                setIsEditingAgent(false);
+                fetchData(); // DB 저장 후 전체 데이터 새로고침
+            } else showToast(`❌ Update Failed.`);
+        } catch (error) { showToast("❌ Network Error."); }
+    };
+
+    // 💡 [신규 추가 2-3] 트리 구조 빌드 함수 (return문 바로 위쯤에 추가)
+    const buildAgentTree = () => {
+        const agentMap = {};
+        const roots = [];
+        agents.forEach(ag => { agentMap[ag.agent_id] = { ...ag, children: [] }; });
+        agents.forEach(ag => {
+            if (ag.parent_agent_id === 'HQ' || !agentMap[ag.parent_agent_id]) roots.push(agentMap[ag.agent_id]);
+            else agentMap[ag.parent_agent_id].children.push(agentMap[ag.agent_id]);
+        });
+        return roots;
+    };
+    const agentTree = buildAgentTree();
 
     const totalPartners = partners.length;
     const activePartners = partners.filter(p => p.status === "Active").length;
@@ -471,68 +547,135 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* AGENTS */}
+                    {/* 💡 [업그레이드] AGENTS 탭 - 트리 분할 레이아웃 적용 */}
                     {/* ========================================================= */}
                     {activeTab === "AGENTS" && (
-                        <div className="animate-fade-in max-w-6xl mx-auto">
-                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                    <div>
-                                        <h2 className="text-lg font-black text-slate-800">Sales Representatives Tree</h2>
-                                        <p className="text-xs font-bold text-slate-500 mt-1">Manage 3-Tier Commission Structure</p>
-                                    </div>
-                                    <button onClick={() => setIsAgentModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-md transition-all active:scale-95">
-                                        + Register Agent
-                                    </button>
+                        <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+                            <div className="flex justify-between items-end mb-6 shrink-0">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800">Sales Representatives</h2>
+                                    <p className="text-sm font-bold text-slate-500 mt-1">Manage Agency Hierarchy & Commissions</p>
                                 </div>
-                                <div className="overflow-x-auto p-4">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-200">
-                                                <th className="p-4 font-black">Agent / Rep Name</th>
-                                                <th className="p-4 font-black">Tier Level</th>
-                                                <th className="p-4 font-black">Parent Agency</th>
-                                                <th className="p-4 font-black">Commission</th>
-                                                <th className="p-4 font-black text-center">Active Hotels</th>
-                                                <th className="p-4 font-black text-right">Join Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-sm font-bold text-slate-800">
-                                            {agents.length === 0 ? (
-                                                <tr><td colSpan="6" className="p-6 text-center text-slate-400">No agents registered.</td></tr>
-                                            ) : (
-                                                agents.map(ag => (
-                                                    <tr key={`ag_${ag.agent_id}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                                        <td className="p-4">
-                                                            <div className="text-slate-900">{ag.name}</div>
-                                                            <div className="text-[10px] text-slate-400 font-mono mt-1">{ag.agent_id}</div>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            {/* 💡 [수정] 테이블에서도 Master / Branch / Rep 명칭 적용 */}
-                                                            <span className={`px-2 py-1 rounded text-xs border ${ag.tier === 'Master' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                                    ag.tier === 'Branch' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                                        'bg-slate-100 text-slate-600 border-slate-200'
-                                                                }`}>
-                                                                {ag.tier}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <span className="text-xs text-slate-500 bg-slate-50 border px-2 py-1 rounded">{ag.parent_agent_id}</span>
-                                                        </td>
-                                                        <td className="p-4 text-emerald-600 font-black">
-                                                            {ag.commission_rate}%
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{ag.activeHotels || 0}</span>
-                                                        </td>
-                                                        <td className="p-4 text-right text-xs text-slate-400">
-                                                            {ag.join_date}
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
+                                <button onClick={() => setIsAgentModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
+                                    <span>+</span> Register New Agent
+                                </button>
+                            </div>
+
+                            <div className="flex-1 flex gap-6 min-h-0 pb-6">
+                                {/* 📌 좌측: 폴더 구조형 에이전트 트리 */}
+                                <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Agency Tree</h3>
+                                    </div>
+                                    <div className="p-4 overflow-y-auto flex-1 space-y-1">
+                                        {agents.length === 0 ? (
+                                            <p className="text-center text-sm text-slate-400 mt-10">No agents found.</p>
+                                        ) : (
+                                            agentTree.map(rootNode => (
+                                                <AgentTreeNode
+                                                    key={rootNode.agent_id}
+                                                    node={rootNode}
+                                                    selectedId={selectedAgent?.agent_id}
+                                                    onSelect={(node) => {
+                                                        setSelectedAgent(node);
+                                                        setIsEditingAgent(false);
+                                                    }}
+                                                />
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 📌 우측: 상세 정보 및 편집 패널 */}
+                                <div className="w-2/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    {!selectedAgent ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10">
+                                            <div className="text-6xl mb-4 opacity-20">📁</div>
+                                            <p className="font-bold">Select an agent from the tree to view or edit details.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col h-full">
+                                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 shrink-0 flex justify-between items-center">
+                                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+                                                    {isEditingAgent ? "Edit Agent Profile" : "Agent Details"}
+                                                </h3>
+                                                {!isEditingAgent && (
+                                                    <button
+                                                        onClick={() => { setEditAgentData({ ...selectedAgent }); setIsEditingAgent(true); }}
+                                                        className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm"
+                                                    >
+                                                        Edit ⚙️
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="p-8 overflow-y-auto flex-1">
+                                                {!isEditingAgent ? (
+                                                    // 📖 보기 모드
+                                                    <div className="space-y-6">
+                                                        <div>
+                                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Company / Agent Name</div>
+                                                            <div className="text-2xl font-black text-slate-800">{selectedAgent.name}</div>
+                                                            <div className="text-sm font-mono text-emerald-600 font-bold mt-1">ID: {selectedAgent.agent_id}</div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tier Level</div>
+                                                                <div className="font-bold text-slate-700">{selectedAgent.tier}</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Commission Rate</div>
+                                                                <div className="font-black text-emerald-600 text-lg">{selectedAgent.commission_rate}%</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Parent Agency</div>
+                                                                <div className="font-bold text-slate-700">{selectedAgent.parent_agent_id}</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Hotels Managed</div>
+                                                                <div className="font-black text-purple-600 text-lg">{selectedAgent.activeHotels || 0}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    // ✏️ 수정 모드 폼
+                                                    <form onSubmit={handleUpdateAgent} className="space-y-5">
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company / Agent Name</label>
+                                                            <input type="text" required value={editAgentData.name} onChange={e => setEditAgentData({ ...editAgentData, name: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-5">
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tier Level</label>
+                                                                <select value={editAgentData.tier} onChange={e => setEditAgentData({ ...editAgentData, tier: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 bg-white">
+                                                                    <option value="Master">Master</option>
+                                                                    <option value="Branch">Branch</option>
+                                                                    <option value="Rep">Rep</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Commission (%)</label>
+                                                                <input type="number" required value={editAgentData.commission_rate} onChange={e => setEditAgentData({ ...editAgentData, commission_rate: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Parent Agency</label>
+                                                            <select value={editAgentData.parent_agent_id} onChange={e => setEditAgentData({ ...editAgentData, parent_agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 bg-white">
+                                                                <option value="HQ">Directly Under HQ</option>
+                                                                {agents.filter(a => a.agent_id !== editAgentData.agent_id).map(ag => (
+                                                                    <option key={`edit_opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="pt-6 flex gap-3">
+                                                            <button type="button" onClick={() => setIsEditingAgent(false)} className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+                                                            <button type="submit" className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">Save Changes</button>
+                                                        </div>
+                                                    </form>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

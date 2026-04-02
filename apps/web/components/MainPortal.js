@@ -158,6 +158,7 @@ export default function MainPortal() {
 
   const [promotions, setPromotions] = useState([]);
   const [partnerHotels, setPartnerHotels] = useState([]);
+  
 
   // 💡 [핵심] Book Now 클릭 시 BookingBar에 전달할 호텔 코드 상태
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
