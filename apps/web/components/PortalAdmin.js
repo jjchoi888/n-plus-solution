@@ -21,14 +21,14 @@ export default function PortalAdmin() {
     const [activeTab, setActiveTab] = useState("DASHBOARD");
     const [searchQuery, setSearchQuery] = useState("");
     const [partners, setPartners] = useState([]);
-    const [agents, setAgents] = useState([]); // 💡 실제 DB 에이전트 상태
+    const [agents, setAgents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-
     const [toastMessage, setToastMessage] = useState("");
 
-    // 💡 신규 에이전트 등록 모달 상태
+    // 💡 신규 에이전트 등록 모달 상태 (비밀번호 및 Tier 초기값 Rep으로 변경)
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
-    const [newAgent, setNewAgent] = useState({ agent_id: "", name: "", tier: "3", parent_agent_id: "HQ", commission_rate: "" });
+    const [newAgent, setNewAgent] = useState({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
+    const [isIdAvailable, setIsIdAvailable] = useState(null); // 중복 확인 상태
 
     const showToast = (msg) => {
         setToastMessage(msg);
@@ -51,7 +51,7 @@ export default function PortalAdmin() {
             if (data.success && data.role === 'SUPER_ADMIN') {
                 setIsLoggedIn(true);
             } else {
-                setLoginError("Invalid HQ credentials or insufficient permissions.");
+                setLoginError("Invalid HQ credentials.");
             }
         } catch (err) {
             setLoginError("Failed to connect to the HQ server.");
@@ -60,7 +60,6 @@ export default function PortalAdmin() {
         }
     };
 
-    // 💡 [수정] 백엔드에서 진짜 파트너와 영업사원 목록을 각각 불러옵니다.
     const fetchData = async () => {
         setIsLoading(true);
         try {
@@ -89,7 +88,6 @@ export default function PortalAdmin() {
         setPartners(prev => prev.map(p => p.code === code ? { ...p, [field]: value } : p));
     };
 
-    // 💡 [수정] Billing 업데이트 시 agent_id 도 함께 전송
     const handleSaveBilling = async (partner) => {
         try {
             const res = await fetch(`${BASE_URL}/api/admin/billing/update`, {
@@ -100,7 +98,7 @@ export default function PortalAdmin() {
                     plan: "Enterprise Suite",
                     status: partner.status,
                     mrr: partner.mrr,
-                    agent_id: partner.agent_id // 새로 추가된 부분
+                    agent_id: partner.agent_id
                 })
             });
             const data = await res.json();
@@ -133,9 +131,39 @@ export default function PortalAdmin() {
         }
     };
 
-    // 💡 [신규] 영업사원 등록 (Register Agent)
+    // 💡 [신규] ID 중복 확인 핸들러
+    const handleCheckAgentId = async () => {
+        if (!newAgent.agent_id.trim()) {
+            return showToast("Please enter an Agent ID first.");
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/check-id`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ agent_id: newAgent.agent_id })
+            });
+            const data = await res.json();
+            if (data.success && data.available) {
+                setIsIdAvailable(true);
+                showToast("✅ Agent ID is available!");
+            } else {
+                setIsIdAvailable(false);
+                showToast("❌ Agent ID already exists.");
+            }
+        } catch (error) {
+            showToast("❌ Network error during ID check.");
+        }
+    };
+
+    // 💡 에이전트 등록 핸들러
     const handleRegisterAgent = async (e) => {
         e.preventDefault();
+
+        // ID 중복 확인 필수 체크
+        if (isIdAvailable !== true) {
+            return showToast("⚠️ Please check Agent ID availability first.");
+        }
+
         try {
             const res = await fetch(`${BASE_URL}/api/admin/agents/register`, {
                 method: "POST",
@@ -146,8 +174,9 @@ export default function PortalAdmin() {
             if (data.success) {
                 showToast("✅ New Agent registered successfully!");
                 setIsAgentModalOpen(false);
-                setNewAgent({ agent_id: "", name: "", tier: "3", parent_agent_id: "HQ", commission_rate: "" });
-                fetchData(); // 등록 후 데이터 즉시 새로고침
+                setNewAgent({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
+                setIsIdAvailable(null);
+                fetchData();
             } else {
                 showToast(`❌ Registration Failed: ${data.message}`);
             }
@@ -209,7 +238,6 @@ export default function PortalAdmin() {
     return (
         <div className="flex h-screen bg-slate-50 font-sans font-medium selection:bg-emerald-500 selection:text-white animate-fade-in relative">
 
-            {/* 전역 토스트 알림창 */}
             {toastMessage && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 animate-fade-in-up border border-slate-700">
                     {toastMessage}
@@ -222,34 +250,65 @@ export default function PortalAdmin() {
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-black text-slate-800">Register New Agent</h3>
-                            <button onClick={() => setIsAgentModalOpen(false)} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
+                            <button onClick={() => { setIsAgentModalOpen(false); setIsIdAvailable(null); }} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
                         </div>
                         <form onSubmit={handleRegisterAgent} className="space-y-4">
+                            {/* 💡 [수정] Agent ID 중복확인 기능 추가 */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Agent ID</label>
-                                <input type="text" required value={newAgent.agent_id} onChange={e => setNewAgent({ ...newAgent, agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="e.g. T2-MS-045" />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newAgent.agent_id}
+                                        onChange={e => { setNewAgent({ ...newAgent, agent_id: e.target.value }); setIsIdAvailable(null); }}
+                                        className={`w-full border rounded-xl px-4 py-2 outline-none focus:ring-1 transition-colors ${isIdAvailable === true ? "border-emerald-500 focus:ring-emerald-500" :
+                                                isIdAvailable === false ? "border-red-500 focus:ring-red-500" : "focus:border-blue-500 focus:ring-blue-500"
+                                            }`}
+                                        placeholder="e.g. MS-045"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCheckAgentId}
+                                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap"
+                                    >
+                                        Check ID
+                                    </button>
+                                </div>
+                                {isIdAvailable === true && <p className="text-[10px] text-emerald-600 mt-1 font-bold">✅ Available ID</p>}
+                                {isIdAvailable === false && <p className="text-[10px] text-red-600 mt-1 font-bold">❌ Already in use</p>}
                             </div>
+
+                            {/* 💡 [수정] 비밀번호 입력란 추가 */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
+                                <input type="password" required value={newAgent.password} onChange={e => setNewAgent({ ...newAgent, password: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••" />
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company / Agent Name</label>
-                                <input type="text" required value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="e.g. Metro Sales Inc." />
+                                <input type="text" required value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="e.g. Metro Sales Inc." />
                             </div>
+
+                            {/* 💡 [수정] Tier 구조 명칭 변경 */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tier Level</label>
-                                    <select value={newAgent.tier} onChange={e => setNewAgent({ ...newAgent, tier: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-emerald-500">
-                                        <option value="1">Tier 1 (Master)</option>
-                                        <option value="2">Tier 2 (Branch)</option>
-                                        <option value="3">Tier 3 (Rep)</option>
+                                    <select value={newAgent.tier} onChange={e => setNewAgent({ ...newAgent, tier: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer bg-white">
+                                        <option value="Master">Master</option>
+                                        <option value="Branch">Branch</option>
+                                        <option value="Rep">Rep</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Commission (%)</label>
-                                    <input type="number" required value={newAgent.commission_rate} onChange={e => setNewAgent({ ...newAgent, commission_rate: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 20" />
+                                    <input type="number" required value={newAgent.commission_rate} onChange={e => setNewAgent({ ...newAgent, commission_rate: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="e.g. 20" />
                                 </div>
                             </div>
+
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Parent Agency</label>
-                                <select value={newAgent.parent_agent_id} onChange={e => setNewAgent({ ...newAgent, parent_agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-emerald-500">
+                                <select value={newAgent.parent_agent_id} onChange={e => setNewAgent({ ...newAgent, parent_agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer bg-white">
                                     <option value="HQ">Directly Under HQ</option>
                                     {agents.map(ag => (
                                         <option key={`opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name} ({ag.agent_id})</option>
@@ -257,8 +316,8 @@ export default function PortalAdmin() {
                                 </select>
                             </div>
                             <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setIsAgentModalOpen(false)} className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">Cancel</button>
-                                <button type="submit" className="flex-1 px-4 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-md">Register</button>
+                                <button type="button" onClick={() => { setIsAgentModalOpen(false); setIsIdAvailable(null); }} className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                                <button type="submit" className="flex-1 px-4 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-md transition-colors disabled:opacity-50" disabled={isIdAvailable !== true}>Register</button>
                             </div>
                         </form>
                     </div>
@@ -411,6 +470,9 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
+                    {/* ========================================================= */}
+                    {/* AGENTS */}
+                    {/* ========================================================= */}
                     {activeTab === "AGENTS" && (
                         <div className="animate-fade-in max-w-6xl mx-auto">
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -446,11 +508,12 @@ export default function PortalAdmin() {
                                                             <div className="text-[10px] text-slate-400 font-mono mt-1">{ag.agent_id}</div>
                                                         </td>
                                                         <td className="p-4">
-                                                            <span className={`px-2 py-1 rounded text-xs border ${ag.tier === 1 ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                                    ag.tier === 2 ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                            {/* 💡 [수정] 테이블에서도 Master / Branch / Rep 명칭 적용 */}
+                                                            <span className={`px-2 py-1 rounded text-xs border ${ag.tier === 'Master' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                                    ag.tier === 'Branch' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                                                                         'bg-slate-100 text-slate-600 border-slate-200'
                                                                 }`}>
-                                                                Tier {ag.tier}
+                                                                {ag.tier}
                                                             </span>
                                                         </td>
                                                         <td className="p-4">
@@ -475,6 +538,9 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
+                    {/* ========================================================= */}
+                    {/* BILLING */}
+                    {/* ========================================================= */}
                     {activeTab === "BILLING" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -510,11 +576,10 @@ export default function PortalAdmin() {
                                                         <td className="p-4">
                                                             <div className="flex flex-col gap-2">
                                                                 <span className="text-emerald-700 font-black text-sm">Enterprise Suite</span>
-                                                                {/* 💡 DB에서 불러온 에이전트 목록을 선택할 수 있는 드롭다운 추가 */}
                                                                 <select
                                                                     value={p.agent_id || 'HQ Direct'}
                                                                     onChange={(e) => handleLocalChange(p.code, 'agent_id', e.target.value)}
-                                                                    className="text-xs text-slate-600 bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer w-fit"
+                                                                    className="text-xs text-slate-600 bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer w-fit max-w-[200px] truncate"
                                                                 >
                                                                     <option value="HQ Direct">HQ Direct (No Commission)</option>
                                                                     {agents.map(ag => (
@@ -563,6 +628,9 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
+                    {/* ========================================================= */}
+                    {/* DOMAINS */}
+                    {/* ========================================================= */}
                     {activeTab === "DOMAINS" && (
                         <div className="animate-fade-in max-w-5xl mx-auto">
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
