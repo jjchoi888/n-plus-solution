@@ -409,6 +409,9 @@ export default function PortalAdmin() {
     const totalMRR = partners.filter(p => p.status === "Active").reduce((sum, p) => sum + Number(p.mrr || 0), 0);
     const totalBookings = partners.reduce((sum, p) => sum + (p.bookings || 0), 0);
 
+    const totalPortalBookings = partners.reduce((sum, p) => sum + (p.portalBookings || 0), 0);
+    const totalWebBookings = partners.reduce((sum, p) => sum + (p.webBookings || 0), 0);
+
     const filteredPartners = partners.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -589,10 +592,16 @@ export default function PortalAdmin() {
                                     </div>
                                     <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl">📈</div>
                                 </div>
+                                {/* 💡 [교체] 채널별 예약 세부 통계 표시 */}
                                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Global Direct Bookings</p>
                                         <h3 className="text-4xl font-black text-slate-800">{totalBookings.toLocaleString()}</h3>
+                                        <div className="mt-2 text-[10px] font-bold text-slate-500 flex gap-3 bg-slate-50 px-2 py-1 rounded w-fit">
+                                            <span className="text-blue-600">Portal: {totalPortalBookings.toLocaleString()}</span>
+                                            <span className="text-slate-300">|</span>
+                                            <span className="text-emerald-600">Hotel Web: {totalWebBookings.toLocaleString()}</span>
+                                        </div>
                                     </div>
                                     <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl">⚡</div>
                                 </div>

@@ -524,13 +524,15 @@ export default function HotelWebsite({ domain }) {
                         {hasSearched && (
                             <div className="w-full max-w-5xl relative z-10 mt-8">
                                 <ErrorBoundary>
+                                    {/* 💡 [수정] source="Hotel Web" 추가 */}
                                     <RoomList
-                                        hotelCode={hotelCode}
+                                        hotelCode={searchData.destination}
                                         lang={lang}
-                                        checkIn={checkIn}
-                                        checkOut={checkOut}
-                                        adults={adults}
-                                        kids={kids}
+                                        checkIn={searchData.checkIn}
+                                        checkOut={searchData.checkOut}
+                                        adults={searchData.adults}
+                                        kids={searchData.kids}
+                                        source="Hotel Web"
                                     />
                                 </ErrorBoundary>
                             </div>
@@ -789,7 +791,8 @@ export default function HotelWebsite({ domain }) {
                                     phone: guestPhone,
                                     nationality: nationality,
                                     total_price: dividedGrandTotal,
-                                    payment_method: "Credit Card"
+                                    payment_method: "Credit Card",
+                                    channel: "Hotel Web" // 💡 [추가] 개별웹 유입 꼬리표 부착!
                                 });
                             }
 

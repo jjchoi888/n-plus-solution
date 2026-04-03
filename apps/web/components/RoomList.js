@@ -38,7 +38,7 @@ const RoomImageCarousel = ({ images, name }) => {
   return <img src={images[currentIndex]} alt={name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" key={currentIndex} />;
 };
 
-export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids }) {
+export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids, source = 'Portal' }) {
   const t = translations[lang] || translations.en;
 
   const [fetchedRooms, setFetchedRooms] = useState([]);
@@ -170,7 +170,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           phone: formData.phone,
           total_price: dividedGrandTotal,
           payment_method: "Credit Card",
-          hotel_code: targetHotelCode 
+          hotel_code: targetHotelCode,
+          channel: source // 💡 [핵심 추가] 부모가 넘겨준 'Portal' 또는 'Hotel Web' 꼬리표를 부착!
         });
       }
     }
