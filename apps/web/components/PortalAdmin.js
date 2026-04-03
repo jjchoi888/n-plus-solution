@@ -612,11 +612,16 @@ export default function PortalAdmin() {
                                     <p className="text-sm font-bold text-slate-500 mt-1">Manage Properties & Master Accounts</p>
                                 </div>
                                 <button onClick={() => {
-                                    // 💡 신규 등록은 모두 빈칸으로 초기화!
+                                    // 💡 p.master_id가 백엔드에서 정상적으로 내려오는지 확인이 핵심입니다.
                                     setPartnerForm({
-                                        code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
+                                        code: p.code,
+                                        name: p.name,
+                                        master_id: p.master_id || "", // 백엔드에서 가져온 진짜 아이디 매핑
+                                        master_pw: "", // 비밀번호는 보안상 수동 입력 전까지 빈칸
+                                        status: p.status,
+                                        agent_id: p.agent_id || "HQ Direct"
                                     });
-                                    setIsEditingPartner(false);
+                                    setIsEditingPartner(true);
                                     setIsPartnerModalOpen(true);
                                 }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
                                     <span>+</span> Register New Partner
