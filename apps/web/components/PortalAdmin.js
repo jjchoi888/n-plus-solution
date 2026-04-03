@@ -612,7 +612,10 @@ export default function PortalAdmin() {
                                     <p className="text-sm font-bold text-slate-500 mt-1">Manage Properties & Master Accounts</p>
                                 </div>
                                 <button onClick={() => {
-                                    setPartnerForm({ code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct" });
+                                    // 💡 신규 등록은 모두 빈칸으로 초기화!
+                                    setPartnerForm({
+                                        code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
+                                    });
                                     setIsEditingPartner(false);
                                     setIsPartnerModalOpen(true);
                                 }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
@@ -661,8 +664,14 @@ export default function PortalAdmin() {
                                                         <td className="p-4 text-right">
                                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <button onClick={() => {
+                                                                    // 💡 수정(Edit) 버튼을 누를 때 DB에서 가져온 마스터 아이디(p.master_id)를 넣어줍니다!
                                                                     setPartnerForm({
-                                                                        code: p.code, name: p.name, master_id: "", master_pw: "", status: p.status, agent_id: p.agent_id || "HQ Direct"
+                                                                        code: p.code,
+                                                                        name: p.name,
+                                                                        master_id: p.master_id || "",
+                                                                        master_pw: "",
+                                                                        status: p.status,
+                                                                        agent_id: p.agent_id || "HQ Direct"
                                                                     });
                                                                     setIsEditingPartner(true);
                                                                     setIsPartnerModalOpen(true);
@@ -1131,7 +1140,7 @@ export default function PortalAdmin() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Master User ID</label>
-                                            <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value.toUpperCase() })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono uppercase" placeholder="e.g. SKY_ADMIN" />
+                                            <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono" placeholder="e.g. Sky_Admin" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{isEditingPartner ? "New Password (Optional)" : "Password"}</label>

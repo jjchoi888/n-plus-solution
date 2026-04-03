@@ -319,7 +319,7 @@ export default function MainPortal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: loginEmail.trim().toUpperCase(),
+          user_id: loginEmail.trim(), // 💡 대소문자 그대로 전송
           password: loginPw.trim()
         })
       });
