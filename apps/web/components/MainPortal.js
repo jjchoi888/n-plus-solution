@@ -315,7 +315,7 @@ export default function MainPortal() {
 
     try {
       // 💡 [핵심] BASE_URL을 반드시 명시하여 정확한 백엔드 서버를 타격하도록 수정
-      const res = await fetch(`${BASE_URL}/api/portal-login`, {
+      const res = await fetch(`/api/portal-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
