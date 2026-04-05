@@ -292,20 +292,25 @@ export default function BookRoomPage() {
                                 {filteredHotels.map(h => {
                                     const isSelected = bookingData.hotel_code === h.code;
 
-                                    // 💡 사진이 무조건 뜨도록 변경
+                                    // 💡 하드코딩 이미지(Unsplash 등) 삭제. 없으면 null 반환
                                     const cardImgRaw = (h.app_gallery && h.app_gallery.length > 0) ? h.app_gallery[0] : h.image_url;
                                     const cardImgUrl = typeof cardImgRaw === 'object' ? (cardImgRaw?.url || cardImgRaw?.src) : cardImgRaw;
-                                    const finalImgUrl = cardImgUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800';
 
                                     return (
                                         <div
                                             key={h.code}
                                             onClick={() => handleHotelSelect(h.code)}
-                                            className={`min-w-[260px] snap-center relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-sm 
+                                            className={`min-w-[260px] snap-center relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-sm flex flex-col
                                                 ${isSelected ? 'border-blue-600 scale-[1.02] shadow-blue-200/50' : 'border-transparent bg-white hover:shadow-md'}`}
                                         >
-                                            <div className="h-40 w-full relative bg-slate-200">
-                                                <img src={finalImgUrl} alt={h.name} className="w-full h-full object-cover" />
+                                            {/* 💡 사진이 없으면 'No Photo' 회색 배경을 보여줍니다 */}
+                                            <div className="h-40 w-full relative bg-slate-200 flex items-center justify-center">
+                                                {cardImgUrl ? (
+                                                    <img src={cardImgUrl} alt={h.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-xs font-bold text-slate-400">No Photo</span>
+                                                )}
+
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
 
                                                 {isSelected && (
@@ -319,7 +324,7 @@ export default function BookRoomPage() {
                                                     <h3 className="font-black text-white text-lg leading-tight truncate">{h.name}</h3>
                                                 </div>
                                             </div>
-                                            <div className="p-3 bg-white">
+                                            <div className="p-3 bg-white flex-1">
                                                 <p className="text-xs text-slate-500 font-bold flex items-center gap-1"><span className="text-blue-500">📍</span> {h.city}, {h.province}</p>
                                             </div>
                                         </div>
@@ -346,7 +351,7 @@ export default function BookRoomPage() {
                                             </p>
                                         </div>
 
-                                        {/* 💡 [지도 완벽 해결] iframe 소스에서 정확한 '검색어(주소)'를 뽑아내어 스마트폰 지도앱과 직접 연동합니다. */}
+                                        {/* 💡 [지도 연동] 오타 수정완료 및 순수 URL 바로 연동 */}
                                         {(() => {
                                             let finalMapUrl = '';
                                             const rawMapData = selectedHotelData.map_url || selectedHotelData.map_embed_url || '';
@@ -358,7 +363,7 @@ export default function BookRoomPage() {
                                                     // 'q=' 파라미터가 있으면 거기가 100% 찐 주소입니다.
                                                     const qMatch = iframeSrc.match(/[?&]q=([^&]+)/);
                                                     if (qMatch && qMatch[1]) {
-                                                        finalMapUrl = `https://www.google.com/maps/search/?api=1&query=${qMatch[1]}`;
+                                                        finalMapUrl = `http://googleusercontent.com/maps.google.com/${qMatch[1]}`;
                                                     } else {
                                                         finalMapUrl = iframeSrc;
                                                     }
@@ -370,7 +375,7 @@ export default function BookRoomPage() {
                                             // 실패했을 경우 최후의 보루로 호텔명 + 도시 로 검색시킵니다.
                                             if (!finalMapUrl) {
                                                 const searchQ = encodeURIComponent(`${selectedHotelData.name}, ${selectedHotelData.city}, ${selectedHotelData.province}`);
-                                                finalMapUrl = `https://www.google.com/maps/search/?api=1&query=${searchQ}`;
+                                                finalMapUrl = `http://googleusercontent.com/maps.google.com/${searchQ}`;
                                             }
 
                                             return (
