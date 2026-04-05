@@ -18,18 +18,16 @@ const getDefaultDate = (offsetDays = 0) => {
 };
 
 export default function BookRoomPage() {
-    const [step, setStep] = useState(1); // 💡 화면 분리: 1단계(Find), 2단계(Guest)
+    const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // 지역 및 호텔 데이터 State
     const [allHotels, setAllHotels] = useState([]);
     const [provinces, setProvinces] = useState([]);
     const [cities, setCities] = useState([]);
     const [filteredHotels, setFilteredHotels] = useState([]);
-    const [roomTypes, setRoomTypes] = useState([]); // 💡 선택된 호텔의 동적 객실 타입
+    const [roomTypes, setRoomTypes] = useState([]);
 
-    // 선택 상태 State
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedCity, setSelectedCity] = useState('');
 
@@ -60,20 +58,16 @@ export default function BookRoomPage() {
             }));
         }
 
-        // 1. 전체 호텔 목록 가져오기
         axios.get('https://api.hotelnplus.com/api/hotels')
             .then(res => {
                 const hotels = res.data || [];
                 setAllHotels(hotels);
-
-                // 고유한 Province 목록 추출
                 const uniqueProvinces = [...new Set(hotels.map(h => h.province).filter(Boolean))];
                 setProvinces(uniqueProvinces);
             })
             .catch(err => console.error("Failed to fetch hotels:", err));
     }, []);
 
-    // 💡 Province 선택 시 City 목록 업데이트
     const handleProvinceChange = (e) => {
         const prov = e.target.value;
         setSelectedProvince(prov);
@@ -82,9 +76,9 @@ export default function BookRoomPage() {
 
         const availableCities = [...new Set(allHotels.filter(h => h.province === prov).map(h => h.city).filter(Boolean))];
         setCities(availableCities);
+        setFilteredHotels([]); // 도시를 바꾸면 호텔 리스트 초기화
     };
 
-    // 💡 City 선택 시 해당 지역 호텔 목록 업데이트
     const handleCityChange = (e) => {
         const city = e.target.value;
         setSelectedCity(city);
@@ -94,25 +88,23 @@ export default function BookRoomPage() {
         setFilteredHotels(matchingHotels);
     };
 
-    // 💡 호텔 선택 시 해당 호텔의 객실 타입(Room Types) 가져오기
-    const handleHotelChange = async (e) => {
-        const hCode = e.target.value;
+    // 💡 [수정] 드롭다운(e.target.value)이 아니라 카드 클릭(hCode)으로 직접 받습니다.
+    const handleHotelSelect = async (hCode) => {
         setBookingData(prev => ({ ...prev, hotel_code: hCode, room_type: '' }));
 
         try {
-            // 해당 지점의 객실 타입 API 호출 (하드코딩 제거)
             const res = await axios.get(`https://api.hotelnplus.com/api/room-types?hotel=${hCode}`);
             if (res.data && res.data.length > 0) {
                 setRoomTypes(res.data);
-                setBookingData(prev => ({ ...prev, room_type: res.data[0].name })); // 첫 번째 룸타입 기본 선택
+                setBookingData(prev => ({ ...prev, hotel_code: hCode, room_type: res.data[0].name }));
             } else {
-                setRoomTypes([{ id: 0, name: 'Standard (Default)' }]); // 만약 등록된 룸타입이 없을 경우 방어 코드
-                setBookingData(prev => ({ ...prev, room_type: 'Standard (Default)' }));
+                setRoomTypes([{ id: 0, name: 'Standard (Default)' }]);
+                setBookingData(prev => ({ ...prev, hotel_code: hCode, room_type: 'Standard (Default)' }));
             }
         } catch (error) {
             console.error("Failed to fetch room types:", error);
             setRoomTypes([{ id: 0, name: 'Standard' }]);
-            setBookingData(prev => ({ ...prev, room_type: 'Standard' }));
+            setBookingData(prev => ({ ...prev, hotel_code: hCode, room_type: 'Standard' }));
         }
     };
 
@@ -120,7 +112,6 @@ export default function BookRoomPage() {
         setBookingData({ ...bookingData, [e.target.name]: e.target.value });
     };
 
-    // 1단계 -> 2단계 넘어가기
     const handleNextStep = () => {
         if (!bookingData.hotel_code) return alert("Please select a hotel destination.");
         if (!bookingData.room_type) return alert("Please select a room type.");
@@ -162,9 +153,17 @@ export default function BookRoomPage() {
         }
     };
 
+    // 선택된 호텔 객체 찾기
+    const selectedHotelData = allHotels.find(h => h.code === bookingData.hotel_code);
+
     return (
         <div className="pb-24 font-sans bg-slate-50 min-h-screen relative">
-            {/* 상단 헤더 (진행도 표시) */}
+            {/* CSS for hiding scrollbar cleanly */}
+            <style jsx global>{`
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            `}</style>
+
             <div className="bg-white px-4 py-4 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100 shadow-sm">
                 <div className="flex items-center gap-3">
                     <button onClick={() => step === 2 ? setStep(1) : window.history.back()} className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 font-bold hover:bg-slate-200">
@@ -181,95 +180,132 @@ export default function BookRoomPage() {
 
             <div className="p-4 md:p-6 space-y-6">
 
-                {/* ========================================================= */}
-                {/* STEP 1: Find Hotels (목적지 및 일정 선택) */}
-                {/* ========================================================= */}
+                {/* STEP 1: Find Hotels */}
                 <div className={`transition-all duration-300 ${step === 1 ? 'block opacity-100' : 'hidden opacity-0'}`}>
+
+                    {/* 1. 지역 검색 박스 */}
                     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
                         <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
-                            <span className="text-lg">📍</span> Destination
+                            <span className="text-lg">📍</span> Select Location
                         </h2>
 
-                        <div className="space-y-3 mb-6">
-                            {/* Province 선택 */}
+                        <div className="space-y-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Province</label>
                                 <select value={selectedProvince} onChange={handleProvinceChange}
-                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer">
+                                    className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer shadow-sm">
                                     <option value="" disabled>Select Province...</option>
                                     {provinces.map(p => <option key={p} value={p}>{p}</option>)}
                                 </select>
                             </div>
-
-                            {/* City 선택 */}
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">City</label>
                                 <select value={selectedCity} onChange={handleCityChange} disabled={!selectedProvince}
-                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer disabled:bg-slate-100 disabled:text-slate-400">
+                                    className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer shadow-sm disabled:bg-slate-50 disabled:text-slate-400">
                                     <option value="" disabled>Select City...</option>
                                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
-
-                            {/* Hotel 선택 */}
-                            <div>
-                                <label className="block text-[10px] font-bold text-blue-600 mb-1 uppercase tracking-wider">Select Hotel</label>
-                                <select name="hotel_code" value={bookingData.hotel_code} onChange={handleHotelChange} disabled={!selectedCity}
-                                    className="w-full p-3 border-2 border-blue-200 rounded-lg text-sm font-black text-slate-800 bg-blue-50 outline-none focus:border-blue-600 cursor-pointer disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400">
-                                    <option value="" disabled>Choose your stay...</option>
-                                    {filteredHotels.map(h => <option key={h.code} value={h.code}>{h.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2 border-t border-slate-100 pt-5">
-                            <span className="text-lg">📅</span> Dates & Room
-                        </h2>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
-                                <input type="date" name="check_in_date" value={bookingData.check_in_date} onChange={handleChange}
-                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
-                                <input type="date" name="check_out_date" value={bookingData.check_out_date} onChange={handleChange}
-                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
-                            </div>
-                        </div>
-
-                        {/* 동적 Room Type 선택 */}
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Room Type</label>
-                            <select name="room_type" value={bookingData.room_type} onChange={handleChange} disabled={!bookingData.hotel_code}
-                                className="w-full p-3 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer disabled:bg-slate-100">
-                                {bookingData.hotel_code ? (
-                                    roomTypes.map(rt => <option key={rt.id} value={rt.name}>{rt.name}</option>)
-                                ) : (
-                                    <option value="" disabled>Select hotel first</option>
-                                )}
-                            </select>
                         </div>
                     </div>
 
-                    <button onClick={handleNextStep} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg transition-colors">
+                    {/* 💡 2. 가로 슬라이드 호텔 카드 (City 선택 시 나타남) */}
+                    {selectedCity && filteredHotels.length > 0 && (
+                        <div className="mb-6">
+                            <h2 className="text-sm font-black text-slate-800 mb-3 pl-1 flex items-center justify-between">
+                                <span>Choose your stay</span>
+                                <span className="text-xs font-bold text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">{filteredHotels.length} found</span>
+                            </h2>
+
+                            <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar px-1">
+                                {filteredHotels.map(h => {
+                                    const isSelected = bookingData.hotel_code === h.code;
+                                    return (
+                                        <div
+                                            key={h.code}
+                                            onClick={() => handleHotelSelect(h.code)}
+                                            className={`min-w-[260px] snap-center relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-sm 
+                                                ${isSelected ? 'border-blue-600 scale-[1.02] shadow-blue-200/50' : 'border-transparent bg-white hover:shadow-md'}`}
+                                        >
+                                            <div className="h-40 w-full relative bg-slate-200">
+                                                <img src={h.image_url || '/hero1.png'} alt={h.name} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
+
+                                                {/* 체크 마크 (선택 시) */}
+                                                {isSelected && (
+                                                    <div className="absolute top-3 right-3 bg-blue-600 text-white rounded-full p-1.5 shadow-lg animate-bounce">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                                    </div>
+                                                )}
+
+                                                <div className="absolute bottom-3 left-4 right-4">
+                                                    <p className="text-[9px] font-black text-blue-300 uppercase tracking-widest mb-0.5">Partner Hotel</p>
+                                                    <h3 className="font-black text-white text-lg leading-tight truncate">{h.name}</h3>
+                                                </div>
+                                            </div>
+                                            <div className="p-3 bg-white">
+                                                <p className="text-xs text-slate-500 font-bold flex items-center gap-1"><span className="text-blue-500">📍</span> {h.city}, {h.province}</p>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 💡 3. 호텔 상세 소개 & 날짜/객실 선택 (호텔 클릭 시 확장됨) */}
+                    {bookingData.hotel_code && selectedHotelData && (
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-blue-200 mb-6 animate-fade-in-up">
+                            {/* 호텔 안내 텍스트 */}
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+                                <h3 className="text-sm font-black text-blue-900 mb-2">Welcome to {selectedHotelData.name}!</h3>
+                                <p className="text-xs font-bold text-blue-700/80 leading-relaxed">
+                                    Experience premium service and ultimate relaxation at our {selectedHotelData.city} branch. Please select your dates and preferred room type below.
+                                </p>
+                            </div>
+
+                            <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                                <span className="text-lg">📅</span> Dates & Room
+                            </h2>
+
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
+                                    <input type="date" name="check_in_date" value={bookingData.check_in_date} onChange={handleChange}
+                                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
+                                    <input type="date" name="check_out_date" value={bookingData.check_out_date} onChange={handleChange}
+                                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
+                                </div>
+                            </div>
+
+                            {/* 객실 선택 (호텔에 맞게 자동 업데이트됨) */}
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Select Room Type</label>
+                                <select name="room_type" value={bookingData.room_type} onChange={handleChange}
+                                    className="w-full p-3 border-2 border-slate-200 rounded-lg text-sm font-black text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                                    {roomTypes.map(rt => <option key={rt.id} value={rt.name}>{rt.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    <button onClick={handleNextStep} disabled={!bookingData.hotel_code} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         Next: Guest Details ➔
                     </button>
                 </div>
 
-                {/* ========================================================= */}
-                {/* STEP 2: Guest Information (고객 정보 확인 및 확정) */}
-                {/* ========================================================= */}
+                {/* STEP 2: Guest Information (변동 없음) */}
                 <form onSubmit={handleSubmit} className={`transition-all duration-300 ${step === 2 ? 'block opacity-100' : 'hidden opacity-0'}`}>
-
                     {/* 선택 요약 카드 */}
                     <div className="bg-slate-800 text-white p-4 rounded-xl mb-6 shadow-md">
                         <div className="flex justify-between items-start mb-2">
                             <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Your Selection</span>
                             <button type="button" onClick={() => setStep(1)} className="text-xs font-bold underline text-slate-300 hover:text-white">Edit</button>
                         </div>
-                        <p className="font-black text-lg leading-tight mb-1">{allHotels.find(h => h.code === bookingData.hotel_code)?.name}</p>
+                        <p className="font-black text-lg leading-tight mb-1">{selectedHotelData?.name}</p>
                         <p className="text-sm text-slate-300 mb-3">{bookingData.room_type}</p>
                         <div className="flex items-center gap-2 text-xs font-bold text-blue-200 bg-slate-700/50 p-2 rounded-lg inline-flex">
                             <span>{bookingData.check_in_date}</span>
@@ -281,7 +317,7 @@ export default function BookRoomPage() {
                     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden mb-24">
                         {isLoggedIn && (
                             <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl border-l border-b border-blue-200">
-                                ✨ Autofilled from profile
+                                ✨ Autofilled
                             </div>
                         )}
 

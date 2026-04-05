@@ -74,12 +74,18 @@ export default function GuestLogin() {
             });
 
             if (response.data.success) {
-                const memberData = response.data.member;
-                alert(response.data.isNew ? "Google Sign-Up Successful!" : "Welcome back!");
+                // 1. 고객 정보를 로컬 스토리지에 안전하게 저장
+                localStorage.setItem('nplus_guest_user', JSON.stringify(response.data.member));
 
-                // 고객 기기에 정보 저장 (나중에 예약 시 Autofill 됨)
-                localStorage.setItem('nplus_guest_user', JSON.stringify(memberData));
-                // window.location.href = '/'; 
+                // 2. 환영 인사 알림창
+                if (response.data.isNew) {
+                    alert('Welcome! Your N+ Rewards account has been created.');
+                } else {
+                    alert('Welcome back!');
+                }
+
+                // 💡 3. [여기를 추가해 주세요!] 알림창 확인을 누르면 메인 홈 화면으로 즉시 이동!
+                window.location.href = '/';
             }
         } catch (error) {
             console.error("Google Login Error:", error);
