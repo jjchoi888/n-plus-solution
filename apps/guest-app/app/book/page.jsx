@@ -4,6 +4,43 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 
+// 💡 [신규 추가] 5장 오버랩 크로스페이드 슬라이더 컴포넌트
+const CrossfadeSlider = ({ images }) => {
+    const slideImages = images && images.length > 0 ? images : ['/hero1.png'];
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (slideImages.length <= 1) return;
+        const timer = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % slideImages.length);
+        }, 3000); // 3초마다 부드럽게 변경
+        return () => clearInterval(timer);
+    }, [slideImages.length]);
+
+    return (
+        <div className="h-56 w-full relative bg-slate-900 overflow-hidden rounded-t-xl">
+            {slideImages.map((imgUrl, idx) => (
+                <img
+                    key={idx}
+                    src={imgUrl}
+                    alt={`Hotel View ${idx + 1}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out
+                        ${idx === currentIndex ? 'opacity-100' : 'opacity-0'}`}
+                />
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent z-10"></div>
+
+            {slideImages.length > 1 && (
+                <div className="absolute bottom-4 right-4 flex gap-1.5 z-20">
+                    {slideImages.map((_, idx) => (
+                        <div key={idx} className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentIndex ? 'bg-white w-4' : 'bg-white/40 w-1.5'}`} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
 const ALL_COUNTRIES = [
     "Afghanistan", "Albania", "Algeria", "Argentina", "Australia", "Canada",
@@ -60,9 +97,19 @@ export default function BookRoomPage() {
 
         axios.get('https://api.hotelnplus.com/api/hotels')
             .then(res => {
-                const hotels = res.data || [];
-                setAllHotels(hotels);
-                const uniqueProvinces = [...new Set(hotels.map(h => h.province).filter(Boolean))];
+                // 💡 [강력 방어 로직] DB에서 덩어리(Object)가 오면 글자(title)만 쏙 빼서 청소합니다!
+                const cleanHotels = (res.data || []).map(h => {
+                    return {
+                        ...h,
+                        // 1. 호텔 이름이 덩어리일 경우
+                        name: typeof h.name === 'object' ? (h.name.title || h.name.hotel_name || h.code) : h.name,
+                        // 2. 부대시설이 덩어리(에러의 핵심 원인)일 경우 title만 추출
+                        facilities: (h.facilities || []).map(fac => typeof fac === 'object' ? (fac.title || fac.name || 'Facility') : fac)
+                    };
+                });
+
+                setAllHotels(cleanHotels);
+                const uniqueProvinces = [...new Set(cleanHotels.map(h => h.province).filter(Boolean))];
                 setProvinces(uniqueProvinces);
             })
             .catch(err => console.error("Failed to fetch hotels:", err));
@@ -248,150 +295,156 @@ export default function BookRoomPage() {
                         </div>
                     )}
 
-                    {/* 💡 호텔 상세 소개 & 날짜/객실 선택 (에러 수정 및 날짜 선택 복구 완료) */}
-                    {bookingData.hotel_code && selectedHotelData && (
-                        <div className="animate-fade-in-up">
+                    {/* 💡 업그레이드 된 호텔 안내 카드 (크로스페이드 슬라이드 + 앱 전용 데이터) */}
+                        <div className="bg-slate-50 rounded-xl border border-slate-200 mb-6 shadow-inner overflow-hidden">
 
-                            {/* 호텔 정보 카드 */}
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 shadow-inner">
-                                <div className="flex justify-between items-start mb-3">
-                                    <h3 className="text-base font-black text-slate-800">Welcome to {selectedHotelData.name}!</h3>
+                            {/* 1. 상단: 크로스페이드 이미지 슬라이더 */}
+                            <CrossfadeSlider images={selectedHotelData.app_gallery} />
 
-                                    <a href={selectedHotelData.map_url} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-[9px] font-black text-blue-600 bg-blue-100 hover:bg-blue-200 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-                                        📍 View Map
-                                    </a>
+                            <div className="p-5">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="text-lg font-black text-slate-800 leading-tight">Welcome to <br /><span className="text-blue-600">{selectedHotelData.name}</span></h3>
+
+                                    {selectedHotelData.map_url && (
+                                        <a href={selectedHotelData.map_url} target="_blank" rel="noopener noreferrer"
+                                            className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-xl transition-colors whitespace-nowrap shadow-sm mt-1">
+                                            📍 View Map
+                                        </a>
+                                    )}
                                 </div>
 
-                                <div className="flex flex-wrap gap-1.5 mb-3">
-                                    {(selectedHotelData.facilities || []).map((fac, idx) => (
-                                        <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[9px] font-black uppercase px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                {/* 2. 앱 전용 부대/편의 시설 뱃지 */}
+                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                    {(selectedHotelData.app_facilities || []).map((fac, idx) => (
+                                        <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
                                             <span className="text-blue-500">✓</span> {fac}
                                         </span>
                                     ))}
                                 </div>
 
-                                <p className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-3">
-                                    {selectedHotelData.description}
+                                {/* 3. 앱 전용 소개글 */}
+                                <p className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-4">
+                                    {selectedHotelData.app_description}
                                 </p>
                             </div>
+                        </div>
 
-                            {/* 체크인/체크아웃 날짜 및 객실 선택 */}
-                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
-                                <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
-                                    <span className="text-lg">📅</span> Dates & Room
-                                </h2>
+                    {/* 체크인/체크아웃 날짜 및 객실 선택 */}
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                        <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                            <span className="text-lg">📅</span> Dates & Room
+                        </h2>
 
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
-                                        <input type="date" name="check_in_date" value={bookingData.check_in_date} onChange={handleChange}
-                                            className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
-                                        <input type="date" name="check_out_date" value={bookingData.check_out_date} onChange={handleChange}
-                                            className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Select Room Type</label>
-                                    <select name="room_type" value={bookingData.room_type} onChange={handleChange}
-                                        className="w-full p-3 border-2 border-slate-200 rounded-lg text-sm font-black text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer shadow-sm">
-                                        {roomTypes.map(rt => <option key={rt.id} value={rt.name}>{rt.name}</option>)}
-                                    </select>
-                                </div>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
+                                <input type="date" name="check_in_date" value={bookingData.check_in_date} onChange={handleChange}
+                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
                             </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
+                                <input type="date" name="check_out_date" value={bookingData.check_out_date} onChange={handleChange}
+                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-slate-50" />
+                            </div>
+                        </div>
 
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Select Room Type</label>
+                            <select name="room_type" value={bookingData.room_type} onChange={handleChange}
+                                className="w-full p-3 border-2 border-slate-200 rounded-lg text-sm font-black text-slate-800 bg-white outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                                {roomTypes.map(rt => <option key={rt.id} value={rt.name}>{rt.name}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+                    )}
+
+                <button onClick={handleNextStep} disabled={!bookingData.hotel_code} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next: Guest Details ➔
+                </button>
+            </div>
+
+            {/* STEP 2: Guest Information */}
+            <form onSubmit={handleSubmit} className={`transition-all duration-300 ${step === 2 ? 'block opacity-100' : 'hidden opacity-0'}`}>
+                <div className="bg-slate-800 text-white p-4 rounded-xl mb-6 shadow-md">
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Your Selection</span>
+                        <button type="button" onClick={() => setStep(1)} className="text-xs font-bold underline text-slate-300 hover:text-white">Edit</button>
+                    </div>
+                    <p className="font-black text-lg leading-tight mb-1">{selectedHotelData?.name}</p>
+                    <p className="text-sm text-slate-300 mb-3">{bookingData.room_type}</p>
+                    <div className="flex items-center gap-2 text-xs font-bold text-blue-200 bg-slate-700/50 p-2 rounded-lg inline-flex">
+                        <span>{bookingData.check_in_date}</span>
+                        <span>➔</span>
+                        <span>{bookingData.check_out_date}</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden mb-24">
+                    {isLoggedIn && (
+                        <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl border-l border-b border-blue-200">
+                            ✨ Autofilled
                         </div>
                     )}
 
-                    <button onClick={handleNextStep} disabled={!bookingData.hotel_code} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Next: Guest Details ➔
-                    </button>
+                    <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2 mt-2">
+                        <span className="text-lg">👤</span> Guest Information
+                    </h2>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">First Name</label>
+                                <input type="text" name="first_name" required value={bookingData.first_name} onChange={handleChange}
+                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" placeholder="John" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Last Name</label>
+                                <input type="text" name="last_name" required value={bookingData.last_name} onChange={handleChange}
+                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" placeholder="Doe" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Email Address</label>
+                            <input type="email" name="email" required value={bookingData.email} onChange={handleChange}
+                                className={`w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold focus:border-blue-500 outline-none ${isLoggedIn ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
+                                readOnly={isLoggedIn} />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
+                            <input type="tel" name="phone" required value={bookingData.phone} onChange={handleChange}
+                                className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" placeholder="+63 917 123 4567" />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Nationality</label>
+                            <select name="nationality" required value={bookingData.nationality} onChange={handleChange}
+                                className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-white cursor-pointer">
+                                {TOP_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                <option disabled>──────────</option>
+                                {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                {/* STEP 2: Guest Information */}
-                <form onSubmit={handleSubmit} className={`transition-all duration-300 ${step === 2 ? 'block opacity-100' : 'hidden opacity-0'}`}>
-                    <div className="bg-slate-800 text-white p-4 rounded-xl mb-6 shadow-md">
-                        <div className="flex justify-between items-start mb-2">
-                            <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Your Selection</span>
-                            <button type="button" onClick={() => setStep(1)} className="text-xs font-bold underline text-slate-300 hover:text-white">Edit</button>
-                        </div>
-                        <p className="font-black text-lg leading-tight mb-1">{selectedHotelData?.name}</p>
-                        <p className="text-sm text-slate-300 mb-3">{bookingData.room_type}</p>
-                        <div className="flex items-center gap-2 text-xs font-bold text-blue-200 bg-slate-700/50 p-2 rounded-lg inline-flex">
-                            <span>{bookingData.check_in_date}</span>
-                            <span>➔</span>
-                            <span>{bookingData.check_out_date}</span>
-                        </div>
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-50">
+                    <div className="max-w-md mx-auto">
+                        <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-black text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2">
+                            {isLoading ? (
+                                <><span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span> Processing...</>
+                            ) : (
+                                'Confirm Booking ➔'
+                            )}
+                        </button>
                     </div>
+                </div>
+            </form>
 
-                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden mb-24">
-                        {isLoggedIn && (
-                            <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl border-l border-b border-blue-200">
-                                ✨ Autofilled
-                            </div>
-                        )}
-
-                        <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2 mt-2">
-                            <span className="text-lg">👤</span> Guest Information
-                        </h2>
-
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">First Name</label>
-                                    <input type="text" name="first_name" required value={bookingData.first_name} onChange={handleChange}
-                                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" placeholder="John" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Last Name</label>
-                                    <input type="text" name="last_name" required value={bookingData.last_name} onChange={handleChange}
-                                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" placeholder="Doe" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Email Address</label>
-                                <input type="email" name="email" required value={bookingData.email} onChange={handleChange}
-                                    className={`w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold focus:border-blue-500 outline-none ${isLoggedIn ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
-                                    readOnly={isLoggedIn} />
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
-                                <input type="tel" name="phone" required value={bookingData.phone} onChange={handleChange}
-                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" placeholder="+63 917 123 4567" />
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Nationality</label>
-                                <select name="nationality" required value={bookingData.nationality} onChange={handleChange}
-                                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 outline-none bg-white cursor-pointer">
-                                    {TOP_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    <option disabled>──────────</option>
-                                    {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-50">
-                        <div className="max-w-md mx-auto">
-                            <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-black text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2">
-                                {isLoading ? (
-                                    <><span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span> Processing...</>
-                                ) : (
-                                    'Confirm Booking ➔'
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-            </div>
         </div>
+        </div >
     );
 }
