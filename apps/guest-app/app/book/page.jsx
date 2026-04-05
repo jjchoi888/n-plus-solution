@@ -17,15 +17,13 @@ const getDefaultDate = (offsetDays = 0) => {
     return now.toISOString().split('T')[0];
 };
 
-// 💡 [수정] 크로스페이드 슬라이더: 하드코딩된 fallback 이미지 완전 제거. 오직 업로드된 사진만 표시.
 const CrossfadeSlider = ({ images }) => {
-    // 💡 안전하게 이미지 URL 배열로 변환하는 함수
     const parsedImages = images && images.length > 0 ? images.map(img => {
         if (!img) return null;
         if (typeof img === 'string') return img;
         if (typeof img === 'object') return img.url || img.src || null;
         return null;
-    }).filter(Boolean) : []; // null 제거
+    }).filter(Boolean) : [];
 
     const slideImages = parsedImages;
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -38,8 +36,7 @@ const CrossfadeSlider = ({ images }) => {
         return () => clearInterval(timer);
     }, [slideImages.length]);
 
-    // 사진이 한장도 없으면 슬라이더 영역 자체를 렌더링하지 않습니다 (하드코딩 사진 방지).
-    if (slideImages.length === 0) return <div className="h-56 w-full bg-slate-200 rounded-t-xl flex items-center justify-center text-slate-400 text-xs">No Photos Uploaded</div>;
+    if (slideImages.length === 0) return <div className="h-56 w-full bg-slate-200 rounded-t-xl flex items-center justify-center text-slate-400 text-xs font-bold">No Photos Available</div>;
 
     return (
         <div className="h-56 w-full relative bg-slate-900 overflow-hidden rounded-t-xl">
@@ -111,7 +108,6 @@ export default function BookRoomPage() {
                 const cleanHotels = (res.data || []).map(h => {
                     const extractName = (fac) => typeof fac === 'object' ? (fac.title || fac.label || fac.name || 'Facility') : String(fac);
 
-                    // 💡 [신규 핵심] DB에서 가져온 app_gallery_urls 압축 풀기
                     let appGallery = [];
                     try {
                         if (h.app_gallery_urls) {
@@ -126,7 +122,6 @@ export default function BookRoomPage() {
                         name: typeof h.name === 'object' ? (h.name.title || h.name.hotel_name || h.code) : h.name,
                         facilities: (h.facilities || []).map(extractName),
                         app_facilities: (h.app_facilities || []).map(extractName),
-                        // 💡 압축을 푼 진짜 갤러리 배열을 세팅
                         app_gallery: appGallery
                     };
                 });
@@ -289,11 +284,11 @@ export default function BookRoomPage() {
                                 {filteredHotels.map(h => {
                                     const isSelected = bookingData.hotel_code === h.code;
 
-                                    // 💡 [수정] 카드 이미지도 오직 업로드된 사진만 표시하도록 fallback 제거
                                     const cardImgRaw = (h.app_gallery && h.app_gallery.length > 0) ? h.app_gallery[0] : h.image_url;
                                     const cardImgUrl = typeof cardImgRaw === 'object' ? (cardImgRaw?.url || cardImgRaw?.src) : cardImgRaw;
 
-                                    if (!cardImgUrl) return null; // 사진 없으면 카드 안찍음 (강력한 방어)
+                                    // 💡 [수정] 무조건 카드는 띄우되, 사진이 없으면 기본 고화질 호텔 이미지를 보여줍니다!
+                                    const finalImgUrl = cardImgUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800';
 
                                     return (
                                         <div
@@ -303,7 +298,7 @@ export default function BookRoomPage() {
                                                 ${isSelected ? 'border-blue-600 scale-[1.02] shadow-blue-200/50' : 'border-transparent bg-white hover:shadow-md'}`}
                                         >
                                             <div className="h-40 w-full relative bg-slate-200">
-                                                <img src={cardImgUrl} alt={h.name} className="w-full h-full object-cover" />
+                                                <img src={finalImgUrl} alt={h.name} className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
 
                                                 {isSelected && (
@@ -337,7 +332,6 @@ export default function BookRoomPage() {
 
                                 <div className="p-5">
                                     <div className="flex justify-between items-start mb-4">
-                                        {/* 💡 [수정 1] "Welcome to" 제거 및 호텔명 / 주소 구분 */}
                                         <div className="flex-1 pr-2">
                                             <h3 className="text-xl font-black text-blue-600 leading-tight mb-1">{selectedHotelData.name}</h3>
                                             <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
@@ -345,15 +339,13 @@ export default function BookRoomPage() {
                                             </p>
                                         </div>
 
-                                        {/* 💡 [수정] iframe HTML 코드에서 주소만 정확히 추출하는 정규표현식 적용 (정공법) */}
                                         {(() => {
                                             const rawIframeString = selectedHotelData.map_url;
                                             if (!rawIframeString) return null;
 
-                                            // 💡 Regex to extract URL from src="..." or src='...'
                                             const regex = /src=["'](.*?)["']/;
                                             const match = rawIframeString.match(regex);
-                                            const finalMapUrl = match ? match[1] : rawIframeString; // Fallback to raw if no match (maybe it's already just a URL)
+                                            const finalMapUrl = match ? match[1] : rawIframeString;
 
                                             if (!finalMapUrl) return null;
 
@@ -366,7 +358,7 @@ export default function BookRoomPage() {
                                         })()}
                                     </div>
 
-                                    <div className="flex flex-wrap gap-1.5 mb-4">
+                                    <div className="flex flex-wrap gap-1.5 mb-4 mt-2">
                                         {(selectedHotelData.app_facilities && selectedHotelData.app_facilities.length > 0
                                             ? selectedHotelData.app_facilities
                                             : selectedHotelData.facilities || []).map((fac, idx) => (
@@ -376,7 +368,6 @@ export default function BookRoomPage() {
                                             ))}
                                     </div>
 
-                                    {/* 💡 HTML 태그 노출 방어 및 fallback 제거 */}
                                     {selectedHotelData.app_description && (
                                         <div
                                             className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-4"
