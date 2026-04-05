@@ -108,21 +108,29 @@ export default function BookRoomPage() {
                 const cleanHotels = (res.data || []).map(h => {
                     const extractName = (fac) => typeof fac === 'object' ? (fac.title || fac.label || fac.name || 'Facility') : String(fac);
 
-                    let appGallery = [];
-                    try {
-                        if (h.app_gallery_urls) {
-                            appGallery = JSON.parse(h.app_gallery_urls);
-                        }
-                    } catch (e) {
-                        console.error("Failed to parse app_gallery_urls for", h.code, e);
+                    // 💡 [사진 완벽 복구] 백엔드에서 어떤 이름으로 던지든 다 주워담습니다.
+                    let rawGallery = h.app_gallery || h.app_gallery_urls || h.gallery_json || h.gallery_urls || [];
+                    if (typeof rawGallery === 'string') {
+                        try { rawGallery = JSON.parse(rawGallery); } catch (e) { rawGallery = []; }
                     }
+                    if (!Array.isArray(rawGallery)) rawGallery = [rawGallery];
+
+                    let appGallery = rawGallery.map(img => {
+                        if (typeof img === 'string') return img;
+                        if (typeof img === 'object' && img !== null) return img.url || img.src;
+                        return null;
+                    }).filter(Boolean);
+
+                    // 갤러리가 텅 비었을 경우 최후의 수단으로 썸네일이나 배경 이미지를 씁니다.
+                    if (appGallery.length === 0 && h.image_url) appGallery = [h.image_url];
+                    if (appGallery.length === 0 && h.bg_image_url) appGallery = [h.bg_image_url];
 
                     return {
                         ...h,
                         name: typeof h.name === 'object' ? (h.name.title || h.name.hotel_name || h.code) : h.name,
                         facilities: (h.facilities || []).map(extractName),
                         app_facilities: (h.app_facilities || []).map(extractName),
-                        app_gallery: appGallery
+                        app_gallery: appGallery // 💡 완벽하게 파싱된 사진 배열 세팅
                     };
                 });
 
@@ -284,10 +292,9 @@ export default function BookRoomPage() {
                                 {filteredHotels.map(h => {
                                     const isSelected = bookingData.hotel_code === h.code;
 
+                                    // 💡 사진이 무조건 뜨도록 변경
                                     const cardImgRaw = (h.app_gallery && h.app_gallery.length > 0) ? h.app_gallery[0] : h.image_url;
                                     const cardImgUrl = typeof cardImgRaw === 'object' ? (cardImgRaw?.url || cardImgRaw?.src) : cardImgRaw;
-
-                                    // 💡 [수정] 무조건 카드는 띄우되, 사진이 없으면 기본 고화질 호텔 이미지를 보여줍니다!
                                     const finalImgUrl = cardImgUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800';
 
                                     return (
@@ -339,15 +346,32 @@ export default function BookRoomPage() {
                                             </p>
                                         </div>
 
+                                        {/* 💡 [지도 완벽 해결] iframe 소스에서 정확한 '검색어(주소)'를 뽑아내어 스마트폰 지도앱과 직접 연동합니다. */}
                                         {(() => {
-                                            const rawIframeString = selectedHotelData.map_url;
-                                            if (!rawIframeString) return null;
+                                            let finalMapUrl = '';
+                                            const rawMapData = selectedHotelData.map_url || selectedHotelData.map_embed_url || '';
 
-                                            const regex = /src=["'](.*?)["']/;
-                                            const match = rawIframeString.match(regex);
-                                            const finalMapUrl = match ? match[1] : rawIframeString;
+                                            if (rawMapData.includes('<iframe') || rawMapData.includes('src=')) {
+                                                const srcMatch = rawMapData.match(/src=["'](.*?)["']/);
+                                                if (srcMatch && srcMatch[1]) {
+                                                    const iframeSrc = srcMatch[1];
+                                                    // 'q=' 파라미터가 있으면 거기가 100% 찐 주소입니다.
+                                                    const qMatch = iframeSrc.match(/[?&]q=([^&]+)/);
+                                                    if (qMatch && qMatch[1]) {
+                                                        finalMapUrl = `https://www.google.com/maps/search/?api=1&query=${qMatch[1]}`;
+                                                    } else {
+                                                        finalMapUrl = iframeSrc;
+                                                    }
+                                                }
+                                            } else if (rawMapData.startsWith('http')) {
+                                                finalMapUrl = rawMapData;
+                                            }
 
-                                            if (!finalMapUrl) return null;
+                                            // 실패했을 경우 최후의 보루로 호텔명 + 도시 로 검색시킵니다.
+                                            if (!finalMapUrl) {
+                                                const searchQ = encodeURIComponent(`${selectedHotelData.name}, ${selectedHotelData.city}, ${selectedHotelData.province}`);
+                                                finalMapUrl = `https://www.google.com/maps/search/?api=1&query=${searchQ}`;
+                                            }
 
                                             return (
                                                 <a href={finalMapUrl} target="_blank" rel="noopener noreferrer"
