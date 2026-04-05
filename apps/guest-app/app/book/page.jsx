@@ -17,9 +17,18 @@ const getDefaultDate = (offsetDays = 0) => {
     return now.toISOString().split('T')[0];
 };
 
-// 💡 크로스페이드 슬라이더 컴포넌트
+// 💡 [수정] 크로스페이드 슬라이더: 객체([object Object]) 에러 완벽 차단 및 기본 이미지 고화질 적용
 const CrossfadeSlider = ({ images }) => {
-    const slideImages = images && images.length > 0 ? images : ['/hero1.png'];
+    // 💡 안전하게 이미지 URL만 추출하는 마법의 함수
+    const getSafeUrl = (img) => {
+        const fallback = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800'; // 고화질 리조트 뷰
+        if (!img) return fallback;
+        if (typeof img === 'string') return img;
+        if (typeof img === 'object') return img.url || img.src || fallback;
+        return fallback;
+    };
+
+    const slideImages = images && images.length > 0 ? images.map(getSafeUrl) : [getSafeUrl(null)];
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
@@ -97,7 +106,6 @@ export default function BookRoomPage() {
 
         axios.get('https://api.hotelnplus.com/api/hotels')
             .then(res => {
-                // 💡 [강력 방어 1] cleanHotels 선언부 복구 & 객체 데이터 청소 완벽 적용
                 const cleanHotels = (res.data || []).map(h => {
                     const extractName = (fac) => typeof fac === 'object' ? (fac.title || fac.label || fac.name || 'Facility') : String(fac);
                     return {
@@ -265,6 +273,11 @@ export default function BookRoomPage() {
                             <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar px-1">
                                 {filteredHotels.map(h => {
                                     const isSelected = bookingData.hotel_code === h.code;
+
+                                    // 💡 여기도 안전하게 이미지 파싱 적용
+                                    const cardImgRaw = (h.app_gallery && h.app_gallery.length > 0) ? h.app_gallery[0] : h.image_url;
+                                    const cardImgUrl = typeof cardImgRaw === 'object' ? (cardImgRaw?.url || cardImgRaw?.src) : cardImgRaw;
+
                                     return (
                                         <div
                                             key={h.code}
@@ -273,7 +286,7 @@ export default function BookRoomPage() {
                                                 ${isSelected ? 'border-blue-600 scale-[1.02] shadow-blue-200/50' : 'border-transparent bg-white hover:shadow-md'}`}
                                         >
                                             <div className="h-40 w-full relative bg-slate-200">
-                                                <img src={h.image_url || '/hero1.png'} alt={h.name} className="w-full h-full object-cover" />
+                                                <img src={cardImgUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800'} alt={h.name} className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
 
                                                 {isSelected && (
@@ -307,36 +320,43 @@ export default function BookRoomPage() {
 
                                 <div className="p-5">
                                     <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-lg font-black text-slate-800 leading-tight">Welcome to <br /><span className="text-blue-600">{selectedHotelData.name}</span></h3>
+                                        {/* 💡 [수정 3] "Welcome to" 삭제, 호텔명(파란색) / 하단에 📍 지역명 표시 */}
+                                        <div className="flex-1 pr-2">
+                                            <h3 className="text-xl font-black text-blue-600 leading-tight mb-1">{selectedHotelData.name}</h3>
+                                            <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                                                <span>📍</span> {selectedHotelData.city}, {selectedHotelData.province}
+                                            </p>
+                                        </div>
 
-                                        {/* 💡 [강력 방어 2] iframe HTML 코드가 들어와도 주소만 똑똑하게 파싱합니다 */}
+                                        {/* 💡 [수정 2] iframe 에러 방지 & 구글맵 모바일 앱 자동 검색 링크(Search Intent) 생성! */}
                                         {(() => {
-                                            let finalMapUrl = selectedHotelData.map_url;
-                                            if (finalMapUrl && finalMapUrl.includes('<iframe') && finalMapUrl.includes('src=')) {
-                                                const match = finalMapUrl.match(/src=["'](.*?)["']/);
-                                                if (match && match[1]) finalMapUrl = match[1];
-                                            }
-
-                                            return finalMapUrl ? (
-                                                <a href={finalMapUrl} target="_blank" rel="noopener noreferrer"
-                                                    className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-xl transition-colors whitespace-nowrap shadow-sm mt-1">
+                                            const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedHotelData.name} ${selectedHotelData.city} ${selectedHotelData.province}`)}`;
+                                            return (
+                                                <a href={mapSearchUrl} target="_blank" rel="noopener noreferrer"
+                                                    className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-xl transition-colors whitespace-nowrap shadow-sm shrink-0">
                                                     📍 View Map
                                                 </a>
-                                            ) : null;
+                                            );
                                         })()}
                                     </div>
 
-                                    <div className="flex flex-wrap gap-1.5 mb-4">
-                                        {(selectedHotelData.app_facilities || selectedHotelData.facilities || []).map((fac, idx) => (
-                                            <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                                <span className="text-blue-500">✓</span> {fac}
-                                            </span>
-                                        ))}
+                                    <div className="flex flex-wrap gap-1.5 mb-4 mt-2">
+                                        {(selectedHotelData.app_facilities && selectedHotelData.app_facilities.length > 0
+                                            ? selectedHotelData.app_facilities
+                                            : selectedHotelData.facilities || []).map((fac, idx) => (
+                                                <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                                    <span className="text-blue-500">✓</span> {fac}
+                                                </span>
+                                            ))}
                                     </div>
 
-                                    <p className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-4">
-                                        {selectedHotelData.app_description || "Experience premium service and ultimate relaxation."}
-                                    </p>
+                                    {/* 💡 HTML 태그 노출 방어 */}
+                                    <div
+                                        className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-4"
+                                        dangerouslySetInnerHTML={{
+                                            __html: selectedHotelData.app_description || "Experience premium service and ultimate relaxation."
+                                        }}
+                                    />
                                 </div>
                             </div>
 
