@@ -17,7 +17,7 @@ const getDefaultDate = (offsetDays = 0) => {
     return now.toISOString().split('T')[0];
 };
 
-// 💡 [신규 추가] 5장 오버랩 크로스페이드 슬라이더 컴포넌트
+// 💡 크로스페이드 슬라이더 컴포넌트
 const CrossfadeSlider = ({ images }) => {
     const slideImages = images && images.length > 0 ? images : ['/hero1.png'];
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,7 +26,7 @@ const CrossfadeSlider = ({ images }) => {
         if (slideImages.length <= 1) return;
         const timer = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % slideImages.length);
-        }, 3000); // 3초마다 부드럽게 변경
+        }, 3000);
         return () => clearInterval(timer);
     }, [slideImages.length]);
 
@@ -97,12 +97,14 @@ export default function BookRoomPage() {
 
         axios.get('https://api.hotelnplus.com/api/hotels')
             .then(res => {
-                // 💡 [강력 방어 로직] DB에서 덩어리(Object)가 오면 글자만 쏙 빼서 청소
+                // 💡 [강력 방어 1] cleanHotels 선언부 복구 & 객체 데이터 청소 완벽 적용
                 const cleanHotels = (res.data || []).map(h => {
+                    const extractName = (fac) => typeof fac === 'object' ? (fac.title || fac.label || fac.name || 'Facility') : String(fac);
                     return {
                         ...h,
                         name: typeof h.name === 'object' ? (h.name.title || h.name.hotel_name || h.code) : h.name,
-                        facilities: (h.facilities || []).map(fac => typeof fac === 'object' ? (fac.title || fac.name || 'Facility') : fac)
+                        facilities: (h.facilities || []).map(extractName),
+                        app_facilities: (h.app_facilities || []).map(extractName)
                     };
                 });
 
@@ -295,29 +297,35 @@ export default function BookRoomPage() {
                         </div>
                     )}
 
-                    {/* 💡 호텔 상세 소개 & 날짜/객실 선택 (에러 완벽 복구 구역) */}
+                    {/* 호텔 상세 소개 & 날짜/객실 선택 */}
                     {bookingData.hotel_code && selectedHotelData && (
                         <div className="animate-fade-in-up">
 
-                            {/* 1. 업그레이드 된 호텔 안내 카드 (크로스페이드 슬라이드 + 앱 전용 데이터) */}
                             <div className="bg-slate-50 rounded-xl border border-slate-200 mb-6 shadow-inner overflow-hidden">
 
-                                {/* 상단: 크로스페이드 이미지 슬라이더 */}
                                 <CrossfadeSlider images={selectedHotelData.app_gallery || []} />
 
                                 <div className="p-5">
                                     <div className="flex justify-between items-start mb-4">
                                         <h3 className="text-lg font-black text-slate-800 leading-tight">Welcome to <br /><span className="text-blue-600">{selectedHotelData.name}</span></h3>
 
-                                        {selectedHotelData.map_url && (
-                                            <a href={selectedHotelData.map_url} target="_blank" rel="noopener noreferrer"
-                                                className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-xl transition-colors whitespace-nowrap shadow-sm mt-1">
-                                                📍 View Map
-                                            </a>
-                                        )}
+                                        {/* 💡 [강력 방어 2] iframe HTML 코드가 들어와도 주소만 똑똑하게 파싱합니다 */}
+                                        {(() => {
+                                            let finalMapUrl = selectedHotelData.map_url;
+                                            if (finalMapUrl && finalMapUrl.includes('<iframe') && finalMapUrl.includes('src=')) {
+                                                const match = finalMapUrl.match(/src=["'](.*?)["']/);
+                                                if (match && match[1]) finalMapUrl = match[1];
+                                            }
+
+                                            return finalMapUrl ? (
+                                                <a href={finalMapUrl} target="_blank" rel="noopener noreferrer"
+                                                    className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-xl transition-colors whitespace-nowrap shadow-sm mt-1">
+                                                    📍 View Map
+                                                </a>
+                                            ) : null;
+                                        })()}
                                     </div>
 
-                                    {/* 앱 전용 부대/편의 시설 뱃지 */}
                                     <div className="flex flex-wrap gap-1.5 mb-4">
                                         {(selectedHotelData.app_facilities || selectedHotelData.facilities || []).map((fac, idx) => (
                                             <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
@@ -326,14 +334,12 @@ export default function BookRoomPage() {
                                         ))}
                                     </div>
 
-                                    {/* 앱 전용 소개글 */}
                                     <p className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-4">
                                         {selectedHotelData.app_description || "Experience premium service and ultimate relaxation."}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* 2. 체크인/체크아웃 날짜 및 객실 선택 */}
                             <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
                                 <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
                                     <span className="text-lg">📅</span> Dates & Room
