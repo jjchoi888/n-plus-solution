@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
 const ALL_COUNTRIES = [
@@ -38,7 +39,7 @@ const CrossfadeSlider = ({ images }) => {
 
     if (slideImages.length === 0) {
         return (
-            <div className="h-56 w-full bg-slate-200 rounded-none flex items-center justify-center text-slate-400 text-xs font-bold">
+            <div className="h-56 w-full bg-slate-200 rounded-none flex items-center justify-center text-slate-400 text-xs font-medium">
                 No Photos Available
             </div>
         );
@@ -68,7 +69,13 @@ const CrossfadeSlider = ({ images }) => {
     );
 };
 
-export default function BookRoomPage() {
+// 💡 URL 파라미터를 읽기 위해 메인 로직을 서브 컴포넌트로 분리합니다.
+function BookRoomContent() {
+    const searchParams = useSearchParams();
+    const initialHotel = searchParams.get('hotel');
+    const initialPromo = searchParams.get('promo');
+    const initialRoomType = searchParams.get('roomType');
+
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -150,9 +157,22 @@ export default function BookRoomPage() {
                 setAllHotels(cleanHotels);
                 const uniqueProvinces = [...new Set(cleanHotels.map(h => h.province).filter(Boolean))];
                 setProvinces(uniqueProvinces);
+
+                if (initialHotel && initialHotel !== 'ALL') {
+                    const targetHotel = cleanHotels.find(h => h.code === initialHotel);
+                    if (targetHotel) {
+                        setSelectedProvince(targetHotel.province);
+                        const availCities = [...new Set(cleanHotels.filter(h => h.province === targetHotel.province).map(h => h.city).filter(Boolean))];
+                        setCities(availCities);
+                        setSelectedCity(targetHotel.city);
+                        setFilteredHotels(cleanHotels.filter(h => h.province === targetHotel.province && h.city === targetHotel.city));
+
+                        handleHotelSelect(initialHotel, true);
+                    }
+                }
             })
             .catch(err => console.error("Failed to fetch hotels:", err));
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const fetchAvailability = async () => {
@@ -200,14 +220,14 @@ export default function BookRoomPage() {
         setSelectedRooms({});
     };
 
-    const handleHotelSelect = async (hCode) => {
+    const handleHotelSelect = async (hCode, isAutoSelect = false) => {
         setBookingData(prev => ({ ...prev, hotel_code: hCode }));
         setSelectedRooms({});
 
         try {
             const res = await axios.get(`https://api.hotelnplus.com/api/room-types?hotel=${hCode}`);
             if (res.data && res.data.length > 0) {
-                const formattedRoomTypes = res.data.map(rt => {
+                let formattedRoomTypes = res.data.map(rt => {
                     let rawImages = rt.images || rt.gallery_json || [];
                     if (typeof rawImages === 'string') {
                         try { rawImages = JSON.parse(rawImages); } catch (e) { rawImages = []; }
@@ -222,6 +242,10 @@ export default function BookRoomPage() {
 
                     return { ...rt, app_images: appImages };
                 });
+
+                if (isAutoSelect && initialRoomType) {
+                    formattedRoomTypes = formattedRoomTypes.filter(rt => initialRoomType.includes(rt.name));
+                }
 
                 setRoomTypes(formattedRoomTypes);
             } else {
@@ -297,7 +321,8 @@ export default function BookRoomPage() {
                         adults: adults,
                         kids: kids,
                         infants: infants,
-                        payment_method: paymentMethod
+                        payment_method: paymentMethod,
+                        promo_code: (initialPromo && bookingData.hotel_code === initialHotel) ? initialPromo : null
                     });
                 }
             });
@@ -348,46 +373,46 @@ export default function BookRoomPage() {
 
             <div className="bg-white px-4 py-4 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => step === 2 ? setStep(1) : window.history.back()} className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-none text-slate-600 font-bold hover:bg-slate-200 transition-colors">
+                    <button onClick={() => step === 2 ? setStep(1) : window.history.back()} className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-none text-slate-600 font-semibold hover:bg-slate-200 transition-colors">
                         ←
                     </button>
-                    <h1 className="text-lg font-black text-slate-800">
+                    <h1 className="text-lg font-bold text-slate-800">
                         {step === 1 ? 'Find Hotels' : 'Complete Booking'}
                     </h1>
                 </div>
-                <div className="text-xs font-bold text-[#009900] bg-green-50 px-2 py-1 rounded-none">
+                <div className="text-xs font-medium text-[#009900] bg-green-50 px-2 py-1 rounded-none">
                     Step {step} of 2
                 </div>
             </div>
 
-            <div className="p-4 md:p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-6 max-w-2xl mx-auto">
 
                 <div className={`transition-all duration-300 ${step === 1 ? 'block opacity-100' : 'hidden opacity-0'}`}>
 
                     <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
-                        <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <span className="text-lg">📍</span> Select Location
                         </h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Province</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Province</label>
                                 <select
                                     value={selectedProvince}
                                     onChange={handleProvinceChange}
-                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 bg-white outline-none focus:border-[#009900] cursor-pointer shadow-sm"
+                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 bg-white outline-none focus:border-[#009900] cursor-pointer shadow-sm"
                                 >
                                     <option value="" disabled>Select Province...</option>
                                     {provinces.map(p => <option key={p} value={p}>{p}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">City</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">City</label>
                                 <select
                                     value={selectedCity}
                                     onChange={handleCityChange}
                                     disabled={!selectedProvince}
-                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 bg-white outline-none focus:border-[#009900] cursor-pointer shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 bg-white outline-none focus:border-[#009900] cursor-pointer shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
                                 >
                                     <option value="" disabled>Select City...</option>
                                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
@@ -398,9 +423,9 @@ export default function BookRoomPage() {
 
                     {selectedCity && filteredHotels.length > 0 && (
                         <div className="mb-6">
-                            <h2 className="text-sm font-black text-slate-800 mb-3 pl-1 flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-slate-800 mb-3 pl-1 flex items-center justify-between">
                                 <span>Choose your stay</span>
-                                <span className="text-xs font-bold text-[#009900] bg-green-100 px-2 py-0.5 rounded-none">{filteredHotels.length} found</span>
+                                <span className="text-xs font-medium text-[#009900] bg-green-100 px-2 py-0.5 rounded-none">{filteredHotels.length} found</span>
                             </h2>
 
                             <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar px-1">
@@ -420,7 +445,7 @@ export default function BookRoomPage() {
                                                 {cardImgUrl ? (
                                                     <img src={cardImgUrl} alt={h.name} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <span className="text-xs font-bold text-slate-400">No Photo</span>
+                                                    <span className="text-xs font-medium text-slate-400">No Photo</span>
                                                 )}
 
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
@@ -432,11 +457,11 @@ export default function BookRoomPage() {
                                                 )}
 
                                                 <div className="absolute bottom-3 left-4 right-4">
-                                                    <h3 className="font-black text-white text-lg leading-tight truncate">{h.name}</h3>
+                                                    <h3 className="font-bold text-white text-lg leading-tight truncate">{h.name}</h3>
                                                 </div>
                                             </div>
                                             <div className="p-3 bg-white flex-1">
-                                                <p className="text-xs text-slate-500 font-bold flex items-center gap-1"><span className="text-[#00aa00]">📍</span> {h.city}, {h.province}</p>
+                                                <p className="text-xs text-slate-500 font-medium flex items-center gap-1"><span className="text-[#00aa00]">📍</span> {h.city}, {h.province}</p>
                                             </div>
                                         </div>
                                     )
@@ -454,8 +479,8 @@ export default function BookRoomPage() {
                                 <div className="p-5">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex-1 pr-2">
-                                            <h3 className="text-xl font-black text-[#009900] leading-tight mb-1">{selectedHotelData.name}</h3>
-                                            <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                                            <h3 className="text-xl font-bold text-[#009900] leading-tight mb-1">{selectedHotelData.name}</h3>
+                                            <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
                                                 <span>📍</span> {selectedHotelData.city}, {selectedHotelData.province}
                                             </p>
                                         </div>
@@ -486,7 +511,7 @@ export default function BookRoomPage() {
 
                                             return (
                                                 <a href={finalMapUrl} target="_blank" rel="noopener noreferrer"
-                                                    className="flex items-center gap-1 text-[10px] font-black text-[#009900] bg-green-100 hover:bg-green-200 px-3 py-2 rounded-none transition-colors whitespace-nowrap shadow-sm shrink-0 mt-1">
+                                                    className="flex items-center gap-1 text-[10px] font-semibold text-[#009900] bg-green-100 hover:bg-green-200 px-3 py-2 rounded-none transition-colors whitespace-nowrap shadow-sm shrink-0 mt-1">
                                                     📍 View Map
                                                 </a>
                                             );
@@ -497,7 +522,7 @@ export default function BookRoomPage() {
                                         {(selectedHotelData.app_facilities && selectedHotelData.app_facilities.length > 0
                                             ? selectedHotelData.app_facilities
                                             : selectedHotelData.facilities || []).map((fac, idx) => (
-                                                <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[10px] font-black px-2.5 py-1 rounded-none shadow-sm flex items-center gap-1">
+                                                <span key={idx} className="bg-white text-slate-600 border border-slate-200 text-[10px] font-semibold px-2.5 py-1 rounded-none shadow-sm flex items-center gap-1">
                                                     <span className="text-[#00aa00]">✓</span> {fac}
                                                 </span>
                                             ))}
@@ -505,7 +530,7 @@ export default function BookRoomPage() {
 
                                     {selectedHotelData.app_description && (
                                         <div
-                                            className="text-xs font-bold text-slate-500 leading-relaxed border-t border-slate-200 pt-4"
+                                            className="text-xs font-medium text-slate-500 leading-relaxed border-t border-slate-200 pt-4"
                                             dangerouslySetInnerHTML={{
                                                 __html: selectedHotelData.app_description
                                             }}
@@ -515,98 +540,98 @@ export default function BookRoomPage() {
                             </div>
 
                             <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
-                                <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                                <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <span className="text-lg">📅</span> Dates & Guests
                                 </h2>
 
                                 <div className="grid grid-cols-1 gap-4 mb-6">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
+                                            <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
                                             <input
                                                 type="date"
                                                 name="check_in_date"
                                                 value={bookingData.check_in_date}
                                                 min={getDefaultDate(0)}
                                                 onChange={handleChange}
-                                                className="w-full p-3 border border-slate-200 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none bg-slate-50 shadow-inner"
+                                                className="w-full p-3 border border-slate-200 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none bg-slate-50 shadow-inner"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
+                                            <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
                                             <input
                                                 type="date"
                                                 name="check_out_date"
                                                 value={bookingData.check_out_date}
                                                 min={bookingData.check_in_date ? new Date(new Date(bookingData.check_in_date).getTime() + 86400000).toISOString().split('T')[0] : getDefaultDate(0)}
                                                 onChange={handleChange}
-                                                className="w-full p-3 border border-slate-200 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none bg-slate-50 shadow-inner"
+                                                className="w-full p-3 border border-slate-200 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none bg-slate-50 shadow-inner"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="relative z-20">
-                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Guests & Summary</label>
+                                        <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Guests & Summary</label>
                                         <div
                                             onClick={(e) => { e.stopPropagation(); setShowGuestPicker(!showGuestPicker); }}
-                                            className="w-full p-3 border border-slate-200 rounded-none bg-slate-50 shadow-inner text-sm font-bold text-slate-800 cursor-pointer flex justify-between items-center select-none hover:bg-slate-100 transition-colors"
+                                            className="w-full p-3 border border-slate-200 rounded-none bg-slate-50 shadow-inner text-sm font-medium text-slate-800 cursor-pointer flex justify-between items-center select-none hover:bg-slate-100 transition-colors"
                                         >
                                             <span className="truncate pr-2">
                                                 {adults} Adults{kids > 0 ? `, ${kids} Kids` : ''}{infants > 0 ? `, ${infants} Infants(Free)` : ''} · {totalSelectedRoomCount} Room(s)
                                             </span>
-                                            <span className="text-slate-400 font-black shrink-0 text-xs">▼</span>
+                                            <span className="text-slate-400 font-bold shrink-0 text-xs">▼</span>
                                         </div>
 
                                         {showGuestPicker && (
                                             <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-none shadow-2xl border border-slate-200 p-4 z-50 animate-fade-in space-y-4 text-slate-800" onClick={e => e.stopPropagation()}>
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <p className="font-bold text-sm">Adults</p>
+                                                        <p className="font-semibold text-sm">Adults</p>
                                                         <p className="text-[10px] text-slate-500">Age 13+</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">-</button>
-                                                        <span className="w-4 text-center font-bold">{adults}</span>
-                                                        <button type="button" onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">+</button>
+                                                        <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-semibold hover:bg-slate-200">-</button>
+                                                        <span className="w-4 text-center font-semibold">{adults}</span>
+                                                        <button type="button" onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-semibold hover:bg-slate-200">+</button>
                                                     </div>
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <p className="font-bold text-sm">Children</p>
+                                                        <p className="font-semibold text-sm">Children</p>
                                                         <p className="text-[10px] text-slate-500">Ages 2-12</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <button type="button" onClick={() => setKids(Math.max(0, kids - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">-</button>
-                                                        <span className="w-4 text-center font-bold">{kids}</span>
-                                                        <button type="button" onClick={() => setKids(kids + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">+</button>
+                                                        <button type="button" onClick={() => setKids(Math.max(0, kids - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-semibold hover:bg-slate-200">-</button>
+                                                        <span className="w-4 text-center font-semibold">{kids}</span>
+                                                        <button type="button" onClick={() => setKids(kids + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-semibold hover:bg-slate-200">+</button>
                                                     </div>
                                                 </div>
                                                 <div className="flex justify-between items-center bg-green-50/50 p-2 -mx-2 rounded-none border border-green-100/50">
                                                     <div>
-                                                        <p className="font-bold text-sm text-green-900">Infants</p>
+                                                        <p className="font-semibold text-sm text-green-900">Infants</p>
                                                         <p className="text-[10px] text-green-600/80">Under 2</p>
                                                     </div>
-                                                    <div className="font-black text-green-600 bg-white px-3 py-1 rounded-none text-xs border border-green-100 shadow-sm uppercase tracking-widest">
+                                                    <div className="font-bold text-green-600 bg-white px-3 py-1 rounded-none text-xs border border-green-100 shadow-sm uppercase tracking-widest">
                                                         Free
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-8 h-8 rounded-none bg-white border border-slate-200 font-bold hover:bg-slate-100">-</button>
-                                                        <span className="w-4 text-center font-bold text-green-700">{infants}</span>
-                                                        <button type="button" onClick={() => setInfants(infants + 1)} className="w-8 h-8 rounded-none bg-white border border-slate-200 font-bold hover:bg-slate-100">+</button>
+                                                        <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-8 h-8 rounded-none bg-white border border-slate-200 font-semibold hover:bg-slate-100">-</button>
+                                                        <span className="w-4 text-center font-semibold text-green-700">{infants}</span>
+                                                        <button type="button" onClick={() => setInfants(infants + 1)} className="w-8 h-8 rounded-none bg-white border border-slate-200 font-semibold hover:bg-slate-100">+</button>
                                                     </div>
                                                 </div>
                                                 <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
                                                     <div>
-                                                        <p className="font-bold text-sm">Rooms</p>
+                                                        <p className="font-semibold text-sm">Rooms</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <button type="button" onClick={() => setRoomCount(Math.max(1, roomCount - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">-</button>
-                                                        <span className="w-4 text-center font-bold">{roomCount}</span>
-                                                        <button type="button" onClick={() => setRoomCount(roomCount + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">+</button>
+                                                        <button type="button" onClick={() => setRoomCount(Math.max(1, roomCount - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-semibold hover:bg-slate-200">-</button>
+                                                        <span className="w-4 text-center font-semibold">{roomCount}</span>
+                                                        <button type="button" onClick={() => setRoomCount(roomCount + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-semibold hover:bg-slate-200">+</button>
                                                     </div>
                                                 </div>
 
-                                                <button type="button" onClick={() => setShowGuestPicker(false)} className="w-full bg-[#009900] text-white font-bold py-2.5 rounded-none mt-2 hover:bg-[#008000] transition-colors">
+                                                <button type="button" onClick={() => setShowGuestPicker(false)} className="w-full bg-[#009900] text-white font-semibold py-2.5 rounded-none mt-2 hover:bg-[#008000] transition-colors">
                                                     Done
                                                 </button>
                                             </div>
@@ -614,7 +639,18 @@ export default function BookRoomPage() {
                                     </div>
                                 </div>
 
-                                <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2 border-t border-slate-100 pt-6">
+                                {/* 💡 프로모션 자동 적용 시각적 피드백 */}
+                                {initialPromo && bookingData.hotel_code === initialHotel && (
+                                    <div className="bg-green-50 border-l-4 border-[#009900] p-4 mb-6 flex justify-between items-center shadow-sm">
+                                        <div>
+                                            <p className="text-xs font-medium text-green-800 uppercase tracking-widest mb-1">Special Promo Applied!</p>
+                                            <p className="text-lg font-bold text-[#009900]">{initialPromo}</p>
+                                        </div>
+                                        <span className="text-3xl">🎁</span>
+                                    </div>
+                                )}
+
+                                <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 border-t border-slate-100 pt-6">
                                     <span className="text-lg">🛏️</span> Select Room Type & Quantity
                                 </h2>
 
@@ -646,55 +682,55 @@ export default function BookRoomPage() {
                                                     {roomImgRaw ? (
                                                         <img src={roomImgRaw} alt={rt.name} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xs">No Room Image</div>
+                                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-medium text-xs">No Room Image</div>
                                                     )}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
 
                                                     {isSelected && (
-                                                        <div className="absolute top-4 right-4 bg-[#009900] text-white px-3 py-1 rounded-none text-xs font-black shadow-lg animate-pulse">
+                                                        <div className="absolute top-4 right-4 bg-[#009900] text-white px-3 py-1 rounded-none text-xs font-bold shadow-lg animate-pulse">
                                                             {currentQty} Selected
                                                         </div>
                                                     )}
 
-                                                    <h3 className="absolute bottom-4 left-4 font-black text-xl text-white leading-tight pr-4">{rt.name}</h3>
+                                                    <h3 className="absolute bottom-4 left-4 font-bold text-xl text-white leading-tight pr-4">{rt.name}</h3>
                                                 </div>
 
                                                 <div className="p-5 flex-1 flex flex-col">
                                                     <div className="flex flex-wrap gap-2 mb-3 mt-1">
-                                                        {size && <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">📏 {size} {String(size).includes('sq') ? '' : 'sq.m'}</span>}
-                                                        <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">🛏️ {bedType}</span>
-                                                        <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">👥 Max: {maxGuests} Guests</span>
+                                                        {size && <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-semibold shadow-sm">📏 {size} {String(size).includes('sq') ? '' : 'sq.m'}</span>}
+                                                        <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-semibold shadow-sm">🛏️ {bedType}</span>
+                                                        <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-semibold shadow-sm">👥 Max: {maxGuests} Guests</span>
                                                     </div>
 
                                                     {desc && <p className="text-xs text-slate-500 font-medium mb-5 line-clamp-2 leading-relaxed flex-1">{desc}</p>}
 
                                                     <div className="mt-auto pt-4 border-t border-slate-100">
                                                         {availCount !== undefined && (
-                                                            <div className={`mb-2 inline-flex items-center gap-1 border px-2 py-0.5 rounded-none text-[9px] font-black ${availCount > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                                                            <div className={`mb-2 inline-flex items-center gap-1 border px-2 py-0.5 rounded-none text-[9px] font-bold ${availCount > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
                                                                 {availCount > 0 ? `🔥 ${availCount} ROOM(S) LEFT` : '❌ SOLD OUT'}
                                                             </div>
                                                         )}
                                                         <div className="flex justify-between items-end">
                                                             <div>
-                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Price</label>
-                                                                <span className={`font-black text-2xl ${isSelected ? 'text-green-800' : 'text-slate-800'}`}>₱{price.toLocaleString()}</span>
-                                                                <span className="text-[10px] text-slate-400 font-bold ml-1">/ night</span>
+                                                                <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">Price</label>
+                                                                <span className={`font-bold text-2xl ${isSelected ? 'text-green-800' : 'text-slate-800'}`}>₱{price.toLocaleString()}</span>
+                                                                <span className="text-[10px] text-slate-400 font-medium ml-1">/ night</span>
                                                             </div>
 
                                                             {isSelected ? (
                                                                 <div className="flex flex-col items-end gap-1">
                                                                     <span className="text-[9px] font-bold text-[#009900] uppercase tracking-widest">Quantity</span>
                                                                     <div className="flex items-center gap-1.5 bg-white border-2 border-[#009900] rounded-none p-1 shadow-sm">
-                                                                        <button type="button" onClick={() => updateRoomQty(rt.name, -1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-black hover:bg-green-100 flex items-center justify-center transition-colors">-</button>
-                                                                        <span className="w-5 text-center font-black text-green-800 text-sm">{currentQty}</span>
-                                                                        <button type="button" onClick={() => updateRoomQty(rt.name, 1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-black hover:bg-green-100 flex items-center justify-center transition-colors">+</button>
+                                                                        <button type="button" onClick={() => updateRoomQty(rt.name, -1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-bold hover:bg-green-100 flex items-center justify-center transition-colors">-</button>
+                                                                        <span className="w-5 text-center font-bold text-green-800 text-sm">{currentQty}</span>
+                                                                        <button type="button" onClick={() => updateRoomQty(rt.name, 1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-bold hover:bg-green-100 flex items-center justify-center transition-colors">+</button>
                                                                     </div>
                                                                 </div>
                                                             ) : (
                                                                 <button
                                                                     onClick={() => updateRoomQty(rt.name, 1)}
                                                                     disabled={availCount === 0}
-                                                                    className={`px-6 py-2.5 rounded-none text-xs font-black transition-all shadow-md active:scale-95 ${availCount === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-100 text-slate-600 hover:bg-[#009900] hover:text-white'}`}
+                                                                    className={`px-6 py-2.5 rounded-none text-xs font-bold transition-all shadow-md active:scale-95 ${availCount === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-100 text-slate-600 hover:bg-[#009900] hover:text-white'}`}
                                                                 >
                                                                     {availCount === 0 ? 'Sold Out' : 'Select Room'}
                                                                 </button>
@@ -705,7 +741,7 @@ export default function BookRoomPage() {
                                             </div>
                                         );
                                     }) : (
-                                        <p className="text-center text-slate-400 text-xs font-bold py-10 bg-slate-50 rounded-none border border-slate-100">No room types available for this hotel.</p>
+                                        <p className="text-center text-slate-400 text-xs font-medium py-10 bg-slate-50 rounded-none border border-slate-100">No room types available for this hotel.</p>
                                     )}
                                 </div>
                             </div>
@@ -717,7 +753,7 @@ export default function BookRoomPage() {
                         <button
                             onClick={handleNextStep}
                             disabled={!bookingData.hotel_code || totalSelectedRoomCount === 0}
-                            className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-none font-black text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-none font-bold text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Next: Guest Details ➔
                         </button>
@@ -727,19 +763,27 @@ export default function BookRoomPage() {
                 <form onSubmit={handleSubmit} className={`transition-all duration-300 ${step === 2 ? 'block opacity-100' : 'hidden opacity-0'}`}>
                     <div className="bg-slate-800 text-white p-5 rounded-none shadow-md mb-6">
                         <div className="flex justify-between items-start mb-2">
-                            <span className="text-[10px] font-bold text-green-300 uppercase tracking-wider">Your Final Selection</span>
-                            <button type="button" onClick={() => setStep(1)} className="text-xs font-bold underline text-slate-300 hover:text-white">Edit</button>
+                            <span className="text-[10px] font-medium text-green-300 uppercase tracking-wider">Your Final Selection</span>
+                            <button type="button" onClick={() => setStep(1)} className="text-xs font-medium underline text-slate-300 hover:text-white">Edit</button>
                         </div>
-                        <p className="font-black text-xl text-[#009900] leading-tight mb-1.5">{selectedHotelData?.name}</p>
+                        <p className="font-bold text-xl text-[#009900] leading-tight mb-1.5">{selectedHotelData?.name}</p>
 
                         <div className="space-y-1 mb-4">
                             {Object.entries(selectedRooms).map(([name, qty]) => (
-                                <p key={name} className="text-xs text-slate-200 font-bold">✓ {name} × {qty}</p>
+                                <p key={name} className="text-xs text-slate-200 font-medium">✓ {name} × {qty}</p>
                             ))}
                         </div>
 
-                        <p className="text-[10px] font-bold text-slate-400 mb-4">{adults} Adults, {kids} Kids{infants > 0 ? `, ${infants} Infants` : ''} · {totalSelectedRoomCount} Room(s)</p>
-                        <div className="flex items-center gap-2 text-xs font-bold text-green-200 bg-slate-700/50 p-2.5 rounded-none inline-flex">
+                        {/* Step 2 요약 화면에도 프로모 코드 명시 */}
+                        {initialPromo && bookingData.hotel_code === initialHotel && (
+                            <div className="mt-4 mb-4 border border-green-500/50 bg-green-900/30 p-3 rounded-none flex justify-between items-center">
+                                <span className="text-[10px] font-medium text-green-300 uppercase tracking-widest">Promo Code Applied</span>
+                                <span className="text-sm font-bold text-green-400">{initialPromo}</span>
+                            </div>
+                        )}
+
+                        <p className="text-[10px] font-medium text-slate-400 mb-4">{adults} Adults, {kids} Kids{infants > 0 ? `, ${infants} Infants` : ''} · {totalSelectedRoomCount} Room(s)</p>
+                        <div className="flex items-center gap-2 text-xs font-medium text-green-200 bg-slate-700/50 p-2.5 rounded-none inline-flex">
                             <span>{bookingData.check_in_date}</span>
                             <span>➔</span>
                             <span>{bookingData.check_out_date}</span>
@@ -748,46 +792,46 @@ export default function BookRoomPage() {
 
                     <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 mb-6">
                         {isLoggedIn && (
-                            <div className="float-right bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-none border border-green-200 mb-2">
+                            <div className="float-right bg-green-100 text-green-700 text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-none border border-green-200 mb-2">
                                 ✨ Autofilled
                             </div>
                         )}
 
-                        <h2 className="text-sm font-black text-slate-800 mb-5 flex items-center gap-2 mt-1 clear-both">
+                        <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 mt-1 clear-both">
                             <span className="text-lg">👤</span> Guest Information
                         </h2>
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">First Name</label>
+                                    <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">First Name</label>
                                     <input type="text" name="first_name" required value={bookingData.first_name} onChange={handleChange}
-                                        className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="John" />
+                                        className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="John" />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Last Name</label>
+                                    <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Last Name</label>
                                     <input type="text" name="last_name" required value={bookingData.last_name} onChange={handleChange}
-                                        className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="Doe" />
+                                        className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="Doe" />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Email Address</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Email Address</label>
                                 <input type="email" name="email" required value={bookingData.email} onChange={handleChange}
-                                    className={`w-full p-3 border border-slate-300 rounded-none text-sm font-bold focus:border-[#009900] outline-none shadow-sm ${isLoggedIn ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
+                                    className={`w-full p-3 border border-slate-300 rounded-none text-sm font-medium focus:border-[#009900] outline-none shadow-sm ${isLoggedIn ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
                                     readOnly={isLoggedIn} />
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
                                 <input type="tel" name="phone" required value={bookingData.phone} onChange={handleChange}
-                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="09" />
+                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="09" />
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Nationality</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Nationality</label>
                                 <select name="nationality" required value={bookingData.nationality} onChange={handleChange}
-                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none bg-white cursor-pointer shadow-sm">
+                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none bg-white cursor-pointer shadow-sm">
                                     {TOP_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                                     <option disabled>──────────</option>
                                     {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -797,7 +841,7 @@ export default function BookRoomPage() {
                     </div>
 
                     <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 relative overflow-hidden">
-                        <h2 className="text-sm font-black text-slate-800 mb-5 flex items-center gap-2 mt-1">
+                        <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 mt-1">
                             <span className="text-lg">💳</span> Payment Method
                         </h2>
 
@@ -809,7 +853,7 @@ export default function BookRoomPage() {
                                     className={`p-4 border-2 cursor-pointer transition-all flex items-center justify-between
                                         ${paymentMethod === method ? 'border-[#009900] bg-green-50/30' : 'border-slate-200 bg-white hover:border-green-300'}`}
                                 >
-                                    <span className={`font-bold text-sm ${paymentMethod === method ? 'text-green-800' : 'text-slate-700'}`}>
+                                    <span className={`font-semibold text-sm ${paymentMethod === method ? 'text-green-800' : 'text-slate-700'}`}>
                                         {method}
                                     </span>
                                     <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors bg-white ${paymentMethod === method ? 'border-[#009900]' : 'border-slate-300'}`}>
@@ -818,13 +862,13 @@ export default function BookRoomPage() {
                                 </div>
                             ))}
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 mt-4 leading-relaxed">
+                        <p className="text-[10px] font-medium text-slate-400 mt-4 leading-relaxed">
                             * You will be securely redirected to the payment gateway after confirming your booking.
                         </p>
                     </div>
 
                     <div className="pt-8 pb-10">
-                        <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-none font-black text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 active:scale-95">
+                        <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-none font-bold text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 active:scale-95">
                             {isLoading ? (
                                 <><span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span> Processing...</>
                             ) : (
@@ -836,5 +880,17 @@ export default function BookRoomPage() {
 
             </div>
         </div>
+    );
+}
+
+export default function BookRoomPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-[#009900]">
+                Loading Booking...
+            </div>
+        }>
+            <BookRoomContent />
+        </Suspense>
     );
 }
