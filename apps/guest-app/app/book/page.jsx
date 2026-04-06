@@ -87,6 +87,7 @@ export default function BookRoomPage() {
     const [infants, setInfants] = useState(0);
     const [showGuestPicker, setShowGuestPicker] = useState(false);
 
+    // 💡 [멀티 선택 장바구니 상태] 단일 문자열이 아닌, 객실명과 수량을 담는 객체입니다.
     const [selectedRooms, setSelectedRooms] = useState({});
 
     const [bookingData, setBookingData] = useState({
@@ -206,17 +207,20 @@ export default function BookRoomPage() {
         }
     };
 
+    // 💡 [수량 조절 로직 복구] 장바구니에 담긴 객실 수량을 변경합니다.delta는 +1 또는 -1입니다.
     const updateRoomQty = (roomName, delta) => {
         setSelectedRooms(prev => {
             const currentQty = prev[roomName] || 0;
             const newQty = currentQty + delta;
 
+            // 수량이 0 이하로 내려가면 장바구니에서 해당 객실을 삭제합니다.
             if (newQty <= 0) {
                 const newState = { ...prev };
                 delete newState[roomName];
                 return newState;
             }
 
+            // 수량이 1 이상이면 업데이트합니다.
             return { ...prev, [roomName]: newQty };
         });
     };
@@ -225,6 +229,7 @@ export default function BookRoomPage() {
         setBookingData({ ...bookingData, [e.target.name]: e.target.value });
     };
 
+    // 💡 총 선택된 방의 개수를 계산합니다.
     const totalSelectedRoomCount = Object.values(selectedRooms).reduce((acc, cur) => acc + cur, 0);
 
     const handleNextStep = () => {
@@ -242,6 +247,7 @@ export default function BookRoomPage() {
         try {
             const bookingPayloads = [];
 
+            // 💡 [멀티 예약 생성] 장바구니에 담긴 객실 종류와 수량만큼 반복해서 예약 데이터를 쪼개 만듭니다.
             Object.entries(selectedRooms).forEach(([roomName, qty]) => {
                 for (let i = 0; i < qty; i++) {
                     bookingPayloads.push({
@@ -263,6 +269,7 @@ export default function BookRoomPage() {
                 }
             });
 
+            // 생성된 여러 개의 예약을 한 번에 서버로 보냅니다.
             const response = await axios.post('https://api.hotelnplus.com/api/reservations/batch-create', {
                 bookings: bookingPayloads
             });
@@ -306,6 +313,9 @@ export default function BookRoomPage() {
 
             <div className="p-4 md:p-6 space-y-6">
 
+                {/* ======================================================= */}
+                {/* STEP 1: Find Hotels */}
+                {/* ======================================================= */}
                 <div className={`transition-all duration-300 ${step === 1 ? 'block opacity-100' : 'hidden opacity-0'}`}>
 
                     <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
@@ -340,6 +350,7 @@ export default function BookRoomPage() {
                         </div>
                     </div>
 
+                    {/* 가로 슬라이드 호텔 카드 */}
                     {selectedCity && filteredHotels.length > 0 && (
                         <div className="mb-6">
                             <h2 className="text-sm font-black text-slate-800 mb-3 pl-1 flex items-center justify-between">
@@ -377,7 +388,7 @@ export default function BookRoomPage() {
                                                 )}
 
                                                 <div className="absolute bottom-3 left-4 right-4">
-                                                    <p className="text-[9px] font-black text-green-300 uppercase tracking-widest mb-0.5">Partner Hotel</p>
+                                                    {/* 💡 [첨부사진 1 요청사항 반영] "Partner Hotel" 문구 삭제 */}
                                                     <h3 className="font-black text-white text-lg leading-tight truncate">{h.name}</h3>
                                                 </div>
                                             </div>
@@ -391,9 +402,11 @@ export default function BookRoomPage() {
                         </div>
                     )}
 
+                    {/* 호텔 상세 소개 및 객실 선택 */}
                     {bookingData.hotel_code && selectedHotelData && (
                         <div className="animate-fade-in-up">
 
+                            {/* 호텔 슬라이더 및 기본 정보 */}
                             <div className="bg-slate-50 rounded-none border border-slate-200 mb-6 shadow-inner overflow-hidden">
                                 <CrossfadeSlider images={selectedHotelData.app_gallery || []} />
 
@@ -460,6 +473,7 @@ export default function BookRoomPage() {
                                 </div>
                             </div>
 
+                            {/* Dates & Guests 선택 영역 */}
                             <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
                                 <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
                                     <span className="text-lg">📅</span> Dates & Guests
@@ -491,6 +505,7 @@ export default function BookRoomPage() {
                                         </div>
                                     </div>
 
+                                    {/* 개별 웹에서 이식한 "Guests & Rooms" 선택기 */}
                                     <div className="relative z-20">
                                         <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Guests & Summary</label>
                                         <div
@@ -557,6 +572,7 @@ export default function BookRoomPage() {
                                 <div className="space-y-4">
                                     {roomTypes.length > 0 ? roomTypes.map(rt => {
 
+                                        // 💡 [첨부사진 2 요청사항 반영] 이 방이 장바구니에 담겨있는지 확인합니다.
                                         const currentQty = selectedRooms[rt.name] || 0;
                                         const isSelected = currentQty > 0;
 
@@ -610,6 +626,7 @@ export default function BookRoomPage() {
                                                             <span className="text-[10px] text-slate-400 font-bold ml-1">/ night</span>
                                                         </div>
 
+                                                        {/* 💡 [첨부사진 2 요청사항 반영] 수량 조절 버튼(+, -)을 복구했습니다. */}
                                                         {isSelected ? (
                                                             <div className="flex flex-col items-end gap-1">
                                                                 <span className="text-[9px] font-bold text-[#009900] uppercase tracking-widest">Select Q'ty</span>
