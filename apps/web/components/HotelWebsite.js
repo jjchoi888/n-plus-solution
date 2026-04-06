@@ -150,17 +150,49 @@ export default function HotelWebsite({ domain }) {
     const [selectedPromo, setSelectedPromo] = useState(null);
     const [appliedPromo, setAppliedPromo] = useState(null);
 
-    // hotelCode 추출기
+    // 💡 독립 도메인 대응형 hotelCode 추출기
     const getEffectiveHotelCode = () => {
         if (typeof window === 'undefined') return 'sample001';
+
         const params = new URLSearchParams(window.location.search);
         const hotelParam = params.get('hotel');
+
+        // 1순위: URL 파라미터 우선 (?hotel=myhotel)
         if (hotelParam) return hotelParam;
 
         const hostname = window.location.hostname;
+
+        // 2순위: 로컬 테스트 환경
         if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
             return 'sample001';
         }
+
+        // 3순위: [핵심] 독립 도메인 판별 (Domain Mapping)
+        // 실제 운영 시에는 이 부분을 백엔드 API에서 받아오거나(추천), 
+        // 아래와 같이 매핑 테이블을 관리합니다.
+        const domainMap = {
+            'grandhotel.com': 'grand_001',
+            'www.grandhotel.com': 'grand_001',
+            'oceanview.ph': 'ocean_v',
+            'hotel-n-plus.vercel.app': 'sample001'
+        };
+
+        if (domainMap[hostname]) {
+            return domainMap[hostname];
+        }
+
+        // 4순위: 만약 매핑 테이블에 없다면 서브도메인 방식(hotelnplus.com)으로 시도
+        if (hostname.includes('hotelnplus.com')) {
+            const parts = hostname.split('.');
+            const subdomain = parts[0].toLowerCase();
+            const systemReserved = ['app', 'manage', 'hq', 'www', 'api'];
+
+            if (!systemReserved.includes(subdomain)) {
+                return subdomain;
+            }
+        }
+
+        // 최종 기본값
         return 'sample001';
     };
 
