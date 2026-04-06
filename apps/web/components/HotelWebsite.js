@@ -524,14 +524,14 @@ export default function HotelWebsite({ domain }) {
                         {hasSearched && (
                             <div className="w-full max-w-5xl relative z-10 mt-8">
                                 <ErrorBoundary>
-                                    {/* 💡 [수정] source="Hotel Web" 추가 */}
+                                    {/* 💡 [완벽 해결] searchData 대신 현재 파일에 존재하는 진짜 state 변수들을 연결합니다! */}
                                     <RoomList
-                                        hotelCode={searchData.destination}
+                                        hotelCode={hotelCode}
                                         lang={lang}
-                                        checkIn={searchData.checkIn}
-                                        checkOut={searchData.checkOut}
-                                        adults={searchData.adults}
-                                        kids={searchData.kids}
+                                        checkIn={checkIn}
+                                        checkOut={checkOut}
+                                        adults={adults}
+                                        kids={kids}
                                         source="Hotel Web"
                                     />
                                 </ErrorBoundary>
