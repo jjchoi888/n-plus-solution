@@ -85,10 +85,12 @@ export default function BookRoomPage() {
     const [adults, setAdults] = useState(2);
     const [kids, setKids] = useState(0);
     const [infants, setInfants] = useState(0);
+    const [roomCount, setRoomCount] = useState(1);
     const [showGuestPicker, setShowGuestPicker] = useState(false);
 
-    // 💡 [멀티 선택 장바구니 상태] 단일 문자열이 아닌, 객실명과 수량을 담는 객체입니다.
     const [selectedRooms, setSelectedRooms] = useState({});
+    const [availability, setAvailability] = useState({});
+    const [paymentMethod, setPaymentMethod] = useState('Credit / Debit Card');
 
     const [bookingData, setBookingData] = useState({
         hotel_code: '',
@@ -152,6 +154,30 @@ export default function BookRoomPage() {
             .catch(err => console.error("Failed to fetch hotels:", err));
     }, []);
 
+    useEffect(() => {
+        const fetchAvailability = async () => {
+            if (!bookingData.hotel_code || !bookingData.check_in_date || !bookingData.check_out_date || roomTypes.length === 0) {
+                setAvailability({});
+                return;
+            }
+
+            const newAvail = {};
+            await Promise.all(roomTypes.map(async (rt) => {
+                try {
+                    const res = await axios.get(`https://api.hotelnplus.com/api/public/check-availability?hotel=${bookingData.hotel_code}&type=${rt.name}&check_in=${bookingData.check_in_date}&check_out=${bookingData.check_out_date}`);
+                    if (res.data && res.data.count !== undefined) {
+                        newAvail[rt.name] = res.data.count;
+                    }
+                } catch (error) {
+                    console.error("Availability error:", error);
+                }
+            }));
+            setAvailability(newAvail);
+        };
+
+        fetchAvailability();
+    }, [bookingData.hotel_code, bookingData.check_in_date, bookingData.check_out_date, roomTypes]);
+
     const handleProvinceChange = (e) => {
         const prov = e.target.value;
         setSelectedProvince(prov);
@@ -207,20 +233,23 @@ export default function BookRoomPage() {
         }
     };
 
-    // 💡 [수량 조절 로직 복구] 장바구니에 담긴 객실 수량을 변경합니다.delta는 +1 또는 -1입니다.
     const updateRoomQty = (roomName, delta) => {
+        const maxAvailable = availability[roomName];
+
         setSelectedRooms(prev => {
             const currentQty = prev[roomName] || 0;
-            const newQty = currentQty + delta;
+            let newQty = currentQty + delta;
 
-            // 수량이 0 이하로 내려가면 장바구니에서 해당 객실을 삭제합니다.
+            if (maxAvailable !== undefined && newQty > maxAvailable) {
+                newQty = maxAvailable;
+            }
+
             if (newQty <= 0) {
                 const newState = { ...prev };
                 delete newState[roomName];
                 return newState;
             }
 
-            // 수량이 1 이상이면 업데이트합니다.
             return { ...prev, [roomName]: newQty };
         });
     };
@@ -229,7 +258,6 @@ export default function BookRoomPage() {
         setBookingData({ ...bookingData, [e.target.name]: e.target.value });
     };
 
-    // 💡 총 선택된 방의 개수를 계산합니다.
     const totalSelectedRoomCount = Object.values(selectedRooms).reduce((acc, cur) => acc + cur, 0);
 
     const handleNextStep = () => {
@@ -246,10 +274,14 @@ export default function BookRoomPage() {
 
         try {
             const bookingPayloads = [];
+            let totalAmount = 0;
 
-            // 💡 [멀티 예약 생성] 장바구니에 담긴 객실 종류와 수량만큼 반복해서 예약 데이터를 쪼개 만듭니다.
             Object.entries(selectedRooms).forEach(([roomName, qty]) => {
+                const matchedRoom = roomTypes.find(r => r.name === roomName);
+                const price = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
+
                 for (let i = 0; i < qty; i++) {
+                    totalAmount += price;
                     bookingPayloads.push({
                         hotel_code: bookingData.hotel_code,
                         channel: 'Guest App',
@@ -264,21 +296,38 @@ export default function BookRoomPage() {
                         nationality: bookingData.nationality,
                         adults: adults,
                         kids: kids,
-                        infants: infants
+                        infants: infants,
+                        payment_method: paymentMethod
                     });
                 }
             });
 
-            // 생성된 여러 개의 예약을 한 번에 서버로 보냅니다.
-            const response = await axios.post('https://api.hotelnplus.com/api/reservations/batch-create', {
+            const response = await axios.post('https://api.hotelnplus.com/api/public/reservations/batch-create', {
                 bookings: bookingPayloads
             });
 
             if (response.data.success || response.status === 200 || response.status === 201) {
-                alert("Booking confirmed successfully! We look forward to your stay.");
-                window.location.href = '/';
+                const selectedHotel = allHotels.find(h => h.code === bookingData.hotel_code);
+                const reqId = 'REQ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+                const newBookingHistory = {
+                    id: reqId,
+                    hotelName: selectedHotel?.name || bookingData.hotel_code,
+                    checkIn: bookingData.check_in_date,
+                    checkOut: bookingData.check_out_date,
+                    rooms: selectedRooms,
+                    totalAmount: totalAmount,
+                    status: 'Pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                const existingHistory = JSON.parse(localStorage.getItem('nplus_my_bookings') || '[]');
+                localStorage.setItem('nplus_my_bookings', JSON.stringify([newBookingHistory, ...existingHistory]));
+
+                alert("Booking request submitted and payment processed! Awaiting hotel confirmation.");
+                window.location.href = '/profile';
             } else {
-                alert("Failed to confirm booking. Please try again.");
+                alert("Failed to submit booking request. Please try again.");
             }
         } catch (error) {
             console.error("Booking Error:", error);
@@ -291,7 +340,7 @@ export default function BookRoomPage() {
     const selectedHotelData = allHotels.find(h => h.code === bookingData.hotel_code);
 
     return (
-        <div className="pb-24 font-sans bg-slate-50 min-h-screen relative selection:bg-[#009900]/20" onClick={() => setShowGuestPicker(false)}>
+        <div className="pb-40 font-sans bg-slate-50 min-h-screen relative selection:bg-[#009900]/20" onClick={() => setShowGuestPicker(false)}>
             <style jsx global>{`
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -313,9 +362,6 @@ export default function BookRoomPage() {
 
             <div className="p-4 md:p-6 space-y-6">
 
-                {/* ======================================================= */}
-                {/* STEP 1: Find Hotels */}
-                {/* ======================================================= */}
                 <div className={`transition-all duration-300 ${step === 1 ? 'block opacity-100' : 'hidden opacity-0'}`}>
 
                     <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
@@ -350,7 +396,6 @@ export default function BookRoomPage() {
                         </div>
                     </div>
 
-                    {/* 가로 슬라이드 호텔 카드 */}
                     {selectedCity && filteredHotels.length > 0 && (
                         <div className="mb-6">
                             <h2 className="text-sm font-black text-slate-800 mb-3 pl-1 flex items-center justify-between">
@@ -361,7 +406,6 @@ export default function BookRoomPage() {
                             <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar px-1">
                                 {filteredHotels.map(h => {
                                     const isSelected = bookingData.hotel_code === h.code;
-
                                     const cardImgRaw = (h.app_gallery && h.app_gallery.length > 0) ? h.app_gallery[0] : h.image_url;
                                     const cardImgUrl = typeof cardImgRaw === 'object' ? (cardImgRaw?.url || cardImgRaw?.src) : cardImgRaw;
 
@@ -388,7 +432,6 @@ export default function BookRoomPage() {
                                                 )}
 
                                                 <div className="absolute bottom-3 left-4 right-4">
-                                                    {/* 💡 [첨부사진 1 요청사항 반영] "Partner Hotel" 문구 삭제 */}
                                                     <h3 className="font-black text-white text-lg leading-tight truncate">{h.name}</h3>
                                                 </div>
                                             </div>
@@ -402,11 +445,9 @@ export default function BookRoomPage() {
                         </div>
                     )}
 
-                    {/* 호텔 상세 소개 및 객실 선택 */}
                     {bookingData.hotel_code && selectedHotelData && (
                         <div className="animate-fade-in-up">
 
-                            {/* 호텔 슬라이더 및 기본 정보 */}
                             <div className="bg-slate-50 rounded-none border border-slate-200 mb-6 shadow-inner overflow-hidden">
                                 <CrossfadeSlider images={selectedHotelData.app_gallery || []} />
 
@@ -421,7 +462,7 @@ export default function BookRoomPage() {
 
                                         {(() => {
                                             let finalMapUrl = '';
-                                            const rawMapData = selectedHotelData.map_url || selectedHotelData.map_embed_url || '';
+                                            const rawMapData = String(selectedHotelData.map_url || selectedHotelData.map_embed_url || '');
 
                                             if (rawMapData.includes('<iframe') || rawMapData.includes('src=')) {
                                                 const srcMatch = rawMapData.match(/src=["'](.*?)["']/);
@@ -473,7 +514,6 @@ export default function BookRoomPage() {
                                 </div>
                             </div>
 
-                            {/* Dates & Guests 선택 영역 */}
                             <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
                                 <h2 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
                                     <span className="text-lg">📅</span> Dates & Guests
@@ -505,7 +545,6 @@ export default function BookRoomPage() {
                                         </div>
                                     </div>
 
-                                    {/* 개별 웹에서 이식한 "Guests & Rooms" 선택기 */}
                                     <div className="relative z-20">
                                         <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Guests & Summary</label>
                                         <div
@@ -556,6 +595,16 @@ export default function BookRoomPage() {
                                                         <button type="button" onClick={() => setInfants(infants + 1)} className="w-8 h-8 rounded-none bg-white border border-slate-200 font-bold hover:bg-slate-100">+</button>
                                                     </div>
                                                 </div>
+                                                <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
+                                                    <div>
+                                                        <p className="font-bold text-sm">Rooms</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <button type="button" onClick={() => setRoomCount(Math.max(1, roomCount - 1))} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">-</button>
+                                                        <span className="w-4 text-center font-bold">{roomCount}</span>
+                                                        <button type="button" onClick={() => setRoomCount(roomCount + 1)} className="w-8 h-8 rounded-none bg-slate-100 font-bold hover:bg-slate-200">+</button>
+                                                    </div>
+                                                </div>
 
                                                 <button type="button" onClick={() => setShowGuestPicker(false)} className="w-full bg-[#009900] text-white font-bold py-2.5 rounded-none mt-2 hover:bg-[#008000] transition-colors">
                                                     Done
@@ -572,9 +621,9 @@ export default function BookRoomPage() {
                                 <div className="space-y-4">
                                     {roomTypes.length > 0 ? roomTypes.map(rt => {
 
-                                        // 💡 [첨부사진 2 요청사항 반영] 이 방이 장바구니에 담겨있는지 확인합니다.
                                         const currentQty = selectedRooms[rt.name] || 0;
                                         const isSelected = currentQty > 0;
+                                        const availCount = availability[rt.name];
 
                                         let config = {};
                                         try { config = typeof rt.roomConfig === 'string' ? JSON.parse(rt.roomConfig) : (rt.roomConfig || {}); } catch (e) { }
@@ -612,38 +661,45 @@ export default function BookRoomPage() {
 
                                                 <div className="p-5 flex-1 flex flex-col">
                                                     <div className="flex flex-wrap gap-2 mb-3 mt-1">
-                                                        {size && <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">📏 {size} {size.includes('sq') ? '' : 'sq.m'}</span>}
+                                                        {size && <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">📏 {size} {String(size).includes('sq') ? '' : 'sq.m'}</span>}
                                                         <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">🛏️ {bedType}</span>
                                                         <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-bold shadow-sm">👥 Max: {maxGuests} Guests</span>
                                                     </div>
 
                                                     {desc && <p className="text-xs text-slate-500 font-medium mb-5 line-clamp-2 leading-relaxed flex-1">{desc}</p>}
 
-                                                    <div className="flex justify-between items-end mt-auto pt-4 border-t border-slate-100">
-                                                        <div>
-                                                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Price</label>
-                                                            <span className={`font-black text-2xl ${isSelected ? 'text-green-800' : 'text-slate-800'}`}>₱{price.toLocaleString()}</span>
-                                                            <span className="text-[10px] text-slate-400 font-bold ml-1">/ night</span>
-                                                        </div>
-
-                                                        {/* 💡 [첨부사진 2 요청사항 반영] 수량 조절 버튼(+, -)을 복구했습니다. */}
-                                                        {isSelected ? (
-                                                            <div className="flex flex-col items-end gap-1">
-                                                                <span className="text-[9px] font-bold text-[#009900] uppercase tracking-widest">Select Q'ty</span>
-                                                                <div className="flex items-center gap-1.5 bg-white border-2 border-[#009900] rounded-none p-1 shadow-sm">
-                                                                    <button type="button" onClick={() => updateRoomQty(rt.name, -1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-black hover:bg-green-100 flex items-center justify-center transition-colors">-</button>
-                                                                    <span className="w-5 text-center font-black text-green-800 text-sm">{currentQty}</span>
-                                                                    <button type="button" onClick={() => updateRoomQty(rt.name, 1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-black hover:bg-green-100 flex items-center justify-center transition-colors">+</button>
-                                                                </div>
+                                                    <div className="mt-auto pt-4 border-t border-slate-100">
+                                                        {availCount !== undefined && (
+                                                            <div className={`mb-2 inline-flex items-center gap-1 border px-2 py-0.5 rounded-none text-[9px] font-black ${availCount > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                                                                {availCount > 0 ? `🔥 ${availCount} ROOM(S) LEFT` : '❌ SOLD OUT'}
                                                             </div>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => updateRoomQty(rt.name, 1)}
-                                                                className="px-6 py-2.5 rounded-none text-xs font-black transition-all shadow-md bg-slate-100 text-slate-600 hover:bg-[#009900] hover:text-white active:scale-95"
-                                                            >
-                                                                Select Room
-                                                            </button>
                                                         )}
+                                                        <div className="flex justify-between items-end">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Price</label>
+                                                                <span className={`font-black text-2xl ${isSelected ? 'text-green-800' : 'text-slate-800'}`}>₱{price.toLocaleString()}</span>
+                                                                <span className="text-[10px] text-slate-400 font-bold ml-1">/ night</span>
+                                                            </div>
+
+                                                            {isSelected ? (
+                                                                <div className="flex flex-col items-end gap-1">
+                                                                    <span className="text-[9px] font-bold text-[#009900] uppercase tracking-widest">Quantity</span>
+                                                                    <div className="flex items-center gap-1.5 bg-white border-2 border-[#009900] rounded-none p-1 shadow-sm">
+                                                                        <button type="button" onClick={() => updateRoomQty(rt.name, -1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-black hover:bg-green-100 flex items-center justify-center transition-colors">-</button>
+                                                                        <span className="w-5 text-center font-black text-green-800 text-sm">{currentQty}</span>
+                                                                        <button type="button" onClick={() => updateRoomQty(rt.name, 1)} className="w-7 h-7 rounded-none bg-green-50 text-green-700 font-black hover:bg-green-100 flex items-center justify-center transition-colors">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => updateRoomQty(rt.name, 1)}
+                                                                    disabled={availCount === 0}
+                                                                    className={`px-6 py-2.5 rounded-none text-xs font-black transition-all shadow-md active:scale-95 ${availCount === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-100 text-slate-600 hover:bg-[#009900] hover:text-white'}`}
+                                                                >
+                                                                    {availCount === 0 ? 'Sold Out' : 'Select Room'}
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -657,20 +713,19 @@ export default function BookRoomPage() {
                         </div>
                     )}
 
-                    <button
-                        onClick={handleNextStep}
-                        disabled={!bookingData.hotel_code || totalSelectedRoomCount === 0}
-                        className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-none font-black text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Next: Guest Details ➔
-                    </button>
+                    <div className="pt-4">
+                        <button
+                            onClick={handleNextStep}
+                            disabled={!bookingData.hotel_code || totalSelectedRoomCount === 0}
+                            className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-none font-black text-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next: Guest Details ➔
+                        </button>
+                    </div>
                 </div>
 
-                {/* ======================================================= */}
-                {/* STEP 2: Guest Information */}
-                {/* ======================================================= */}
                 <form onSubmit={handleSubmit} className={`transition-all duration-300 ${step === 2 ? 'block opacity-100' : 'hidden opacity-0'}`}>
-                    <div className="bg-slate-800 text-white p-5 rounded-none mb-6 shadow-md">
+                    <div className="bg-slate-800 text-white p-5 rounded-none shadow-md mb-6">
                         <div className="flex justify-between items-start mb-2">
                             <span className="text-[10px] font-bold text-green-300 uppercase tracking-wider">Your Final Selection</span>
                             <button type="button" onClick={() => setStep(1)} className="text-xs font-bold underline text-slate-300 hover:text-white">Edit</button>
@@ -691,14 +746,14 @@ export default function BookRoomPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 relative overflow-hidden mb-28">
+                    <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 mb-6">
                         {isLoggedIn && (
-                            <div className="absolute top-0 right-0 bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-none border-l border-b border-green-200">
+                            <div className="float-right bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-none border border-green-200 mb-2">
                                 ✨ Autofilled
                             </div>
                         )}
 
-                        <h2 className="text-sm font-black text-slate-800 mb-5 flex items-center gap-2 mt-1">
+                        <h2 className="text-sm font-black text-slate-800 mb-5 flex items-center gap-2 mt-1 clear-both">
                             <span className="text-lg">👤</span> Guest Information
                         </h2>
 
@@ -726,7 +781,7 @@ export default function BookRoomPage() {
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
                                 <input type="tel" name="phone" required value={bookingData.phone} onChange={handleChange}
-                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="+63 917 123 4567" />
+                                    className="w-full p-3 border border-slate-300 rounded-none text-sm font-bold text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="09" />
                             </div>
 
                             <div>
@@ -741,16 +796,41 @@ export default function BookRoomPage() {
                         </div>
                     </div>
 
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-50">
-                        <div className="max-w-md mx-auto">
-                            <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-none font-black text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 active:scale-95">
-                                {isLoading ? (
-                                    <><span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span> Processing...</>
-                                ) : (
-                                    'Confirm Booking ➔'
-                                )}
-                            </button>
+                    <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 relative overflow-hidden">
+                        <h2 className="text-sm font-black text-slate-800 mb-5 flex items-center gap-2 mt-1">
+                            <span className="text-lg">💳</span> Payment Method
+                        </h2>
+
+                        <div className="space-y-3">
+                            {['Credit / Debit Card', 'GCash', 'Maya'].map((method) => (
+                                <div
+                                    key={method}
+                                    onClick={() => setPaymentMethod(method)}
+                                    className={`p-4 border-2 cursor-pointer transition-all flex items-center justify-between
+                                        ${paymentMethod === method ? 'border-[#009900] bg-green-50/30' : 'border-slate-200 bg-white hover:border-green-300'}`}
+                                >
+                                    <span className={`font-bold text-sm ${paymentMethod === method ? 'text-green-800' : 'text-slate-700'}`}>
+                                        {method}
+                                    </span>
+                                    <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors bg-white ${paymentMethod === method ? 'border-[#009900]' : 'border-slate-300'}`}>
+                                        {paymentMethod === method && <div className="w-2.5 h-2.5 bg-[#009900]"></div>}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                        <p className="text-[10px] font-bold text-slate-400 mt-4 leading-relaxed">
+                            * You will be securely redirected to the payment gateway after confirming your booking.
+                        </p>
+                    </div>
+
+                    <div className="pt-8 pb-10">
+                        <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-none font-black text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 active:scale-95">
+                            {isLoading ? (
+                                <><span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span> Processing...</>
+                            ) : (
+                                'Confirm Booking ➔'
+                            )}
+                        </button>
                     </div>
                 </form>
 
