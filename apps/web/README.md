@@ -8,7 +8,7 @@
 
 게스트 앱 (Membership): https://app.hotelnplus.com
 
-호텔 PMS (B2B 운영): https://manage.hotelnplus.com
+호텔 PMS (B2B 운영): https://pms.hotelnplus.com
 
 본사 포털 (Super Admin): https://hq.hotelnplus.com
 
