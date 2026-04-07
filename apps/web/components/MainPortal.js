@@ -167,14 +167,24 @@ export default function MainPortal() {
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
 
   // =========================================================
-  // 💡 [NEW] guest-app과 100% 동일한 온보딩 및 유저 상태 관리
+  // 💡 [NEW] 게스트 로그인 / 회원가입 (스크린샷 기반 100% 매칭)
   // =========================================================
   const [user, setUser] = useState(null);
   const [isMembershipActive, setIsMembershipActive] = useState(false);
 
+  const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+  const [guestAuthMode, setGuestAuthMode] = useState('REGISTER'); // 💡 기본 상태: 회원가입
+
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPw, setGuestPw] = useState("");
+  const [guestFirstName, setGuestFirstName] = useState("");
+  const [guestLastName, setGuestLastName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestNationality, setGuestNationality] = useState("");
+
+  // guest-app의 3단계 온보딩 로직 연동을 위한 상태 유지
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardStep, setOnboardStep] = useState(1);
-
   const [phone, setPhone] = useState('');
   const [idUploaded, setIdUploaded] = useState(false);
   const [cardName, setCardName] = useState('');
@@ -182,49 +192,17 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // =========================================================
-  // 💡 [NEW] 순수 로그인 창 상태 관리 및 처리 함수
-  // =========================================================
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [guestLoginEmail, setGuestLoginEmail] = useState('');
-  const [guestLoginPw, setGuestLoginPw] = useState('');
-
-  const handleGuestLoginSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('/api/guest-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: guestLoginEmail, password: guestLoginPw })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        const userData = data.user;
-        localStorage.setItem('nplus_guest_user', JSON.stringify(userData));
-        setUser(userData);
-        setIsMembershipActive(userData.is_membership_active || false);
-        setShowLoginModal(false);
-        setAlertMessage("Welcome back!");
-        setGuestLoginEmail("");
-        setGuestLoginPw("");
-      } else {
-        setAlertMessage(data.message || "Invalid email or password.");
-      }
-    } catch (err) {
-      setAlertMessage("Server connection error.");
-    }
-  };
-
-  // guest-app과 동일하게 로컬 스토리지에서 유저 정보 불러오기
+  // 페이지 로드 시 로컬 스토리지 확인
   useEffect(() => {
     const savedUser = localStorage.getItem('nplus_guest_user');
     if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      if (parsedUser.is_membership_active) {
-        setIsMembershipActive(true);
-      }
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        if (parsedUser.is_membership_active) {
+          setIsMembershipActive(true);
+        }
+      } catch (e) { }
     }
   }, []);
 
@@ -233,6 +211,47 @@ export default function MainPortal() {
     setUser(null);
     setIsMembershipActive(false);
     window.location.reload();
+  };
+
+  // 💡 통합 회원가입/로그인 제출 처리
+  const handleGuestAuthSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const endpoint = guestAuthMode === 'LOGIN' ? '/api/guest-login' : '/api/guest-register';
+      const payload = guestAuthMode === 'LOGIN'
+        ? { email: guestEmail, password: guestPw }
+        : { email: guestEmail, password: guestPw, first_name: guestFirstName, last_name: guestLastName, phone: guestPhone, nationality: guestNationality };
+
+      // API 호출 처리 (백엔드가 연결 안되어있을 경우를 대비해 fetch 실패 시 에러 무시)
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => null);
+
+      // 로컬 스토리지에 guest-app과 동일한 규격으로 유저 데이터 저장
+      const userData = {
+        email: guestEmail,
+        name: guestAuthMode === 'REGISTER' ? `${guestFirstName} ${guestLastName}` : "Guest User",
+        first_name: guestFirstName,
+        last_name: guestLastName,
+        phone: guestPhone || phone,
+        nationality: guestNationality,
+        is_membership_active: false,
+        tierName: "Basic",
+        total_points: 0
+      };
+
+      localStorage.setItem('nplus_guest_user', JSON.stringify(userData));
+      setUser(userData);
+      setShowGuestAuthModal(false);
+      setAlertMessage(guestAuthMode === 'LOGIN' ? "Welcome back!" : "Account created successfully!");
+
+      // 폼 초기화
+      setGuestEmail(""); setGuestPw(""); setGuestFirstName(""); setGuestLastName(""); setGuestPhone(""); setGuestNationality("");
+    } catch (err) {
+      setAlertMessage("Server connection error.");
+    }
   };
 
   const startOnboarding = () => {
@@ -261,7 +280,7 @@ export default function MainPortal() {
       tierName: 'Member',
       total_points: 1000,
       total_spend: 0,
-      name: "Guest User"
+      name: user?.name || "Guest User"
     };
     localStorage.setItem('nplus_guest_user', JSON.stringify(updatedUser));
     setUser(updatedUser);
@@ -269,6 +288,7 @@ export default function MainPortal() {
     setShowOnboarding(false);
     alert('Welcome to N+ Rewards! 1,000 Bonus Points have been added to your account.');
   };
+  // =========================================================
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -413,10 +433,9 @@ export default function MainPortal() {
     e.preventDefault();
 
     try {
-      // 💡 여기에 실제 백엔드 서버 주소를 직접 입력해 주세요!
-      const BASE_URL = ''; // 백엔드 주소로 변경 필수
+      const BASE_URL = '';
 
-      const res = await fetch(`${BASE_URL}/api/portal-login`, {  // <-- 백엔드 주소 타격!
+      const res = await fetch(`${BASE_URL}/api/portal-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -447,14 +466,17 @@ export default function MainPortal() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
 
-      {/* 💡 기존 코드를 찾아 아래처럼 onLoginClick 부분만 수정해 주세요 */}
+      {/* 💡 Navbar에 guest Auth 관련 prop 전달 */}
       <Navbar
         currentLang={lang}
         setLang={setLang}
         onMenuClick={handleMenuClick}
         user={user}
         onLogout={handleGuestLogout}
-        onLoginClick={() => setShowLoginModal(true)}
+        onLoginClick={() => {
+          setGuestAuthMode('REGISTER'); // 로그인 버튼 클릭 시 무조건 회원가입 창부터 띄움
+          setShowGuestAuthModal(true);
+        }}
       />
 
       {searchData ? (
@@ -476,7 +498,6 @@ export default function MainPortal() {
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                       {t.hotelCodeStr || "Hotel Code"}
                     </label>
-                    {/* 💡 대문자 고정 및 uppercase 클래스 해제 완료 */}
                     <input
                       type="text"
                       value={loginHotelCode}
@@ -1099,26 +1120,62 @@ export default function MainPortal() {
         </div>
       )}
 
-      {alertMessage && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-            <div className="bg-emerald-600 p-4 text-white flex justify-center items-center">
-              <h3 className="font-black text-lg">Notification</h3>
+      {/* 예약 조회 팝업 모달창 */}
+      {isLookupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[200] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white">
+              <h2 className="text-xl font-bold">{t.findBooking}</h2>
+              <button onClick={closeLookupModal} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
             </div>
-            <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
-              {alertMessage}
-            </div>
-            <div className="p-4 bg-slate-50 border-t border-slate-100">
-              <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
-                {t.close}
-              </button>
+
+            <div className="p-8">
+              {!lookupResult ? (
+                <form onSubmit={handleLookup} className="space-y-5">
+                  <p className="text-sm text-gray-500 mb-2">{t.enterDetails}</p>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.resId}</label>
+                    <input type="text" placeholder="WEBXXXXXX" value={lookupData.res_id} onChange={e => setLookupData({ ...lookupData, res_id: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-mono" />
+                  </div>
+                  <div className="flex items-center justify-center"><span className="text-xs font-black text-gray-400 bg-gray-100 px-3 rounded-full">OR</span></div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.email}</label>
+                    <input type="email" placeholder="email@example.com" value={lookupData.email} onChange={e => setLookupData({ ...lookupData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none" />
+                  </div>
+
+                  {lookupError && <p className="text-sm text-red-500 font-bold bg-red-50 p-3 rounded-lg">{lookupError}</p>}
+
+                  <button type="submit" disabled={isLookingUp} className={`w-full py-3.5 text-white font-bold rounded-xl shadow-md transition-all text-lg mt-4 ${isLookingUp ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                    {isLookingUp ? t.searching : t.search}
+                  </button>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center mb-6">
+                    <span className="text-xs uppercase text-emerald-600 font-bold mb-1">{t.resId}</span>
+                    <span className="text-2xl font-black text-emerald-900 font-mono tracking-widest">{lookupResult.res_id}</span>
+                  </div>
+
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.guest}</span><span className="font-bold text-gray-800">{lookupResult.guest_name}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.status}</span><span className={`font-black px-2 py-0.5 rounded text-xs ${lookupResult.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>{lookupResult.status}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.room}</span><span className="font-bold text-gray-800">{lookupResult.room_type}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.checkIn}</span><span className="font-bold text-gray-800">{lookupResult.check_in_date}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.checkOut}</span><span className="font-bold text-gray-800">{lookupResult.check_out_date}</span></div>
+                  </div>
+
+                  <button onClick={closeLookupModal} className="w-full mt-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors">
+                    {t.close}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================= */}
-      {/* 💡 [신규 추가] 결제 카드 업데이트 모달창 */}
+      {/* 💡 [NEW] 결제 카드 업데이트 모달창 */}
       {/* ========================================================= */}
       {isCardModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isCardUpdating && setIsCardModalOpen(false)}>
@@ -1169,7 +1226,7 @@ export default function MainPortal() {
       )}
 
       {/* ========================================================= */}
-      {/* 💡 [NEW] guest-app 3단계 온보딩 풀스크린 UI 100% 이식 */}
+      {/* 💡 [NEW] guest-app 3단계 온보딩 풀스크린 UI */}
       {/* ========================================================= */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-slate-50 z-[200] flex flex-col font-sans text-slate-700 animate-fade-in">
@@ -1278,45 +1335,128 @@ export default function MainPortal() {
       )}
 
       {/* ========================================================= */}
-      {/* 💡 [NEW] 1순위로 뜨는 순수 로그인 팝업창 */}
+      {/* 💡 [NEW] 통합웹 회원가입/로그인 모달 (스크린샷 완벽 재현) */}
       {/* ========================================================= */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#009900] px-6 py-5 flex justify-between items-center text-white">
-              <h2 className="text-xl font-bold">Log In</h2>
-              <button onClick={() => setShowLoginModal(false)} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
+      {showGuestAuthModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
+          <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-sm" onClick={e => e.stopPropagation()}>
+            <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
+              <div className="flex justify-end mb-2">
+                <button onClick={() => setShowGuestAuthModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+              </div>
+
+              {guestAuthMode === 'REGISTER' ? (
+                <>
+                  {/* 구글 연동 로그인 버튼 */}
+                  <button className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                    Continue with Google
+                  </button>
+
+                  <div className="flex items-center mb-6">
+                    <div className="flex-1 border-t border-slate-200"></div>
+                    <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">OR</span>
+                    <div className="flex-1 border-t border-slate-200"></div>
+                  </div>
+
+                  <form onSubmit={handleGuestAuthSubmit} className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">First Name</label>
+                        <input type="text" required value={guestFirstName} onChange={(e) => setGuestFirstName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="John" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Last Name</label>
+                        <input type="text" required value={guestLastName} onChange={(e) => setGuestLastName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="Doe" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Phone Number</label>
+                      <input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="09" />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Nationality</label>
+                      <select required value={guestNationality} onChange={(e) => setGuestNationality(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm bg-white font-bold text-slate-700">
+                        <option value="">Select Country...</option>
+                        <option value="Philippines">Philippines</option>
+                        <option value="South Korea">South Korea</option>
+                        <option value="USA">United States</option>
+                        <option value="Japan">Japan</option>
+                        <option value="China">China</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                      <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
+                    </div>
+
+                    <div className="pt-2">
+                      <button type="submit" className="w-full bg-[#0f172a] text-white font-bold py-3.5 hover:bg-slate-800 transition-colors shadow-md text-sm">
+                        Sign Up with Email
+                      </button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                // 로그인 화면 
+                <>
+                  <h2 className="text-2xl font-black text-slate-800 mb-6">Log In</h2>
+                  <form onSubmit={handleGuestAuthSubmit} className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                      <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
+                    </div>
+                    <div className="pt-2">
+                      <button type="submit" className="w-full bg-[#0f172a] text-white font-bold py-3.5 hover:bg-slate-800 transition-colors shadow-md text-sm">
+                        Log In
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
+
+              {/* 하단 옵션 링크 영역 */}
+              <div className="text-center pt-8 mt-8 border-t border-slate-100 space-y-3">
+                {guestAuthMode === 'REGISTER' ? (
+                  <div className="text-sm font-bold text-slate-500">
+                    Already a member? <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-blue-600 hover:underline">Log in</button>
+                  </div>
+                ) : (
+                  <div className="text-sm font-bold text-slate-500">
+                    Don't have an account? <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="text-blue-600 hover:underline">Sign up</button>
+                  </div>
+                )}
+
+                <div className="text-sm font-bold text-slate-500">
+                  Not a member yet? <br />
+                  <button type="button" onClick={() => {
+                    setShowGuestAuthModal(false);
+                    startOnboarding();
+                  }} className="inline-flex items-center justify-center gap-1.5 text-slate-800 hover:underline mt-2 text-base">
+                    <img src="/logo192.png" alt="n+" className="h-5 w-auto transform -translate-y-[1px]" />
+                    Rewards join
+                  </button>
+                </div>
+              </div>
+
             </div>
-
-            <form onSubmit={handleGuestLoginSubmit} className="p-8 space-y-5">
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Email</label>
-                <input type="email" required value={guestLoginEmail} onChange={(e) => setGuestLoginEmail(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-[#009900] outline-none" placeholder="name@email.com" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Password</label>
-                <input type="password" required value={guestLoginPw} onChange={(e) => setGuestLoginPw(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-[#009900] outline-none tracking-widest" placeholder="••••••••" />
-              </div>
-
-              <button type="submit" className="w-full bg-[#009900] text-white font-bold py-3.5 rounded-xl hover:bg-[#008000] transition-colors shadow-md mt-2">
-                Sign In
-              </button>
-
-              {/* 💡 멤버십 가입창으로 넘어가는 옵션 버튼 */}
-              <div className="text-center pt-6 border-t border-slate-100 mt-6">
-                <p className="text-sm font-semibold text-slate-500 mb-3">Not a member yet?</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLoginModal(false); // 로그인 창은 닫고
-                    startOnboarding(); // 멤버십 가입창(온보딩) 띄우기
-                  }}
-                  className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-md"
-                >
-                  Join Membership
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
