@@ -413,15 +413,14 @@ export default function MainPortal() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
 
+      {/* 💡 이 부분을 찾아서 아래 코드로 덮어쓰세요! */}
       <Navbar
         currentLang={lang}
         setLang={setLang}
         onMenuClick={handleMenuClick}
-        isGuestLoggedIn={isGuestLoggedIn}
-        setIsGuestLoggedIn={setIsGuestLoggedIn}
-        guestData={guestData}
-        setGuestData={setGuestData}
-        setShowGuestAuthModal={setShowGuestAuthModal}
+        user={user}
+        onLogout={handleGuestLogout}
+        onLoginClick={startOnboarding}
       />
 
       {searchData ? (

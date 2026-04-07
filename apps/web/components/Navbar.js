@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 
-// 💡 다국어 번역 사전 (menuHome 추가 완료)
 const translations = {
   en: { menuHome: "Home", findBooking: "Find Booking", resId: "Reservation ID", email: "Email", search: "Search", close: "Close", status: "Status", checkIn: "Check-in", checkOut: "Check-out", room: "Room Type", notFound: "No matching reservation found.", enterDetails: "Please enter your Reservation ID OR Email.", searching: "Searching...", guest: "Guest Name", menuPms: "Cloud PMS Solutions", menuLogin: "Partner Login", menuContact: "Contact Sales", contactSalesTitle: "Contact Sales", sendEmail: "Send an Email", whatsapp: "WhatsApp", emailLabel: "Your Email", msgLabel: "Message", sendBtn: "Send Message", backBtn: "Back", successMsg: "Your message has been sent successfully!" },
   ko: { menuHome: "홈", findBooking: "예약 조회", resId: "예약 번호", email: "이메일", search: "조회하기", close: "닫기", status: "상태", checkIn: "체크인", checkOut: "체크아웃", room: "객실 타입", notFound: "일치하는 예약 내역이 없습니다.", enterDetails: "예약 번호 또는 이메일을 입력해 주세요.", searching: "조회 중...", guest: "예약자명", menuPms: "클라우드 PMS 솔루션", menuLogin: "파트너 로그인", menuContact: "도입 문의", contactSalesTitle: "도입 문의", sendEmail: "이메일 보내기", whatsapp: "WhatsApp 문의", emailLabel: "이메일 주소", msgLabel: "문의 내용", sendBtn: "메시지 전송", backBtn: "뒤로 가기", successMsg: "메시지가 성공적으로 전송되었습니다!" },
@@ -9,13 +8,11 @@ const translations = {
   zh: { menuHome: "首页", findBooking: "查找预订", resId: "预订编号", email: "电子邮箱", search: "搜索", close: "关闭", status: "状态", checkIn: "入住", checkOut: "退房", room: "客房类型", notFound: "未找到匹配的预订。", enterDetails: "请输入您的预订信息。", searching: "搜索中...", guest: "预订人", menuPms: "云端 PMS 解决方案", menuLogin: "合作伙伴登录", menuContact: "联系销售", contactSalesTitle: "联系销售", sendEmail: "发送电子邮件", whatsapp: "WhatsApp", emailLabel: "您的电子邮箱", msgLabel: "留言", sendBtn: "发送消息", backBtn: "返回", successMsg: "您的消息已成功发送！" }
 };
 
-// 💡 [Cleaned] Updated port to 8000 to match the main PMS backend server
 const BASE_URL = '';
 
 export default function Navbar({
   currentLang, setLang, onMenuClick,
-  isGuestLoggedIn, setIsGuestLoggedIn,
-  guestData, setGuestData, setShowGuestAuthModal
+  user, onLogout, onLoginClick
 }) {
   const t = translations[currentLang] || translations.en;
 
@@ -116,24 +113,21 @@ export default function Navbar({
           </div>
 
           {/* ======================================================== */}
-          {/* 💡 [NEW] 일반 고객 로그인/마이페이지 버튼 (언어버튼과 메뉴 사이) */}
+          {/* 💡 [NEW] guest-app 연동 고객 로그인/마이페이지 버튼 */}
           {/* ======================================================== */}
-          {isGuestLoggedIn ? (
+          {user ? (
             <div className="flex items-center gap-2 md:gap-3 ml-1 md:ml-2">
               <span className="hidden md:block text-sm font-bold text-slate-700">
-                {guestData?.name}
+                {user.name || user.first_name || "Guest"}
               </span>
               <button
                 onClick={() => alert("My Page 개발 준비 중입니다.")}
-                className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold text-emerald-600 border-2 border-emerald-600 rounded-full hover:bg-emerald-600 hover:text-white transition-all whitespace-nowrap"
+                className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold text-[#009900] border-2 border-[#009900] rounded-full hover:bg-[#009900] hover:text-white transition-all whitespace-nowrap"
               >
                 My Page
               </button>
               <button
-                onClick={() => {
-                  setIsGuestLoggedIn(false);
-                  setGuestData(null);
-                }}
+                onClick={onLogout}
                 className="hidden md:block text-xs font-bold text-slate-400 hover:text-slate-600"
               >
                 Logout
@@ -141,10 +135,10 @@ export default function Navbar({
             </div>
           ) : (
             <button
-              onClick={() => setShowGuestAuthModal && setShowGuestAuthModal(true)}
-              className="ml-1 md:ml-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold bg-emerald-600 text-white rounded-full hover:bg-emerald-700 shadow-sm transition-all whitespace-nowrap"
+              onClick={onLoginClick}
+              className="ml-1 md:ml-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold bg-[#009900] text-white rounded-full hover:bg-[#008000] shadow-sm transition-all whitespace-nowrap"
             >
-              Sign In
+              Log In / Sign Up
             </button>
           )}
           {/* ======================================================== */}
@@ -157,9 +151,8 @@ export default function Navbar({
           </button>
         </div>
 
-        {/* 💡 드롭다운 메뉴 항목 부분 */}
+        {/* 모바일 햄버거 드롭다운 메뉴 */}
         <div className={`absolute top-full left-0 w-full bg-white shadow-2xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-[400px] py-2' : 'max-h-0 py-0'}`}>
-          {/* 💡 [신규 추가] 'Home' 버튼을 메뉴 최상단에 추가! */}
           <button onClick={() => { setIsMobileMenuOpen(false); onMenuClick && onMenuClick('HOME'); }} className="px-8 py-4 text-right font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 border-b border-slate-50 transition-colors tracking-wide">
             {t.menuHome}
           </button>
