@@ -309,7 +309,10 @@ export default function MainPortal() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`/api/portal-login`, {
+      // 💡 여기에 실제 백엔드 서버 주소를 직접 입력해 주세요!
+      const BASE_URL = ''; // 백엔드 주소로 변경 필수
+
+      const res = await fetch(`${BASE_URL}/api/portal-login`, {  // <-- 백엔드 주소 타격!
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
