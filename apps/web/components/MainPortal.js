@@ -167,44 +167,73 @@ export default function MainPortal() {
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
 
   // =========================================================
-  // 💡 [NEW] 일반 고객(Guest) 로그인 및 회원가입 상태 관리
+  // 💡 [NEW] guest-app과 100% 동일한 온보딩 및 유저 상태 관리
   // =========================================================
-  const [isGuestLoggedIn, setIsGuestLoggedIn] = useState(false);
-  const [guestData, setGuestData] = useState(null);
-  const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
-  const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // 'LOGIN' or 'REGISTER'
+  const [user, setUser] = useState(null);
+  const [isMembershipActive, setIsMembershipActive] = useState(false);
 
-  const [guestEmail, setGuestEmail] = useState("");
-  const [guestPw, setGuestPw] = useState("");
-  const [guestName, setGuestName] = useState("");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardStep, setOnboardStep] = useState(1);
 
-  const handleGuestAuthSubmit = async (e) => {
-    e.preventDefault();
-    const endpoint = guestAuthMode === 'LOGIN' ? '/api/guest-login' : '/api/guest-register';
-    const payload = guestAuthMode === 'LOGIN'
-      ? { email: guestEmail, password: guestPw }
-      : { email: guestEmail, password: guestPw, name: guestName };
+  const [phone, setPhone] = useState('');
+  const [idUploaded, setIdUploaded] = useState(false);
+  const [cardName, setCardName] = useState('');
+  const [cardNum, setCardNum] = useState('');
+  const [cardExp, setCardExp] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
 
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        setIsGuestLoggedIn(true);
-        setGuestData(guestAuthMode === 'LOGIN' ? data.user : { name: guestName, email: guestEmail });
-        setShowGuestAuthModal(false);
-        setAlertMessage(guestAuthMode === 'LOGIN' ? "환영합니다!" : "회원가입이 완료되었습니다!");
-        setGuestEmail(""); setGuestPw(""); setGuestName("");
-      } else {
-        setAlertMessage(data.message || "인증에 실패했습니다.");
+  // guest-app과 동일하게 로컬 스토리지에서 유저 정보 불러오기
+  useEffect(() => {
+    const savedUser = localStorage.getItem('nplus_guest_user');
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      if (parsedUser.is_membership_active) {
+        setIsMembershipActive(true);
       }
-    } catch (err) {
-      setAlertMessage("서버 연결에 실패했습니다. 다시 시도해 주세요.");
     }
+  }, []);
+
+  const handleGuestLogout = () => {
+    localStorage.removeItem('nplus_guest_user');
+    setUser(null);
+    setIsMembershipActive(false);
+    window.location.reload();
+  };
+
+  const startOnboarding = () => {
+    setShowOnboarding(true);
+    setOnboardStep(1);
+  };
+
+  const nextStep = () => {
+    if (onboardStep === 1 && !phone) return alert('Please enter your phone number.');
+    if (onboardStep === 2 && !idUploaded) return alert('Please upload your ID card for verification.');
+    if (onboardStep === 3 && (!cardName || !cardNum || !cardExp || !cardCvv)) return alert('Please enter all payment details.');
+
+    if (onboardStep < 3) {
+      setOnboardStep(onboardStep + 1);
+    } else {
+      completeOnboarding();
+    }
+  };
+
+  const completeOnboarding = () => {
+    const updatedUser = {
+      ...user,
+      phone: phone,
+      is_membership_active: true,
+      tierId: 'MEMBER',
+      tierName: 'Member',
+      total_points: 1000,
+      total_spend: 0,
+      name: "Guest User"
+    };
+    localStorage.setItem('nplus_guest_user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    setIsMembershipActive(true);
+    setShowOnboarding(false);
+    alert('Welcome to N+ Rewards! 1,000 Bonus Points have been added to your account.');
   };
 
   useEffect(() => {
@@ -1106,45 +1135,111 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 💡 [NEW] 일반 고객용 회원가입/로그인 모달 */}
-      {showGuestAuthModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
+      {/* ========================================================= */}
+      {/* 💡 [NEW] guest-app 3단계 온보딩 풀스크린 UI 100% 이식 */}
+      {/* ========================================================= */}
+      {showOnboarding && (
+        <div className="fixed inset-0 bg-slate-50 z-[200] flex flex-col font-sans text-slate-700 animate-fade-in">
+          <div className="bg-white p-4 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-sm">
+            <button onClick={() => setShowOnboarding(false)} className="text-slate-400 font-bold text-xl px-2 hover:text-slate-600 transition-colors">✕</button>
+            <h2 className="font-bold text-slate-800 text-lg">Join Membership</h2>
+            <span className="text-[#009900] font-bold text-xs">Step {onboardStep} / 3</span>
+          </div>
 
-            <div className="flex border-b border-slate-100">
-              <button
-                className={`flex-1 py-4 text-sm font-bold transition-colors ${guestAuthMode === 'LOGIN' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
-                onClick={() => setGuestAuthMode('LOGIN')}
-              >
-                Sign In
-              </button>
-              <button
-                className={`flex-1 py-4 text-sm font-bold transition-colors ${guestAuthMode === 'REGISTER' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
-                onClick={() => setGuestAuthMode('REGISTER')}
-              >
-                Join Membership
-              </button>
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col max-w-md mx-auto w-full pb-20">
+            <div className="flex gap-2 mb-8 shrink-0">
+              <div className={`h-1.5 flex-1 ${onboardStep >= 1 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+              <div className={`h-1.5 flex-1 ${onboardStep >= 2 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+              <div className={`h-1.5 flex-1 ${onboardStep >= 3 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
             </div>
 
-            <form onSubmit={handleGuestAuthSubmit} className="p-8 space-y-4">
-              {guestAuthMode === 'REGISTER' && (
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Full Name</label>
-                  <input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="John Doe" />
+            {onboardStep === 1 && (
+              <div className="animate-fade-in-up">
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">Exclusive Benefits</h3>
+                <p className="text-slate-500 text-sm font-medium mb-6">Complete your profile to unlock our progressive reward tiers.</p>
+
+                <div className="bg-white border border-slate-200 p-5 shadow-sm mb-8 space-y-5">
+                  <div className="flex items-start gap-3">
+                    <img src="/point.svg" alt="Points" className="w-7 h-7 object-contain shrink-0" />
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">Up to 10% Reward Points</p>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Start with 2% back on all bookings as a Member, growing up to 10% as VIP.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <img src="/progressive.svg" alt="Progressive" className="w-7 h-7 object-contain shrink-0" />
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">Progressive Perks</p>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Unlock 1-Hour Late Checkout (Silver) and Free Breakfast & Upgrades (Gold).</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <img src="/vip.svg" alt="VIP" className="w-7 h-7 object-contain shrink-0" />
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">VIP Experience</p>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Reach VIP tier for exclusive Lounge Access and complimentary Mini-bar.</p>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Email</label>
-                <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="name@email.com" />
+
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Password</label>
-                <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none tracking-widest" placeholder="••••••••" />
+            )}
+
+            {onboardStep === 2 && (
+              <div className="animate-fade-in-up">
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">Identity Verification</h3>
+                <p className="text-slate-500 text-sm font-medium mb-6">Please upload a valid ID for security and age verification.</p>
+
+                <div className="border-2 border-dashed border-slate-300 bg-white p-8 text-center relative hover:border-[#009900] transition-colors cursor-pointer group">
+                  <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">🪪</div>
+                  {idUploaded ? (
+                    <p className="text-[#009900] font-bold text-lg">ID Uploaded Successfully ✓</p>
+                  ) : (
+                    <>
+                      <p className="font-bold text-slate-800 text-lg mb-1">Tap to Upload ID</p>
+                      <p className="text-xs font-medium text-slate-400">Passport, Driver's License, or National ID</p>
+                    </>
+                  )}
+                </div>
               </div>
-              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md mt-2">
-                {guestAuthMode === 'LOGIN' ? 'Sign In' : 'Create Account'}
+            )}
+
+            {onboardStep === 3 && (
+              <div className="animate-fade-in-up">
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">Link Payment Method</h3>
+                <p className="text-slate-500 text-sm font-medium mb-6">Register a credit card to secure future bookings and prevent no-shows. No charges will be made now.</p>
+
+                <div className="bg-white p-5 border border-slate-200 shadow-sm space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Name on Card</label>
+                    <input type="text" name="cardName" autoComplete="cc-name" value={cardName} onChange={e => setCardName(e.target.value)} placeholder="John Doe" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Card Number</label>
+                    <input type="text" name="cardNumber" autoComplete="cc-number" value={cardNum} onChange={e => setCardNum(e.target.value)} placeholder="0000 0000 0000 0000" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Expiry Date</label>
+                      <input type="text" name="cardExpiry" autoComplete="cc-exp" value={cardExp} onChange={e => setCardExp(e.target.value)} placeholder="MM/YY" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none text-center" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">CVV</label>
+                      <input type="password" name="cardCvc" autoComplete="cc-csc" maxLength="4" value={cardCvv} onChange={e => setCardCvv(e.target.value)} placeholder="•••" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none text-center" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 pt-4">
+              <button onClick={nextStep} className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-none">
+                {onboardStep === 3 ? 'Complete Registration ✓' : 'Next Step ➔'}
               </button>
-            </form>
+            </div>
           </div>
         </div>
       )}
