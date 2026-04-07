@@ -1012,7 +1012,15 @@ export default function MainPortal() {
                           }
                         }}
                       >
-                        <img src={dest.image_url} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <img
+                          /* 💡 데이터에 image_url이 없으면 imageUrl 또는 thumbnail을 확인하고, 
+                             모두 없으면 기본 샘플 이미지를 보여주도록 방어 코드를 넣었습니다. */
+                          src={dest.image_url || dest.imageUrl || dest.main_image || dest.thumbnail || "/hero1.png"}
+                          alt={dest.name}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          /* 이미지 로딩 실패 시 빈 화면 대신 기본 이미지로 대체 */
+                          onError={(e) => { e.target.src = "/hero1.png"; }}
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
                         <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
                           <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-1 flex items-center gap-1">
