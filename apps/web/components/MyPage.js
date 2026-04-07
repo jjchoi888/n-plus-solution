@@ -1,15 +1,37 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export default function MyPage({ user, onBack }) {
-    // 예약 내역 (현재는 Mock 데이터, 나중에 API 연결)
-    const [bookings, setBookings] = useState([
+export default function MyPage({ user, onBack, onJoinRewards }) {
+    // 예약 내역 (현재는 Mock 데이터)
+    const [bookings] = useState([
         { id: 'BK-20260401', hotel: 'Sky City Hotel', room: 'Deluxe King', checkIn: '2026-05-10', status: 'Confirmed' },
         { id: 'BK-20260315', hotel: 'Ocean Resort', room: 'Suite Room', checkIn: '2026-03-20', status: 'Completed' },
     ]);
 
+    // 사용자의 멤버십 가입 여부 확인 (MainPortal에서 넘겨받은 user 데이터 기반)
+    const isMember = user?.is_membership_active === true;
+
+    // 첨부사진의 Exclusive Benefits 내용 데이터화
+    const membershipBenefits = [
+        {
+            icon: "🎁", // 원본의 첫 번째 아이콘 대체
+            title: "Up to 10% Reward Points",
+            desc: "Start with 2% back on all bookings as a Member, growing up to 10% as VIP."
+        },
+        {
+            icon: "⚡", // 원본의 두 번째 아이콘 대체
+            title: "Progressive Perks",
+            desc: "Unlock 1-Hour Late Checkout (Silver) and Free Breakfast & Upgrades (Gold)."
+        },
+        {
+            icon: "👑", // 원본의 세 번째 아이콘 대체
+            title: "VIP Experience",
+            desc: "Reach VIP tier for exclusive Lounge Access and complimentary Mini-bar."
+        }
+    ];
+
     return (
-        <div className="w-full max-w-5xl mx-auto pt-24 pb-20 px-4 animate-fade-in">
+        <div className="w-full max-w-5xl mx-auto pt-24 pb-20 px-4 animate-fade-in font-sans">
             {/* 상단 헤더 & 뒤로가기 */}
             <div className="flex items-center gap-4 mb-8">
                 <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
@@ -20,18 +42,26 @@ export default function MyPage({ user, onBack }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* 좌측: 프로필 & 멤버십 카드 */}
+                {/* 좌측: 프로필 & 멤버십 영역 */}
                 <div className="lg:col-span-1 space-y-6">
+                    {/* 멤버십 카드 */}
                     <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/40 transition-all"></div>
 
-                        <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">{user?.tierName || 'Basic'} Member</p>
+                        {/* 등급 표시: Member 아니면 Basic User */}
+                        <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                            {isMember ? `${user?.tierName || 'Member'}` : 'Basic User'}
+                        </p>
                         <h2 className="text-2xl font-black mb-6">{user?.name || 'Guest User'}</h2>
 
                         <div className="space-y-4">
                             <div>
                                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Available Points</p>
-                                <p className="text-3xl font-black text-emerald-400">{(user?.total_points || 0).toLocaleString()} <span className="text-sm text-slate-300 font-bold ml-1">pts</span></p>
+                                {/* Member는 포인트 표시, Basic은 0 */}
+                                <p className="text-3xl font-black text-emerald-400">
+                                    {isMember ? (user?.total_points || 0).toLocaleString() : '0'}
+                                    <span className="text-sm text-slate-300 font-bold ml-1">pts</span>
+                                </p>
                             </div>
                             <div className="pt-4 border-t border-slate-800">
                                 <p className="text-xs text-slate-400 font-medium">Member ID: {user?.email}</p>
@@ -39,16 +69,37 @@ export default function MyPage({ user, onBack }) {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-                        <h3 className="font-bold text-slate-800 mb-4">Membership Benefits</h3>
-                        <ul className="space-y-3">
-                            <li className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-                                <span className="text-emerald-500">✓</span> 2% Point Accrual
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-slate-400 font-medium">
-                                <span className="text-slate-300">✓</span> 1-Hour Late Checkout (Silver+)
-                            </li>
-                        </ul>
+                    {/* 💡 [수정] Membership Benefits 영역 (첨부사진 내용 적용) */}
+                    <div className="bg-white rounded-3xl border border-slate-200 p-7 shadow-sm">
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">Exclusive Benefits</h3>
+                        <p className="text-slate-500 text-sm font-medium mb-6">Complete your profile to unlock our progressive reward tiers.</p>
+
+                        <div className="space-y-6 mb-8">
+                            {membershipBenefits.map((benefit, idx) => (
+                                <div key={idx} className="flex items-start gap-4">
+                                    {/* 아이콘 영역 */}
+                                    <div className="w-10 h-10 shrink-0 flex items-center justify-center text-2xl">
+                                        {benefit.icon}
+                                    </div>
+                                    {/* 텍스트 영역 */}
+                                    <div>
+                                        <p className="font-bold text-slate-800 text-sm">{benefit.title}</p>
+                                        <p className="text-xs text-slate-500 font-medium mt-0.5 leading-relaxed">{benefit.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 💡 Member가 아닐 때만 [Join Rewards] 버튼 노출 */}
+                        {!isMember && (
+                            <button
+                                onClick={onJoinRewards}
+                                className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-xl flex items-center justify-center gap-2"
+                            >
+                                <img src="/logo192.png" alt="n+" className="h-5 w-auto brightness-0 invert" />
+                                Join Rewards
+                            </button>
+                        )}
                     </div>
                 </div>
 

@@ -799,7 +799,12 @@ export default function MainPortal() {
 
       ) : activeView === "MYPAGE" ? (
         <div className="w-full flex-grow bg-slate-50">
-          <MyPage user={user} onBack={() => setActiveView("HOME")} />
+          {/* 💡 props에 onJoinRewards를 추가하여 온보딩 함수를 연결합니다. */}
+          <MyPage
+            user={user}
+            onBack={() => setActiveView("HOME")}
+            onJoinRewards={startOnboarding} // MyPage에서 버튼 누르면 가입 온보딩 시작
+          />
         </div>
 
       ) : (
