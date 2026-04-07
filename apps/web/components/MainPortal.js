@@ -33,7 +33,7 @@ const translations = {
     alertDest: "is powered by n+ Hotel Solution.\nUse the booking bar above to find available rooms.", alertDemo: "Thank you for your interest! Our sales team will contact you shortly.", close: "Close",
     pmsPageTitle: "Cloud PMS Solutions", pmsPageSubtitle: "The Ultimate Operating System for Modern Hotels", pmsPageDesc: "Discover the powerful tools integrated into n+ to automate operations, connect with global OTAs, and drive revenue.",
     pmsSection1Title: "Intelligent Front Desk", pmsSection1Desc: "Speed up check-ins, manage folios seamlessly, and gain a bird's-eye view of all room statuses in real time. Designed for maximum staff efficiency.", pmsSection2Title: "Two-Way Channel Manager", pmsSection2Desc: "Connect to major OTAs (Agoda, Booking.com, Expedia) instantly. Rates and availability are automatically synced, eliminating overbookings and manual data entry.", pmsSection3Title: "Low-Commission Booking Engine", pmsSection3Desc: "Convert website visitors into direct guests. Offer a secure, modern, and mobile-friendly booking experience on your own domain with only a 1.5% transaction fee.",
-    loginTitle: "Partner Login", emailStr: "Email Address", pwStr: "Password", loginBtn: "Sign In", loginErr: "Invalid credentials.",
+    loginTitle: "Partner Login", hotelCodeStr: "Hotel Code", emailStr: "User ID", pwStr: "Password", loginBtn: "Sign In", loginErr: "Invalid credentials.",
     dashTitle: "Partner Dashboard", dashSub: "Manage your hotel's integrations and billing.",
     dbBilling: "Billing & Payments", dbCardReg: "Auto-Payment Card", dbCardRegBtn: "Update Card", dbInvoices: "Payment History", dbReceipt: "Receipt",
     dbDomain: "Domain Settings", dbDomainDesc: "Link your custom domain for direct bookings.", dbDomainStatus: "Status", dbLinked: "Linked", dbDomainBtn: "Save Domain",
@@ -62,7 +62,7 @@ const translations = {
     alertDest: "은(는) n+ 호텔 솔루션 파트너입니다.\n상단의 예약 검색바를 이용해 남은 객실을 확인해 주세요.", alertDemo: "관심을 가져주셔서 감사합니다! 곧 영업팀에서 연락드리겠습니다.", close: "닫기",
     pmsPageTitle: "클라우드 PMS 솔루션", pmsPageSubtitle: "현대 호텔을 위한 궁극의 운영 체제", pmsPageDesc: "운영을 자동화하고, 글로벌 OTA와 연결하며, 수익을 창출하는 n+의 강력한 툴을 발견해보세요.",
     pmsSection1Title: "지능형 프론트 데스크", pmsSection1Desc: "체크인 속도를 높이고, 정산을 매끄럽게 처리하며, 모든 객실 상태를 실시간으로 한눈에 파악하세요. 직원의 업무 효율성을 극대화하도록 설계되었습니다.", pmsSection2Title: "양방향 채널 매니저", pmsSection2Desc: "Agoda, Booking.com, Expedia 등 주요 OTA와 즉시 연결됩니다. 요금과 가용 객실이 자동으로 동기화되어 오버부킹과 수기 입력의 번거로움을 없앱니다.", pmsSection3Title: "초저수수료 다이렉트 예약 엔진", pmsSection3Desc: "웹사이트 방문자를 다이렉트 고객으로 전환하세요. 호텔의 자체 도메인에서 단 1.5%의 수수료로 모바일에 최적화된 최신 예약 경험을 제공합니다.",
-    loginTitle: "파트너 로그인", emailStr: "이메일 주소", pwStr: "비밀번호", loginBtn: "로그인", loginErr: "로그인 정보가 올바르지 않습니다.",
+    loginTitle: "파트너 로그인", hotelCodeStr: "호텔 코드", emailStr: "사용자 ID", pwStr: "비밀번호", loginBtn: "로그인", loginErr: "로그인 정보가 올바르지 않습니다.",
     dashTitle: "파트너 대시보드", dashSub: "호텔의 연동 정보 및 결제 내역을 관리하세요.",
     dbBilling: "자동 결제 및 영수증", dbCardReg: "결제 카드 등록", dbCardRegBtn: "카드 변경", dbInvoices: "결제 및 영수증 내역", dbReceipt: "영수증 발급",
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
@@ -91,7 +91,7 @@ const translations = {
     alertDest: "はn+ ホテルソリューションのパートナーです。\n上の検索バーを使用して空室を確認してください。", alertDemo: "ご関心をお寄せいただきありがとうございます！担当者より追ってご連絡いたします。", close: "閉じる",
     pmsPageTitle: "クラウド PMS ソリューション", pmsPageSubtitle: "現代ホテルのための究極のオペレーティングシステム", pmsPageDesc: "業務を自動化し、グローバルOTAと接続し、収益を牽引するn+の強力なツールを発見してください。",
     pmsSection1Title: "インテリジェントなフロントデスク", pmsSection1Desc: "チェックインを迅速化し、会計をシームレスに管理し、すべての客室状況をリアルタイムで把握します。", pmsSection2Title: "双方向チャネルマネージャー", pmsSection2Desc: "主要なOTAと即座に接続します。料金と空室状況は自動的に同期され、オーバーブッキングを防ぎます。", pmsSection3Title: "低手数料（1.5%）の予約エンジン", pmsSection3Desc: "ウェブサイト訪問者を直接のゲストに変換します。わずか1.5%の取引手数料で、安全でモバイルフレンドリーな予約体験を提供します。",
-    loginTitle: "パートナーログイン", emailStr: "メールアドレス", pwStr: "パスワード", loginBtn: "ログイン", loginErr: "無効な資格情報です。",
+    loginTitle: "パートナーログイン", hotelCodeStr: "ホテルコード", emailStr: "ユーザーID", pwStr: "パスワード", loginBtn: "ログイン", loginErr: "無効な資格情報です。",
     dashTitle: "パートナーダッシュボード", dashSub: "ホテルの統合と請求を管理します。",
     dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
     dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
@@ -120,7 +120,7 @@ const translations = {
     alertDest: "由 n+ 酒店解决方案提供支持。\n请使用上方的搜索栏查找可用客房。", alertDemo: "感谢您的关注！我们的销售团队将很快与您联系。", close: "关闭",
     pmsPageTitle: "云端 PMS 解决方案", pmsPageSubtitle: "现代酒店的终极操作系统", pmsPageDesc: "发现 n+ 中集成的强大工具，以自动化运营、连接全球 OTA 并增加收入。",
     pmsSection1Title: "智能前台", pmsSection1Desc: "加快入住办理速度，无缝管理账单，并实时鸟瞰所有客房状态。", pmsSection2Title: "双向渠道管理器", pmsSection2Desc: "立即连接到主要 OTA。价格和空房情况自动同步，消除超售。", pmsSection3Title: "超低佣金预订引擎", pmsSection3Desc: "将网站访问者转化为直接宾客。在您自己的域名上提供安全、现代的预订体验，交易费仅为 1.5%。",
-    loginTitle: "合作伙伴登录", emailStr: "电子邮箱", pwStr: "密码", loginBtn: "登录", loginErr: "凭据无效。",
+    loginTitle: "合作伙伴登录", hotelCodeStr: "酒店代码", emailStr: "用户 ID", pwStr: "密码", loginBtn: "登录", loginErr: "凭据无效。",
     dashTitle: "合作伙伴仪表板", dashSub: "管理您酒店的集成和账单。",
     dbBilling: "账单与支付", dbCardReg: "自动支付卡", dbCardRegBtn: "更新银行卡", dbInvoices: "支付历史", dbReceipt: "收据",
     dbDomain: "域名设置", dbDomainDesc: "链接您的自定义域名以进行直接预订。", dbDomainStatus: "状态", dbLinked: "已链接", dbDomainBtn: "保存域名",
@@ -143,6 +143,8 @@ export default function MainPortal() {
   const [activeView, setActiveView] = useState("HOME");
 
   const [isPartnerLoggedIn, setIsPartnerLoggedIn] = useState(false);
+  // 💡 [수정/추가] 호텔 코드(Hotel Code) 상태 추가
+  const [loginHotelCode, setLoginHotelCode] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPw, setLoginPw] = useState("");
 
@@ -319,6 +321,7 @@ export default function MainPortal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          hotel_code: loginHotelCode.trim(), // 💡 [추가] 호텔 코드 전송
           user_id: loginEmail.trim(), // 💡 대소문자 그대로 전송
           password: loginPw.trim()
         })
@@ -362,25 +365,40 @@ export default function MainPortal() {
                   <h2 className="text-2xl font-black text-slate-800">{t.loginTitle}</h2>
                 </div>
                 <form onSubmit={handleLogin} className="space-y-5">
-                    <div>
-                      {/* 💡 1. t.IDStr 번역을 사용 (만약 번역 객체에 없으면 "User ID" 출력) */}
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
-                        {t.IDStr || "User ID"}
-                      </label>
+                  {/* 💡 [신규 추가] 호텔 코드 입력 필드 */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+                      {t.hotelCodeStr || "Hotel Code"}
+                    </label>
+                    <input
+                      type="text"
+                      value={loginHotelCode}
+                      onChange={e => setLoginHotelCode(e.target.value.toUpperCase())}
+                      required
+                      className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none uppercase tracking-widest"
+                      placeholder="e.g. SKY001"
+                    />
+                  </div>
 
-                      {/* 💡 2. type을 "text"로 변경하고, value를 loginEmail로 통일 */}
-                      <input
-                        type="text"
-                        value={loginEmail}
-                        onChange={e => setLoginEmail(e.target.value)}
-                        required
-                        className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="e.g. MA001"
-                      />
-                    </div>
+                  <div>
+                    {/* 💡 1. t.IDStr 번역을 사용 (만약 번역 객체에 없으면 "User ID" 출력) */}
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+                      {t.emailStr || "User ID"}
+                    </label>
+
+                    {/* 💡 2. type을 "text"로 변경하고, value를 loginEmail로 통일 */}
+                    <input
+                      type="text"
+                      value={loginEmail}
+                      onChange={e => setLoginEmail(e.target.value)}
+                      required
+                      className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none"
+                      placeholder="e.g. MA001"
+                    />
+                  </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{t.pwStr}</label>
-                    <input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="" />
+                    <input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} required className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none tracking-widest" placeholder="••••••••" />
                   </div>
                   <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 transition-colors mt-4">
                     {t.loginBtn}
@@ -401,6 +419,8 @@ export default function MainPortal() {
                   sessionStorage.removeItem("partner_logged_in"); // 💡 세션 지우기!
                   setIsPartnerLoggedIn(false);
                   setLoginPw('');
+                  setLoginEmail(''); // 상태 초기화 추가
+                  setLoginHotelCode(''); // 상태 초기화 추가
                 }} className="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm">
                   {t.logoutBtn}
                 </button>
