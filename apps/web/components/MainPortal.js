@@ -3,7 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import Navbar from "./Navbar";
 import BookingBar from "./BookingBar";
 import RoomList from "./RoomList";
-import { signIn } from "next-auth/react";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { app } from '../lib/firebase';
+import axios from 'axios';
 
 const heroImages = [
   "/hero1.png",
