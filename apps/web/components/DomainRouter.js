@@ -4,9 +4,11 @@ import dynamic from 'next/dynamic';
 
 const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
 const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
+// 💡 [추가] 본사 포털(HQ) 컴포넌트를 불러옵니다.
+const PortalAdmin = dynamic(() => import('./PortalAdmin'), { ssr: false });
 
 export default function DomainRouter({ initialHotel }) {
-  const [view, setView] = useState(null); // 'PORTAL' 또는 'HOTEL'
+  const [view, setView] = useState(null); // 'PORTAL', 'HOTEL', 또는 'HQ'
   const [targetHotel, setTargetHotel] = useState(null);
 
   useEffect(() => {
@@ -14,16 +16,23 @@ export default function DomainRouter({ initialHotel }) {
     const params = new URLSearchParams(window.location.search);
     const hotelParam = params.get('hotel');
 
-    // 💡 [도메인 기반 판별 로직 고도화]
-    // 1순위: URL 파라미터가 있는가? (테스트/딥링킹 용)
-    // 2순위: 'app.hotelnplus.com' 또는 'manage.hotelnplus.com' 등이 아닌 '개별 호텔용 도메인'인가?
-
     const isMainPortal = host === 'hotelnplus.com' || host === 'www.hotelnplus.com';
-    const isSystemSubdomain = host.startsWith('app.') || host.startsWith('manage.') || host.startsWith('hq.');
+    // 💡 hq는 별도로 뺄 것이므로 isSystemSubdomain에서 hq 조건은 제외합니다.
+    const isSystemSubdomain = host.startsWith('app.') || host.startsWith('manage.');
 
-    if (hotelParam || initialHotel || (!isMainPortal && !isSystemSubdomain && host !== 'localhost')) {
-      // 💡 개별 호텔 웹사이트로 판별된 경우
-      const matchedHotel = hotelParam || initialHotel || host.split('.')[0]; // 예: 'sample'.hotelnplus.com 에서 sample 추출
+    // 💡 [추가] HQ 도메인 감지 로직
+    const isHQ = host === 'hq.hotelnplus.com' || host.startsWith('hq.localhost');
+
+    if (isHQ) {
+      // 💡 1. 본사 포털(HQ) 접속 시
+      setView('HQ');
+      setTargetHotel(null);
+      localStorage.removeItem('hotelCode');
+      console.log(`🏢 [Router] HQ Portal Mode Active`);
+    }
+    else if (hotelParam || initialHotel || (!isMainPortal && !isSystemSubdomain && host !== 'localhost')) {
+      // 💡 2. 개별 호텔 웹사이트로 판별된 경우
+      const matchedHotel = hotelParam || initialHotel || host.split('.')[0];
 
       setView('HOTEL');
       setTargetHotel(matchedHotel);
@@ -33,7 +42,7 @@ export default function DomainRouter({ initialHotel }) {
       console.log(`🏨 [Router] Hotel Mode Active: ${matchedHotel}`);
     }
     else {
-      // 💡 메인 포털(통합웹)로 판별된 경우
+      // 💡 3. 메인 포털(통합웹)로 판별된 경우
       setView('PORTAL');
       setTargetHotel(null);
 
@@ -46,8 +55,10 @@ export default function DomainRouter({ initialHotel }) {
   // 로딩 중 깜빡임 방지
   if (!view) return <div className="min-h-screen bg-white" />;
 
-  // 결정된 뷰에 따라 컴포넌트 렌더링
-  if (view === 'HOTEL') {
+  // 💡 결정된 뷰에 따라 컴포넌트 렌더링
+  if (view === 'HQ') {
+    return <PortalAdmin />;
+  } else if (view === 'HOTEL') {
     return <HotelWebsite domain={targetHotel} />;
   } else {
     return <MainPortal />;
