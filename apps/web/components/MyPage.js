@@ -64,7 +64,7 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                                 </p>
                             </div>
                             <div className="pt-4 border-t border-slate-800">
-                                <p className="text-xs text-slate-400 font-medium">Member ID: {user?.email}</p>
+                                <p className="text-xs text-slate-400 font-medium">User ID: {user?.email}</p>
                             </div>
                         </div>
                     </div>
@@ -90,14 +90,15 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                             ))}
                         </div>
 
-                        {/* 💡 Member가 아닐 때만 [Join Rewards] 버튼 노출 */}
+                        {/* 💡 Member가 아닐 때만 [Join n+ Rewards] 버튼 노출 */}
                         {!isMember && (
                             <button
                                 onClick={onJoinRewards}
                                 className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-xl flex items-center justify-center gap-2"
                             >
+                                <span>Join</span>
                                 <img src="/logo192.png" alt="n+" className="h-5 w-auto brightness-0 invert" />
-                                Join Rewards
+                                <span>Rewards</span>
                             </button>
                         )}
                     </div>
