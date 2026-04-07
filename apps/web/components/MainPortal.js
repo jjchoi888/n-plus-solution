@@ -143,7 +143,6 @@ export default function MainPortal() {
   const [activeView, setActiveView] = useState("HOME");
 
   const [isPartnerLoggedIn, setIsPartnerLoggedIn] = useState(false);
-  // 💡 [수정/추가] 호텔 코드(Hotel Code) 상태 추가
   const [loginHotelCode, setLoginHotelCode] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPw, setLoginPw] = useState("");
@@ -152,7 +151,6 @@ export default function MainPortal() {
   const [partnerCode, setPartnerCode] = useState("");
   const [partnerCard, setPartnerCard] = useState("");
 
-  // 👇👇👇 [신규 추가] 결제 카드 변경 모달용 상태
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [isCardUpdating, setIsCardUpdating] = useState(false);
   const [cardForm, setCardForm] = useState({ number: '', expiry: '', cvc: '', name: '' });
@@ -166,8 +164,6 @@ export default function MainPortal() {
   const [promotions, setPromotions] = useState([]);
   const [partnerHotels, setPartnerHotels] = useState([]);
 
-
-  // 💡 [핵심] Book Now 클릭 시 BookingBar에 전달할 호텔 코드 상태
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
 
   useEffect(() => {
@@ -198,7 +194,6 @@ export default function MainPortal() {
   const [promoRegion, setPromoRegion] = useState("ALL");
   const [promoSearch, setPromoSearch] = useState("");
 
-  // 💡 [핵심] 프로모션 데이터에 호텔 이름과 주소 정보(city, province)를 조인(Join)하여 병합합니다!
   const enrichedPromotions = promotions.map(promo => {
     const matchedHotel = partnerHotels.find(h => h.code === promo.hotel_code) || {};
     return {
@@ -270,7 +265,6 @@ export default function MainPortal() {
     }
   };
 
-  // ✅ [수정] 카드 정보 업데이트 핸들러
   const handleCardSave = (e) => {
     e.preventDefault();
     setIsCardUpdating(true);
@@ -279,8 +273,8 @@ export default function MainPortal() {
       const last4 = cardForm.number.slice(-4).padStart(4, '0');
       const maskedCard = `**** **** **** ${last4}`;
 
-      setPartnerCard(maskedCard); // 화면에 즉시 반영
-      localStorage.setItem("mock_partner_card", maskedCard); // 💡 [추가] 새로고침해도 안 날아가도록 브라우저에 임시 저장!
+      setPartnerCard(maskedCard);
+      localStorage.setItem("mock_partner_card", maskedCard);
 
       setIsCardUpdating(false);
       setIsCardModalOpen(false);
@@ -311,18 +305,16 @@ export default function MainPortal() {
     setAlertMessage(`Profile saved successfully and updated on the portal.`);
   };
 
-  // ✅ [수정] 진짜 DB와 연동되는 파트너(오너) 로그인 핸들러
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      // 💡 [핵심] BASE_URL을 반드시 명시하여 정확한 백엔드 서버를 타격하도록 수정
       const res = await fetch(`/api/portal-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          hotel_code: loginHotelCode.trim(), // 💡 [추가] 호텔 코드 전송
-          user_id: loginEmail.trim(), // 💡 대소문자 그대로 전송
+          hotel_code: loginHotelCode.trim(),
+          user_id: loginEmail.trim(),
           password: loginPw.trim()
         })
       });
@@ -365,28 +357,25 @@ export default function MainPortal() {
                   <h2 className="text-2xl font-black text-slate-800">{t.loginTitle}</h2>
                 </div>
                 <form onSubmit={handleLogin} className="space-y-5">
-                  {/* 💡 [신규 추가] 호텔 코드 입력 필드 */}
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                       {t.hotelCodeStr || "Hotel Code"}
                     </label>
+                    {/* 💡 대문자 고정 및 uppercase 클래스 해제 완료 */}
                     <input
                       type="text"
                       value={loginHotelCode}
-                      onChange={e => setLoginHotelCode(e.target.value.toUpperCase())}
+                      onChange={e => setLoginHotelCode(e.target.value)}
                       required
-                      className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none uppercase tracking-widest"
+                      className="w-full p-3 border border-slate-200 rounded-xl font-bold bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none tracking-widest"
                       placeholder="e.g. SKY001"
                     />
                   </div>
 
                   <div>
-                    {/* 💡 1. t.IDStr 번역을 사용 (만약 번역 객체에 없으면 "User ID" 출력) */}
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                       {t.emailStr || "User ID"}
                     </label>
-
-                    {/* 💡 2. type을 "text"로 변경하고, value를 loginEmail로 통일 */}
                     <input
                       type="text"
                       value={loginEmail}
@@ -416,11 +405,11 @@ export default function MainPortal() {
                   <p className="text-slate-500 font-bold">{t.dashSub}</p>
                 </div>
                 <button onClick={() => {
-                  sessionStorage.removeItem("partner_logged_in"); // 💡 세션 지우기!
+                  sessionStorage.removeItem("partner_logged_in");
                   setIsPartnerLoggedIn(false);
                   setLoginPw('');
-                  setLoginEmail(''); // 상태 초기화 추가
-                  setLoginHotelCode(''); // 상태 초기화 추가
+                  setLoginEmail('');
+                  setLoginHotelCode('');
                 }} className="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm">
                   {t.logoutBtn}
                 </button>
@@ -660,7 +649,6 @@ export default function MainPortal() {
                     <span className="text-emerald-600">✨</span> {t.bookPartner}
                   </h3>
                 </div>
-                {/* 💡 [수정] BookingBar에 API로 가져온 호텔 정보와 프로모 클릭 시 받은 선택된 호텔(preselectedHotelCode) 전달 */}
                 <BookingBar lang={lang} onSearchResults={setSearchData} hotels={partnerHotels} preselectedHotelCode={selectedPromoHotel} />
               </div>
             </div>
@@ -721,7 +709,6 @@ export default function MainPortal() {
                       </div>
                       <div className="p-6 flex-grow flex flex-col">
 
-                        {/* 💡 [수정 완료] 조인된 호텔 이름 및 지역 정보 출력 */}
                         <div className="mb-4 pb-4 border-b border-slate-100">
                           <h4 className="text-slate-900 font-black text-lg leading-tight line-clamp-1 hover:text-emerald-600 transition-colors cursor-pointer">
                             {promo.hotel_name}
@@ -740,7 +727,6 @@ export default function MainPortal() {
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.promoCode}</span>
                           <span className="font-mono font-black text-emerald-600 text-lg">{promo.code}</span>
                         </div>
-                        {/* 프로모션 카드 하단 버튼 영역 */}
                         <div className="flex justify-between items-center shrink-0">
                           <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
                             {t.validUntil}: <br className="sm:hidden" />{promo.end_date}
@@ -748,19 +734,15 @@ export default function MainPortal() {
 
                           <button
                             onClick={() => {
-                              // 💡 [혁신 UX: 다이렉트 딥링킹] 검색바를 거치지 않고 개별 호텔 예약창으로 직행합니다.
                               const matchedHotel = partnerHotels.find(h => h.code === promo.hotel_code);
 
-                              // 1. 호텔의 독립 도메인이 있으면 거기로, 없으면 통합 포털의 개별 주소로 설정
                               const baseUrl = matchedHotel?.domain
                                 ? `https://${matchedHotel.domain}`
                                 : `/?hotel=${promo.hotel_code}`;
 
-                              // 2. 주소 뒤에 프로모션 코드와 타겟 객실 타입 꼬리표(Query Parameter) 부착
                               const separator = baseUrl.includes('?') ? '&' : '?';
                               const deepLink = `${baseUrl}${separator}promo=${promo.code}&roomType=${encodeURIComponent(promo.target_room_type)}`;
 
-                              // 3. 고객을 맞춤형 혜택이 세팅된 페이지로 즉시 안내 (새 창)
                               window.open(deepLink, '_blank');
                             }}
                             className="bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-md"
@@ -829,8 +811,6 @@ export default function MainPortal() {
 
               <div ref={sliderRef} className="flex overflow-x-auto gap-6 snap-x pb-8 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {partnerHotels.length > 0 ? partnerHotels.map((dest, idx) => {
-                  // DB에 개별 도메인(dest.domain)이 등록되어 있으면 해당 도메인으로, 
-                  // 없으면 현재의 쿼리 파라미터(/?hotel=) 방식으로 자동 연결됩니다.
                   const hotelLink = dest.domain ? `https://${dest.domain}` : `/?hotel=${dest.code}`;
 
                   return (
