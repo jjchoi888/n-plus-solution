@@ -17,7 +17,7 @@ export function middleware(req) {
     if (hostname === 'hq.hotelnplus.com' || hostname.startsWith('hq.localhost')) {
         // 이미 /hq 경로로 들어온 경우는 무한 루프 방지
         if (!url.pathname.startsWith('/hq')) {
-            console.log("🚀 [Middleware] HQ 도메인 감지 -> /hq 로 리라이트 합니다.");
+            // 💡 ESLint 빌드 에러를 막기 위해 console.log 삭제됨
             url.pathname = `/hq${url.pathname}`;
             return NextResponse.rewrite(url);
         }
@@ -26,16 +26,9 @@ export function middleware(req) {
     return NextResponse.next();
 }
 
-// 💡 [가장 중요] 미들웨어가 루트(/)를 포함한 모든 일반 경로에서 무조건 실행되도록 강제
+// 💡 [가장 중요] 미들웨어가 무조건 실행되도록 강제
 export const config = {
     matcher: [
-        /*
-         * 다음으로 시작하는 경로를 제외한 모든 요청과 일치:
-         * - api (API 경로)
-         * - _next/static (정적 파일)
-         * - _next/image (이미지 최적화 파일)
-         * - favicon.ico (파비콘 파일)
-         */
         '/((?!api|_next/static|_next/image|favicon.ico).*)',
     ],
 };
