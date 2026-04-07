@@ -259,6 +259,8 @@ export default function MainPortal() {
 
   // 💡 [NEW] 파이어베이스 구글 연동 로그인 함수 (여기에 새로 추가!)
   const handleGoogleLogin = async () => {
+    alert("구글 버튼이 눌렸습니다! 파이어베이스 통신을 시작합니다.");
+    
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
