@@ -257,6 +257,42 @@ export default function MainPortal() {
     }
   };
 
+  // 💡 [NEW] 파이어베이스 구글 연동 로그인 함수 (여기에 새로 추가!)
+  const handleGoogleLogin = async () => {
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const response = await axios.post('https://api.hotelnplus.com/api/members/auth', {
+        hotel_code: 'NPLUS01',
+        email: user.email,
+        first_name: user.displayName ? user.displayName.split(' ')[0] : 'Guest',
+        last_name: user.displayName ? user.displayName.split(' ')[1] || '' : '',
+        phone: user.phoneNumber || '',
+        nationality: 'Unknown'
+      });
+
+      if (response.data.success) {
+        localStorage.setItem('nplus_guest_user', JSON.stringify(response.data.member));
+        setUser(response.data.member);
+        setIsMembershipActive(response.data.member.is_membership_active || false);
+        setShowGuestAuthModal(false);
+
+        if (response.data.isNew) {
+          setAlertMessage('Welcome! Your N+ Rewards account has been created.');
+        } else {
+          setAlertMessage('Welcome back!');
+        }
+      }
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      setAlertMessage("Google sign-in failed. Please try again.");
+    }
+  };
+
   const startOnboarding = () => {
     setShowOnboarding(true);
     setOnboardStep(1);
@@ -1287,7 +1323,7 @@ export default function MainPortal() {
                   {/* 구글 연동 로그인 버튼 */}
                   <button
                     type="button"
-                    onClick={() => signIn('google')}
+                    onClick={handleGoogleLogin} // 💡 이 부분이 바뀌었습니다!
                     className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm"
                   >
                     {/* 💡 여기에 여는 svg 태그를 추가했습니다! */}
