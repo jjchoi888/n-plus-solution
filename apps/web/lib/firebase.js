@@ -1,4 +1,3 @@
-// apps/guest-app/lib/firebase.js
 import { initializeApp } from 'firebase/app';
 
 // 대표님의 Firebase 프로젝트 설정값 (Firebase Console에서 확인 가능)

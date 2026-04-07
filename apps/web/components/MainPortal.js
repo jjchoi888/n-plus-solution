@@ -4,7 +4,7 @@ import Navbar from "./Navbar";
 import BookingBar from "./BookingBar";
 import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { app } from '../lib/firebase';
+import { app } from './lib/firebase';
 import axios from 'axios';
 
 const heroImages = [
@@ -260,7 +260,7 @@ export default function MainPortal() {
   // 💡 [NEW] 파이어베이스 구글 연동 로그인 함수 (여기에 새로 추가!)
   const handleGoogleLogin = async () => {
     alert("구글 버튼이 눌렸습니다! 파이어베이스 통신을 시작합니다.");
-    
+
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
