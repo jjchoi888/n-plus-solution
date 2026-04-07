@@ -1120,60 +1120,6 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 예약 조회 팝업 모달창 */}
-      {isLookupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[200] p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white">
-              <h2 className="text-xl font-bold">{t.findBooking}</h2>
-              <button onClick={closeLookupModal} className="text-white hover:text-gray-200 text-3xl font-light leading-none">&times;</button>
-            </div>
-
-            <div className="p-8">
-              {!lookupResult ? (
-                <form onSubmit={handleLookup} className="space-y-5">
-                  <p className="text-sm text-gray-500 mb-2">{t.enterDetails}</p>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.resId}</label>
-                    <input type="text" placeholder="WEBXXXXXX" value={lookupData.res_id} onChange={e => setLookupData({ ...lookupData, res_id: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-mono" />
-                  </div>
-                  <div className="flex items-center justify-center"><span className="text-xs font-black text-gray-400 bg-gray-100 px-3 rounded-full">OR</span></div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.email}</label>
-                    <input type="email" placeholder="email@example.com" value={lookupData.email} onChange={e => setLookupData({ ...lookupData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none" />
-                  </div>
-
-                  {lookupError && <p className="text-sm text-red-500 font-bold bg-red-50 p-3 rounded-lg">{lookupError}</p>}
-
-                  <button type="submit" disabled={isLookingUp} className={`w-full py-3.5 text-white font-bold rounded-xl shadow-md transition-all text-lg mt-4 ${isLookingUp ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
-                    {isLookingUp ? t.searching : t.search}
-                  </button>
-                </form>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center mb-6">
-                    <span className="text-xs uppercase text-emerald-600 font-bold mb-1">{t.resId}</span>
-                    <span className="text-2xl font-black text-emerald-900 font-mono tracking-widest">{lookupResult.res_id}</span>
-                  </div>
-
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.guest}</span><span className="font-bold text-gray-800">{lookupResult.guest_name}</span></div>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.status}</span><span className={`font-black px-2 py-0.5 rounded text-xs ${lookupResult.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>{lookupResult.status}</span></div>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.room}</span><span className="font-bold text-gray-800">{lookupResult.room_type}</span></div>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.checkIn}</span><span className="font-bold text-gray-800">{lookupResult.check_in_date}</span></div>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500 font-bold">{t.checkOut}</span><span className="font-bold text-gray-800">{lookupResult.check_out_date}</span></div>
-                  </div>
-
-                  <button onClick={closeLookupModal} className="w-full mt-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors">
-                    {t.close}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ========================================================= */}
       {/* 💡 [NEW] 결제 카드 업데이트 모달창 */}
       {/* ========================================================= */}
