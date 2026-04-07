@@ -166,6 +166,47 @@ export default function MainPortal() {
 
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
 
+  // =========================================================
+  // 💡 [NEW] 일반 고객(Guest) 로그인 및 회원가입 상태 관리
+  // =========================================================
+  const [isGuestLoggedIn, setIsGuestLoggedIn] = useState(false);
+  const [guestData, setGuestData] = useState(null);
+  const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+  const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // 'LOGIN' or 'REGISTER'
+
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPw, setGuestPw] = useState("");
+  const [guestName, setGuestName] = useState("");
+
+  const handleGuestAuthSubmit = async (e) => {
+    e.preventDefault();
+    const endpoint = guestAuthMode === 'LOGIN' ? '/api/guest-login' : '/api/guest-register';
+    const payload = guestAuthMode === 'LOGIN'
+      ? { email: guestEmail, password: guestPw }
+      : { email: guestEmail, password: guestPw, name: guestName };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setIsGuestLoggedIn(true);
+        setGuestData(guestAuthMode === 'LOGIN' ? data.user : { name: guestName, email: guestEmail });
+        setShowGuestAuthModal(false);
+        setAlertMessage(guestAuthMode === 'LOGIN' ? "환영합니다!" : "회원가입이 완료되었습니다!");
+        setGuestEmail(""); setGuestPw(""); setGuestName("");
+      } else {
+        setAlertMessage(data.message || "인증에 실패했습니다.");
+      }
+    } catch (err) {
+      setAlertMessage("서버 연결에 실패했습니다. 다시 시도해 주세요.");
+    }
+  };
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -343,7 +384,16 @@ export default function MainPortal() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
 
-      <Navbar currentLang={lang} setLang={setLang} onMenuClick={handleMenuClick} />
+      <Navbar
+        currentLang={lang}
+        setLang={setLang}
+        onMenuClick={handleMenuClick}
+        isGuestLoggedIn={isGuestLoggedIn}
+        setIsGuestLoggedIn={setIsGuestLoggedIn}
+        guestData={guestData}
+        setGuestData={setGuestData}
+        setShowGuestAuthModal={setShowGuestAuthModal}
+      />
 
       {searchData ? (
         <section className="w-full max-w-6xl mx-auto mt-28 px-4 animate-fade-in-up relative z-10 pb-20 flex-grow">
@@ -1055,6 +1105,50 @@ export default function MainPortal() {
           </div>
         </div>
       )}
+
+      {/* 💡 [NEW] 일반 고객용 회원가입/로그인 모달 */}
+      {showGuestAuthModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
+
+            <div className="flex border-b border-slate-100">
+              <button
+                className={`flex-1 py-4 text-sm font-bold transition-colors ${guestAuthMode === 'LOGIN' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+                onClick={() => setGuestAuthMode('LOGIN')}
+              >
+                Sign In
+              </button>
+              <button
+                className={`flex-1 py-4 text-sm font-bold transition-colors ${guestAuthMode === 'REGISTER' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+                onClick={() => setGuestAuthMode('REGISTER')}
+              >
+                Join Membership
+              </button>
+            </div>
+
+            <form onSubmit={handleGuestAuthSubmit} className="p-8 space-y-4">
+              {guestAuthMode === 'REGISTER' && (
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Full Name</label>
+                  <input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="John Doe" />
+                </div>
+              )}
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Email</label>
+                <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="name@email.com" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Password</label>
+                <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none tracking-widest" placeholder="••••••••" />
+              </div>
+              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md mt-2">
+                {guestAuthMode === 'LOGIN' ? 'Sign In' : 'Create Account'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
