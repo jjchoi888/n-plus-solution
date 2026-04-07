@@ -6,6 +6,7 @@ import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { app } from '../lib/firebase';
 import axios from 'axios';
+import MyPage from "./MyPage";
 
 const heroImages = [
   "/hero1.png",
@@ -425,6 +426,8 @@ export default function MainPortal() {
       setSearchData(null);
     } else if (action === 'CONTACT') {
       setIsContactOpen(true);
+    } else if (action === 'MYPAGE') { // 💡 추가
+      setActiveView("MYPAGE");
     }
   };
 
@@ -792,6 +795,11 @@ export default function MainPortal() {
               </button>
             </div>
           </section>
+        </div>
+
+      ) : activeView === "MYPAGE" ? (
+        <div className="w-full flex-grow bg-slate-50">
+          <MyPage user={user} onBack={() => setActiveView("HOME")} />
         </div>
 
       ) : (

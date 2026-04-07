@@ -121,8 +121,8 @@ export default function Navbar({
                 {user.name || user.first_name || "Guest"}
               </span>
               <button
-                onClick={() => alert("My Page 개발 준비 중입니다.")}
-                className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold text-[#009900] border-2 border-[#009900] rounded-full hover:bg-[#009900] hover:text-white transition-all whitespace-nowrap"
+                onClick={() => onMenuClick && onMenuClick('MYPAGE')} // 💡 alert 대신 이 명령어를 넣습니다.
+                className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:cdtext-sm font-bold text-[#009900] border-2 border-[#009900] rounded-full hover:bg-[#009900] hover:text-white transition-all whitespace-nowrap"
               >
                 My Page
               </button>
