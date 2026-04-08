@@ -8,32 +8,30 @@ export default function ProfilePage() {
     const [myBookings, setMyBookings] = useState([]);
 
     useEffect(() => {
-        // 1. 유저 정보 불러오기 (로컬 스토리지로 빠른 화면 렌더링)
+        // 1. 유저 정보 불러오기 (로컬 스토리지 캐시)
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
             setUser(parsedUser);
 
-            // 💡 [NEW] 캐시 방지용 난수(Date.now()) 추가 및 모든 등급 변수명(tierName, tier) 강제 주입
+            // 2. 백엔드에서 최신 데이터를 가져와서 모바일 화면 즉시 갱신 (HQ 실시간 동기화)
             fetch(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.member) {
                         const freshUser = {
                             ...data.member,
-                            // 💡 어떤 컴포넌트에서 부르든 찰떡같이 알아듣도록 호환성 100% 세팅
-                            tierName: data.member.tier_id || data.member.tier || 'Basic',
-                            tier: data.member.tier_id || data.member.tier || 'Basic',
+                            // 이름 조합 로직 통일
                             name: `${data.member.first_name || ''} ${data.member.last_name || ''}`.trim() || 'Guest User'
                         };
                         localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
-                        setUser(freshUser); // 화면 즉시 새로고침
+                        setUser(freshUser); // 화면 새로고침
                     }
                 })
                 .catch(err => console.error("Profile sync error:", err));
         }
 
-        // 방금 book 페이지에서 저장한 '나의 예약 내역' 불러오기
+        // 예약 내역 불러오기
         const savedBookings = localStorage.getItem('nplus_my_bookings');
         if (savedBookings) {
             setMyBookings(JSON.parse(savedBookings));
@@ -61,13 +59,12 @@ export default function ProfilePage() {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-1">Membership</p>
-                                {/* 💡 대문자로 깔끔하게 티어가 출력되도록 적용 */}
+                                {/* 💡 [핵심 수정 구간] 하드코딩 완전 제거! DB에서 온 tier_id를 무조건 대문자로 출력 */}
                                 <p className="text-[#009900] font-black text-sm uppercase tracking-widest">
                                     {user.tier_id ? `${user.tier_id} TIER` : 'BASIC'}
                                 </p>
                             </div>
                             <div className="text-right">
-                                {/* 이름 표시 안전장치 적용 */}
                                 <h2 className="text-xl font-black">
                                     {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : user.name}
                                 </h2>
@@ -81,7 +78,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 ) : (
-
                     <div className="bg-slate-100 rounded-none p-6 text-center shadow-inner border border-slate-200">
                         <h2 className="text-xl font-black text-slate-800 mb-2">Guest User</h2>
                         <p className="text-sm font-bold text-slate-500 mb-6 px-4">Log in to view your reward points and faster booking checkout.</p>
@@ -101,8 +97,6 @@ export default function ProfilePage() {
                         <div className="space-y-4">
                             {myBookings.map((booking, idx) => (
                                 <div key={idx} className="bg-white border-2 border-slate-200 rounded-none shadow-sm p-5 relative">
-
-                                    {/* 💡 [핵심 로직] 상태 표시 뱃지: Pending(대기) vs Confirmed(확정) */}
                                     <div className="absolute top-4 right-4">
                                         {booking.status === 'Pending' ? (
                                             <span className="bg-yellow-100 text-yellow-800 border border-yellow-300 px-3 py-1 rounded-none text-[9px] font-black uppercase tracking-widest shadow-sm flex items-center gap-1">
