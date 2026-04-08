@@ -8,10 +8,27 @@ export default function ProfilePage() {
     const [myBookings, setMyBookings] = useState([]);
 
     useEffect(() => {
-        // 유저 정보 불러오기
+        // 1. 유저 정보 불러오기 (로컬 스토리지로 빠른 화면 렌더링)
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) {
-            setUser(JSON.parse(savedUser));
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+
+            // 💡 [NEW] 2. 백엔드에서 최신 데이터를 가져와서 모바일 화면과 로컬 스토리지를 갱신 (HQ 실시간 반영)
+            fetch(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.member) {
+                        const freshUser = {
+                            ...data.member,
+                            // 이름 조합 로직 통일
+                            name: `${data.member.first_name || ''} ${data.member.last_name || ''}`.trim() || 'Guest User'
+                        };
+                        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+                        setUser(freshUser); // 화면 즉시 새로고침
+                    }
+                })
+                .catch(err => console.error("Profile sync error:", err));
         }
 
         // 방금 book 페이지에서 저장한 '나의 예약 내역' 불러오기
@@ -23,8 +40,6 @@ export default function ProfilePage() {
 
     const handleLogout = () => {
         localStorage.removeItem('nplus_guest_user');
-        // 예약 내역도 기기에서 지우려면 아래 주석 해제 (보통은 서버에 연동되므로 지워도 무방)
-        // localStorage.removeItem('nplus_my_bookings'); 
         setUser(null);
         window.location.href = '/';
     };
@@ -44,20 +59,27 @@ export default function ProfilePage() {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-1">Membership</p>
-                                <p className="text-[#009900] font-black text-sm uppercase tracking-widest">{user.tier_id === 1 ? 'MEMBER' : 'PREMIUM'}</p>
+                                {/* 💡 [핵심 수정] 하드코딩 제거하고 실제 DB의 tier_id 값 출력! */}
+                                <p className="text-[#009900] font-black text-sm uppercase tracking-widest">
+                                    {user.tier_id ? `${user.tier_id} TIER` : 'BASIC'}
+                                </p>
                             </div>
                             <div className="text-right">
-                                <h2 className="text-xl font-black">{user.first_name} {user.last_name}</h2>
+                                {/* 이름 표시 안전장치 적용 */}
+                                <h2 className="text-xl font-black">
+                                    {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : user.name}
+                                </h2>
                                 <p className="text-xs text-slate-400 font-medium mt-1">{user.email}</p>
                             </div>
                         </div>
 
                         <div className="bg-white/10 rounded-none p-4 backdrop-blur-md border border-white/10">
                             <p className="text-[10px] text-slate-300 mb-1 uppercase font-bold tracking-wider">Available Reward Points</p>
-                            <p className="text-3xl font-black tracking-wider text-white">₱ {user.total_points || 0}</p>
+                            <p className="text-3xl font-black tracking-wider text-white">₱ {(user.total_points || 0).toLocaleString()}</p>
                         </div>
                     </div>
                 ) : (
+                    
                     <div className="bg-slate-100 rounded-none p-6 text-center shadow-inner border border-slate-200">
                         <h2 className="text-xl font-black text-slate-800 mb-2">Guest User</h2>
                         <p className="text-sm font-bold text-slate-500 mb-6 px-4">Log in to view your reward points and faster booking checkout.</p>
