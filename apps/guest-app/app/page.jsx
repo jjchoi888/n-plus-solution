@@ -21,6 +21,7 @@ export default function HomePage() {
     const [currentHotelIndex, setCurrentHotelIndex] = useState(0);
 
     useEffect(() => {
+        // 1. 빠른 렌더링을 위해 로컬 스토리지 데이터 먼저 세팅
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
@@ -28,6 +29,23 @@ export default function HomePage() {
             if (parsedUser.is_membership_active) {
                 setIsMembershipActive(true);
             }
+
+            // 💡 [NEW] 2. 백엔드에서 최신 데이터를 가져와 홈 화면 즉시 갱신 (캐시 방지 적용)
+            axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
+                headers: { 'Cache-Control': 'no-cache' }
+            })
+                .then(res => {
+                    if (res.data && res.data.success && res.data.member) {
+                        const freshUser = {
+                            ...res.data.member,
+                            name: `${res.data.member.first_name || ''} ${res.data.member.last_name || ''}`.trim() || 'Guest User'
+                        };
+                        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+                        setUser(freshUser);
+                        setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
+                    }
+                })
+                .catch(err => console.error("Home sync error:", err));
         }
 
         axios.get('https://api.hotelnplus.com/api/hotels')
@@ -70,21 +88,35 @@ export default function HomePage() {
         }
     };
 
-    const completeOnboarding = () => {
-        const updatedUser = {
-            ...user,
-            phone: phone,
-            is_membership_active: true,
-            tierId: 'MEMBER',
-            tierName: 'Member',
-            total_points: 1000,
-            total_spend: 0
-        };
-        localStorage.setItem('nplus_guest_user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        setIsMembershipActive(true);
-        setShowOnboarding(false);
-        alert('Welcome to N+ Rewards! 1,000 Bonus Points have been added to your account.');
+    // 💡 [NEW] 홈 화면에서 리워즈 가입 시에도 진짜 API 호출하도록 변경
+    const completeOnboarding = async () => {
+        try {
+            const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", {
+                email: user.email,
+                phone: phone,
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+            });
+
+            if (response.data && response.data.success) {
+                const updatedUser = response.data.member;
+                const finalUser = {
+                    ...updatedUser,
+                    name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
+                };
+
+                localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
+                setUser(finalUser);
+                setIsMembershipActive(true);
+                setShowOnboarding(false);
+                alert('Welcome to N+ Rewards! 1,000 Bonus Points have been added to your account.');
+            } else {
+                alert("Failed to join rewards: " + response.data.message);
+            }
+        } catch (error) {
+            console.error("Join Error:", error);
+            alert(error.response?.data?.message || "Server error occurred.");
+        }
     };
 
     if (showOnboarding) {
@@ -109,7 +141,6 @@ export default function HomePage() {
                             <p className="text-slate-500 text-sm font-medium mb-6">Complete your profile to unlock our progressive reward tiers.</p>
 
                             <div className="bg-white border border-slate-200 p-5 shadow-sm mb-8 space-y-5">
-                                {/* 💡 [수정] 이모지 대신 public 폴더의 커스텀 SVG 아이콘 적용 */}
                                 <div className="flex items-start gap-3">
                                     <img src="/point.svg" alt="Points" className="w-7 h-7 object-contain shrink-0" />
                                     <div>
@@ -205,10 +236,22 @@ export default function HomePage() {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-widest mb-1">Membership</p>
-                                <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">{user.tierName || 'MEMBER'} TIER</p>
+                                {/* 💡 [핵심 수정] 홈 화면에서도 DB에서 넘어온 등급을 하드코딩 없이 대문자로 무조건 정확하게 표출 */}
+                                <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">
+                                    {(() => {
+                                        const tier = user?.tier_id || user?.tier || user?.tierName;
+                                        if (!tier || tier === 1 || tier === '1') return 'MEMBER TIER';
+                                        if (tier === 2 || tier === '2') return 'SILVER TIER';
+                                        if (tier === 3 || tier === '3') return 'GOLD TIER';
+                                        if (tier === 4 || tier === '4') return 'VIP TIER';
+                                        return `${String(tier).toUpperCase()} TIER`;
+                                    })()}
+                                </p>
                             </div>
                             <div className="text-right">
-                                <h2 className="text-xl font-bold">{user.first_name} {user.last_name}</h2>
+                                <h2 className="text-xl font-bold">
+                                    {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : user.name}
+                                </h2>
                             </div>
                         </div>
 
@@ -245,11 +288,7 @@ export default function HomePage() {
             <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
                 <Link href="/book" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-none shadow-sm h-24 group">
-                    <img
-                        src="/bed-icon.png"
-                        alt="Book Room"
-                        className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0"
-                    />
+                    <img src="/bed-icon.png" alt="Book Room" className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0" />
                     <span className="font-bold text-slate-800 text-sm">Book Room</span>
                 </Link>
                 <Link href="/promos" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-none shadow-sm h-24 group">
