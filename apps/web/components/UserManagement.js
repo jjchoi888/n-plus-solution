@@ -3,11 +3,12 @@ import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 // 💡 리치 텍스트 에디터(React-Quill) 불러오기
 import dynamic from 'next/dynamic';
-const ReactQuill = dynamic(() => import('react-quill'), {
+// 💡 react-quill 뒤에 '-new' 가 붙었습니다!
+const ReactQuill = dynamic(() => import('react-quill-new'), {
     ssr: false,
     loading: () => <div className="h-[350px] bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center font-bold text-slate-400">Loading Editor...</div>
 });
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
@@ -192,7 +193,7 @@ export default function UserManagement() {
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                                    <span>🎨</span> Email Campaign Designer
+                                    <span>🎨</span> Email Campaign Designer [v2 확인용!!!]
                                 </h3>
                                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
                                     Sending to: {displayUsers.length} Recipients
