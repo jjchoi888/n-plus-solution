@@ -193,7 +193,7 @@ export default function UserManagement() {
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                                    <span>🎨</span> Email Campaign Designer [v2 확인용!!!]
+                                    <span>🎨</span> Email Campaign Designer
                                 </h3>
                                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
                                     Sending to: {displayUsers.length} Recipients
