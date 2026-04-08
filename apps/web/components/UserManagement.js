@@ -101,16 +101,15 @@ export default function UserManagement() {
     };
 
     // 💡 [NEW] 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
+    // 💡 [NEW] 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
 
         try {
-            // 1. 진짜 백엔드 서버로 변경된 데이터를 쏩니다.
             const res = await axios.post("https://api.hotelnplus.com/api/hq/members/update", editingUser);
 
             if (res.data && res.data.success) {
-                // 2. DB 업데이트가 성공하면 화면의 리스트도 갈아끼웁니다.
                 setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
                 alert(`✅ Successfully updated information for ${editingUser.name}.`);
                 setIsEditModalOpen(false);
