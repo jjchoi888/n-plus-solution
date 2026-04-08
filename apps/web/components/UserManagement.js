@@ -28,6 +28,10 @@ export default function UserManagement() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    // 💡 [NEW] 포인트 로그 상태 및 검색 필터
+    const [pointsLogs, setPointsLogs] = useState([]);
+    const [logSearch, setLogSearch] = useState("");
+    const [logFilterTier, setLogFilterTier] = useState("ALL");
 
     // 에디터 툴바 구성
     const modules = useMemo(() => ({
@@ -50,6 +54,10 @@ export default function UserManagement() {
                 const res = await axios.get("https://api.hotelnplus.com/api/hq/members");
                 if (res.data && res.data.members) {
                     setUsers(res.data.members);
+
+                // 💡 [NEW] 포인트 로그도 함께 가져옵니다.
+                const logRes = await axios.get("https://api.hotelnplus.com/api/hq/points-log").catch(() => ({ data: { logs: [] } }));
+                if (logRes.data && logRes.data.logs) setPointsLogs(logRes.data.logs);
                 }
             } catch (err) {
                 console.error("Data load failure:", err);
@@ -57,6 +65,7 @@ export default function UserManagement() {
             } finally { setLoading(false); }
         };
         fetchUsers();
+
     }, []);
 
     const basicUsers = users.filter(u => !u.is_membership_active);
@@ -129,13 +138,14 @@ export default function UserManagement() {
     return (
         <div className="space-y-6 animate-fade-in pb-20 font-sans">
             {/* 상단 탭 */}
-            <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm">
+            <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm overflow-x-auto">
                 {[
                     { id: "ALL_USERS", label: `Total (${users.length})` },
                     { id: "BASIC", label: `Basic Users (${basicUsers.length})` },
-                    { id: "MEMBERS", label: `Rewards Members (${memberUsers.length})` }
+                    { id: "MEMBERS", label: `Rewards Members (${memberUsers.length})` },
+                    { id: "POINTS_LOG", label: `Points Audit Log 📊` } // 💡 로그 탭 추가
                 ].map(t => (
-                    <button key={t.id} onClick={() => { setTab(t.id); setFilterTier("ALL"); }} className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${tab === t.id ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"}`}>
+                    <button key={t.id} onClick={() => { setTab(t.id); setFilterTier("ALL"); }} className={`px-5 md:px-6 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${tab === t.id ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"}`}>
                         {t.label}
                     </button>
                 ))}
@@ -165,61 +175,96 @@ export default function UserManagement() {
                 </div>
             </div>
 
-            {/* 유저 테이블 */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm font-bold">
-                    <thead className="bg-slate-50 border-b border-slate-100 font-black text-slate-500 uppercase text-[11px] tracking-widest">
-                        <tr><th className="p-5">User Info</th><th className="p-5">Nationality</th><th className="p-5">Tier Status</th><th className="p-5">Points</th><th className="p-5 text-right">Actions</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {displayUsers.map(u => {
-                            // 스크린샷에 "1"로 나오는 티어를 보기 좋게 처리
-                            const displayTier = u.tier === '1' || !u.tier ? 'Basic' : String(u.tier).toUpperCase();
+            {/* 📊 포인트 로그 탭 화면 */}
+            {tab === "POINTS_LOG" && (
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+                    <div className="p-4 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row gap-3">
+                        <input type="text" placeholder="Search Email or Description..." value={logSearch} onChange={e => setLogSearch(e.target.value)} className="flex-1 p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
+                        <select value={logFilterTier} onChange={e => setLogFilterTier(e.target.value)} className="p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none cursor-pointer">
+                            {tiers.map(t => <option key={`log_${t}`} value={t}>Tier: {t}</option>)}
+                        </select>
+                    </div>
+                    <table className="w-full text-left text-sm font-bold">
+                        <thead className="bg-slate-100 border-b border-slate-200 text-slate-500 uppercase text-[11px] tracking-widest">
+                            <tr><th className="p-4">Date & Time</th><th className="p-4">Member Info</th><th className="p-4">Description</th><th className="p-4 text-right">Points Added</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {pointsLogs
+                                .filter(l => (logFilterTier === "ALL" || l.tier_id === logFilterTier) && ((l.member_email || '').toLowerCase().includes(logSearch.toLowerCase()) || (l.description || '').toLowerCase().includes(logSearch.toLowerCase())))
+                                .map(log => (
+                                    <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="p-4 text-slate-500 font-mono text-xs">{new Date(log.created_at).toLocaleString()}</td>
+                                        <td className="p-4">
+                                            <div className="text-slate-800">{log.first_name} {log.last_name}</div>
+                                            <div className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md inline-block mt-1">{log.member_email}</div>
+                                        </td>
+                                        <td className="p-4 text-slate-600">{log.description}</td>
+                                        <td className="p-4 text-right font-black text-emerald-500 text-lg">+{log.points_added.toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            {pointsLogs.length === 0 && <tr><td colSpan="4" className="p-10 text-center text-slate-400">No point logs available.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-                            return (
-                                <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="p-5">
-                                        <div className="text-slate-800 text-base">{u.name}</div>
-                                        <div className="text-[11px] text-slate-400 font-mono uppercase">{u.email}</div>
-                                    </td>
-                                    <td className="p-5 text-slate-600 font-medium">{u.nationality}</td>
-                                    <td className="p-5">
-                                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${displayTier === 'VIP' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+            {/* 유저 테이블 (POINTS_LOG 탭이 아닐 때만 표시) */}
+            {tab !== "POINTS_LOG" && (
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table className="w-full text-left text-sm font-bold">
+                        <thead className="bg-slate-50 border-b border-slate-100 font-black text-slate-500 uppercase text-[11px] tracking-widest">
+                            <tr><th className="p-5">User Info</th><th className="p-5">Nationality</th><th className="p-5">Tier Status</th><th className="p-5">Points</th><th className="p-5 text-right">Actions</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {displayUsers.map(u => {
+                                // 스크린샷에 "1"로 나오는 티어를 보기 좋게 처리
+                                const displayTier = u.tier === '1' || !u.tier ? 'Basic' : String(u.tier).toUpperCase();
+
+                                return (
+                                    <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-5">
+                                            <div className="text-slate-800 text-base">{u.name}</div>
+                                            <div className="text-[11px] text-slate-400 font-mono uppercase">{u.email}</div>
+                                        </td>
+                                        <td className="p-5 text-slate-600 font-medium">{u.nationality}</td>
+                                        <td className="p-5">
+                                            <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${displayTier === 'VIP' ? 'bg-purple-100 text-purple-700 border-purple-200' :
                                                 displayTier === 'GOLD' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                                                     displayTier === 'SILVER' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                                                         displayTier === 'MEMBER' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
                                                             'bg-slate-100 text-slate-500 border-slate-200'
-                                            }`}>
-                                            {displayTier}
-                                        </span>
-                                    </td>
-                                    <td className="p-5 text-slate-700">
-                                        <span className="text-base">{Number(u.total_points).toLocaleString()}</span>
-                                        <span className="text-[10px] text-slate-300 ml-1">pts</span>
-                                    </td>
-                                    <td className="p-5 text-right">
-                                        {/* 💡 [NEW] Manage 버튼에 onClick 이벤트 연결 */}
-                                        <button
-                                            onClick={() => {
-                                                setEditingUser({ ...u, tier: displayTier }); // 수정용 객체 복사
-                                                setIsEditModalOpen(true);
-                                            }}
-                                            className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black"
-                                        >
-                                            Manage
-                                        </button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-                {displayUsers.length === 0 && (
-                    <div className="p-24 text-center">
-                        <p className="text-slate-400 font-black text-lg">No users found.</p>
-                    </div>
-                )}
-            </div>
+                                                }`}>
+                                                {displayTier}
+                                            </span>
+                                        </td>
+                                        <td className="p-5 text-slate-700">
+                                            <span className="text-base">{Number(u.total_points).toLocaleString()}</span>
+                                            <span className="text-[10px] text-slate-300 ml-1">pts</span>
+                                        </td>
+                                        <td className="p-5 text-right">
+                                            {/* 💡 [NEW] Manage 버튼에 onClick 이벤트 연결 */}
+                                            <button
+                                                onClick={() => {
+                                                    setEditingUser({ ...u, tier: displayTier }); // 수정용 객체 복사
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                                className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black"
+                                            >
+                                                Manage
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    {displayUsers.length === 0 && (
+                        <div className="p-24 text-center">
+                            <p className="text-slate-400 font-black text-lg">No users found.</p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ========================================== */}
             {/* 📌 [NEW] 유저 정보 수정(Manage) 모달창 */}
