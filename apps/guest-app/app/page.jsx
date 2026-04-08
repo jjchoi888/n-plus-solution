@@ -288,7 +288,7 @@ export default function HomePage() {
             <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
                 <Link href="/book" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-none shadow-sm h-24 group">
-                    <img src="/bed-icon.png" alt="Book Room" className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0" />
+                    <img src="/bed-icon.svg" alt="Book Room" className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0" />
                     <span className="font-bold text-slate-800 text-sm">Book Room</span>
                 </Link>
                 <Link href="/promos" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-none shadow-sm h-24 group">
