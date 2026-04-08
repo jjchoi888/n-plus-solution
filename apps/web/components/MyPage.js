@@ -49,7 +49,9 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                         <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
                             {isMember ? `${user?.tier_id || 'MEMBER'}` : 'BASIC USER'}
                         </p>
-                        <h2 className="text-2xl font-black mb-6">{user?.name || 'Guest User'}</h2>
+                        <h2 className="text-2xl font-black mb-6">
+                            {(user?.first_name || user?.last_name) ? `${user?.first_name || ''} ${user?.last_name || ''}`.trim() : 'Guest User'}
+                        </h2>
 
                         <div className="space-y-4">
                             <div>
