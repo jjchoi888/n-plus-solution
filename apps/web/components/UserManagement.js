@@ -37,21 +37,24 @@ export default function UserManagement() {
         ],
     }), []);
 
+    // 💡 UserManagement.js 수정 부분
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const res = await axios.get("/api/hq/members");
-                setUsers(res.data.members);
+                // 주소를 Vercel 상대경로에서 진짜 백엔드 주소로 변경합니다.
+                // (만약 도메인이 다르다면 https://api.hotelnplus.com/api/hq/members 처럼 전체 주소를 적어주세요)
+                const res = await axios.get("https://api.hotelnplus.com/api/hq/members");
+
+                if (res.data && res.data.members) {
+                    setUsers(res.data.members);
+                }
             } catch (err) {
-                // 테스트용 데이터
-                setUsers([
-                    { id: 1, name: "Jongwon Choi", email: "jjchoi888@gmail.com", nationality: "South Korea", is_membership_active: true, total_points: 1000, tier: "Member", created_at: "2026-04-01" },
-                    { id: 2, name: "Juan Dela Cruz", email: "juan@example.com", nationality: "Philippines", is_membership_active: false, total_points: 0, tier: "Basic", created_at: "2026-04-05" },
-                    { id: 3, name: "Maria Santos", email: "maria@test.com", nationality: "Philippines", is_membership_active: true, total_points: 5000, tier: "VIP", created_at: "2026-03-20" },
-                    { id: 4, name: "Kenji Sato", email: "kenji@nplus.jp", nationality: "Japan", is_membership_active: true, total_points: 2500, tier: "Silver", created_at: "2026-04-02" },
-                    { id: 5, name: "HQ Admin", email: "admin@hotelnplus.com", nationality: "South Korea", is_membership_active: true, total_points: 9999, tier: "Gold", created_at: "2026-01-01" },
-                ]);
-            } finally { setLoading(false); }
+                console.error("Failed to retrieve actual data. Please check the server connection.");
+                // 에러 발생 시에만 테스트용 데이터를 보여줍니다.
+                setUsers([]);
+            } finally {
+                setLoading(false);
+            }
         };
         fetchUsers();
     }, []);
