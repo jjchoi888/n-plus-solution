@@ -14,14 +14,16 @@ export default function ProfilePage() {
             const parsedUser = JSON.parse(savedUser);
             setUser(parsedUser);
 
-            // 💡 [NEW] 2. 백엔드에서 최신 데이터를 가져와서 모바일 화면과 로컬 스토리지를 갱신 (HQ 실시간 반영)
-            fetch(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}`)
+            // 💡 [NEW] 캐시 방지용 난수(Date.now()) 추가 및 모든 등급 변수명(tierName, tier) 강제 주입
+            fetch(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.member) {
                         const freshUser = {
                             ...data.member,
-                            // 이름 조합 로직 통일
+                            // 💡 어떤 컴포넌트에서 부르든 찰떡같이 알아듣도록 호환성 100% 세팅
+                            tierName: data.member.tier_id || data.member.tier || 'Basic',
+                            tier: data.member.tier_id || data.member.tier || 'Basic',
                             name: `${data.member.first_name || ''} ${data.member.last_name || ''}`.trim() || 'Guest User'
                         };
                         localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
@@ -59,9 +61,9 @@ export default function ProfilePage() {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-1">Membership</p>
-                                {/* 💡 [핵심 수정] 하드코딩 제거하고 실제 DB의 tier_id 값 출력! */}
+                                {/* 💡 대문자로 깔끔하게 티어가 출력되도록 적용 */}
                                 <p className="text-[#009900] font-black text-sm uppercase tracking-widest">
-                                    {user.tier_id ? `${user.tier_id} TIER` : 'BASIC'}
+                                    {user.tierName ? `${user.tierName} TIER` : 'BASIC'}
                                 </p>
                             </div>
                             <div className="text-right">
@@ -79,7 +81,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 ) : (
-                    
+
                     <div className="bg-slate-100 rounded-none p-6 text-center shadow-inner border border-slate-200">
                         <h2 className="text-xl font-black text-slate-800 mb-2">Guest User</h2>
                         <p className="text-sm font-bold text-slate-500 mb-6 px-4">Log in to view your reward points and faster booking checkout.</p>
