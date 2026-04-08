@@ -52,7 +52,7 @@ export default function UserManagement() {
                     setUsers(res.data.members);
                 }
             } catch (err) {
-                console.error("데이터 로드 실패:", err);
+                console.error("Data load failure:", err);
                 setUsers([]);
             } finally { setLoading(false); }
         };
@@ -92,29 +92,34 @@ export default function UserManagement() {
                 `
             });
 
-            alert("이메일 발송이 성공적으로 시작되었습니다!");
+            alert("Email sending has started successfully!");
             setIsEmailModalOpen(false);
             setEmailForm({ subject: "", content: "", imageUrl: "" });
         } catch (err) {
-            alert("발송 중 에러가 발생했습니다.");
+            alert("error occurred during dispatch.");
         } finally { setIsSending(false); }
     };
 
-    // 💡 [NEW] 유저 수정(Manage) 저장 로직
+    // 💡 [NEW] 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
 
         try {
-            // 서버에 업데이트 요청을 보냅니다 (서버 API가 아직 없다면 에러가 나겠지만, 화면은 갱신되도록 처리합니다)
-            await axios.post("https://api.hotelnplus.com/api/hq/members/update", editingUser).catch(() => console.log("서버 업데이트 준비중"));
+            // 1. 진짜 백엔드 서버로 변경된 데이터를 쏩니다.
+            const res = await axios.post("https://api.hotelnplus.com/api/hq/members/update", editingUser);
 
-            // 화면의 리스트를 즉시 변경된 정보로 갈아끼웁니다.
-            setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
-            alert(`${editingUser.name} 님의 정보가 성공적으로 수정되었습니다.`);
-            setIsEditModalOpen(false);
+            if (res.data && res.data.success) {
+                // 2. DB 업데이트가 성공하면 화면의 리스트도 갈아끼웁니다.
+                setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
+                alert(`✅ Successfully updated information for ${editingUser.name}.`);
+                setIsEditModalOpen(false);
+            } else {
+                alert("❌ Update failed: " + res.data.message);
+            }
         } catch (err) {
-            alert("수정 중 오류가 발생했습니다.");
+            console.error("Update Error:", err);
+            alert("🚨 A network error occurred during the update. Please try again.");
         } finally {
             setIsUpdating(false);
         }
