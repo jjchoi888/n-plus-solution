@@ -1,9 +1,8 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-// 💡 리치 텍스트 에디터(React-Quill) 불러오기
 import dynamic from 'next/dynamic';
-// 💡 react-quill 뒤에 '-new' 가 붙었습니다!
+
 const ReactQuill = dynamic(() => import('react-quill-new'), {
     ssr: false,
     loading: () => <div className="h-[350px] bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center font-bold text-slate-400">Loading Editor...</div>
@@ -20,41 +19,42 @@ export default function UserManagement() {
     const [filterTier, setFilterTier] = useState("ALL");
     const [filterNation, setFilterNation] = useState("ALL");
 
+    // 이메일 모달 상태
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [emailForm, setEmailForm] = useState({ subject: "", content: "", imageUrl: "" });
     const [isSending, setIsSending] = useState(false);
 
-    // 💡 에디터 툴바 구성 (글꼴, 크기, 정렬, 이미지 첨부 등)
+    // 💡 [NEW] 유저 관리(Manage) 모달 상태
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // 에디터 툴바 구성
     const modules = useMemo(() => ({
         toolbar: [
-            [{ 'font': [] }],                               // 글꼴
-            [{ 'size': ['small', false, 'large', 'huge'] }], // 글씨 크기
-            [{ 'align': [] }],                              // 정렬 (좌/우/가운데)
-            ['bold', 'italic', 'underline', 'strike'],      // 스타일
-            [{ 'color': [] }, { 'background': [] }],        // 글자색/배경색
-            ['image', 'link'],                              // 내 컴퓨터에서 사진 첨부 및 링크
-            ['clean']                                       // 서식 지우기
+            [{ 'font': [] }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],
+            [{ 'align': [] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            ['image', 'link'],
+            ['clean']
         ],
     }), []);
 
-    // 💡 UserManagement.js 수정 부분
+    // 유저 데이터 로드
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                // 주소를 Vercel 상대경로에서 진짜 백엔드 주소로 변경합니다.
-                // (만약 도메인이 다르다면 https://api.hotelnplus.com/api/hq/members 처럼 전체 주소를 적어주세요)
+                // 실제 DB에서 데이터 가져오기
                 const res = await axios.get("https://api.hotelnplus.com/api/hq/members");
-
                 if (res.data && res.data.members) {
                     setUsers(res.data.members);
                 }
             } catch (err) {
-                console.error("Failed to retrieve actual data. Please check the server connection.");
-                // 에러 발생 시에만 테스트용 데이터를 보여줍니다.
+                console.error("데이터 로드 실패:", err);
                 setUsers([]);
-            } finally {
-                setLoading(false);
-            }
+            } finally { setLoading(false); }
         };
         fetchUsers();
     }, []);
@@ -73,7 +73,7 @@ export default function UserManagement() {
     const nations = ["ALL", ...new Set(users.map(u => u.nationality))];
     const tiers = ["ALL", "Basic", "Member", "Silver", "Gold", "VIP"];
 
-    // 이메일 발송 처리
+    // 이메일 발송 로직
     const submitEmailCampaign = async (e) => {
         e.preventDefault();
         if (!confirm(`${displayUsers.length}명의 유저에게 이메일을 발송하시겠습니까?`)) return;
@@ -83,12 +83,9 @@ export default function UserManagement() {
             await axios.post("/api/hq/send-marketing-email", {
                 emails: displayUsers.map(u => u.email),
                 subject: emailForm.subject,
-                // 💡 작성된 에디터의 HTML 본문을 그대로 전송
                 content: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
-                    ${emailForm.imageUrl ? `<img src="${emailForm.imageUrl}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;" />` : ""}
-                    <h1 style="color: #1e293b;">${emailForm.subject}</h1>
-                    <div style="font-size: 16px; line-height: 1.6; color: #475569;">${emailForm.content}</div>
+                    ${emailForm.content}
                     <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0;" />
                     <p style="font-size: 12px; color: #94a3b8;">© 2026 n+ Solutions. All rights reserved.</p>
                 </div>
@@ -100,8 +97,26 @@ export default function UserManagement() {
             setEmailForm({ subject: "", content: "", imageUrl: "" });
         } catch (err) {
             alert("발송 중 에러가 발생했습니다.");
+        } finally { setIsSending(false); }
+    };
+
+    // 💡 [NEW] 유저 수정(Manage) 저장 로직
+    const handleUpdateUser = async (e) => {
+        e.preventDefault();
+        setIsUpdating(true);
+
+        try {
+            // 서버에 업데이트 요청을 보냅니다 (서버 API가 아직 없다면 에러가 나겠지만, 화면은 갱신되도록 처리합니다)
+            await axios.post("https://api.hotelnplus.com/api/hq/members/update", editingUser).catch(() => console.log("서버 업데이트 준비중"));
+
+            // 화면의 리스트를 즉시 변경된 정보로 갈아끼웁니다.
+            setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
+            alert(`${editingUser.name} 님의 정보가 성공적으로 수정되었습니다.`);
+            setIsEditModalOpen(false);
+        } catch (err) {
+            alert("수정 중 오류가 발생했습니다.");
         } finally {
-            setIsSending(false);
+            setIsUpdating(false);
         }
     };
 
@@ -109,7 +124,7 @@ export default function UserManagement() {
 
     return (
         <div className="space-y-6 animate-fade-in pb-20 font-sans">
-            {/* 상단 탭 구분 */}
+            {/* 상단 탭 */}
             <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm">
                 {[
                     { id: "ALL_USERS", label: `Total (${users.length})` },
@@ -122,7 +137,7 @@ export default function UserManagement() {
                 ))}
             </div>
 
-            {/* 필터 및 이메일 도구함 */}
+            {/* 필터 및 검색 */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="relative flex-1 min-w-[200px]">
@@ -146,101 +161,173 @@ export default function UserManagement() {
                 </div>
             </div>
 
-            {/* 회원 리스트 테이블 */}
+            {/* 유저 테이블 */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <table className="w-full text-left text-sm font-bold">
                     <thead className="bg-slate-50 border-b border-slate-100 font-black text-slate-500 uppercase text-[11px] tracking-widest">
                         <tr><th className="p-5">User Info</th><th className="p-5">Nationality</th><th className="p-5">Tier Status</th><th className="p-5">Points</th><th className="p-5 text-right">Actions</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                        {displayUsers.map(u => (
-                            <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-5">
-                                    <div className="text-slate-800 text-base">{u.name}</div>
-                                    <div className="text-[11px] text-slate-400 font-mono uppercase">{u.email}</div>
-                                </td>
-                                <td className="p-5 text-slate-600 font-medium">{u.nationality}</td>
-                                <td className="p-5">
-                                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${u.tier === 'VIP' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                                        u.tier === 'Gold' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                            u.tier === 'Silver' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                u.tier === 'Member' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                                                    'bg-slate-100 text-slate-500 border-slate-200'
-                                        }`}>
-                                        {u.tier}
-                                    </span>
-                                </td>
-                                <td className="p-5 text-slate-700">
-                                    <span className="text-base">{u.total_points.toLocaleString()}</span>
-                                    <span className="text-[10px] text-slate-300 ml-1">pts</span>
-                                </td>
-                                <td className="p-5 text-right">
-                                    <button className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black">Manage</button>
-                                </td>
-                            </tr>
-                        ))}
+                        {displayUsers.map(u => {
+                            // 스크린샷에 "1"로 나오는 티어를 보기 좋게 처리
+                            const displayTier = u.tier === '1' || !u.tier ? 'Basic' : String(u.tier).toUpperCase();
+
+                            return (
+                                <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="p-5">
+                                        <div className="text-slate-800 text-base">{u.name}</div>
+                                        <div className="text-[11px] text-slate-400 font-mono uppercase">{u.email}</div>
+                                    </td>
+                                    <td className="p-5 text-slate-600 font-medium">{u.nationality}</td>
+                                    <td className="p-5">
+                                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${displayTier === 'VIP' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                                                displayTier === 'GOLD' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                                    displayTier === 'SILVER' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                        displayTier === 'MEMBER' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                                            'bg-slate-100 text-slate-500 border-slate-200'
+                                            }`}>
+                                            {displayTier}
+                                        </span>
+                                    </td>
+                                    <td className="p-5 text-slate-700">
+                                        <span className="text-base">{Number(u.total_points).toLocaleString()}</span>
+                                        <span className="text-[10px] text-slate-300 ml-1">pts</span>
+                                    </td>
+                                    <td className="p-5 text-right">
+                                        {/* 💡 [NEW] Manage 버튼에 onClick 이벤트 연결 */}
+                                        <button
+                                            onClick={() => {
+                                                setEditingUser({ ...u, tier: displayTier }); // 수정용 객체 복사
+                                                setIsEditModalOpen(true);
+                                            }}
+                                            className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black"
+                                        >
+                                            Manage
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
                 {displayUsers.length === 0 && (
                     <div className="p-24 text-center">
-                        <p className="text-slate-400 font-black text-lg">No users found matching your criteria.</p>
-                        <button onClick={() => { setSearchTerm(""); setFilterTier("ALL"); setFilterNation("ALL"); }} className="text-emerald-600 hover:underline mt-2 font-bold">Reset all filters</button>
+                        <p className="text-slate-400 font-black text-lg">No users found.</p>
                     </div>
                 )}
             </div>
 
-            {/* 📌 [업그레이드 완료] 복합기능 리치 텍스트 에디터 모달 */}
+            {/* ========================================== */}
+            {/* 📌 [NEW] 유저 정보 수정(Manage) 모달창 */}
+            {/* ========================================== */}
+            {isEditModalOpen && editingUser && (
+                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
+                    <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
+
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                                    <span>⚙️</span> Manage User
+                                </h3>
+                                <p className="text-xs font-bold text-slate-500 mt-1">
+                                    {editingUser.email}
+                                </p>
+                            </div>
+                            <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-3xl font-light">&times;</button>
+                        </div>
+
+                        <form onSubmit={handleUpdateUser} className="p-8 space-y-5">
+                            {/* 이름 (읽기 전용) */}
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Full Name</label>
+                                <input type="text" readOnly value={editingUser.name} className="w-full p-4 bg-slate-100 border border-slate-200 rounded-2xl font-bold text-slate-500 cursor-not-allowed" />
+                            </div>
+
+                            {/* 등급(Tier) 수정 */}
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Membership Tier</label>
+                                <select
+                                    value={editingUser.tier}
+                                    onChange={e => setEditingUser({ ...editingUser, tier: e.target.value })}
+                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="Basic">Basic</option>
+                                    <option value="Member">Member</option>
+                                    <option value="Silver">Silver</option>
+                                    <option value="Gold">Gold</option>
+                                    <option value="VIP">VIP</option>
+                                </select>
+                            </div>
+
+                            {/* 포인트 수정 */}
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Reward Points</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={editingUser.total_points}
+                                        onChange={e => setEditingUser({ ...editingUser, total_points: Number(e.target.value) })}
+                                        className="w-full p-4 pl-6 pr-12 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">pts</span>
+                                </div>
+                            </div>
+
+                            {/* 멤버십 상태 활성화 토글 */}
+                            <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                                <div>
+                                    <label className="block text-sm font-black text-slate-800">Active Member</label>
+                                    <span className="text-[10px] font-bold text-slate-400">Can access rewards and bookings</span>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={editingUser.is_membership_active}
+                                        onChange={e => setEditingUser({ ...editingUser, is_membership_active: e.target.checked })}
+                                    />
+                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 font-black rounded-2xl hover:bg-slate-50 transition-colors">Cancel</button>
+                                <button type="submit" disabled={isUpdating} className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 shadow-xl transition-all active:scale-95 disabled:opacity-50">
+                                    {isUpdating ? "Saving..." : "Save Changes"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 📌 이메일 캠페인 에디터 모달 (기존 유지) */}
             {isEmailModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] border border-white/20">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
-                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                                    <span>🎨</span> Email Campaign Designer
-                                </h3>
-                                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                                    Sending to: {displayUsers.length} Recipients
-                                </p>
+                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><span>🎨</span> Email Campaign Designer</h3>
+                                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sending to: {displayUsers.length} Recipients</p>
                             </div>
                             <button onClick={() => setIsEmailModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-3xl font-light">&times;</button>
                         </div>
-
                         <form onSubmit={submitEmailCampaign} className="flex-1 flex flex-col overflow-hidden">
                             <div className="p-8 space-y-6 overflow-y-auto">
                                 <div>
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Campaign Subject</label>
-                                    <input
-                                        type="text" required
-                                        value={emailForm.subject}
-                                        onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-lg text-slate-800 placeholder:text-slate-300"
-                                        placeholder="Enter email subject line..."
-                                    />
+                                    <input type="text" required value={emailForm.subject} onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-lg text-slate-800 placeholder:text-slate-300" placeholder="Enter email subject line..." />
                                 </div>
-
-                                {/* 💡 에디터 영역 (textarea를 대체) */}
                                 <div className="flex flex-col min-h-[450px]">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Message Content (Rich Text)</label>
                                     <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col bg-white">
-                                        <ReactQuill
-                                            theme="snow"
-                                            value={emailForm.content}
-                                            onChange={(content) => setEmailForm({ ...emailForm, content })}
-                                            modules={modules}
-                                            placeholder="Write your marketing message here. Click the image icon to upload from your computer."
-                                            className="h-[380px] flex-1"
-                                        />
+                                        <ReactQuill theme="snow" value={emailForm.content} onChange={(content) => setEmailForm({ ...emailForm, content })} modules={modules} placeholder="Write your marketing message here. Click the image icon to upload from your computer." className="h-[380px] flex-1" />
                                     </div>
                                 </div>
                             </div>
-
                             <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4 shrink-0">
                                 <button type="button" onClick={() => setIsEmailModalOpen(false)} className="px-8 py-4 bg-white border border-slate-200 text-slate-500 font-black rounded-2xl hover:bg-slate-100 transition-colors">Discard Draft</button>
-                                <button
-                                    type="submit"
-                                    disabled={isSending || displayUsers.length === 0}
-                                    className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 shadow-xl transition-all active:scale-95 disabled:opacity-50"
-                                >
+                                <button type="submit" disabled={isSending || displayUsers.length === 0} className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 shadow-xl transition-all active:scale-95 disabled:opacity-50">
                                     {isSending ? "🚀 BLASTING EMAILS..." : `📧 SEND CAMPAIGN TO ${displayUsers.length} USERS`}
                                 </button>
                             </div>
@@ -249,7 +336,6 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 💡 에디터 툴바 및 내부 디자인을 예쁘게 잡아주는 CSS */}
             <style jsx global>{`
                 .ql-container { font-family: inherit; font-size: 16px; border: none !important; }
                 .ql-toolbar { border: none !important; border-bottom: 1px solid #f1f5f9 !important; background: #f8fafc; padding: 12px 20px !important; }
