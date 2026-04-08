@@ -63,7 +63,7 @@ export default function ProfilePage() {
                                 <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-1">Membership</p>
                                 {/* 💡 대문자로 깔끔하게 티어가 출력되도록 적용 */}
                                 <p className="text-[#009900] font-black text-sm uppercase tracking-widest">
-                                    {user.tier_id ? `${user.tier+id} TIER` : 'BASIC'}
+                                    {user.tier_id ? `${user.tier_id} TIER` : 'BASIC'}
                                 </p>
                             </div>
                             <div className="text-right">
