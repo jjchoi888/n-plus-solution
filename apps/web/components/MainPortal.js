@@ -196,16 +196,36 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // 페이지 로드 시 로컬 스토리지 확인
+  // 💡 [NEW] 페이지 로드 시 백엔드에서 최신 데이터를 가져와 상태 동기화 (HQ 어드민 실시간 반영)
   useEffect(() => {
     const savedUser = localStorage.getItem('nplus_guest_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
+        // 1차: 일단 로컬 데이터로 화면을 빠르게 렌더링 (깜빡임 방지)
         setUser(parsedUser);
-        if (parsedUser.is_membership_active) {
-          setIsMembershipActive(true);
-        }
+        if (parsedUser.is_membership_active) setIsMembershipActive(true);
+
+        // 2차: 백엔드에 찔러서 방금 HQ 관리자가 바꾼 포인트나 등급이 있는지 최신화!
+        axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}`)
+          .then(res => {
+            if (res.data && res.data.success) {
+              const freshUser = res.data.member;
+
+              // 규격 통일 (이름, 등급 등)
+              const finalUser = {
+                ...freshUser,
+                name: `${freshUser.first_name || ''} ${freshUser.last_name || ''}`.trim() || 'Guest User',
+                tierName: freshUser.tier_id || 'Basic'
+              };
+
+              // 최신 데이터를 로컬 스토리지와 화면 상태에 완전히 덮어씌움
+              localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
+              setUser(finalUser);
+              setIsMembershipActive(freshUser.is_membership_active === 1);
+            }
+          })
+          .catch(err => console.error("Sync error:", err));
       } catch (e) { }
     }
   }, []);
@@ -311,29 +331,28 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [NEW] 실제 백엔드 API와 통신하는 리워즈 가입 로직 (진짜 방식)
+  // 💡 [NEW] 리워즈 가입 즉시 전역 상태(Global State) 갱신
   const completeOnboarding = async () => {
     try {
-      // 1. 우리가 만든 진짜 백엔드 서버(GCP)에 전화번호와 함께 가입 요청을 보냅니다.
+      // 1. 진짜 백엔드 서버로 리워즈 가입 요청 (1000포인트 적립, 등급 상향, 로그 기록)
       const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", {
         email: user.email,
         phone: phone,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        // document_url: (추후 신분증 업로드 기능이 추가되면 여기에 연결합니다)
       });
 
       if (response.data && response.data.success) {
-        // 2. 백엔드에서 1000 포인트를 주고 'Member'로 승급시킨 진짜 최신 유저 정보를 받아옵니다.
         const updatedUser = response.data.member;
 
-        // 3. 받아온 진짜 정보로 로컬 스토리지와 화면을 업데이트합니다. (이름도 제대로 나오도록 안전장치 추가)
+        // 2. 백엔드가 준 최신 데이터로 규격 맞추기
         const finalUser = {
           ...updatedUser,
           name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
           tierName: updatedUser.tier_id
         };
 
+        // 3. 로컬 스토리지와 화면 전역 상태 즉시 갈아끼우기 (새로고침 없이 반영)
         localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
         setUser(finalUser);
         setIsMembershipActive(true);
@@ -345,7 +364,6 @@ export default function MainPortal() {
       }
     } catch (error) {
       console.error("Rewards Join Error:", error);
-      // 서버에서 409 에러(전화번호 중복)를 보냈을 때의 처리
       if (error.response && error.response.status === 409) {
         alert(error.response.data.message);
       } else {
