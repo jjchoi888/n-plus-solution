@@ -1,9 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // 💡 [NEW] 라우팅을 위한 훅 추가
 import axios from 'axios';
 
 export default function HomePage() {
+    const router = useRouter(); // 💡 [NEW] 라우터 초기화
     const [user, setUser] = useState(null);
     const [isMembershipActive, setIsMembershipActive] = useState(false);
 
@@ -20,7 +22,17 @@ export default function HomePage() {
     const [hotels, setHotels] = useState([]);
     const [currentHotelIndex, setCurrentHotelIndex] = useState(0);
 
+    // 💡 [NEW] PWA 설치 프롬프트 이벤트를 저장할 상태 추가
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+
     useEffect(() => {
+        // 💡 [NEW] PWA 설치 가능 이벤트 리스너
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault(); // 기본 알림 억제
+            setDeferredPrompt(e); // 이벤트 저장
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
         // 1. 빠른 렌더링을 위해 로컬 스토리지 데이터 먼저 세팅
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) {
@@ -30,7 +42,7 @@ export default function HomePage() {
                 setIsMembershipActive(true);
             }
 
-            // 💡 [NEW] 2. 백엔드에서 최신 데이터를 가져와 홈 화면 즉시 갱신 (캐시 방지 적용)
+            // 2. 백엔드에서 최신 데이터를 가져와 홈 화면 즉시 갱신 (캐시 방지 적용)
             axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
                 headers: { 'Cache-Control': 'no-cache' }
             })
@@ -54,6 +66,8 @@ export default function HomePage() {
                 setHotels(validHotels);
             })
             .catch(err => console.error(err));
+
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     }, []);
 
     useEffect(() => {
@@ -88,7 +102,6 @@ export default function HomePage() {
         }
     };
 
-    // 💡 [NEW] 홈 화면에서 리워즈 가입 시에도 진짜 API 호출하도록 변경
     const completeOnboarding = async () => {
         try {
             const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", {
@@ -117,6 +130,25 @@ export default function HomePage() {
             console.error("Join Error:", error);
             alert(error.response?.data?.message || "Server error occurred.");
         }
+    };
+
+    // 💡 [NEW] "Join Rewards" 버튼 클릭 시 PWA 로직 실행 후 이동
+    const handleJoinClick = async () => {
+        if (deferredPrompt) {
+            // 안드로이드/데스크톱 등에서 설치 프롬프트 띄우기
+            deferredPrompt.prompt();
+            // 사용자의 선택(설치 완료 또는 취소) 대기
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`PWA Install Outcome: ${outcome}`);
+            // 한 번 사용한 프롬프트는 무효화되므로 초기화
+            setDeferredPrompt(null);
+        } else {
+            // 이미 설치되었거나 iOS 기기일 경우 프롬프트를 띄울 수 없으므로 무시하고 진행
+            console.log("PWA prompt not available or already installed.");
+        }
+
+        // PWA 설치 여부와 상관없이 로그인 페이지로 이동
+        router.push('/login');
     };
 
     if (showOnboarding) {
@@ -204,14 +236,6 @@ export default function HomePage() {
                                     <input type="text" name="cardNumber" autoComplete="cc-number" value={cardNum} onChange={e => setCardNum(e.target.value)} placeholder="0000 0000 0000 0000" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Expiry Date</label>
-                                        <input type="text" name="cardExpiry" autoComplete="cc-exp" value={cardExp} onChange={e => setCardExp(e.target.value)} placeholder="MM/YY" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none text-center" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">CVV</label>
-                                        <input type="password" name="cardCvc" autoComplete="cc-csc" maxLength="4" value={cardCvv} onChange={e => setCardCvv(e.target.value)} placeholder="•••" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none text-center" />
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -236,7 +260,6 @@ export default function HomePage() {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-widest mb-1">Membership</p>
-                                {/* 💡 [핵심 수정] 홈 화면에서도 DB에서 넘어온 등급을 하드코딩 없이 대문자로 무조건 정확하게 표출 */}
                                 <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">
                                     {(() => {
                                         const tier = user?.tier_id || user?.tier || user?.tierName;
@@ -277,10 +300,17 @@ export default function HomePage() {
                 <div className="bg-white shadow-sm mb-6 border border-slate-200 rounded-none flex flex-col shrink-0 overflow-hidden">
                     <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-auto block" />
                     <div className="p-6 pt-5 text-center bg-white">
-                        <p className="text-sm font-medium text-slate-600 mb-5 leading-relaxed">Sign up to earn points on every stay and unlock exclusive tier perks.</p>
-                        <Link href="/login" className="inline-block bg-[#009900] text-white font-bold px-10 py-3 shadow-md hover:bg-[#008000] transition-colors text-sm w-full sm:w-auto rounded-none">
-                            Log In / Sign Up
-                        </Link>
+                        {/* 💡 [NEW] 요청하신 대로 문구 변경 */}
+                        <p className="text-sm font-medium text-slate-600 mb-5 leading-relaxed">
+                            Join now to earn points on every stay and unlock exclusive tier perks.
+                        </p>
+                        {/* 💡 [NEW] Link 태그를 button으로 변경하고 onClick 핸들러 연결, 버튼명 변경 */}
+                        <button
+                            onClick={handleJoinClick}
+                            className="inline-block bg-[#009900] text-white font-bold px-10 py-3 shadow-md hover:bg-[#008000] transition-colors text-sm w-full sm:w-auto rounded-none"
+                        >
+                            Join Rewards
+                        </button>
                     </div>
                 </div>
             )}
