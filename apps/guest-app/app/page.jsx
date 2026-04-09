@@ -301,7 +301,7 @@ export default function HomePage() {
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Phone Number</label>
-                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+63 9XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Nationality</label>
