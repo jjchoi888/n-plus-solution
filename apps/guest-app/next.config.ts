@@ -1,5 +1,21 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
 
+// 💡 PWA 설정 초기화
+const withPWA = withPWAInit({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  // 💡 swcMinify: true,  <-- 이 줄을 삭제하세요. (Next.js 최신 버전은 기본으로 적용됨)
+  disable: process.env.NODE_ENV === "development",
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+// 💡 기존 Next.js 설정
+// (참고: allowedDevOrigins 속성에서 TypeScript 타입 에러가 발생한다면 `const nextConfig = { ... } as any;` 형태로 수정해서 사용하세요.)
 const nextConfig: NextConfig = {
   // 💡 [수정] 로컬 네트워크 기기 및 서브도메인 테스트를 위한 허용 목록 확대
   allowedDevOrigins: [
@@ -23,4 +39,5 @@ const nextConfig: NextConfig = {
   */
 };
 
-export default nextConfig;
+// 기존 nextConfig를 PWA 모듈로 감싸서 export 합니다.
+export default withPWA(nextConfig);
