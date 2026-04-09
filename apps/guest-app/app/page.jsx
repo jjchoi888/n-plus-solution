@@ -1,48 +1,60 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // 💡 [NEW] 라우팅을 위한 훅 추가
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 export default function HomePage() {
-    const router = useRouter(); // 💡 [NEW] 라우터 초기화
+    const router = useRouter();
     const [user, setUser] = useState(null);
     const [isMembershipActive, setIsMembershipActive] = useState(false);
+    const [membershipStatus, setMembershipStatus] = useState(''); // 'pending', 'active', 'rejected'
 
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardStep, setOnboardStep] = useState(1);
 
+    // 💡 Step 1: 개인정보
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [dob, setDob] = useState('');
     const [phone, setPhone] = useState('');
+    const [nationality, setNationality] = useState('');
+    const [email, setEmail] = useState('');
+
+    // 💡 Step 2: 신분증 정보
+    const [citizenType, setCitizenType] = useState(''); // 'filipino' | 'foreigner'
+    const [idType, setIdType] = useState('');
     const [idUploaded, setIdUploaded] = useState(false);
-    const [cardName, setCardName] = useState('');
-    const [cardNum, setCardNum] = useState('');
-    const [cardExp, setCardExp] = useState('');
-    const [cardCvv, setCardCvv] = useState('');
+
+    // 💡 Step 3: 결제 정보
+    const [paymentMethod, setPaymentMethod] = useState(''); // 'card' | 'gcash' | 'maya'
+    const [accName, setAccName] = useState(''); // 카드 이름 or 계정 이름
+    const [accNum, setAccNum] = useState(''); // 카드 번호 or 계정 번호
 
     const [hotels, setHotels] = useState([]);
     const [currentHotelIndex, setCurrentHotelIndex] = useState(0);
-
-    // 💡 [NEW] PWA 설치 프롬프트 이벤트를 저장할 상태 추가
     const [deferredPrompt, setDeferredPrompt] = useState(null);
 
+    const filipinoIdOptions = [
+        "PhilSys ID", "Passport", "Driver's License",
+        "PRC ID", "SSS/GSIS ID", "PhilHealth ID", "Voter's ID"
+    ];
+
     useEffect(() => {
-        // 💡 [NEW] PWA 설치 가능 이벤트 리스너
         const handleBeforeInstallPrompt = (e) => {
-            e.preventDefault(); // 기본 알림 억제
-            setDeferredPrompt(e); // 이벤트 저장
+            e.preventDefault();
+            setDeferredPrompt(e);
         };
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-        // 1. 빠른 렌더링을 위해 로컬 스토리지 데이터 먼저 세팅
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
             setUser(parsedUser);
-            if (parsedUser.is_membership_active) {
-                setIsMembershipActive(true);
-            }
+            setIsMembershipActive(parsedUser.is_membership_active === 1 || parsedUser.is_membership_active === true);
+            setMembershipStatus(parsedUser.membership_status || 'active'); // 승인 상태 가져오기
 
-            // 2. 백엔드에서 최신 데이터를 가져와 홈 화면 즉시 갱신 (캐시 방지 적용)
+            // 최신 데이터 동기화
             axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
                 headers: { 'Cache-Control': 'no-cache' }
             })
@@ -55,6 +67,7 @@ export default function HomePage() {
                         localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
                         setUser(freshUser);
                         setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
+                        setMembershipStatus(freshUser.membership_status || 'active');
                     }
                 })
                 .catch(err => console.error("Home sync error:", err));
@@ -82,6 +95,7 @@ export default function HomePage() {
         localStorage.removeItem('nplus_guest_user');
         setUser(null);
         setIsMembershipActive(false);
+        setMembershipStatus('');
         window.location.reload();
     };
 
@@ -91,9 +105,20 @@ export default function HomePage() {
     };
 
     const nextStep = () => {
-        if (onboardStep === 1 && !phone) return alert('Please enter your phone number.');
-        if (onboardStep === 2 && !idUploaded) return alert('Please upload your ID card for verification.');
-        if (onboardStep === 3 && (!cardName || !cardNum || !cardExp || !cardCvv)) return alert('Please enter all payment details.');
+        if (onboardStep === 1) {
+            if (!firstName || !lastName || !dob || !phone || !nationality || !email) {
+                return alert('Please fill in all personal information fields.');
+            }
+        }
+        if (onboardStep === 2) {
+            if (!citizenType) return alert('Please select Filipino or Foreigner.');
+            if (!idType) return alert('Please select an ID type.');
+            if (!idUploaded) return alert('Please upload your ID or take a photo.');
+        }
+        if (onboardStep === 3) {
+            if (!paymentMethod) return alert('Please select a payment method.');
+            if (!accName || !accNum) return alert('Please fill in your payment details.');
+        }
 
         if (onboardStep < 3) {
             setOnboardStep(onboardStep + 1);
@@ -104,25 +129,39 @@ export default function HomePage() {
 
     const completeOnboarding = async () => {
         try {
-            const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", {
-                email: user.email,
+            // 💡 [수정] DB 스키마에 맞게 payload 구성
+            const payload = {
+                first_name: firstName,
+                last_name: lastName,
+                dob: dob,
                 phone: phone,
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-            });
+                nationality: nationality,
+                email: email,
+                citizen_type: citizenType,
+                id_type: idType,
+                payment_method: paymentMethod,
+                payment_acc_name: accName,
+                payment_acc_num: accNum,
+                membership_status: 'pending' // 승인 대기 상태로 전송
+            };
+
+            const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", payload);
 
             if (response.data && response.data.success) {
-                const updatedUser = response.data.member;
                 const finalUser = {
-                    ...updatedUser,
-                    name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
+                    ...payload,
+                    name: `${firstName} ${lastName}`.trim(),
+                    is_membership_active: false, // 아직 비활성화 상태
                 };
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 setUser(finalUser);
-                setIsMembershipActive(true);
+                setIsMembershipActive(false);
+                setMembershipStatus('pending'); // UI 상태 변경
                 setShowOnboarding(false);
-                alert('Welcome to N+ Rewards! 1,000 Bonus Points have been added to your account.');
+
+                // 💡 완료 메시지 변경
+                alert('Registration submitted successfully! Your account is currently under review by our HQ Admin. You will be notified once activated.');
             } else {
                 alert("Failed to join rewards: " + response.data.message);
             }
@@ -132,23 +171,13 @@ export default function HomePage() {
         }
     };
 
-    // 💡 [NEW] "Join Rewards" 버튼 클릭 시 PWA 로직 실행 후 이동
     const handleJoinClick = async () => {
         if (deferredPrompt) {
-            // 안드로이드/데스크톱 등에서 설치 프롬프트 띄우기
             deferredPrompt.prompt();
-            // 사용자의 선택(설치 완료 또는 취소) 대기
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`PWA Install Outcome: ${outcome}`);
-            // 한 번 사용한 프롬프트는 무효화되므로 초기화
+            await deferredPrompt.userChoice;
             setDeferredPrompt(null);
-        } else {
-            // 이미 설치되었거나 iOS 기기일 경우 프롬프트를 띄울 수 없으므로 무시하고 진행
-            console.log("PWA prompt not available or already installed.");
         }
-
-        // PWA 설치 여부와 상관없이 로그인 페이지로 이동
-        router.push('/login');
+        startOnboarding(); // 기존 /login 라우팅 대신 팝업 가입창 바로 띄우기로 변경
     };
 
     if (showOnboarding) {
@@ -167,83 +196,143 @@ export default function HomePage() {
                         <div className={`h-1.5 flex-1 ${onboardStep >= 3 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
                     </div>
 
+                    {/* STEP 1: 개인정보 입력 */}
                     {onboardStep === 1 && (
-                        <div className="animate-fade-in-up">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Exclusive Benefits</h3>
-                            <p className="text-slate-500 text-sm font-medium mb-6">Complete your profile to unlock our progressive reward tiers.</p>
+                        <div className="animate-fade-in-up space-y-4">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Personal Information</h3>
 
-                            <div className="bg-white border border-slate-200 p-5 shadow-sm mb-8 space-y-5">
-                                <div className="flex items-start gap-3">
-                                    <img src="/point.svg" alt="Points" className="w-7 h-7 object-contain shrink-0" />
-                                    <div>
-                                        <p className="font-bold text-slate-800 text-sm">Up to 10% Reward Points</p>
-                                        <p className="text-xs text-slate-500 font-medium mt-0.5">Start with 2% back on all bookings as a Member, growing up to 10% as VIP.</p>
-                                    </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">First Name</label>
+                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <img src="/progressive.svg" alt="Progressive" className="w-7 h-7 object-contain shrink-0" />
-                                    <div>
-                                        <p className="font-bold text-slate-800 text-sm">Progressive Perks</p>
-                                        <p className="text-xs text-slate-500 font-medium mt-0.5">Unlock 1-Hour Late Checkout (Silver) and Free Breakfast & Upgrades (Gold).</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <img src="/vip.svg" alt="VIP" className="w-7 h-7 object-contain shrink-0" />
-                                    <div>
-                                        <p className="font-bold text-slate-800 text-sm">VIP Experience</p>
-                                        <p className="text-xs text-slate-500 font-medium mt-0.5">Reach VIP tier for exclusive Lounge Access and complimentary Mini-bar.</p>
-                                    </div>
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Last Name</label>
+                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
                                 </div>
                             </div>
-
-                            <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
-                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Date of Birth</label>
+                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Phone Number</label>
+                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+63 9XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Nationality</label>
+                                <input type="text" value={nationality} onChange={e => setNationality(e.target.value)} placeholder="e.g. Filipino, Korean" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Email Address</label>
+                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                            </div>
                         </div>
                     )}
 
+                    {/* STEP 2: 신분증 업로드 */}
                     {onboardStep === 2 && (
-                        <div className="animate-fade-in-up">
+                        <div className="animate-fade-in-up space-y-5">
                             <h3 className="text-2xl font-bold text-slate-800 mb-2">Identity Verification</h3>
-                            <p className="text-slate-500 text-sm font-medium mb-6">Please upload a valid ID for security and age verification.</p>
 
-                            <div className="border-2 border-dashed border-slate-300 bg-white p-8 text-center relative hover:border-[#009900] transition-colors cursor-pointer group">
-                                <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">🪪</div>
-                                {idUploaded ? (
-                                    <p className="text-[#009900] font-bold text-lg">ID Uploaded Successfully ✓</p>
-                                ) : (
-                                    <>
-                                        <p className="font-bold text-slate-800 text-lg mb-1">Tap to Upload ID</p>
-                                        <p className="text-xs font-medium text-slate-400">Passport, Driver's License, or National ID</p>
-                                    </>
-                                )}
+                            <div className="grid grid-cols-2 gap-3 mb-2">
+                                <button
+                                    onClick={() => { setCitizenType('filipino'); setIdType(''); }}
+                                    className={`py-3 text-sm font-bold border ${citizenType === 'filipino' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}
+                                >
+                                    Filipino
+                                </button>
+                                <button
+                                    onClick={() => { setCitizenType('foreigner'); setIdType('Passport'); }}
+                                    className={`py-3 text-sm font-bold border ${citizenType === 'foreigner' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}
+                                >
+                                    Foreigner
+                                </button>
                             </div>
+
+                            {citizenType === 'filipino' && (
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Select ID Type</label>
+                                    <select value={idType} onChange={e => setIdType(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
+                                        <option value="">-- Choose ID --</option>
+                                        {filipinoIdOptions.map(id => <option key={id} value={id}>{id}</option>)}
+                                    </select>
+                                </div>
+                            )}
+
+                            {citizenType === 'foreigner' && (
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">ID Type</label>
+                                    <input type="text" readOnly value="Passport" className="w-full p-3 border border-slate-300 text-sm bg-slate-100 outline-none text-slate-500" />
+                                </div>
+                            )}
+
+                            {idType && (
+                                <div className="border-2 border-dashed border-slate-300 bg-white p-8 text-center relative hover:border-[#009900] transition-colors mt-4">
+                                    <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                    <div className="text-4xl mb-2">📸</div>
+                                    {idUploaded ? (
+                                        <p className="text-[#009900] font-bold text-sm">ID Uploaded Successfully ✓</p>
+                                    ) : (
+                                        <>
+                                            <p className="font-bold text-slate-800 text-sm mb-1">Upload or Take Photo</p>
+                                            <p className="text-xs text-slate-400">Please ensure details are clear</p>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
+                    {/* STEP 3: 결제 정보 입력 */}
                     {onboardStep === 3 && (
-                        <div className="animate-fade-in-up">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Link Payment Method</h3>
-                            <p className="text-slate-500 text-sm font-medium mb-6">Register a credit card to secure future bookings and prevent no-shows. No charges will be made now.</p>
+                        <div className="animate-fade-in-up space-y-5">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Payment Details</h3>
+                            <p className="text-slate-500 text-[11px] mb-4">Secure your bookings. No charges will be made at this step.</p>
 
-                            <div className="bg-white p-5 border border-slate-200 shadow-sm space-y-4">
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Name on Card</label>
-                                    <input type="text" name="cardName" autoComplete="cc-name" value={cardName} onChange={e => setCardName(e.target.value)} placeholder="John Doe" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Card Number</label>
-                                    <input type="text" name="cardNumber" autoComplete="cc-number" value={cardNum} onChange={e => setCardNum(e.target.value)} placeholder="0000 0000 0000 0000" className="w-full p-4 border border-slate-300 text-sm font-semibold text-slate-800 focus:border-[#009900] outline-none shadow-sm rounded-none" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button onClick={() => { setPaymentMethod('card'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'card' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}>
+                                    <span>💳</span> Card
+                                </button>
+                                <button onClick={() => { setPaymentMethod('gcash'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'gcash' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>
+                                    <span>G</span> GCash
+                                </button>
+                                <button onClick={() => { setPaymentMethod('maya'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'maya' ? 'bg-green-500 text-white border-green-500' : 'bg-white text-slate-500 border-slate-300'}`}>
+                                    <span>M</span> Maya
+                                </button>
                             </div>
+
+                            {paymentMethod === 'card' && (
+                                <div className="space-y-4 bg-white p-4 border border-slate-200 mt-2">
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Card Number</label>
+                                        <input type="text" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder="0000 0000 0000 0000" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Name on Card</label>
+                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value)} placeholder="JOHN DOE" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {(paymentMethod === 'gcash' || paymentMethod === 'maya') && (
+                                <div className="space-y-4 bg-white p-4 border border-slate-200 mt-2">
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Account Number (Mobile)</label>
+                                        <input type="tel" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder="09XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Registered Name</label>
+                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value)} placeholder="John Doe" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
                     <div className="mt-8 pt-4">
                         <button onClick={nextStep} className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-none">
-                            {onboardStep === 3 ? 'Complete Registration ✓' : 'Next Step ➔'}
+                            {onboardStep === 3 ? 'Submit Application ✓' : 'Next Step ➔'}
                         </button>
                     </div>
                 </div>
@@ -254,7 +343,16 @@ export default function HomePage() {
     return (
         <div className="p-4 md:p-6 flex flex-col font-sans selection:bg-[#009900]/20 min-h-[calc(100vh-80px)] text-slate-700">
             {user ? (
-                isMembershipActive ? (
+                membershipStatus === 'pending' ? (
+                    // 💡 HQ 승인 대기 중 화면
+                    <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center">
+                        <div className="text-4xl mb-3">⏳</div>
+                        <h3 className="font-bold text-amber-800 text-lg mb-2">Application Pending Review</h3>
+                        <p className="text-xs text-amber-700 font-medium">Your registration has been submitted and is currently under review by our HQ Admin. Please wait for activation.</p>
+                        <button onClick={handleLogout} className="mt-4 text-xs font-semibold text-slate-400 hover:text-red-500 underline py-2">Sign Out</button>
+                    </div>
+                ) : isMembershipActive ? (
+                    // 💡 기존 정상 회원 화면
                     <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-none shrink-0">
                         <div className="absolute -right-4 -top-4 text-8xl opacity-10">👑</div>
                         <div className="flex justify-between items-start mb-6">
@@ -272,9 +370,7 @@ export default function HomePage() {
                                 </p>
                             </div>
                             <div className="text-right">
-                                <h2 className="text-xl font-bold">
-                                    {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : user.name}
-                                </h2>
+                                <h2 className="text-xl font-bold">{user.name}</h2>
                             </div>
                         </div>
 
@@ -285,26 +381,15 @@ export default function HomePage() {
                             </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="bg-white shadow-sm mb-6 border border-slate-200 rounded-none flex flex-col shrink-0 overflow-hidden relative">
-                        <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-auto block" />
-                        <button
-                            onClick={startOnboarding}
-                            className="bg-[#009900] text-white font-semibold px-5 py-2 shadow-lg hover:bg-[#008000] transition-colors rounded-none absolute bottom-4 right-4 z-10 text-xs"
-                        >
-                            Join Now ➔
-                        </button>
-                    </div>
-                )
+                ) : null
             ) : (
+                // 💡 가입 전 화면
                 <div className="bg-white shadow-sm mb-6 border border-slate-200 rounded-none flex flex-col shrink-0 overflow-hidden">
                     <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-auto block" />
                     <div className="p-6 pt-5 text-center bg-white">
-                        {/* 💡 [NEW] 요청하신 대로 문구 변경 */}
                         <p className="text-sm font-medium text-slate-600 mb-5 leading-relaxed">
                             Join now to earn points on every stay and unlock exclusive tier perks.
                         </p>
-                        {/* 💡 [NEW] Link 태그를 button으로 변경하고 onClick 핸들러 연결, 버튼명 변경 */}
                         <button
                             onClick={handleJoinClick}
                             className="inline-block bg-[#009900] text-white font-bold px-10 py-3 shadow-md hover:bg-[#008000] transition-colors text-sm w-full sm:w-auto rounded-none"
@@ -330,7 +415,6 @@ export default function HomePage() {
             </div>
 
             <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Discover</h3>
-
             <Link href="/book" className="overflow-hidden relative shadow-md flex-1 flex items-end group cursor-pointer rounded-none min-h-[200px] mb-2 bg-slate-900 w-full block">
                 {hotels.length > 0 ? hotels.map((h, idx) => {
                     let rawGallery = h.app_gallery || h.app_gallery_urls || h.gallery_json || h.gallery_urls || [];
@@ -347,7 +431,6 @@ export default function HomePage() {
                 )}
 
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent z-10"></div>
-
                 <div className="relative z-20 text-white w-full p-5">
                     <p className="text-[10px] font-bold text-[#009900] bg-green-100 inline-block px-2 py-0.5 rounded-none uppercase tracking-widest mb-2 shadow-sm">
                         {hotels.length > 0 ? (hotels[currentHotelIndex]?.city || 'Explore') : 'Featured'}
@@ -362,7 +445,7 @@ export default function HomePage() {
                 </div>
             </Link>
 
-            {user && (
+            {user && membershipStatus === 'active' && (
                 <div className="mt-4 mb-2 text-center shrink-0">
                     <button onClick={handleLogout} className="text-xs font-semibold text-slate-400 hover:text-red-500 underline py-2">Sign Out securely</button>
                 </div>
