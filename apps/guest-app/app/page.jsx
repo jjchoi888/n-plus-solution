@@ -6,14 +6,18 @@ import axios from 'axios';
 
 export default function HomePage() {
     const router = useRouter();
+
+    // 💡 Auth & Security States
     const [user, setUser] = useState(null);
     const [isMembershipActive, setIsMembershipActive] = useState(false);
-    const [membershipStatus, setMembershipStatus] = useState(''); // 'pending', 'active', 'rejected'
+    const [membershipStatus, setMembershipStatus] = useState('');
+    const [isUnlocked, setIsUnlocked] = useState(false); // 💡 PIN 잠금 해제 여부
+    const [loginPin, setLoginPin] = useState(''); // 💡 잠금 화면 입력용
 
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardStep, setOnboardStep] = useState(1);
 
-    // 💡 Step 1: 개인정보
+    // Step 1: 개인정보
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [dob, setDob] = useState('');
@@ -21,15 +25,19 @@ export default function HomePage() {
     const [nationality, setNationality] = useState('');
     const [email, setEmail] = useState('');
 
-    // 💡 Step 2: 신분증 정보
-    const [citizenType, setCitizenType] = useState(''); // 'filipino' | 'foreigner'
+    // Step 2: 신분증 정보
+    const [citizenType, setCitizenType] = useState('');
     const [idType, setIdType] = useState('');
     const [idUploaded, setIdUploaded] = useState(false);
 
-    // 💡 Step 3: 결제 정보
-    const [paymentMethod, setPaymentMethod] = useState(''); // 'card' | 'gcash' | 'maya'
-    const [accName, setAccName] = useState(''); // 카드 이름 or 계정 이름
-    const [accNum, setAccNum] = useState(''); // 카드 번호 or 계정 번호
+    // Step 3: 결제 정보
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [accName, setAccName] = useState('');
+    const [accNum, setAccNum] = useState('');
+
+    // 💡 Step 4: 보안 (PIN 설정)
+    const [pin, setPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
 
     const [hotels, setHotels] = useState([]);
     const [currentHotelIndex, setCurrentHotelIndex] = useState(0);
@@ -39,6 +47,9 @@ export default function HomePage() {
         "PhilSys ID", "Passport", "Driver's License",
         "PRC ID", "SSS/GSIS ID", "PhilHealth ID", "Voter's ID"
     ];
+
+    const topNationalities = ['Filipino', 'South Korean', 'Chinese', 'Japanese', 'American'];
+    const otherNationalities = ['Australian', 'British', 'Canadian', 'French', 'German', 'Indian', 'Indonesian', 'Malaysian', 'Singaporean', 'Spanish', 'Thai', 'Vietnamese', 'Other'];
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
@@ -52,15 +63,18 @@ export default function HomePage() {
             const parsedUser = JSON.parse(savedUser);
             setUser(parsedUser);
             setIsMembershipActive(parsedUser.is_membership_active === 1 || parsedUser.is_membership_active === true);
-            setMembershipStatus(parsedUser.membership_status || 'active'); // 승인 상태 가져오기
+            setMembershipStatus(parsedUser.membership_status || 'active');
 
-            // 최신 데이터 동기화
+            // 💡 유저가 있으면 앱 접속 시 잠금 상태로 설정 (PIN 요구)
+            setIsUnlocked(false);
+
             axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
                 headers: { 'Cache-Control': 'no-cache' }
             })
                 .then(res => {
                     if (res.data && res.data.success && res.data.member) {
                         const freshUser = {
+                            ...parsedUser, // 유지할 로컬 데이터 (PIN 등)
                             ...res.data.member,
                             name: `${res.data.member.first_name || ''} ${res.data.member.last_name || ''}`.trim() || 'Guest User'
                         };
@@ -71,6 +85,9 @@ export default function HomePage() {
                     }
                 })
                 .catch(err => console.error("Home sync error:", err));
+        } else {
+            // 로그인 안된 상태면 화면 바로 표시
+            setIsUnlocked(true);
         }
 
         axios.get('https://api.hotelnplus.com/api/hotels')
@@ -96,6 +113,7 @@ export default function HomePage() {
         setUser(null);
         setIsMembershipActive(false);
         setMembershipStatus('');
+        setIsUnlocked(true);
         window.location.reload();
     };
 
@@ -119,17 +137,18 @@ export default function HomePage() {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accName || !accNum) return alert('Please fill in your payment details.');
         }
-
-        if (onboardStep < 3) {
-            setOnboardStep(onboardStep + 1);
-        } else {
-            completeOnboarding();
+        // 💡 보안 PIN 입력 검증 추가
+        if (onboardStep === 4) {
+            if (pin.length !== 4) return alert('Please enter a 4-digit PIN.');
+            if (pin !== confirmPin) return alert('PIN numbers do not match.');
+            return completeOnboarding();
         }
+
+        setOnboardStep(onboardStep + 1);
     };
 
     const completeOnboarding = async () => {
         try {
-            // 💡 [수정] DB 스키마에 맞게 payload 구성
             const payload = {
                 first_name: firstName,
                 last_name: lastName,
@@ -142,7 +161,7 @@ export default function HomePage() {
                 payment_method: paymentMethod,
                 payment_acc_name: accName,
                 payment_acc_num: accNum,
-                membership_status: 'pending' // 승인 대기 상태로 전송
+                membership_status: 'pending'
             };
 
             const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", payload);
@@ -151,17 +170,19 @@ export default function HomePage() {
                 const finalUser = {
                     ...payload,
                     name: `${firstName} ${lastName}`.trim(),
-                    is_membership_active: false, // 아직 비활성화 상태
+                    is_membership_active: false,
+                    pin: pin // 💡 보안 락스크린을 위해 로컬에 PIN 저장
                 };
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 setUser(finalUser);
                 setIsMembershipActive(false);
-                setMembershipStatus('pending'); // UI 상태 변경
+                setMembershipStatus('pending');
+                setIsUnlocked(true); // 가입 직후엔 잠금해제 상태로 진입
                 setShowOnboarding(false);
 
-                // 💡 완료 메시지 변경
-                alert('Registration submitted successfully! Your account is currently under review by our HQ Admin. You will be notified once activated.');
+                // 💡 완료 알림 메시지 변경
+                alert('Registration submitted successfully! Your account is currently under review by n+ Rewards. You will be notified once activated.');
             } else {
                 alert("Failed to join rewards: " + response.data.message);
             }
@@ -177,8 +198,68 @@ export default function HomePage() {
             await deferredPrompt.userChoice;
             setDeferredPrompt(null);
         }
-        startOnboarding(); // 기존 /login 라우팅 대신 팝업 가입창 바로 띄우기로 변경
+        startOnboarding();
     };
+
+    // 💡 락스크린 PIN 입력 처리
+    const handleLoginPinInput = (num) => {
+        if (loginPin.length < 4) {
+            const newPin = loginPin + num;
+            setLoginPin(newPin);
+            if (newPin.length === 4) {
+                if (newPin === user.pin) {
+                    setIsUnlocked(true);
+                } else {
+                    setTimeout(() => {
+                        alert('Incorrect PIN. Please try again.');
+                        setLoginPin('');
+                    }, 100);
+                }
+            }
+        }
+    };
+
+    // 💡 락스크린 (보안 화면) 렌더링
+    if (user && !isUnlocked) {
+        return (
+            <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
+                <div className="text-center mb-8">
+                    <div className="bg-white p-3 rounded-full inline-block mb-4">
+                        <img src="/logo192.png" alt="Logo" className="w-12 h-12 object-contain" />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-1">Welcome Back</h2>
+                    <p className="text-slate-400 text-sm">Enter your PIN to unlock</p>
+                </div>
+
+                <div className="flex gap-4 mb-10">
+                    {[0, 1, 2, 3].map(i => (
+                        <div key={i} className={`w-4 h-4 rounded-full border-2 ${loginPin.length > i ? 'bg-[#009900] border-[#009900]' : 'border-slate-500'}`} />
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-3 gap-6 max-w-[280px] w-full">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                        <button key={num} onClick={() => handleLoginPinInput(num.toString())} className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-2xl font-semibold hover:bg-slate-700 active:bg-slate-600 transition-colors mx-auto">
+                            {num}
+                        </button>
+                    ))}
+                    <div className="col-start-2">
+                        <button onClick={() => handleLoginPinInput('0')} className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-2xl font-semibold hover:bg-slate-700 active:bg-slate-600 transition-colors mx-auto">0</button>
+                    </div>
+                    <div className="flex items-center justify-center">
+                        <button onClick={() => setLoginPin(loginPin.slice(0, -1))} className="text-slate-400 font-bold active:text-white p-2">⌫</button>
+                    </div>
+                </div>
+
+                <div className="mt-12 space-y-4 text-center">
+                    <button onClick={() => alert('Biometric login requires secure backend setup. Please use PIN for now.')} className="text-[#009900] text-sm font-semibold flex items-center justify-center gap-2 w-full">
+                        <span className="text-xl">🪪</span> Use Face ID / Fingerprint
+                    </button>
+                    <button onClick={handleLogout} className="text-slate-500 text-xs underline block mx-auto">Sign in with different account</button>
+                </div>
+            </div>
+        );
+    }
 
     if (showOnboarding) {
         return (
@@ -186,7 +267,7 @@ export default function HomePage() {
                 <div className="bg-white p-4 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-sm">
                     <button onClick={() => setShowOnboarding(false)} className="text-slate-400 font-bold text-xl px-2 hover:text-slate-600 transition-colors">✕</button>
                     <h2 className="font-bold text-slate-800 text-lg">Join Membership</h2>
-                    <span className="text-[#009900] font-bold text-xs">Step {onboardStep} / 3</span>
+                    <span className="text-[#009900] font-bold text-xs">Step {onboardStep} / 4</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 flex flex-col max-w-md mx-auto w-full pb-20">
@@ -194,6 +275,7 @@ export default function HomePage() {
                         <div className={`h-1.5 flex-1 ${onboardStep >= 1 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
                         <div className={`h-1.5 flex-1 ${onboardStep >= 2 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
                         <div className={`h-1.5 flex-1 ${onboardStep >= 3 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+                        <div className={`h-1.5 flex-1 ${onboardStep >= 4 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
                     </div>
 
                     {/* STEP 1: 개인정보 입력 */}
@@ -204,16 +286,18 @@ export default function HomePage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">First Name</label>
-                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    {/* 💡 강제 영문 대문자 변환 */}
+                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Last Name</label>
-                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    {/* 💡 강제 영문 대문자 변환 */}
+                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
                                 </div>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Date of Birth</label>
-                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white" />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Phone Number</label>
@@ -221,7 +305,16 @@ export default function HomePage() {
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Nationality</label>
-                                <input type="text" value={nationality} onChange={e => setNationality(e.target.value)} placeholder="e.g. Filipino, Korean" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                {/* 💡 드롭다운 메뉴로 변경 및 주요 국가 상단 고정 */}
+                                <select value={nationality} onChange={e => setNationality(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
+                                    <option value="">-- Select Nationality --</option>
+                                    <optgroup label="Top Nationalities">
+                                        {topNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Other Nationalities">
+                                        {otherNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
+                                    </optgroup>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Email Address</label>
@@ -268,17 +361,23 @@ export default function HomePage() {
                             )}
 
                             {idType && (
-                                <div className="border-2 border-dashed border-slate-300 bg-white p-8 text-center relative hover:border-[#009900] transition-colors mt-4">
-                                    <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                    <div className="text-4xl mb-2">📸</div>
-                                    {idUploaded ? (
-                                        <p className="text-[#009900] font-bold text-sm">ID Uploaded Successfully ✓</p>
-                                    ) : (
-                                        <>
-                                            <p className="font-bold text-slate-800 text-sm mb-1">Upload or Take Photo</p>
-                                            <p className="text-xs text-slate-400">Please ensure details are clear</p>
-                                        </>
-                                    )}
+                                <div className="mt-6">
+                                    <p className="text-xs font-semibold text-slate-500 mb-3 text-center uppercase">Choose Upload Method</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* 💡 카메라 명시적 호출 버튼 */}
+                                        <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
+                                            <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">📷</div>
+                                            <p className="font-bold text-slate-700 text-xs">Take Photo</p>
+                                        </div>
+                                        {/* 💡 갤러리 업로드용 버튼 (capture 속성 제거) */}
+                                        <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
+                                            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
+                                            <p className="font-bold text-slate-700 text-xs">Gallery</p>
+                                        </div>
+                                    </div>
+                                    {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-2">ID Attached Successfully ✓</p>}
                                 </div>
                             )}
                         </div>
@@ -302,37 +401,48 @@ export default function HomePage() {
                                 </button>
                             </div>
 
-                            {paymentMethod === 'card' && (
+                            {paymentMethod && (
                                 <div className="space-y-4 bg-white p-4 border border-slate-200 mt-2">
                                     <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Card Number</label>
-                                        <input type="text" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder="0000 0000 0000 0000" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
+                                            {paymentMethod === 'card' ? 'Card Number' : 'Account Number (Mobile)'}
+                                        </label>
+                                        <input type="text" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder={paymentMethod === 'card' ? "0000 0000 0000 0000" : "09XX XXX XXXX"} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Name on Card</label>
-                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value)} placeholder="JOHN DOE" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
-                                    </div>
-                                </div>
-                            )}
-
-                            {(paymentMethod === 'gcash' || paymentMethod === 'maya') && (
-                                <div className="space-y-4 bg-white p-4 border border-slate-200 mt-2">
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Account Number (Mobile)</label>
-                                        <input type="tel" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder="09XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Registered Name</label>
-                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value)} placeholder="John Doe" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
+                                            {paymentMethod === 'card' ? 'Name on Card' : 'Registered Name'}
+                                        </label>
+                                        {/* 💡 강제 영문 대문자 변환 */}
+                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value.toUpperCase())} placeholder="JOHN DOE" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
                                     </div>
                                 </div>
                             )}
                         </div>
                     )}
 
+                    {/* 💡 STEP 4: 앱 보안 장치 설정 */}
+                    {onboardStep === 4 && (
+                        <div className="animate-fade-in-up space-y-5">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Secure Your Account</h3>
+                            <p className="text-slate-500 text-[11px] mb-6">Create a 4-digit PIN to protect your rewards and personal data.</p>
+
+                            <div className="space-y-4 bg-white p-5 border border-slate-200 text-center">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Create PIN</label>
+                                    <input type="password" inputMode="numeric" maxLength="4" value={pin} onChange={e => setPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="••••" className="w-full text-center tracking-[1em] text-2xl p-3 border border-slate-300 focus:border-[#009900] outline-none bg-slate-50" />
+                                </div>
+                                <div className="pt-2">
+                                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Confirm PIN</label>
+                                    <input type="password" inputMode="numeric" maxLength="4" value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="••••" className="w-full text-center tracking-[1em] text-2xl p-3 border border-slate-300 focus:border-[#009900] outline-none bg-slate-50" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-8 pt-4">
                         <button onClick={nextStep} className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-none">
-                            {onboardStep === 3 ? 'Submit Application ✓' : 'Next Step ➔'}
+                            {onboardStep === 4 ? 'Submit Application ✓' : 'Next Step ➔'}
                         </button>
                     </div>
                 </div>
@@ -344,15 +454,13 @@ export default function HomePage() {
         <div className="p-4 md:p-6 flex flex-col font-sans selection:bg-[#009900]/20 min-h-[calc(100vh-80px)] text-slate-700">
             {user ? (
                 membershipStatus === 'pending' ? (
-                    // 💡 HQ 승인 대기 중 화면
                     <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center">
                         <div className="text-4xl mb-3">⏳</div>
                         <h3 className="font-bold text-amber-800 text-lg mb-2">Application Pending Review</h3>
-                        <p className="text-xs text-amber-700 font-medium">Your registration has been submitted and is currently under review by our HQ Admin. Please wait for activation.</p>
+                        <p className="text-xs text-amber-700 font-medium">Your registration has been submitted and is currently under review by n+ Rewards. Please wait for activation.</p>
                         <button onClick={handleLogout} className="mt-4 text-xs font-semibold text-slate-400 hover:text-red-500 underline py-2">Sign Out</button>
                     </div>
                 ) : isMembershipActive ? (
-                    // 💡 기존 정상 회원 화면
                     <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-none shrink-0">
                         <div className="absolute -right-4 -top-4 text-8xl opacity-10">👑</div>
                         <div className="flex justify-between items-start mb-6">
@@ -383,7 +491,6 @@ export default function HomePage() {
                     </div>
                 ) : null
             ) : (
-                // 💡 가입 전 화면
                 <div className="bg-white shadow-sm mb-6 border border-slate-200 rounded-none flex flex-col shrink-0 overflow-hidden">
                     <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-auto block" />
                     <div className="p-6 pt-5 text-center bg-white">
