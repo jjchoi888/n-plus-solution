@@ -7,12 +7,13 @@ import axios from 'axios';
 export default function HomePage() {
     const router = useRouter();
 
-    // 💡 Auth & Security States
+    // Auth & Security States
     const [user, setUser] = useState(null);
     const [isMembershipActive, setIsMembershipActive] = useState(false);
     const [membershipStatus, setMembershipStatus] = useState('');
-    const [isUnlocked, setIsUnlocked] = useState(false); // 💡 PIN 잠금 해제 여부
-    const [loginPin, setLoginPin] = useState(''); // 💡 잠금 화면 입력용
+    const [isUnlocked, setIsUnlocked] = useState(false);
+    const [loginPin, setLoginPin] = useState('');
+    const [isResetting, setIsResetting] = useState(false); // 💡 PIN 리셋 로딩 상태
 
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardStep, setOnboardStep] = useState(1);
@@ -35,7 +36,7 @@ export default function HomePage() {
     const [accName, setAccName] = useState('');
     const [accNum, setAccNum] = useState('');
 
-    // 💡 Step 4: 보안 (PIN 설정)
+    // Step 4: 보안 (PIN 설정)
     const [pin, setPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
 
@@ -48,8 +49,8 @@ export default function HomePage() {
         "PRC ID", "SSS/GSIS ID", "PhilHealth ID", "Voter's ID"
     ];
 
-    const topNationalities = ['Filipino', 'South Korean', 'Chinese', 'Japanese', 'American'];
-    const otherNationalities = ['Australian', 'British', 'Canadian', 'French', 'German', 'Indian', 'Indonesian', 'Malaysian', 'Singaporean', 'Spanish', 'Thai', 'Vietnamese', 'Other'];
+    const topNationalities = ['Philippines', 'South Korea', 'China', 'Japan', 'United States'];
+    const otherNationalities = ['Australia', 'Canada', 'France', 'Germany', 'India', 'Indonesia', 'Malaysia', 'Singapore', 'Taiwan', 'Thailand', 'United Kingdom', 'Vietnam'];
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
@@ -65,7 +66,7 @@ export default function HomePage() {
             setIsMembershipActive(parsedUser.is_membership_active === 1 || parsedUser.is_membership_active === true);
             setMembershipStatus(parsedUser.membership_status || 'active');
 
-            // 💡 유저가 있으면 앱 접속 시 잠금 상태로 설정 (PIN 요구)
+            // 유저가 있으면 앱 접속 시 잠금 상태로 설정 (PIN 요구)
             setIsUnlocked(false);
 
             axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
@@ -137,7 +138,6 @@ export default function HomePage() {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accName || !accNum) return alert('Please fill in your payment details.');
         }
-        // 💡 보안 PIN 입력 검증 추가
         if (onboardStep === 4) {
             if (pin.length !== 4) return alert('Please enter a 4-digit PIN.');
             if (pin !== confirmPin) return alert('PIN numbers do not match.');
@@ -171,17 +171,16 @@ export default function HomePage() {
                     ...payload,
                     name: `${firstName} ${lastName}`.trim(),
                     is_membership_active: false,
-                    pin: pin // 💡 보안 락스크린을 위해 로컬에 PIN 저장
+                    pin: pin
                 };
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 setUser(finalUser);
                 setIsMembershipActive(false);
                 setMembershipStatus('pending');
-                setIsUnlocked(true); // 가입 직후엔 잠금해제 상태로 진입
+                setIsUnlocked(true);
                 setShowOnboarding(false);
 
-                // 💡 완료 알림 메시지 변경
                 alert('Registration submitted successfully! Your account is currently under review by n+ Rewards. You will be notified once activated.');
             } else {
                 alert("Failed to join rewards: " + response.data.message);
@@ -201,7 +200,6 @@ export default function HomePage() {
         startOnboarding();
     };
 
-    // 💡 락스크린 PIN 입력 처리
     const handleLoginPinInput = (num) => {
         if (loginPin.length < 4) {
             const newPin = loginPin + num;
@@ -219,7 +217,28 @@ export default function HomePage() {
         }
     };
 
-    // 💡 락스크린 (보안 화면) 렌더링
+    // 💡 락스크린 내 PIN 재설정 링크 발송 로직
+    const handleForgotPinLockScreen = async () => {
+        if (!user || !user.email) return;
+
+        setIsResetting(true);
+        try {
+            // 실제 API 연동 시 아래 주석을 해제하세요.
+            // await axios.post('https://api.hotelnplus.com/api/members/forgot-pin', { email: user.email });
+
+            // UI 시뮬레이션 지연 시간
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            alert(`A PIN reset link has been sent to ${user.email}. Please check your inbox to reset your PIN.`);
+        } catch (error) {
+            console.error("Forgot PIN Error:", error);
+            alert("Failed to send reset link. Please try again.");
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
+    // 락스크린 (보안 화면) 렌더링
     if (user && !isUnlocked) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
@@ -233,7 +252,7 @@ export default function HomePage() {
 
                 <div className="flex gap-4 mb-10">
                     {[0, 1, 2, 3].map(i => (
-                        <div key={i} className={`w-4 h-4 rounded-full border-2 ${loginPin.length > i ? 'bg-[#009900] border-[#009900]' : 'border-slate-500'}`} />
+                        <div key={i} className={`w-4 h-4 rounded-full border-2 transition-colors duration-200 ${loginPin.length > i ? 'bg-[#009900] border-[#009900]' : 'border-slate-500'}`} />
                     ))}
                 </div>
 
@@ -247,15 +266,27 @@ export default function HomePage() {
                         <button onClick={() => handleLoginPinInput('0')} className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-2xl font-semibold hover:bg-slate-700 active:bg-slate-600 transition-colors mx-auto">0</button>
                     </div>
                     <div className="flex items-center justify-center">
-                        <button onClick={() => setLoginPin(loginPin.slice(0, -1))} className="text-slate-400 font-bold active:text-white p-2">⌫</button>
+                        <button onClick={() => setLoginPin(loginPin.slice(0, -1))} className="text-slate-400 font-bold active:text-white p-2 text-xl">⌫</button>
                     </div>
                 </div>
 
-                <div className="mt-12 space-y-4 text-center">
+                <div className="mt-12 space-y-5 text-center w-full max-w-[280px]">
                     <button onClick={() => alert('Biometric login requires secure backend setup. Please use PIN for now.')} className="text-[#009900] text-sm font-semibold flex items-center justify-center gap-2 w-full">
                         <span className="text-xl">🪪</span> Use Face ID / Fingerprint
                     </button>
-                    <button onClick={handleLogout} className="text-slate-500 text-xs underline block mx-auto">Sign in with different account</button>
+
+                    {/* 💡 Forgot PIN 버튼 추가 */}
+                    <button
+                        onClick={handleForgotPinLockScreen}
+                        disabled={isResetting}
+                        className="text-slate-400 text-sm font-medium hover:text-white transition-colors block mx-auto disabled:opacity-50"
+                    >
+                        {isResetting ? 'Sending Link...' : 'Forgot PIN?'}
+                    </button>
+
+                    <button onClick={handleLogout} className="text-slate-500 text-xs underline block mx-auto pt-2 border-t border-slate-800 w-full">
+                        Sign in with different account
+                    </button>
                 </div>
             </div>
         );
@@ -286,13 +317,11 @@ export default function HomePage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">First Name</label>
-                                    {/* 💡 강제 영문 대문자 변환 */}
-                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
+                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" placeholder="JOHN" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Last Name</label>
-                                    {/* 💡 강제 영문 대문자 변환 */}
-                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
+                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" placeholder="DOE" />
                                 </div>
                             </div>
                             <div>
@@ -305,7 +334,6 @@ export default function HomePage() {
                             </div>
                             <div>
                                 <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Nationality</label>
-                                {/* 💡 드롭다운 메뉴로 변경 및 주요 국가 상단 고정 */}
                                 <select value={nationality} onChange={e => setNationality(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
                                     <option value="">-- Select Nationality --</option>
                                     <optgroup label="Top Nationalities">
@@ -364,13 +392,11 @@ export default function HomePage() {
                                 <div className="mt-6">
                                     <p className="text-xs font-semibold text-slate-500 mb-3 text-center uppercase">Choose Upload Method</p>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {/* 💡 카메라 명시적 호출 버튼 */}
                                         <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
                                             <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">📷</div>
                                             <p className="font-bold text-slate-700 text-xs">Take Photo</p>
                                         </div>
-                                        {/* 💡 갤러리 업로드용 버튼 (capture 속성 제거) */}
                                         <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
                                             <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
@@ -413,7 +439,6 @@ export default function HomePage() {
                                         <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
                                             {paymentMethod === 'card' ? 'Name on Card' : 'Registered Name'}
                                         </label>
-                                        {/* 💡 강제 영문 대문자 변환 */}
                                         <input type="text" value={accName} onChange={e => setAccName(e.target.value.toUpperCase())} placeholder="JOHN DOE" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
                                     </div>
                                 </div>
@@ -421,7 +446,7 @@ export default function HomePage() {
                         </div>
                     )}
 
-                    {/* 💡 STEP 4: 앱 보안 장치 설정 */}
+                    {/* STEP 4: 앱 보안 장치 설정 */}
                     {onboardStep === 4 && (
                         <div className="animate-fade-in-up space-y-5">
                             <h3 className="text-2xl font-bold text-slate-800 mb-2">Secure Your Account</h3>
