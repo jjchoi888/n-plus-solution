@@ -169,18 +169,18 @@ export default function UserManagement() {
         }
     };
 
-    // 💡 [NEW] 거절(Reject) 처리 및 사유 전송 핸들러
+    // 💡 거절(Reject) 처리 및 사유 전송 핸들러
     const handleRejectUser = async (userEmail) => {
-        // 관리자가 직접 거절 사유를 입력할 수 있습니다. (앱의 알림함으로 들어갑니다)
         const reason = window.prompt("Please enter the reason for rejection (e.g., Unclear ID photo):", "ID photo is unclear. Please re-upload a valid ID.");
-        if (reason === null) return; // 취소 누름
+        if (reason === null) return;
 
         try {
             const res = await axios.post("https://api.hotelnplus.com/api/members/reject", { email: userEmail, reason });
             if (res.data && res.data.success) {
-                alert(`✅ Application marked as 'Need More Info'. Notification sent to ${userEmail}.`);
+                // 💡 [수정됨] 이메일이 아닌 'Guest App 알림'으로 전송되었다고 명확히 안내합니다.
+                alert(`✅ Application marked as 'Need More Info'. An in-app notification was sent to the user's Guest App.`);
                 setIsReviewModalOpen(false);
-                fetchUsers(); // 리스트 새로고침
+                fetchUsers();
             } else {
                 alert("❌ Rejection failed.");
             }
