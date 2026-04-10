@@ -47,35 +47,66 @@ export default function UserManagement() {
         ],
     }), []);
 
-    // 유저 데이터 로드
+    // 💡 유저 데이터 로드 (캐시 무효화 및 데이터 정제 로직 추가)
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            // 💡 [핵심 1] ?t=${Date.now()} 를 추가하여 무조건 DB에서 최신 데이터를 강제로 새로 가져오게 만듭니다.
+            const res = await axios.get(`https://api.hotelnplus.com/api/hq/members?t=${Date.now()}`, {
+                headers: { 'Cache-Control': 'no-cache' }
+            });
+
+            if (res.data && res.data.members) {
+                // 💡 [핵심 2] DB에서 온 데이터 형식이 달라도 화면이 깨지지 않도록 데이터를 정제(Map)합니다.
+                const cleanUsers = res.data.members.map(u => ({
+                    ...u,
+                    // name이 없으면 first_name과 last_name을 합쳐서 만들어줍니다.
+                    name: u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown Guest',
+                    nationality: u.nationality || 'Unknown',
+                    email: u.email || 'No Email',
+                    tier: u.tier_id || u.tier || 'Basic',
+                    total_points: u.total_points || 0,
+                    membership_status: u.membership_status || (u.is_membership_active ? 'active' : 'pending')
+                }));
+
+                // 최신순(가입일순) 정렬이 필요하다면 아래 주석을 해제하세요.
+                // cleanUsers.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+                setUsers(cleanUsers);
+            }
+
+            // 포인트 로그 로드 (마찬가지로 캐시 무효화)
+            const logRes = await axios.get(`https://api.hotelnplus.com/api/hq/points-log?t=${Date.now()}`, {
+                headers: { 'Cache-Control': 'no-cache' }
+            }).catch(() => ({ data: { logs: [] } }));
+
+            if (logRes.data && logRes.data.logs) setPointsLogs(logRes.data.logs);
+
+        } catch (err) {
+            console.error("Data load failure:", err);
+            setUsers([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 컴포넌트 마운트 시 데이터 1회 로드
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                // 실제 DB에서 데이터 가져오기
-                const res = await axios.get("https://api.hotelnplus.com/api/hq/members");
-                if (res.data && res.data.members) {
-                    setUsers(res.data.members);
-
-                    // 포인트 로그도 함께 가져옵니다.
-                    const logRes = await axios.get("https://api.hotelnplus.com/api/hq/points-log").catch(() => ({ data: { logs: [] } }));
-                    if (logRes.data && logRes.data.logs) setPointsLogs(logRes.data.logs);
-                }
-            } catch (err) {
-                console.error("Data load failure:", err);
-                setUsers([]);
-            } finally { setLoading(false); }
-        };
         fetchUsers();
-
     }, []);
 
+    // 화면 표시에 쓰일 필터링된 유저 목록
     const basicUsers = users.filter(u => !u.is_membership_active);
     const memberUsers = users.filter(u => u.is_membership_active);
 
     const displayUsers = (tab === "ALL_USERS" ? users : tab === "BASIC" ? basicUsers : memberUsers)
         .filter(u => {
             const matchSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchTier = filterTier === "ALL" || u.tier === filterTier;
+
+            // Tier 매칭 로직 보완 (1, 2, 3 같은 숫자형 Tier도 텍스트와 매칭)
+            const displayTier = u.tier === '1' || !u.tier ? 'Basic' : String(u.tier).toUpperCase();
+            const matchTier = filterTier === "ALL" || displayTier.toLowerCase() === filterTier.toLowerCase();
+
             const matchNation = filterNation === "ALL" || u.nationality === filterNation;
             return matchSearch && matchTier && matchNation;
         });
@@ -86,11 +117,11 @@ export default function UserManagement() {
     // 이메일 발송 로직
     const submitEmailCampaign = async (e) => {
         e.preventDefault();
-        if (!confirm(`${displayUsers.length}명의 유저에게 이메일을 발송하시겠습니까?`)) return;
+        if (!window.confirm(`Are you sure you want to send this email to ${displayUsers.length} users?`)) return;
 
         setIsSending(true);
         try {
-            await axios.post("/api/hq/send-marketing-email", {
+            await axios.post("https://api.hotelnplus.com/api/hq/send-marketing-email", {
                 emails: displayUsers.map(u => u.email),
                 subject: emailForm.subject,
                 content: `
@@ -106,11 +137,11 @@ export default function UserManagement() {
             setIsEmailModalOpen(false);
             setEmailForm({ subject: "", content: "", imageUrl: "" });
         } catch (err) {
-            alert("error occurred during dispatch.");
+            alert("Error occurred during dispatch.");
         } finally { setIsSending(false); }
     };
 
-    // 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
+    // 유저 수정(Manage) 실제 DB 저장 로직
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
@@ -119,7 +150,8 @@ export default function UserManagement() {
             const res = await axios.post("https://api.hotelnplus.com/api/hq/members/update", editingUser);
 
             if (res.data && res.data.success) {
-                setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
+                // 수정 성공 시 최신 데이터를 다시 서버에서 긁어옵니다.
+                fetchUsers();
                 alert(`✅ Successfully updated information for ${editingUser.name}.`);
                 setIsEditModalOpen(false);
             } else {
@@ -142,13 +174,8 @@ export default function UserManagement() {
 
             if (res.data && res.data.success) {
                 alert(`✅ Successfully activated membership for ${userEmail}.`);
-
-                // 로컬 상태 즉시 업데이트 (화면 새로고침 없이 리스트에 바로 반영)
-                setUsers(users.map(u =>
-                    u.email === userEmail
-                        ? { ...u, membership_status: 'active', is_membership_active: 1, tier: 'MEMBER' }
-                        : u
-                ));
+                // 💡 승인 직후 서버에서 최신 회원 목록을 새로고침합니다!
+                fetchUsers();
             } else {
                 alert("❌ Activation failed: " + res.data.message);
             }
@@ -174,6 +201,10 @@ export default function UserManagement() {
                         {t.label}
                     </button>
                 ))}
+                {/* 💡 수동 새로고침 버튼 (옵션) */}
+                <button onClick={fetchUsers} className="ml-2 px-4 py-2 text-emerald-600 hover:bg-emerald-50 rounded-xl font-bold text-xs transition-colors border border-emerald-200">
+                    ↻ Refresh
+                </button>
             </div>
 
             {/* 필터 및 검색 */}
@@ -242,7 +273,6 @@ export default function UserManagement() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {displayUsers.map(u => {
-                                // 스크린샷에 "1"로 나오는 티어를 보기 좋게 처리
                                 const displayTier = u.tier === '1' || !u.tier ? 'Basic' : String(u.tier).toUpperCase();
 
                                 return (
@@ -261,15 +291,21 @@ export default function UserManagement() {
                                                 }`}>
                                                 {displayTier}
                                             </span>
+                                            {/* 💡 [NEW] 상태가 대기 중(Pending)일 경우 라벨 추가 */}
+                                            {u.membership_status === 'pending' && (
+                                                <span className="ml-2 text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded uppercase font-black">
+                                                    Pending Review
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="p-5 text-slate-700">
                                             <span className="text-base">{Number(u.total_points).toLocaleString()}</span>
                                             <span className="text-[10px] text-slate-300 ml-1">pts</span>
                                         </td>
                                         <td className="p-5 text-right">
-                                            {/* 💡 [NEW] Approve & Manage 버튼 컨테이너 */}
                                             <div className="flex justify-end items-center gap-2">
-                                                {/* 💡 멤버십이 활성화되지 않았거나, 상태가 pending일 때 Approve 버튼 표시 */}
+
+                                                {/* 💡 [NEW] 멤버십이 활성화되지 않았거나 상태가 pending일 때만 Approve 버튼 표시 */}
                                                 {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') && (
                                                     <button
                                                         onClick={() => handleActivateUser(u.email)}
@@ -281,7 +317,7 @@ export default function UserManagement() {
 
                                                 <button
                                                     onClick={() => {
-                                                        setEditingUser({ ...u, tier: displayTier }); // 수정용 객체 복사
+                                                        setEditingUser({ ...u, tier: displayTier });
                                                         setIsEditModalOpen(true);
                                                     }}
                                                     className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black"
@@ -323,13 +359,11 @@ export default function UserManagement() {
                         </div>
 
                         <form onSubmit={handleUpdateUser} className="p-8 space-y-5">
-                            {/* 이름 (읽기 전용) */}
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Full Name</label>
                                 <input type="text" readOnly value={editingUser.name} className="w-full p-4 bg-slate-100 border border-slate-200 rounded-2xl font-bold text-slate-500 cursor-not-allowed" />
                             </div>
 
-                            {/* 등급(Tier) 수정 */}
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Membership Tier</label>
                                 <select
@@ -345,7 +379,6 @@ export default function UserManagement() {
                                 </select>
                             </div>
 
-                            {/* 포인트 수정 */}
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Reward Points</label>
                                 <div className="relative">
@@ -359,7 +392,6 @@ export default function UserManagement() {
                                 </div>
                             </div>
 
-                            {/* 멤버십 상태 활성화 토글 */}
                             <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl">
                                 <div>
                                     <label className="block text-sm font-black text-slate-800">Active Member</label>
