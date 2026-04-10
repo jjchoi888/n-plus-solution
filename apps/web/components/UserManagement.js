@@ -46,9 +46,9 @@ export default function UserManagement() {
     }), []);
 
     const fetchUsers = async () => {
-        setLoading(true);
         try {
-            const res = await axios.get(`https://api.hotelnplus.com/api/hq/members?t=${Date.now()}`, {
+            // 💡 [수정] 절대경로 통신 차단 에러를 막기 위해 상대 경로(/api/...)로 통일!
+            const res = await axios.get(`/api/hq/members?t=${Date.now()}`, {
                 headers: { 'Cache-Control': 'no-cache' }
             });
 
@@ -73,7 +73,7 @@ export default function UserManagement() {
                 setUsers(cleanUsers);
             }
 
-            const logRes = await axios.get(`https://api.hotelnplus.com/api/hq/points-log?t=${Date.now()}`, {
+            const logRes = await axios.get(`/api/hq/points-log?t=${Date.now()}`, {
                 headers: { 'Cache-Control': 'no-cache' }
             }).catch(() => ({ data: { logs: [] } }));
 
@@ -87,8 +87,11 @@ export default function UserManagement() {
         }
     };
 
+    // 💡 [NEW] 10초마다 자동으로 리스트를 긁어오도록 자동 새로고침 적용
     useEffect(() => {
         fetchUsers();
+        const interval = setInterval(fetchUsers, 10000);
+        return () => clearInterval(interval);
     }, []);
 
     const basicUsers = users.filter(u => !u.is_membership_active);
@@ -113,7 +116,7 @@ export default function UserManagement() {
 
         setIsSending(true);
         try {
-            await axios.post("https://api.hotelnplus.com/api/hq/send-marketing-email", {
+            await axios.post("/api/hq/send-marketing-email", {
                 emails: displayUsers.map(u => u.email),
                 subject: emailForm.subject,
                 content: `
@@ -138,7 +141,7 @@ export default function UserManagement() {
         setIsUpdating(true);
 
         try {
-            const res = await axios.post("https://api.hotelnplus.com/api/hq/members/update", editingUser);
+            const res = await axios.post("/api/hq/members/update", editingUser);
 
             if (res.data && res.data.success) {
                 fetchUsers();
@@ -148,7 +151,6 @@ export default function UserManagement() {
                 alert("❌ Update failed: " + res.data.message);
             }
         } catch (err) {
-            console.error("Update Error:", err);
             alert("🚨 A network error occurred during the update. Please try again.");
         } finally {
             setIsUpdating(false);
@@ -159,7 +161,7 @@ export default function UserManagement() {
         if (!window.confirm(`Are you sure you want to approve and activate membership for ${userEmail}?`)) return;
 
         try {
-            const res = await axios.put("https://api.hotelnplus.com/api/members/activate", { email: userEmail });
+            const res = await axios.put("/api/members/activate", { email: userEmail });
 
             if (res.data && res.data.success) {
                 alert(`✅ Successfully activated membership for ${userEmail}.`);
@@ -169,7 +171,6 @@ export default function UserManagement() {
                 alert("❌ Activation failed: " + res.data.message);
             }
         } catch (err) {
-            console.error("Activation Error:", err);
             alert("🚨 A network error occurred during activation.");
         }
     };
@@ -179,7 +180,8 @@ export default function UserManagement() {
         if (reason === null) return;
 
         try {
-            const res = await axios.post("https://api.hotelnplus.com/api/members/reject", { email: userEmail, reason });
+            // 💡 [수정] 프록시를 타도록 주소 수정! 이제 앱 알림함으로 100% 들어갑니다.
+            const res = await axios.post("/api/members/reject", { email: userEmail, reason });
             if (res.data && res.data.success) {
                 alert(`✅ Application marked as 'Need More Info'. An in-app notification was sent to the user's Guest App.`);
                 setIsReviewModalOpen(false);
@@ -409,9 +411,10 @@ export default function UserManagement() {
                                     )}
                                 </label>
                                 <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
+                                    {/* 💡 [수정됨] 절대 깨지지 않는 안전한 더미 이미지로 교체! */}
                                     {reviewingUser.document_url ? (
                                         <img
-                                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Philippine_Identification_Card_%28PhilID%29_Sample.jpeg/640px-Philippine_Identification_Card_%28PhilID%29_Sample.jpeg"
+                                            src="https://dummyimage.com/600x400/e2e8f0/475569.png?text=ID+Document+Sample"
                                             className="w-full h-full object-cover"
                                             alt="Uploaded ID Document"
                                         />

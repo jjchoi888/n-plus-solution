@@ -8,23 +8,22 @@ const TAB_TITLES = {
     DASHBOARD: "HQ Overview",
     PARTNERS: "Partner Management",
     AGENTS: "Sales Representatives (Commissions)",
-    SETTLEMENT: "Commission Settlement", // 💡 신규 추가
+    SETTLEMENT: "Commission Settlement",
     BILLING: "Billing & Commission Management",
     DOMAINS: "Custom Domain Assignments",
-    USERs: "User & Membership Management"
+    USERS: "Member Management" // 💡 타이틀 변경됨
 };
 
 const SIDEBAR_MENUS = [
     { id: "DASHBOARD", label: "HQ Overview", icon: "📊" },
     { id: "PARTNERS", label: "Partner Hotels", icon: "🏨" },
-    { id: "USERS", label: "Registered Users", icon: "👤" },
+    { id: "USERS", label: "Members", icon: "👤" }, // 💡 메뉴 이름 변경됨
     { id: "AGENTS", label: "Sales Agents", icon: "🤝" },
-    { id: "SETTLEMENT", label: "Commissions", icon: "💰" }, // 💡 신규 추가
+    { id: "SETTLEMENT", label: "Commissions", icon: "💰" },
     { id: "BILLING", label: "Billing & Plans", icon: "💳" },
     { id: "DOMAINS", label: "Domain Settings", icon: "🌐" }
 ];
 
-// 💡 [신규 추가 1] 재귀적으로 트리를 그려주는 컴포넌트 (파일 탐색기 스타일)
 const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
     const [isExpanded, setIsExpanded] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
@@ -80,16 +79,17 @@ export default function PortalAdmin() {
     const [isLoading, setIsLoading] = useState(true);
     const [toastMessage, setToastMessage] = useState("");
 
-    // 💡 신규 에이전트 등록 모달 상태 (비밀번호 및 Tier 초기값 Rep으로 변경)
+    // 💡 [NEW] 사이드바 뱃지용 대기 중 멤버 수 카운트
+    const [pendingMemberCount, setPendingMemberCount] = useState(0);
+
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [newAgent, setNewAgent] = useState({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
-    const [isIdAvailable, setIsIdAvailable] = useState(null); // 중복 확인 상태
+    const [isIdAvailable, setIsIdAvailable] = useState(null);
 
     const [selectedAgent, setSelectedAgent] = useState(null);
     const [isEditingAgent, setIsEditingAgent] = useState(false);
     const [editAgentData, setEditAgentData] = useState(null);
 
-    // 💡 [신규 추가 2-2] 에이전트 정보 업데이트 (수정) 핸들러
     const handleUpdateAgent = async (e) => {
         e.preventDefault();
         try {
@@ -100,12 +100,11 @@ export default function PortalAdmin() {
             if (data.success) {
                 showToast("✅ Agent info updated successfully!");
                 setIsEditingAgent(false);
-                fetchData(); // DB 저장 후 전체 데이터 새로고침
+                fetchData();
             } else showToast(`❌ Update Failed.`);
         } catch (error) { showToast("❌ Network Error."); }
     };
 
-    // 💡 [신규] 에이전트 삭제 핸들러
     const handleDeleteAgent = async (agentId) => {
         if (!window.confirm(`Are you sure you want to delete Agent [${agentId}]?\n\n* Agents with sub-agents or active hotels cannot be deleted.`)) return;
         try {
@@ -116,14 +115,12 @@ export default function PortalAdmin() {
         } catch (e) { showToast("❌ Network Error."); }
     };
 
-    // 💡 [신규 추가] 파트너 관리용 모달 상태
     const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
     const [isEditingPartner, setIsEditingPartner] = useState(false);
     const [partnerForm, setPartnerForm] = useState({
         code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
     });
 
-    // 💡 파트너 폼 전송 핸들러 (등록 & 수정 공통)
     const handlePartnerSubmit = async (e) => {
         e.preventDefault();
         const url = isEditingPartner ? `${BASE_URL}/api/admin/partners/${partnerForm.code}` : `${BASE_URL}/api/admin/partners/register`;
@@ -137,14 +134,13 @@ export default function PortalAdmin() {
             if (data.success) {
                 showToast(`✅ Partner successfully ${isEditingPartner ? 'updated' : 'registered'}!`);
                 setIsPartnerModalOpen(false);
-                fetchData(); // 표 새로고침
+                fetchData();
             } else {
                 showToast(`❌ Error: ${data.message}`);
             }
         } catch (error) { showToast("❌ Network error."); }
     };
 
-    // 💡 파트너 삭제 핸들러
     const handleDeletePartner = async (code, name) => {
         if (!window.confirm(`⚠️ [WARNING]\nAre you sure you want to completely delete '${name}'?\nThis will erase the hotel and ALL associated user accounts!`)) return;
         try {
@@ -157,7 +153,6 @@ export default function PortalAdmin() {
         } catch (error) { showToast("❌ Network error."); }
     };
 
-    // 💡 [신규] 롤업(차등) 커미션 정산 알고리즘 로직
     const calculateSettlement = (targetAgentId) => {
         const agentMap = {};
         agents.forEach(a => agentMap[a.agent_id] = a);
@@ -171,22 +166,20 @@ export default function PortalAdmin() {
             let currentRate = 0;
             let pathPayouts = {};
 
-            // 호텔부터 상위 본사(HQ)까지 올라가며 각 계층이 먹을 커미션 차액(%)을 계산
             while (currentAgentId && agentMap[currentAgentId]) {
                 const agent = agentMap[currentAgentId];
                 let payoutRate = agent.commission_rate - currentRate;
-                if (payoutRate < 0) payoutRate = 0; // 역마진 방지
+                if (payoutRate < 0) payoutRate = 0;
 
                 pathPayouts[agent.agent_id] = payoutRate;
                 currentRate = agent.commission_rate;
                 currentAgentId = agent.parent_agent_id;
             }
 
-            // 만약 내가 선택한 에이전트가 이 호텔의 커미션 라인에 포함되어 있다면?
             if (pathPayouts[targetAgentId] !== undefined) {
                 const gross = Number(hotel.mrr);
-                const net = gross * 0.88; // 💡 12% E.VAT 공제 (정산 원금)
-                const targetPayoutRate = pathPayouts[targetAgentId]; // 내가 먹을 차액 %
+                const net = gross * 0.88;
+                const targetPayoutRate = pathPayouts[targetAgentId];
                 const targetEarned = net * (targetPayoutRate / 100);
 
                 totalGross += gross; totalNet += net; myCommission += targetEarned;
@@ -196,7 +189,6 @@ export default function PortalAdmin() {
         return { totalGross, totalNet, myCommission, hotelDetails };
     };
 
-    // 💡 [신규 추가 2-3] 트리 구조 빌드 함수 (return문 바로 위쯤에 추가)
     const buildAgentTree = () => {
         const agentMap = {};
         const roots = [];
@@ -228,7 +220,6 @@ export default function PortalAdmin() {
             const data = await res.json();
 
             if (data.success && data.role === 'SUPER_ADMIN') {
-                // 💡 로그인 성공 시 브라우저 세션에 저장 (창을 닫기 전까지 유지)
                 sessionStorage.setItem("hq_logged_in", "true");
                 setIsLoggedIn(true);
             } else {
@@ -261,12 +252,27 @@ export default function PortalAdmin() {
         }
     };
 
-    // 💡 로그인이 되면 데이터를 불러옴
+    // 💡 [NEW] 자동 업데이트용: 10초마다 대기 중인 멤버 수만 가볍게 긁어옵니다.
+    const fetchPendingMembersCount = async () => {
+        try {
+            const res = await fetch(`/api/hq/members`);
+            const data = await res.json();
+            if (data.success && data.members) {
+                const pending = data.members.filter(m => m.membership_status === 'pending').length;
+                setPendingMemberCount(pending);
+            }
+        } catch (e) { }
+    };
+
     useEffect(() => {
-        if (isLoggedIn) fetchData();
+        if (isLoggedIn) {
+            fetchData();
+            fetchPendingMembersCount();
+            const interval = setInterval(fetchPendingMembersCount, 10000); // 10초 주기 폴링
+            return () => clearInterval(interval);
+        }
     }, [isLoggedIn]);
 
-    // 💡 새로고침 시 로그인 상태 복구
     useEffect(() => {
         const isAuth = sessionStorage.getItem("hq_logged_in");
         if (isAuth === "true") {
@@ -321,7 +327,6 @@ export default function PortalAdmin() {
         }
     };
 
-    // 💡 [신규] ID 중복 확인 핸들러
     const handleCheckAgentId = async () => {
         if (!newAgent.agent_id.trim()) {
             return showToast("Please enter an Agent ID first.");
@@ -345,11 +350,9 @@ export default function PortalAdmin() {
         }
     };
 
-    // 💡 에이전트 등록 핸들러
     const handleRegisterAgent = async (e) => {
         e.preventDefault();
 
-        // ID 중복 확인 필수 체크
         if (isIdAvailable !== true) {
             return showToast("⚠️ Please check Agent ID availability first.");
         }
@@ -438,7 +441,6 @@ export default function PortalAdmin() {
                             <button onClick={() => { setIsAgentModalOpen(false); setIsIdAvailable(null); }} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
                         </div>
                         <form onSubmit={handleRegisterAgent} className="space-y-4">
-                            {/* 💡 [수정] Agent ID 중복확인 기능 추가 */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Agent ID</label>
                                 <div className="flex gap-2">
@@ -464,7 +466,6 @@ export default function PortalAdmin() {
                                 {isIdAvailable === false && <p className="text-[10px] text-red-600 mt-1 font-bold">❌ Already in use</p>}
                             </div>
 
-                            {/* 💡 [수정] 비밀번호 입력란 추가 */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
                                 <input type="password" required value={newAgent.password} onChange={e => setNewAgent({ ...newAgent, password: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••" />
@@ -475,7 +476,6 @@ export default function PortalAdmin() {
                                 <input type="text" required value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="e.g. Metro Sales Inc." />
                             </div>
 
-                            {/* 💡 [수정] Tier 구조 명칭 변경 */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tier Level</label>
@@ -524,13 +524,22 @@ export default function PortalAdmin() {
                             <button
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left outline-none transition-colors duration-300 ease-in-out ${activeTab === item.id
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-left outline-none transition-colors duration-300 ease-in-out ${activeTab === item.id
                                     ? "bg-emerald-500/20 text-emerald-400"
                                     : "bg-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                                     }`}
                             >
-                                <span className="text-lg w-6 text-center">{item.icon}</span>
-                                <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg w-6 text-center">{item.icon}</span>
+                                    <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                                </div>
+
+                                {/* 💡 [NEW] 사이드바 메뉴 뱃지 추가 (대기 중 멤버수 노출) */}
+                                {item.id === "USERS" && pendingMemberCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-md">
+                                        {pendingMemberCount}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </nav>
@@ -613,7 +622,7 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 [업그레이드] PARTNERS 탭 (등록/수정/삭제 기능 추가) */}
+                    {/* 💡 PARTNERS 탭 (등록/수정/삭제 기능 추가) */}
                     {/* ========================================================= */}
                     {activeTab === "PARTNERS" && (
                         <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
@@ -624,16 +633,15 @@ export default function PortalAdmin() {
                                     <p className="text-sm font-bold text-slate-500 mt-1">Manage Properties & Master Accounts</p>
                                 </div>
                                 <button onClick={() => {
-                                    // 💡 p.master_id가 백엔드에서 정상적으로 내려오는지 확인이 핵심입니다.
                                     setPartnerForm({
-                                        code: p.code,
-                                        name: p.name,
-                                        master_id: p.master_id || "", // 백엔드에서 가져온 진짜 아이디 매핑
-                                        master_pw: "", // 비밀번호는 보안상 수동 입력 전까지 빈칸
-                                        status: p.status,
-                                        agent_id: p.agent_id || "HQ Direct"
+                                        code: "",
+                                        name: "",
+                                        master_id: "",
+                                        master_pw: "",
+                                        status: "Active",
+                                        agent_id: "HQ Direct"
                                     });
-                                    setIsEditingPartner(true);
+                                    setIsEditingPartner(false);
                                     setIsPartnerModalOpen(true);
                                 }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
                                     <span>+</span> Register New Partner
@@ -681,7 +689,6 @@ export default function PortalAdmin() {
                                                         <td className="p-4 text-right">
                                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <button onClick={() => {
-                                                                    // 💡 수정(Edit) 버튼을 누를 때 DB에서 가져온 마스터 아이디(p.master_id)를 넣어줍니다!
                                                                     setPartnerForm({
                                                                         code: p.code,
                                                                         name: p.name,
@@ -717,7 +724,7 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 [업그레이드] AGENTS 탭 - 트리 분할 레이아웃 적용 */}
+                    {/* 💡 AGENTS 탭 - 트리 분할 레이아웃 적용 */}
                     {/* ========================================================= */}
                     {activeTab === "AGENTS" && (
                         <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
@@ -855,7 +862,7 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 [신규] SETTLEMENT 탭 - 12% E.VAT 공제 및 롤업 커미션 정산 */}
+                    {/* 💡 SETTLEMENT 탭 - 12% E.VAT 공제 및 롤업 커미션 정산 */}
                     {/* ========================================================= */}
                     {activeTab === "SETTLEMENT" && (
                         <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
@@ -867,7 +874,7 @@ export default function PortalAdmin() {
                             </div>
 
                             <div className="flex-1 flex gap-6 min-h-0 pb-6">
-                                {/* 📌 좌측: 에이전트 트리 (AGENTS 탭과 동일한 컴포넌트 재사용) */}
+                                {/* 📌 좌측: 에이전트 트리 */}
                                 <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
                                     <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
                                         <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Agency</h3>
@@ -1148,7 +1155,7 @@ export default function PortalAdmin() {
                                                 <option value="Overdue">Overdue (Lock System)</option>
                                             </select>
                                         </div>
-                                        {/* 등록 시에만 임시 호텔명 입력 (이후엔 웹빌더에서 관리) */}
+                                        {/* 등록 시에만 임시 호텔명 입력 */}
                                         {!isEditingPartner && (
                                             <div>
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Name</label>
