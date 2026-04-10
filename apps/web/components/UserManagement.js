@@ -401,22 +401,24 @@ export default function UserManagement() {
                                 </div>
                             </div>
 
+                            {/* 신분증 이미지 표시 영역 */}
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
                                     <span>Submitted ID Document ({reviewingUser.citizen_type === 'filipino' ? 'Local' : reviewingUser.citizen_type === 'foreigner' ? 'Foreigner' : 'Unknown'} - {reviewingUser.id_type || 'N/A'})</span>
-                                    {reviewingUser.document_url ? (
+                                    {reviewingUser.document_url && reviewingUser.document_url.startsWith('data:image') ? (
                                         <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px] font-black">Verified Upload</span>
                                     ) : (
                                         <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[9px] font-black">Missing</span>
                                     )}
                                 </label>
                                 <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
-                                    {/* 💡 [수정됨] 절대 깨지지 않는 안전한 더미 이미지로 교체! */}
-                                    {reviewingUser.document_url ? (
+
+                                    {/* 💡 [핵심 수정 5] DB에서 진짜 사진 데이터(Base64)가 넘어오면 화면에 바로 그립니다! */}
+                                    {reviewingUser.document_url && reviewingUser.document_url.startsWith('data:image') ? (
                                         <img
-                                            src="https://dummyimage.com/600x400/e2e8f0/475569.png?text=ID+Document+Sample"
-                                            className="w-full h-full object-cover"
-                                            alt="Uploaded ID Document"
+                                            src={reviewingUser.document_url}
+                                            className="w-full h-full object-contain"
+                                            alt="Uploaded Real ID Document"
                                         />
                                     ) : (
                                         <>
@@ -424,6 +426,7 @@ export default function UserManagement() {
                                             <span className="text-xs font-bold text-slate-500">No ID Uploaded</span>
                                         </>
                                     )}
+
                                 </div>
                             </div>
 

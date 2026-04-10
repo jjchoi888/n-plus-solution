@@ -34,7 +34,7 @@ export default function GuestLogin() {
     // Step 2: 신분증
     const [citizenType, setCitizenType] = useState(''); // 'filipino' | 'foreigner'
     const [idType, setIdType] = useState('');
-    const [idUploaded, setIdUploaded] = useState(false);
+    const [idUploaded, setIdUploaded] = useState(""); // 💡 [추가] 텍스트 파일(Base64)이 담길 곳
 
     // Step 3: 결제 정보
     const [paymentMethod, setPaymentMethod] = useState(''); // 'card' | 'gcash' | 'maya'
@@ -54,6 +54,18 @@ export default function GuestLogin() {
             setIsCheckingDevice(false);
         }
     }, [router]);
+
+    // 💡 [NEW] 이미지 파일을 읽어서 Base64 문자열로 변환 (서버 전송용)
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setIdUploaded(reader.result); // 변환된 이미지 데이터 저장
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const nextStep = () => {
         if (onboardStep === 1) {
@@ -81,21 +93,28 @@ export default function GuestLogin() {
         setIsLoading(true);
 
         try {
-            // 💡 [핵심 수정] join-rewards 대신 통합 auth API로 쏴서 DB에 INSERT(생성) 시킵니다.
+            // 💡 [핵심 수정] 새로 추가된 결제정보, 신분증, 생일 및 PIN 번호를 통째로 담아 보냅니다.
             const payload = {
                 email,
                 first_name: firstName,
                 last_name: lastName,
                 phone,
                 nationality,
-                pin, // 비밀번호 대신 PIN을 넘겨서 DB의 password_hash에 저장하도록 합니다.
+                dob,
+                citizen_type: citizenType,
+                id_type: idType,
+                document_url: idUploaded, // 진짜 사진 데이터(Base64) 전송
+                payment_method: paymentMethod,
+                payment_acc_name: accName,
+                payment_acc_num: accNum,
+                pin, // PIN 번호 전송
                 membership_status: 'pending'
             };
 
             const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
             if (response.data && response.data.success) {
-                // 💡 생성 성공 시 로컬 스토리지에 저장하여 앱에서 로그인 상태 유지
+                // 생성 성공 시 로컬 스토리지에 저장하여 앱에서 로그인 상태 유지
                 const finalUser = response.data.member || {
                     ...payload,
                     name: `${firstName} ${lastName}`.trim(),
@@ -108,6 +127,7 @@ export default function GuestLogin() {
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
+                localStorage.setItem('guest_pin', pin); // 💡 기기에 PIN 번호 기록
 
                 alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
                 window.location.href = '/';
@@ -143,7 +163,6 @@ export default function GuestLogin() {
                         <img src="/logo192.png" alt="N+ Logo" className="h-8 w-auto object-contain" />
                         <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Rewards</h2>
                     </div>
-                    {/* 요청하신 타이틀로 정확히 수정 */}
                     <p className="text-sm font-bold text-slate-500 mt-2 leading-relaxed">
                         n+ Rewards membership<br />
                         <span className="text-xs font-medium">Sign up to earn points and auto-fill your bookings.</span>
@@ -217,11 +236,11 @@ export default function GuestLogin() {
                             <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Identity Verification</label>
 
                             <div className="grid grid-cols-2 gap-3 mb-2">
-                                <button onClick={() => { setCitizenType('filipino'); setIdType(''); setIdUploaded(false); }}
+                                <button onClick={() => { setCitizenType('filipino'); setIdType(''); setIdUploaded(""); }}
                                     className={`py-3.5 text-sm font-bold rounded-xl border-2 transition-colors ${citizenType === 'filipino' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
                                     Filipino
                                 </button>
-                                <button onClick={() => { setCitizenType('foreigner'); setIdType('Passport'); setIdUploaded(false); }}
+                                <button onClick={() => { setCitizenType('foreigner'); setIdType('Passport'); setIdUploaded(""); }}
                                     className={`py-3.5 text-sm font-bold rounded-xl border-2 transition-colors ${citizenType === 'foreigner' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
                                     Foreigner
                                 </button>
@@ -247,36 +266,20 @@ export default function GuestLogin() {
                             {idType && (
                                 <div className="mt-4 pt-2">
                                     <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Upload Method</p>
-
                                     <div className="grid grid-cols-2 gap-3">
-                                        {/* 📸 Take Photo 버튼 */}
+                                        {/* 💡 [핵심 수정] z-index 최상위 설정 및 handleFileChange 연동. 클릭 영역 넓힘! */}
                                         <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl overflow-hidden group">
-                                            {/* 💡 [수정됨] z-index를 최상위(z-20)로 올리고, 나머지 아이콘/텍스트는 pointer-events-none 처리하여 클릭 방해 요소를 완전히 제거했습니다. */}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                capture="environment"
-                                                onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                            />
+                                            <input type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform relative z-10 pointer-events-none">📷</div>
                                             <p className="font-bold text-slate-700 text-xs relative z-10 pointer-events-none">Take Photo</p>
                                         </div>
-
-                                        {/* 🖼️ Gallery 버튼 */}
                                         <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl overflow-hidden group">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                            />
+                                            <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform relative z-10 pointer-events-none">🖼️</div>
                                             <p className="font-bold text-slate-700 text-xs relative z-10 pointer-events-none">Gallery</p>
                                         </div>
                                     </div>
-
-                                    {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-3 rounded-lg border border-green-100">ID Attached Successfully ✓</p>}
+                                    {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-3 rounded-lg border border-green-100">ID Image Attached ✓</p>}
                                 </div>
                             )}
                         </div>
