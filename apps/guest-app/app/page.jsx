@@ -13,7 +13,7 @@ export default function HomePage() {
     const [membershipStatus, setMembershipStatus] = useState('');
     const [isUnlocked, setIsUnlocked] = useState(false);
     const [loginPin, setLoginPin] = useState('');
-    const [isResetting, setIsResetting] = useState(false); // 💡 PIN 리셋 로딩 상태
+    const [isResetting, setIsResetting] = useState(false);
 
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardStep, setOnboardStep] = useState(1);
@@ -197,7 +197,8 @@ export default function HomePage() {
             await deferredPrompt.userChoice;
             setDeferredPrompt(null);
         }
-        startOnboarding();
+        // 이메일 로그인 페이지로 이동하도록 수정 (기존의 모달 팝업 대신 로그인/가입 전용 페이지로 라우팅)
+        router.push('/login');
     };
 
     const handleLoginPinInput = (num) => {
@@ -217,18 +218,13 @@ export default function HomePage() {
         }
     };
 
-    // 💡 락스크린 내 PIN 재설정 링크 발송 로직
     const handleForgotPinLockScreen = async () => {
         if (!user || !user.email) return;
 
         setIsResetting(true);
         try {
-            // 실제 API 연동 시 아래 주석을 해제하세요.
             // await axios.post('https://api.hotelnplus.com/api/members/forgot-pin', { email: user.email });
-
-            // UI 시뮬레이션 지연 시간
             await new Promise(resolve => setTimeout(resolve, 800));
-
             alert(`A PIN reset link has been sent to ${user.email}. Please check your inbox to reset your PIN.`);
         } catch (error) {
             console.error("Forgot PIN Error:", error);
@@ -238,7 +234,7 @@ export default function HomePage() {
         }
     };
 
-    // 락스크린 (보안 화면) 렌더링
+    // 💡 락스크린 (보안 화면) 렌더링
     if (user && !isUnlocked) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
@@ -275,7 +271,6 @@ export default function HomePage() {
                         <span className="text-xl">🪪</span> Use Face ID / Fingerprint
                     </button>
 
-                    {/* 💡 Forgot PIN 버튼 추가 */}
                     <button
                         onClick={handleForgotPinLockScreen}
                         disabled={isResetting}
@@ -292,294 +287,133 @@ export default function HomePage() {
         );
     }
 
-    if (showOnboarding) {
-        return (
-            <div className="fixed inset-0 bg-slate-50 z-[100] flex flex-col font-sans text-slate-700">
-                <div className="bg-white p-4 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-sm">
-                    <button onClick={() => setShowOnboarding(false)} className="text-slate-400 font-bold text-xl px-2 hover:text-slate-600 transition-colors">✕</button>
-                    <h2 className="font-bold text-slate-800 text-lg">Join Membership</h2>
-                    <span className="text-[#009900] font-bold text-xs">Step {onboardStep} / 4</span>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6 flex flex-col max-w-md mx-auto w-full pb-20">
-                    <div className="flex gap-2 mb-8 shrink-0">
-                        <div className={`h-1.5 flex-1 ${onboardStep >= 1 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
-                        <div className={`h-1.5 flex-1 ${onboardStep >= 2 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
-                        <div className={`h-1.5 flex-1 ${onboardStep >= 3 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
-                        <div className={`h-1.5 flex-1 ${onboardStep >= 4 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
-                    </div>
-
-                    {/* STEP 1: 개인정보 입력 */}
-                    {onboardStep === 1 && (
-                        <div className="animate-fade-in-up space-y-4">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Personal Information</h3>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">First Name</label>
-                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" placeholder="JOHN" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Last Name</label>
-                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" placeholder="DOE" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Date of Birth</label>
-                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white" />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Phone Number</label>
-                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Nationality</label>
-                                <select value={nationality} onChange={e => setNationality(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
-                                    <option value="">-- Select Nationality --</option>
-                                    <optgroup label="Top Nationalities">
-                                        {topNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
-                                    </optgroup>
-                                    <optgroup label="Other Nationalities">
-                                        {otherNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Email Address</label>
-                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* STEP 2: 신분증 업로드 */}
-                    {onboardStep === 2 && (
-                        <div className="animate-fade-in-up space-y-5">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Identity Verification</h3>
-
-                            <div className="grid grid-cols-2 gap-3 mb-2">
-                                <button
-                                    onClick={() => { setCitizenType('filipino'); setIdType(''); }}
-                                    className={`py-3 text-sm font-bold border ${citizenType === 'filipino' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}
-                                >
-                                    Filipino
-                                </button>
-                                <button
-                                    onClick={() => { setCitizenType('foreigner'); setIdType('Passport'); }}
-                                    className={`py-3 text-sm font-bold border ${citizenType === 'foreigner' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}
-                                >
-                                    Foreigner
-                                </button>
-                            </div>
-
-                            {citizenType === 'filipino' && (
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Select ID Type</label>
-                                    <select value={idType} onChange={e => setIdType(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
-                                        <option value="">-- Choose ID --</option>
-                                        {filipinoIdOptions.map(id => <option key={id} value={id}>{id}</option>)}
-                                    </select>
-                                </div>
-                            )}
-
-                            {citizenType === 'foreigner' && (
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">ID Type</label>
-                                    <input type="text" readOnly value="Passport" className="w-full p-3 border border-slate-300 text-sm bg-slate-100 outline-none text-slate-500" />
-                                </div>
-                            )}
-
-                            {idType && (
-                                <div className="mt-6">
-                                    <p className="text-xs font-semibold text-slate-500 mb-3 text-center uppercase">Choose Upload Method</p>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
-                                            <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">📷</div>
-                                            <p className="font-bold text-slate-700 text-xs">Take Photo</p>
-                                        </div>
-                                        <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
-                                            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
-                                            <p className="font-bold text-slate-700 text-xs">Gallery</p>
-                                        </div>
-                                    </div>
-                                    {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-2">ID Attached Successfully ✓</p>}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 3: 결제 정보 입력 */}
-                    {onboardStep === 3 && (
-                        <div className="animate-fade-in-up space-y-5">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Payment Details</h3>
-                            <p className="text-slate-500 text-[11px] mb-4">Secure your bookings. No charges will be made at this step.</p>
-
-                            <div className="grid grid-cols-3 gap-2">
-                                <button onClick={() => { setPaymentMethod('card'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'card' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}>
-                                    <span>💳</span> Card
-                                </button>
-                                <button onClick={() => { setPaymentMethod('gcash'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'gcash' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>
-                                    <span>G</span> GCash
-                                </button>
-                                <button onClick={() => { setPaymentMethod('maya'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'maya' ? 'bg-green-500 text-white border-green-500' : 'bg-white text-slate-500 border-slate-300'}`}>
-                                    <span>M</span> Maya
-                                </button>
-                            </div>
-
-                            {paymentMethod && (
-                                <div className="space-y-4 bg-white p-4 border border-slate-200 mt-2">
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
-                                            {paymentMethod === 'card' ? 'Card Number' : 'Account Number (Mobile)'}
-                                        </label>
-                                        <input type="text" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder={paymentMethod === 'card' ? "0000 0000 0000 0000" : "09XX XXX XXXX"} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
-                                            {paymentMethod === 'card' ? 'Name on Card' : 'Registered Name'}
-                                        </label>
-                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value.toUpperCase())} placeholder="JOHN DOE" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 4: 앱 보안 장치 설정 */}
-                    {onboardStep === 4 && (
-                        <div className="animate-fade-in-up space-y-5">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Secure Your Account</h3>
-                            <p className="text-slate-500 text-[11px] mb-6">Create a 4-digit PIN to protect your rewards and personal data.</p>
-
-                            <div className="space-y-4 bg-white p-5 border border-slate-200 text-center">
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Create PIN</label>
-                                    <input type="password" inputMode="numeric" maxLength="4" value={pin} onChange={e => setPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="••••" className="w-full text-center tracking-[1em] text-2xl p-3 border border-slate-300 focus:border-[#009900] outline-none bg-slate-50" />
-                                </div>
-                                <div className="pt-2">
-                                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Confirm PIN</label>
-                                    <input type="password" inputMode="numeric" maxLength="4" value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="••••" className="w-full text-center tracking-[1em] text-2xl p-3 border border-slate-300 focus:border-[#009900] outline-none bg-slate-50" />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="mt-8 pt-4">
-                        <button onClick={nextStep} className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-none">
-                            {onboardStep === 4 ? 'Submit Application ✓' : 'Next Step ➔'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+    // 💡 메인 렌더링 영역: 유저 로그인 여부에 따라 완전히 다른 화면 구조를 보여줍니다.
     return (
-        <div className="p-4 md:p-6 flex flex-col font-sans selection:bg-[#009900]/20 min-h-[calc(100vh-80px)] text-slate-700">
+        <div className={`p-4 md:p-6 flex flex-col font-sans selection:bg-[#009900]/20 min-h-[calc(100vh-80px)] text-slate-700 ${!user ? 'justify-center bg-slate-100' : ''}`}>
+
             {user ? (
-                membershipStatus === 'pending' ? (
-                    <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center">
-                        <div className="text-4xl mb-3">⏳</div>
-                        <h3 className="font-bold text-amber-800 text-lg mb-2">Application Pending Review</h3>
-                        <p className="text-xs text-amber-700 font-medium">Your registration has been submitted and is currently under review by n+ Rewards. Please wait for activation.</p>
-                        <button onClick={handleLogout} className="mt-4 text-xs font-semibold text-slate-400 hover:text-red-500 underline py-2">Sign Out</button>
-                    </div>
-                ) : isMembershipActive ? (
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-none shrink-0">
-                        <div className="absolute -right-4 -top-4 text-8xl opacity-10">👑</div>
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-widest mb-1">Membership</p>
-                                <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">
-                                    {(() => {
-                                        const tier = user?.tier_id || user?.tier || user?.tierName;
-                                        if (!tier || tier === 1 || tier === '1') return 'MEMBER TIER';
-                                        if (tier === 2 || tier === '2') return 'SILVER TIER';
-                                        if (tier === 3 || tier === '3') return 'GOLD TIER';
-                                        if (tier === 4 || tier === '4') return 'VIP TIER';
-                                        return `${String(tier).toUpperCase()} TIER`;
-                                    })()}
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <h2 className="text-xl font-bold">{user.name}</h2>
-                            </div>
+                /* ---------------------------------------------------- */
+                /* 💡 1. 회원용 화면: 상태에 따른 멤버십 카드 및 하위 기능 표시 */
+                /* ---------------------------------------------------- */
+                <>
+                    {membershipStatus === 'pending' ? (
+                        <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center rounded-xl">
+                            <div className="text-4xl mb-3">⏳</div>
+                            <h3 className="font-bold text-amber-800 text-lg mb-2">Application Pending Review</h3>
+                            <p className="text-xs text-amber-700 font-medium">Your registration has been submitted and is currently under review by n+ Rewards. Please wait for activation.</p>
                         </div>
+                    ) : isMembershipActive ? (
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0">
+                            <div className="absolute -right-4 -top-4 text-8xl opacity-10">👑</div>
+                            <div className="flex justify-between items-start mb-6">
+                                <div>
+                                    <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-widest mb-1">Membership</p>
+                                    <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">
+                                        {(() => {
+                                            const tier = user?.tier_id || user?.tier || user?.tierName;
+                                            if (!tier || tier === 1 || tier === '1') return 'MEMBER TIER';
+                                            if (tier === 2 || tier === '2') return 'SILVER TIER';
+                                            if (tier === 3 || tier === '3') return 'GOLD TIER';
+                                            if (tier === 4 || tier === '4') return 'VIP TIER';
+                                            return `${String(tier).toUpperCase()} TIER`;
+                                        })()}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <h2 className="text-xl font-bold">{user.name}</h2>
+                                </div>
+                            </div>
 
-                        <div className="bg-white/10 p-4 backdrop-blur-md border border-white/10 rounded-none flex justify-between items-center">
-                            <div>
-                                <p className="text-[10px] text-slate-300 mb-1 uppercase font-semibold tracking-wider">Available Reward Points</p>
-                                <p className="text-2xl md:text-3xl font-bold tracking-wider text-white">₱ {user.total_points ? user.total_points.toLocaleString() : 0}</p>
+                            <div className="bg-white/10 p-4 backdrop-blur-md border border-white/10 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <p className="text-[10px] text-slate-300 mb-1 uppercase font-semibold tracking-wider">Available Reward Points</p>
+                                    <p className="text-2xl md:text-3xl font-bold tracking-wider text-white">₱ {user.total_points ? user.total_points.toLocaleString() : 0}</p>
+                                </div>
                             </div>
                         </div>
+                    ) : null}
+
+                    {/* 회원이 진입했을 때만 보이는 하위 메뉴들 */}
+                    <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
+                        <Link href="/book" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-xl shadow-sm h-24 group">
+                            <img src="/bed-icon.svg" alt="Book Room" className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0" />
+                            <span className="font-bold text-slate-800 text-sm">Book Room</span>
+                        </Link>
+                        <Link href="/promos" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-xl shadow-sm h-24 group">
+                            <svg className="w-6 h-6 text-[#009900] group-hover:scale-110 transition-transform shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            <span className="font-bold text-slate-800 text-sm">Special Offers</span>
+                        </Link>
                     </div>
-                ) : null
+
+                    <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Discover</h3>
+                    <Link href="/book" className="overflow-hidden relative shadow-md flex-1 flex items-end group cursor-pointer rounded-xl min-h-[200px] mb-2 bg-slate-900 w-full block">
+                        {hotels.length > 0 ? hotels.map((h, idx) => {
+                            let rawGallery = h.app_gallery || h.app_gallery_urls || h.gallery_json || h.gallery_urls || [];
+                            if (typeof rawGallery === 'string') { try { rawGallery = JSON.parse(rawGallery); } catch (e) { rawGallery = []; } }
+                            if (!Array.isArray(rawGallery)) rawGallery = [rawGallery];
+                            let imgUrl = rawGallery[0] || h.image_url || h.bg_image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800';
+                            if (typeof imgUrl === 'object') imgUrl = imgUrl.url || imgUrl.src;
+
+                            return (
+                                <img key={h.code} src={imgUrl} alt={h.name} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentHotelIndex ? 'opacity-100' : 'opacity-0'}`} />
+                            );
+                        }) : (
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800" alt="Hotel Pool" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000" />
+                        )}
+
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent z-10"></div>
+                        <div className="relative z-20 text-white w-full p-5">
+                            <p className="text-[10px] font-bold text-[#009900] bg-green-100 inline-block px-2 py-0.5 rounded-sm uppercase tracking-widest mb-2 shadow-sm">
+                                {hotels.length > 0 ? (hotels[currentHotelIndex]?.city || 'Explore') : 'Featured'}
+                            </p>
+                            <h3 className="text-xl md:text-2xl font-bold leading-tight drop-shadow-md mb-1">
+                                {hotels.length > 0 ? hotels[currentHotelIndex]?.name : 'Experience true relaxation'}
+                            </h3>
+                            <div className="mt-3 flex justify-between items-center w-full border-t border-white/20 pt-3">
+                                <span className="text-xs font-semibold text-white/90">Book This Hotel</span>
+                                <span className="text-white group-hover:translate-x-1 transition-transform">➔</span>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {membershipStatus === 'active' && (
+                        <div className="mt-4 mb-2 text-center shrink-0">
+                            <button onClick={handleLogout} className="text-xs font-semibold text-slate-400 hover:text-red-500 underline py-2">Sign Out securely</button>
+                        </div>
+                    )}
+                </>
             ) : (
-                <div className="bg-white shadow-sm mb-6 border border-slate-200 rounded-none flex flex-col shrink-0 overflow-hidden">
-                    <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-auto block" />
-                    <div className="p-6 pt-5 text-center bg-white">
-                        <p className="text-sm font-medium text-slate-600 mb-5 leading-relaxed">
-                            Join now to earn points on every stay and unlock exclusive tier perks.
-                        </p>
-                        <button
-                            onClick={handleJoinClick}
-                            className="inline-block bg-[#009900] text-white font-bold px-10 py-3 shadow-md hover:bg-[#008000] transition-colors text-sm w-full sm:w-auto rounded-none"
-                        >
-                            Join Rewards
-                        </button>
+                /* ---------------------------------------------------- */
+                /* 💡 2. 초기 진입 화면 (비회원): 오직 가입 안내만 표시 */
+                /* ---------------------------------------------------- */
+                <div className="w-full max-w-sm mx-auto animate-fade-in-up">
+                    <div className="bg-white shadow-xl border border-slate-100 rounded-3xl overflow-hidden flex flex-col">
+                        {/* 상단 썸네일 이미지 */}
+                        <div className="relative h-48 w-full bg-slate-900">
+                            <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-full object-cover opacity-90" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent"></div>
+                        </div>
+
+                        {/* 안내 문구 및 버튼 */}
+                        <div className="p-8 pt-2 text-center bg-white relative z-10">
+                            <div className="bg-white p-3 rounded-2xl shadow-sm inline-block -mt-10 mb-4 border border-slate-50">
+                                <img src="/logo192.png" alt="N+ Logo" className="w-12 h-12 object-contain" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight">Welcome to N+</h2>
+                            <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed px-2">
+                                Join our exclusive rewards program to earn points on every stay and unlock premium tier perks.
+                            </p>
+                            <button
+                                onClick={handleJoinClick}
+                                className="bg-[#009900] text-white font-bold py-4 px-6 shadow-lg shadow-green-900/20 hover:bg-[#008000] active:scale-95 transition-all text-sm w-full rounded-2xl"
+                            >
+                                Get Started
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-
-            <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
-                <Link href="/book" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-none shadow-sm h-24 group">
-                    <img src="/bed-icon.svg" alt="Book Room" className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0" />
-                    <span className="font-bold text-slate-800 text-sm">Book Room</span>
-                </Link>
-                <Link href="/promos" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-none shadow-sm h-24 group">
-                    <svg className="w-6 h-6 text-[#009900] group-hover:scale-110 transition-transform shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                        <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                    </svg>
-                    <span className="font-bold text-slate-800 text-sm">Special Offers</span>
-                </Link>
-            </div>
-
-            <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Discover</h3>
-            <Link href="/book" className="overflow-hidden relative shadow-md flex-1 flex items-end group cursor-pointer rounded-none min-h-[200px] mb-2 bg-slate-900 w-full block">
-                {hotels.length > 0 ? hotels.map((h, idx) => {
-                    let rawGallery = h.app_gallery || h.app_gallery_urls || h.gallery_json || h.gallery_urls || [];
-                    if (typeof rawGallery === 'string') { try { rawGallery = JSON.parse(rawGallery); } catch (e) { rawGallery = []; } }
-                    if (!Array.isArray(rawGallery)) rawGallery = [rawGallery];
-                    let imgUrl = rawGallery[0] || h.image_url || h.bg_image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800';
-                    if (typeof imgUrl === 'object') imgUrl = imgUrl.url || imgUrl.src;
-
-                    return (
-                        <img key={h.code} src={imgUrl} alt={h.name} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentHotelIndex ? 'opacity-100' : 'opacity-0'}`} />
-                    );
-                }) : (
-                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800" alt="Hotel Pool" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000" />
-                )}
-
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent z-10"></div>
-                <div className="relative z-20 text-white w-full p-5">
-                    <p className="text-[10px] font-bold text-[#009900] bg-green-100 inline-block px-2 py-0.5 rounded-none uppercase tracking-widest mb-2 shadow-sm">
-                        {hotels.length > 0 ? (hotels[currentHotelIndex]?.city || 'Explore') : 'Featured'}
-                    </p>
-                    <h3 className="text-xl md:text-2xl font-bold leading-tight drop-shadow-md mb-1">
-                        {hotels.length > 0 ? hotels[currentHotelIndex]?.name : 'Experience true relaxation'}
-                    </h3>
-                    <div className="mt-3 flex justify-between items-center w-full border-t border-white/20 pt-3">
-                        <span className="text-xs font-semibold text-white/90">Book This Hotel</span>
-                        <span className="text-white group-hover:translate-x-1 transition-transform">➔</span>
-                    </div>
-                </div>
-            </Link>
-
-            {user && membershipStatus === 'active' && (
-                <div className="mt-4 mb-2 text-center shrink-0">
-                    <button onClick={handleLogout} className="text-xs font-semibold text-slate-400 hover:text-red-500 underline py-2">Sign Out securely</button>
                 </div>
             )}
         </div>
