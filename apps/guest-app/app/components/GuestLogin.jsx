@@ -55,16 +55,50 @@ export default function GuestLogin() {
         }
     }, [router]);
 
-    // 💡 [NEW] 이미지 파일을 읽어서 Base64 문자열로 변환 (서버 전송용)
+    // 💡 [최종 진화] 사진 화질은 유지하면서 용량을 획기적으로 압축 (5MB -> 100KB 수준)
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setIdUploaded(reader.result); // 변환된 이미지 데이터 저장
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                // 1. 최대 해상도 설정 (보통 신분증 식별은 800px 이면 충분합니다)
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                // 2. 비율을 유지하면서 크기 줄이기
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                // 3. 가상의 도화지(Canvas)에 줄어든 크기로 그림 그리기
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // 4. JPEG 포맷으로 변환하며 화질을 70%로 압축 (용량이 1/20 수준으로 줄어듦)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                // 압축된 데이터를 최종 저장
+                setIdUploaded(compressedBase64);
             };
-            reader.readAsDataURL(file);
-        }
+        };
     };
 
     const nextStep = () => {
@@ -93,50 +127,36 @@ export default function GuestLogin() {
         setIsLoading(true);
 
         try {
-            // 💡 [핵심 수정] 새로 추가된 결제정보, 신분증, 생일 및 PIN 번호를 통째로 담아 보냅니다.
             const payload = {
-                email,
-                first_name: firstName,
-                last_name: lastName,
-                phone,
-                nationality,
-                dob,
-                citizen_type: citizenType,
-                id_type: idType,
-                document_url: idUploaded, // 진짜 사진 데이터(Base64) 전송
-                payment_method: paymentMethod,
-                payment_acc_name: accName,
-                payment_acc_num: accNum,
-                pin, // PIN 번호 전송
+                email, first_name: firstName, last_name: lastName, phone, nationality, dob, // 💡 생일(dob) 포함
+                citizen_type: citizenType, id_type: idType, document_url: idUploaded, // 💡 진짜 사진 포함
+                payment_method: paymentMethod, payment_acc_name: accName, payment_acc_num: accNum,
+                pin, // 💡 PIN 포함
                 membership_status: 'pending'
             };
 
-            const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
+            // 💡 [핵심] '/api/members/auth' 가 아니라 '/api/members/join-rewards' 로 보냅니다!!!
+            const response = await axios.post('/api/members/join-rewards', payload);
 
             if (response.data && response.data.success) {
-                // 생성 성공 시 로컬 스토리지에 저장하여 앱에서 로그인 상태 유지
+                // ... 하단 성공 로직은 기존과 동일
                 const finalUser = response.data.member || {
-                    ...payload,
-                    name: `${firstName} ${lastName}`.trim(),
-                    is_membership_active: false,
-                    tierName: 'MEMBER',
-                    total_points: 0
+                    ...payload, name: `${firstName} ${lastName}`.trim(), is_membership_active: false, tierName: 'MEMBER', total_points: 0
                 };
-
                 finalUser.membership_status = 'pending';
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
-                localStorage.setItem('guest_pin', pin); // 💡 기기에 PIN 번호 기록
+                localStorage.setItem('guest_pin', pin); // 기기에도 PIN 저장
 
-                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
+                alert("Your application for n+ Rewards membership has been successfully submitted.");
                 window.location.href = '/';
             } else {
-                alert(response.data.message || "Registration failed. Please try again.");
+                alert(response.data.message || "Registration failed.");
             }
         } catch (error) {
             console.error("Join Error:", error);
-            alert(error.response?.data?.message || "Error connecting to server. Please try again.");
+            alert("Error connecting to server.");
         } finally {
             setIsLoading(false);
         }

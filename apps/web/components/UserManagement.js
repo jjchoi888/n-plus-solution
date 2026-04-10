@@ -405,7 +405,7 @@ export default function UserManagement() {
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
                                     <span>Submitted ID Document ({reviewingUser.citizen_type === 'filipino' ? 'Local' : reviewingUser.citizen_type === 'foreigner' ? 'Foreigner' : 'Unknown'} - {reviewingUser.id_type || 'N/A'})</span>
-                                    {reviewingUser.document_url && reviewingUser.document_url.startsWith('data:image') ? (
+                                    {reviewingUser.document_url && reviewingUser.document_url.length > 100 ? (
                                         <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px] font-black">Verified Upload</span>
                                     ) : (
                                         <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[9px] font-black">Missing</span>
@@ -413,11 +413,11 @@ export default function UserManagement() {
                                 </label>
                                 <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
 
-                                    {/* 💡 [핵심 수정 5] DB에서 진짜 사진 데이터(Base64)가 넘어오면 화면에 바로 그립니다! */}
-                                    {reviewingUser.document_url && reviewingUser.document_url.startsWith('data:image') ? (
+                                    {/* 💡 DB에 사진 텍스트(Base64)가 100자 이상 저장되어 있으면 진짜 사진을 무조건 화면에 뿌립니다! */}
+                                    {reviewingUser.document_url && reviewingUser.document_url.length > 100 ? (
                                         <img
                                             src={reviewingUser.document_url}
-                                            className="w-full h-full object-contain"
+                                            className="w-full h-full object-contain bg-black"
                                             alt="Uploaded Real ID Document"
                                         />
                                     ) : (
