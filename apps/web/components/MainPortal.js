@@ -192,7 +192,6 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // 💡 데이터 동기화 (DB 지워지면 로그아웃되도록 강력 조치)
   const syncWithServer = () => {
     const savedUser = localStorage.getItem('nplus_guest_user');
     if (savedUser) {
@@ -210,7 +209,8 @@ export default function MainPortal() {
               const finalUser = {
                 ...freshUser,
                 name: `${freshUser.first_name || ''} ${freshUser.last_name || ''}`.trim() || 'Guest User',
-                tierName: freshUser.tier_id || 'Basic',
+                // 💡 Basic 완전 삭제. 기본값은 MEMBER
+                tierName: freshUser.tier_id || 'MEMBER',
                 membership_status: freshUser.membership_status
               };
 
@@ -218,13 +218,11 @@ export default function MainPortal() {
               setUser(finalUser);
               setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
             } else {
-              // 💡 [핵심] DB를 밀어버려서 회원이 없다면? 유령 데이터를 파괴합니다!
               handleGuestLogout();
             }
           })
           .catch(err => {
             if (err.response && err.response.status === 404) {
-              // 💡 DB에서 404를 반환해도 즉시 삭제
               handleGuestLogout();
             }
             console.error("Sync error:", err);
@@ -242,33 +240,30 @@ export default function MainPortal() {
     localStorage.removeItem('nplus_session_key');
     setUser(null);
     setIsMembershipActive(false);
-    // UI 초기화를 위해 새로고침 대신 상태만 비웁니다.
   };
 
-  // 💡 [핵심 수정] 로그인/가입 통합 로직: 가짜 API 버리고 진짜 백엔드로 통신!
   const handleGuestAuthSubmit = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         email: guestEmail,
-        pin: guestPw, // 임시로 비밀번호를 PIN 검증에 사용
+        pin: guestPw,
         first_name: guestFirstName,
         last_name: guestLastName,
         phone: guestPhone,
         nationality: guestNationality,
-        membership_status: 'pending' // 무조건 승인 대기
+        membership_status: 'pending'
       };
 
-      // 💡 가짜 /api/guest-register 대신 진짜 서버 DB에 쏩니다!
       const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
       if (response.data && response.data.success) {
-        // DB 저장이 확정된 후에만 로컬 스토리지 생성
         const freshUser = response.data.member || {
           ...payload,
           name: `${guestFirstName} ${guestLastName}`.trim(),
           is_membership_active: false,
-          tierName: "Basic",
+          // 💡 Basic에서 MEMBER로 기본값 수정
+          tierName: "MEMBER",
           total_points: 0
         };
 
@@ -285,10 +280,9 @@ export default function MainPortal() {
           alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
         } else {
           setAlertMessage("Welcome back!");
-          syncWithServer(); // 기존 회원 로그인 시 최신 상태 즉시 동기화
+          syncWithServer();
         }
 
-        // 폼 초기화
         setGuestEmail(""); setGuestPw(""); setGuestFirstName(""); setGuestLastName(""); setGuestPhone(""); setGuestNationality("");
       } else {
         setAlertMessage("❌ " + (response.data.message || "Authentication failed."));
@@ -299,7 +293,6 @@ export default function MainPortal() {
     }
   };
 
-  // 구글 연동 로그인 함수
   const handleGoogleLogin = async () => {
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
@@ -362,7 +355,7 @@ export default function MainPortal() {
         phone: phone,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        membership_status: 'pending' // 대기 상태 명시
+        membership_status: 'pending'
       };
 
       const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", payload);
@@ -373,7 +366,8 @@ export default function MainPortal() {
         const finalUser = {
           ...updatedUser,
           name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
-          tierName: 'Basic',
+          // 💡 Basic에서 MEMBER로 기본값 수정
+          tierName: 'MEMBER',
           membership_status: 'pending'
         };
 
@@ -587,7 +581,6 @@ export default function MainPortal() {
         }}
       />
 
-      {/* 💡 임시 알림창 UI 처리 */}
       {alertMessage && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl z-[300] animate-fade-in-up font-bold text-sm">
           {alertMessage}
@@ -1237,9 +1230,6 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 💡 [NEW] 결제 카드 업데이트 모달창 */}
-      {/* ========================================================= */}
       {isCardModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isCardUpdating && setIsCardModalOpen(false)}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 transform transition-all" onClick={e => e.stopPropagation()}>
@@ -1288,9 +1278,6 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 💡 [NEW] guest-app 3단계 온보딩 풀스크린 UI */}
-      {/* ========================================================= */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-slate-50 z-[200] flex flex-col font-sans text-slate-700 animate-fade-in">
           <div className="bg-white p-4 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-sm">
@@ -1397,9 +1384,6 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 💡 [NEW] 통합웹 회원가입/로그인 모달 (스크린샷 완벽 재현) */}
-      {/* ========================================================= */}
       {showGuestAuthModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
           <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-sm" onClick={e => e.stopPropagation()}>
@@ -1410,7 +1394,6 @@ export default function MainPortal() {
 
               {guestAuthMode === 'REGISTER' ? (
                 <>
-                  {/* 구글 연동 회원가입 버튼 */}
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
@@ -1478,11 +1461,9 @@ export default function MainPortal() {
                   </form>
                 </>
               ) : (
-                // 💡 [수정] 로그인 화면에도 구글 연동 버튼 추가 완료
                 <>
                   <h2 className="text-2xl font-black text-slate-800 mb-6">Log In</h2>
 
-                  {/* 구글 연동 로그인 버튼 */}
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
@@ -1521,7 +1502,6 @@ export default function MainPortal() {
                 </>
               )}
 
-              {/* 하단 옵션 링크 영역 */}
               <div className="text-center pt-8 mt-8 border-t border-slate-100 space-y-3">
                 {guestAuthMode === 'REGISTER' ? (
                   <div className="text-sm font-bold text-slate-500">
