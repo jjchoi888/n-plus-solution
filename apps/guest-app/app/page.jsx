@@ -197,7 +197,6 @@ export default function HomePage() {
             await deferredPrompt.userChoice;
             setDeferredPrompt(null);
         }
-        // 이메일 로그인 페이지로 이동하도록 수정 (기존의 모달 팝업 대신 로그인/가입 전용 페이지로 라우팅)
         router.push('/login');
     };
 
@@ -234,10 +233,13 @@ export default function HomePage() {
         }
     };
 
-    // 💡 락스크린 (보안 화면) 렌더링
+    // 💡 1. 락스크린 (보안 화면): 네비게이션 바와 헤더 숨김 처리
     if (user && !isUnlocked) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
+                {/* layout.jsx의 네비게이션과 헤더를 강제로 숨기는 스타일 주입 */}
+                <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
+
                 <div className="text-center mb-8">
                     <div className="bg-white p-3 rounded-full inline-block mb-4">
                         <img src="/logo192.png" alt="Logo" className="w-12 h-12 object-contain" />
@@ -287,14 +289,202 @@ export default function HomePage() {
         );
     }
 
-    // 💡 메인 렌더링 영역: 유저 로그인 여부에 따라 완전히 다른 화면 구조를 보여줍니다.
+    // 💡 2. 온보딩 화면: 네비게이션 바와 헤더 숨김 처리
+    if (showOnboarding) {
+        return (
+            <div className="fixed inset-0 bg-slate-50 z-[100] flex flex-col font-sans text-slate-700">
+                <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
+
+                <div className="bg-white p-4 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-sm">
+                    <button onClick={() => setShowOnboarding(false)} className="text-slate-400 font-bold text-xl px-2 hover:text-slate-600 transition-colors">✕</button>
+                    <h2 className="font-bold text-slate-800 text-lg">Join Membership</h2>
+                    <span className="text-[#009900] font-bold text-xs">Step {onboardStep} / 4</span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 flex flex-col max-w-md mx-auto w-full pb-20">
+                    <div className="flex gap-2 mb-8 shrink-0">
+                        <div className={`h-1.5 flex-1 ${onboardStep >= 1 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+                        <div className={`h-1.5 flex-1 ${onboardStep >= 2 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+                        <div className={`h-1.5 flex-1 ${onboardStep >= 3 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+                        <div className={`h-1.5 flex-1 ${onboardStep >= 4 ? 'bg-[#009900]' : 'bg-slate-200'}`}></div>
+                    </div>
+
+                    {/* STEP 1: 개인정보 입력 */}
+                    {onboardStep === 1 && (
+                        <div className="animate-fade-in-up space-y-4">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Personal Information</h3>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">First Name</label>
+                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" placeholder="JOHN" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Last Name</label>
+                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value.toUpperCase())} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" placeholder="DOE" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Date of Birth</label>
+                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Phone Number</label>
+                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+63 9XX XXX XXXX" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Nationality</label>
+                                <select value={nationality} onChange={e => setNationality(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
+                                    <option value="">-- Select Nationality --</option>
+                                    <optgroup label="Top Nationalities">
+                                        {topNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Other Nationalities">
+                                        {otherNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Email Address</label>
+                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 2: 신분증 업로드 */}
+                    {onboardStep === 2 && (
+                        <div className="animate-fade-in-up space-y-5">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Identity Verification</h3>
+
+                            <div className="grid grid-cols-2 gap-3 mb-2">
+                                <button
+                                    onClick={() => { setCitizenType('filipino'); setIdType(''); }}
+                                    className={`py-3 text-sm font-bold border ${citizenType === 'filipino' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}
+                                >
+                                    Filipino
+                                </button>
+                                <button
+                                    onClick={() => { setCitizenType('foreigner'); setIdType('Passport'); }}
+                                    className={`py-3 text-sm font-bold border ${citizenType === 'foreigner' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}
+                                >
+                                    Foreigner
+                                </button>
+                            </div>
+
+                            {citizenType === 'filipino' && (
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Select ID Type</label>
+                                    <select value={idType} onChange={e => setIdType(e.target.value)} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none bg-white">
+                                        <option value="">-- Choose ID --</option>
+                                        {filipinoIdOptions.map(id => <option key={id} value={id}>{id}</option>)}
+                                    </select>
+                                </div>
+                            )}
+
+                            {citizenType === 'foreigner' && (
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">ID Type</label>
+                                    <input type="text" readOnly value="Passport" className="w-full p-3 border border-slate-300 text-sm bg-slate-100 outline-none text-slate-500" />
+                                </div>
+                            )}
+
+                            {idType && (
+                                <div className="mt-6">
+                                    <p className="text-xs font-semibold text-slate-500 mb-3 text-center uppercase">Choose Upload Method</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
+                                            <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">📷</div>
+                                            <p className="font-bold text-slate-700 text-xs">Take Photo</p>
+                                        </div>
+                                        <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
+                                            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
+                                            <p className="font-bold text-slate-700 text-xs">Gallery</p>
+                                        </div>
+                                    </div>
+                                    {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-2">ID Attached Successfully ✓</p>}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* STEP 3: 결제 정보 입력 */}
+                    {onboardStep === 3 && (
+                        <div className="animate-fade-in-up space-y-5">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Payment Details</h3>
+                            <p className="text-slate-500 text-[11px] mb-4">Secure your bookings. No charges will be made at this step.</p>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                <button onClick={() => { setPaymentMethod('card'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'card' ? 'bg-[#009900] text-white border-[#009900]' : 'bg-white text-slate-500 border-slate-300'}`}>
+                                    <span>💳</span> Card
+                                </button>
+                                <button onClick={() => { setPaymentMethod('gcash'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'gcash' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>
+                                    <span>G</span> GCash
+                                </button>
+                                <button onClick={() => { setPaymentMethod('maya'); setAccName(''); setAccNum(''); }} className={`py-3 text-xs font-bold border flex flex-col items-center gap-1 ${paymentMethod === 'maya' ? 'bg-green-500 text-white border-green-500' : 'bg-white text-slate-500 border-slate-300'}`}>
+                                    <span>M</span> Maya
+                                </button>
+                            </div>
+
+                            {paymentMethod && (
+                                <div className="space-y-4 bg-white p-4 border border-slate-200 mt-2">
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
+                                            {paymentMethod === 'card' ? 'Card Number' : 'Account Number (Mobile)'}
+                                        </label>
+                                        <input type="text" value={accNum} onChange={e => setAccNum(e.target.value)} placeholder={paymentMethod === 'card' ? "0000 0000 0000 0000" : "09XX XXX XXXX"} className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">
+                                            {paymentMethod === 'card' ? 'Name on Card' : 'Registered Name'}
+                                        </label>
+                                        <input type="text" value={accName} onChange={e => setAccName(e.target.value.toUpperCase())} placeholder="JOHN DOE" className="w-full p-3 border border-slate-300 text-sm focus:border-[#009900] outline-none uppercase" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* STEP 4: 앱 보안 장치 설정 */}
+                    {onboardStep === 4 && (
+                        <div className="animate-fade-in-up space-y-5">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Secure Your Account</h3>
+                            <p className="text-slate-500 text-[11px] mb-6">Create a 4-digit PIN to protect your rewards and personal data.</p>
+
+                            <div className="space-y-4 bg-white p-5 border border-slate-200 text-center">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Create PIN</label>
+                                    <input type="password" inputMode="numeric" maxLength="4" value={pin} onChange={e => setPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="••••" className="w-full text-center tracking-[1em] text-2xl p-3 border border-slate-300 focus:border-[#009900] outline-none bg-slate-50" />
+                                </div>
+                                <div className="pt-2">
+                                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Confirm PIN</label>
+                                    <input type="password" inputMode="numeric" maxLength="4" value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="••••" className="w-full text-center tracking-[1em] text-2xl p-3 border border-slate-300 focus:border-[#009900] outline-none bg-slate-50" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="mt-8 pt-4">
+                        <button onClick={nextStep} className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 font-bold text-base shadow-lg transition-transform active:scale-95 rounded-none">
+                            {onboardStep === 4 ? 'Submit Application ✓' : 'Next Step ➔'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 💡 3. 메인 렌더링 영역 (비로그인 시 화면 중앙 집중 UI)
     return (
-        <div className={`p-4 md:p-6 flex flex-col font-sans selection:bg-[#009900]/20 min-h-[calc(100vh-80px)] text-slate-700 ${!user ? 'justify-center bg-slate-100' : ''}`}>
+        <div className={`p-4 md:p-6 flex flex-col font-sans selection:bg-[#009900]/20 text-slate-700 ${!user ? 'justify-center bg-slate-100 min-h-screen' : 'min-h-[calc(100vh-80px)]'}`}>
+
+            {/* 비회원 화면일 때 네비게이션과 헤더 강제 숨김 */}
+            {!user && (
+                <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
+            )}
 
             {user ? (
-                /* ---------------------------------------------------- */
-                /* 💡 1. 회원용 화면: 상태에 따른 멤버십 카드 및 하위 기능 표시 */
-                /* ---------------------------------------------------- */
                 <>
                     {membershipStatus === 'pending' ? (
                         <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center rounded-xl">
@@ -333,7 +523,7 @@ export default function HomePage() {
                         </div>
                     ) : null}
 
-                    {/* 회원이 진입했을 때만 보이는 하위 메뉴들 */}
+                    {/* 회원에게만 보이는 메뉴 및 콘텐츠 */}
                     <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
                         <Link href="/book" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-xl shadow-sm h-24 group">
@@ -386,18 +576,14 @@ export default function HomePage() {
                     )}
                 </>
             ) : (
-                /* ---------------------------------------------------- */
-                /* 💡 2. 초기 진입 화면 (비회원): 오직 가입 안내만 표시 */
-                /* ---------------------------------------------------- */
+                /* 비회원(로그인 전) 화면: 네비게이션이 사라지고 가운데 정렬됨 */
                 <div className="w-full max-w-sm mx-auto animate-fade-in-up">
                     <div className="bg-white shadow-xl border border-slate-100 rounded-3xl overflow-hidden flex flex-col">
-                        {/* 상단 썸네일 이미지 */}
                         <div className="relative h-48 w-full bg-slate-900">
                             <img src="/rewards.webp" alt="N+ Rewards" className="w-full h-full object-cover opacity-90" />
                             <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent"></div>
                         </div>
 
-                        {/* 안내 문구 및 버튼 */}
                         <div className="p-8 pt-2 text-center bg-white relative z-10">
                             <div className="bg-white p-3 rounded-2xl shadow-sm inline-block -mt-10 mb-4 border border-slate-50">
                                 <img src="/logo192.png" alt="N+ Logo" className="w-12 h-12 object-contain" />
