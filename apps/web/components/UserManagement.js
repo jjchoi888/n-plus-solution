@@ -26,6 +26,10 @@ export default function UserManagement() {
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
 
+    // 💡 [NEW] 회원가입 리뷰 모달 상태 관리
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [reviewingUser, setReviewingUser] = useState(null);
+
     const [pointsLogs, setPointsLogs] = useState([]);
     const [logSearch, setLogSearch] = useState("");
     const [logFilterTier, setLogFilterTier] = useState("ALL");
@@ -55,7 +59,7 @@ export default function UserManagement() {
                     name: u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown Guest',
                     nationality: u.nationality || 'Unknown',
                     email: u.email || 'No Email',
-                    // 💡 Basic 완전 삭제. 기본값은 MEMBER
+                    phone: u.phone || '', // 전화번호 추가 매핑
                     tier: u.tier_id || u.tier || 'MEMBER',
                     total_points: u.total_points || 0,
                     membership_status: u.membership_status || (u.is_membership_active ? 'active' : 'pending')
@@ -87,7 +91,6 @@ export default function UserManagement() {
     const displayUsers = (tab === "ALL_USERS" ? users : tab === "BASIC" ? basicUsers : memberUsers)
         .filter(u => {
             const matchSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase());
-            // 💡 1이나 빈 값을 모두 MEMBER로 처리
             const displayTier = u.tier === '1' || !u.tier ? 'MEMBER' : String(u.tier).toUpperCase();
             const matchTier = filterTier === "ALL" || displayTier === filterTier.toUpperCase();
 
@@ -96,7 +99,6 @@ export default function UserManagement() {
         });
 
     const nations = ["ALL", ...new Set(users.map(u => u.nationality))];
-    // 💡 필터 배열에서 Basic 삭제 및 대문자 통일
     const tiers = ["ALL", "MEMBER", "SILVER", "GOLD", "VIP"];
 
     const submitEmailCampaign = async (e) => {
@@ -147,14 +149,16 @@ export default function UserManagement() {
         }
     };
 
+    // 💡 [수정] 모달창에서 승인 버튼을 눌렀을 때 실행되도록 개선
     const handleActivateUser = async (userEmail) => {
-        if (!window.confirm(`Activate membership for ${userEmail}?`)) return;
+        if (!window.confirm(`Are you sure you want to approve and activate membership for ${userEmail}?`)) return;
 
         try {
             const res = await axios.put("https://api.hotelnplus.com/api/members/activate", { email: userEmail });
 
             if (res.data && res.data.success) {
                 alert(`✅ Successfully activated membership for ${userEmail}.`);
+                setIsReviewModalOpen(false); // 💡 승인 완료 시 모달 닫기
                 fetchUsers();
             } else {
                 alert("❌ Activation failed: " + res.data.message);
@@ -172,7 +176,7 @@ export default function UserManagement() {
             <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm overflow-x-auto">
                 {[
                     { id: "ALL_USERS", label: `Total (${users.length})` },
-                    { id: "BASIC", label: `Pending Users (${basicUsers.length})` }, // 💡 Basic Users -> Pending Users 로 라벨 수정
+                    { id: "BASIC", label: `Pending Users (${basicUsers.length})` },
                     { id: "MEMBERS", label: `Rewards Members (${memberUsers.length})` },
                     { id: "POINTS_LOG", label: `Points Audit Log 📊` }
                 ].map(t => (
@@ -248,7 +252,6 @@ export default function UserManagement() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {displayUsers.map(u => {
-                                // 💡 Basic 삭제 -> 1이거나 없으면 무조건 MEMBER
                                 const displayTier = u.tier === '1' || !u.tier ? 'MEMBER' : String(u.tier).toUpperCase();
 
                                 return (
@@ -262,7 +265,7 @@ export default function UserManagement() {
                                             <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${displayTier === 'VIP' ? 'bg-purple-100 text-purple-700 border-purple-200' :
                                                     displayTier === 'GOLD' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                                                         displayTier === 'SILVER' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                            'bg-emerald-100 text-emerald-700 border-emerald-200' // MEMBER 기본 스타일
+                                                            'bg-emerald-100 text-emerald-700 border-emerald-200'
                                                 }`}>
                                                 {displayTier}
                                             </span>
@@ -278,12 +281,16 @@ export default function UserManagement() {
                                         </td>
                                         <td className="p-5 text-right">
                                             <div className="flex justify-end items-center gap-2">
+                                                {/* 💡 [변경] Approve 버튼 대신 Review 버튼 노출 */}
                                                 {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') && (
                                                     <button
-                                                        onClick={() => handleActivateUser(u.email)}
-                                                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-xl transition-colors font-black text-xs shadow-md active:scale-95"
+                                                        onClick={() => {
+                                                            setReviewingUser(u);
+                                                            setIsReviewModalOpen(true);
+                                                        }}
+                                                        className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-xl transition-colors font-black text-xs shadow-md active:scale-95"
                                                     >
-                                                        Approve ✓
+                                                        Review 👀
                                                     </button>
                                                 )}
 
@@ -311,6 +318,93 @@ export default function UserManagement() {
                 </div>
             )}
 
+            {/* ========================================== */}
+            {/* 📌 [NEW] 가입 정보 대조/리뷰 모달창 */}
+            {/* ========================================== */}
+            {isReviewModalOpen && reviewingUser && (
+                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsReviewModalOpen(false)}>
+                    <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
+
+                        {/* 모달 헤더 */}
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-amber-50/50">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                                    <span>🔍</span> Review Application
+                                </h3>
+                                <p className="text-xs font-bold text-slate-500 mt-1">
+                                    Please verify the submitted details against the ID document.
+                                </p>
+                            </div>
+                            <button onClick={() => setIsReviewModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-3xl font-light">&times;</button>
+                        </div>
+
+                        {/* 모달 콘텐츠 (유저 정보 + 신분증) */}
+                        <div className="p-8 space-y-8 overflow-y-auto max-h-[60vh] custom-scrollbar">
+
+                            {/* 입력된 회원 정보 블록 */}
+                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
+                                    <div className="text-sm font-bold text-slate-800">{reviewingUser.name}</div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nationality</label>
+                                    <div className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                                        <span className="text-lg">🌍</span> {reviewingUser.nationality}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone Number</label>
+                                    <div className="text-sm font-bold text-slate-800">{reviewingUser.phone || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</label>
+                                    <div className="text-sm font-bold text-slate-800">{reviewingUser.email}</div>
+                                </div>
+                            </div>
+
+                            {/* 신분증 이미지 표시 영역 */}
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
+                                    <span>Submitted ID Document</span>
+                                    <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px]">Verified Upload</span>
+                                </label>
+                                <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
+
+                                    {/* 💡 향후 백엔드에서 이미지 URL(document_url)을 내려준다면 아래 주석을 풀고 img 태그를 사용하세요. 
+                                        현재는 Placeholder로 UI 프레임만 완벽하게 잡아두었습니다. */}
+                                    {/* <img src={reviewingUser.document_url} className="w-full h-full object-contain" alt="ID Document" /> */}
+
+                                    <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">🪪</span>
+                                    <span className="text-xs font-bold text-slate-500">ID Document Image</span>
+                                    <span className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-tight">
+                                        (The user's uploaded ID document will be displayed here securely)
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* 모달 하단 버튼 */}
+                        <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
+                            <button onClick={() => {
+                                alert("Application marked as 'Need More Info'. An email will be sent to the user.");
+                                setIsReviewModalOpen(false);
+                            }} className="flex-1 py-3.5 bg-white border border-slate-200 text-red-500 font-black rounded-xl hover:bg-red-50 transition-colors shadow-sm">
+                                Reject / Request Info
+                            </button>
+                            <button onClick={() => handleActivateUser(reviewingUser.email)} className="flex-1 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
+                                Approve & Activate ✓
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {/* ========================================== */}
+            {/* 📌 기존 유저 정보 수정(Manage) 모달창 */}
+            {/* ========================================== */}
             {isEditModalOpen && editingUser && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
@@ -340,7 +434,6 @@ export default function UserManagement() {
                                     onChange={e => setEditingUser({ ...editingUser, tier: e.target.value })}
                                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
-                                    {/* 💡 수정 모달에서도 Basic 삭제, 4단계 글로벌 등급만 제공 */}
                                     <option value="MEMBER">Member</option>
                                     <option value="SILVER">Silver</option>
                                     <option value="GOLD">Gold</option>
