@@ -7,7 +7,7 @@ import axios from 'axios';
 export default function HomePage() {
     const router = useRouter();
 
-    // 💡 [수정됨] 앱 초기 로딩 상태 (데이터 동기화 중 화면 깜박임 및 무한 루프 방지)
+    // 💡 [수정됨] 앱 초기 로딩 상태 (데이터 동기화 중 화면 깜박임 방지)
     const [isAppLoading, setIsAppLoading] = useState(true);
 
     // Auth & Security States
@@ -18,6 +18,7 @@ export default function HomePage() {
     const [loginPin, setLoginPin] = useState('');
     const [isResetting, setIsResetting] = useState(false);
 
+    // 온보딩 상태
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardStep, setOnboardStep] = useState(1);
 
@@ -89,6 +90,7 @@ export default function HomePage() {
                     } else {
                         // 서버 연결 실패 시에도 락스크린 유지를 위해 기본 데이터 렌더링
                         setUser(targetSession);
+                        setMembershipStatus(targetSession.membership_status || 'pending');
                     }
                 })
                 .catch(err => {
@@ -176,6 +178,7 @@ export default function HomePage() {
                 payment_method: paymentMethod,
                 payment_acc_name: accName,
                 payment_acc_num: accNum,
+                pin: pin, // 백엔드로 PIN 전달
                 membership_status: 'pending'
             };
 
@@ -199,7 +202,8 @@ export default function HomePage() {
                 setIsUnlocked(true);
                 setShowOnboarding(false);
 
-                alert('Registration submitted successfully! Your account is currently under review by n+ Rewards. You will be notified once activated.');
+                // 💡 [수정] 24시간 이내 리뷰 안내를 영어로 변경
+                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
             } else {
                 alert("Failed to join rewards: " + response.data.message);
             }
@@ -215,7 +219,8 @@ export default function HomePage() {
             await deferredPrompt.userChoice;
             setDeferredPrompt(null);
         }
-        router.push('/login');
+        // 기존의 로그인 페이지 이동이 아닌 현재 페이지에서 팝업으로 온보딩 띄움
+        startOnboarding();
     };
 
     const handleLoginPinInput = (num) => {
@@ -265,6 +270,7 @@ export default function HomePage() {
     if (user && !isUnlocked) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
+                {/* layout.jsx의 네비게이션과 헤더를 강제로 숨기는 스타일 주입 */}
                 <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
 
                 <div className="text-center mb-8">
@@ -316,7 +322,7 @@ export default function HomePage() {
         );
     }
 
-    // 💡 2. 온보딩 화면 (내부 팝업용 - 기존 코드 유지)
+    // 💡 2. 온보딩 화면 (내부 팝업용 - 기존 로직 완벽 복구)
     if (showOnboarding) {
         return (
             <div className="fixed inset-0 bg-slate-50 z-[100] flex flex-col font-sans text-slate-700">
@@ -514,13 +520,20 @@ export default function HomePage() {
             {user ? (
                 <>
                     {membershipStatus === 'pending' ? (
-                        <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center rounded-xl">
+                        <div className="bg-amber-50 shadow-sm mb-6 border border-amber-200 p-6 text-center rounded-xl mt-4">
                             <div className="text-4xl mb-3">⏳</div>
-                            <h3 className="font-bold text-amber-800 text-lg mb-2">Application Pending Review</h3>
-                            <p className="text-xs text-amber-700 font-medium">Your registration has been submitted and is currently under review by n+ Rewards. Please wait for activation.</p>
+                            <h3 className="font-bold text-amber-800 text-lg mb-2">Application Under Review</h3>
+                            <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                                Thank you for applying for n+ Rewards membership.<br />
+                                Your application is currently under review by our n+ Rewards team.<br />
+                                We will notify you within 24 hours once your account has been activated.
+                            </p>
+                            <button onClick={handleLogout} className="mt-5 text-[11px] font-semibold text-slate-400 hover:text-red-500 underline py-2">
+                                Sign Out securely
+                            </button>
                         </div>
                     ) : isMembershipActive ? (
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0 mt-4">
                             <div className="absolute -right-4 -top-4 text-8xl opacity-10">👑</div>
                             <div className="flex justify-between items-start mb-6">
                                 <div>
@@ -551,7 +564,7 @@ export default function HomePage() {
                     ) : null}
 
                     {/* 회원에게만 보이는 메뉴 및 콘텐츠 */}
-                    <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0">Quick Actions</h3>
+                    <h3 className="font-bold text-slate-800 text-lg mb-3 pl-1 shrink-0 mt-2">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
                         <Link href="/book" className="bg-white border border-slate-200 p-4 flex flex-col justify-center gap-1.5 hover:border-[#009900] transition-all rounded-xl shadow-sm h-24 group">
                             <img src="/bed-icon.svg" alt="Book Room" className="w-6 h-6 group-hover:scale-110 transition-transform object-contain shrink-0" />
@@ -615,9 +628,9 @@ export default function HomePage() {
                             <div className="bg-white p-3 rounded-2xl shadow-sm inline-block -mt-10 mb-4 border border-slate-50">
                                 <img src="/logo192.png" alt="N+ Logo" className="w-12 h-12 object-contain" />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight">Welcome to N+</h2>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight">Welcome to n+</h2>
                             <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed px-2">
-                                Join our exclusive rewards program to earn points on every stay and unlock premium tier perks.
+                                Join our exclusive n+ Rewards membership to earn points on every stay and unlock premium tier perks.
                             </p>
                             <button
                                 onClick={handleJoinClick}

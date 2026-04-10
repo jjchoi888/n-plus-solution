@@ -103,7 +103,7 @@ export default function GuestLogin() {
                 // 클라우드 서버 저장 후 기기에는 식별용 세션키만 발급
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
 
-                alert("Membership registration submitted successfully! After review by n+ Rewards, your account will be activated.");
+                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the n+ Rewards review is complete and your account is activated.");
                 window.location.href = '/';
             } else {
                 alert(response.data.message || "Registration failed. Please try again.");

@@ -133,6 +133,31 @@ export default function UserManagement() {
         }
     };
 
+    // 💡 [NEW] 회원 승인(Activation) 핸들러 추가
+    const handleActivateUser = async (userEmail) => {
+        if (!window.confirm(`Activate membership for ${userEmail}?`)) return;
+
+        try {
+            const res = await axios.put("https://api.hotelnplus.com/api/members/activate", { email: userEmail });
+
+            if (res.data && res.data.success) {
+                alert(`✅ Successfully activated membership for ${userEmail}.`);
+
+                // 로컬 상태 즉시 업데이트 (화면 새로고침 없이 리스트에 반영)
+                setUsers(users.map(u =>
+                    u.email === userEmail
+                        ? { ...u, membership_status: 'active', is_membership_active: 1 }
+                        : u
+                ));
+            } else {
+                alert("❌ Activation failed: " + res.data.message);
+            }
+        } catch (err) {
+            console.error("Activation Error:", err);
+            alert("🚨 A network error occurred during activation.");
+        }
+    };
+
     if (loading) return <div className="p-20 text-center font-bold text-slate-400">Loading User Data...</div>;
 
     return (
@@ -242,16 +267,27 @@ export default function UserManagement() {
                                             <span className="text-[10px] text-slate-300 ml-1">pts</span>
                                         </td>
                                         <td className="p-5 text-right">
-                                            {/* 💡 [NEW] Manage 버튼에 onClick 이벤트 연결 */}
-                                            <button
-                                                onClick={() => {
-                                                    setEditingUser({ ...u, tier: displayTier }); // 수정용 객체 복사
-                                                    setIsEditModalOpen(true);
-                                                }}
-                                                className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black"
-                                            >
-                                                Manage
-                                            </button>
+                                            <div className="flex justify-end items-center gap-2">
+                                                {/* 💡 [NEW] 승인 대기 중(pending)일 때만 Approve 버튼 노출 */}
+                                                {u.membership_status === 'pending' && (
+                                                    <button
+                                                        onClick={() => handleActivateUser(u.email)}
+                                                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-xl transition-colors font-black text-xs shadow-md active:scale-95"
+                                                    >
+                                                        Approve ✓
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingUser({ ...u, tier: displayTier }); // 수정용 객체 복사
+                                                        setIsEditModalOpen(true);
+                                                    }}
+                                                    className="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors font-black"
+                                                >
+                                                    Manage
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
