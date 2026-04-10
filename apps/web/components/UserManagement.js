@@ -26,7 +26,6 @@ export default function UserManagement() {
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // 💡 [NEW] 회원가입 리뷰 모달 상태 관리
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [reviewingUser, setReviewingUser] = useState(null);
 
@@ -59,7 +58,14 @@ export default function UserManagement() {
                     name: u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown Guest',
                     nationality: u.nationality || 'Unknown',
                     email: u.email || 'No Email',
-                    phone: u.phone || '', // 전화번호 추가 매핑
+                    phone: u.phone || '',
+                    dob: u.dob || '',
+                    citizen_type: u.citizen_type || '',
+                    id_type: u.id_type || '',
+                    document_url: u.document_url || '',
+                    payment_method: u.payment_method || '',
+                    payment_acc_name: u.payment_acc_name || '',
+                    payment_acc_num: u.payment_acc_num || '',
                     tier: u.tier_id || u.tier || 'MEMBER',
                     total_points: u.total_points || 0,
                     membership_status: u.membership_status || (u.is_membership_active ? 'active' : 'pending')
@@ -149,7 +155,6 @@ export default function UserManagement() {
         }
     };
 
-    // 💡 [수정] 모달창에서 승인 버튼을 눌렀을 때 실행되도록 개선
     const handleActivateUser = async (userEmail) => {
         if (!window.confirm(`Are you sure you want to approve and activate membership for ${userEmail}?`)) return;
 
@@ -158,7 +163,7 @@ export default function UserManagement() {
 
             if (res.data && res.data.success) {
                 alert(`✅ Successfully activated membership for ${userEmail}.`);
-                setIsReviewModalOpen(false); // 💡 승인 완료 시 모달 닫기
+                setIsReviewModalOpen(false);
                 fetchUsers();
             } else {
                 alert("❌ Activation failed: " + res.data.message);
@@ -169,7 +174,6 @@ export default function UserManagement() {
         }
     };
 
-    // 💡 거절(Reject) 처리 및 사유 전송 핸들러
     const handleRejectUser = async (userEmail) => {
         const reason = window.prompt("Please enter the reason for rejection (e.g., Unclear ID photo):", "ID photo is unclear. Please re-upload a valid ID.");
         if (reason === null) return;
@@ -177,7 +181,6 @@ export default function UserManagement() {
         try {
             const res = await axios.post("https://api.hotelnplus.com/api/members/reject", { email: userEmail, reason });
             if (res.data && res.data.success) {
-                // 💡 [수정됨] 이메일이 아닌 'Guest App 알림'으로 전송되었다고 명확히 안내합니다.
                 alert(`✅ Application marked as 'Need More Info'. An in-app notification was sent to the user's Guest App.`);
                 setIsReviewModalOpen(false);
                 fetchUsers();
@@ -283,9 +286,9 @@ export default function UserManagement() {
                                         <td className="p-5 text-slate-600 font-medium">{u.nationality}</td>
                                         <td className="p-5">
                                             <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${displayTier === 'VIP' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                                                    displayTier === 'GOLD' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                                        displayTier === 'SILVER' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                            'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                                displayTier === 'GOLD' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                                    displayTier === 'SILVER' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                        'bg-emerald-100 text-emerald-700 border-emerald-200'
                                                 }`}>
                                                 {displayTier}
                                             </span>
@@ -301,7 +304,6 @@ export default function UserManagement() {
                                         </td>
                                         <td className="p-5 text-right">
                                             <div className="flex justify-end items-center gap-2">
-                                                {/* 💡 [변경] Approve 버튼 대신 Review 버튼 노출 */}
                                                 {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') && (
                                                     <button
                                                         onClick={() => {
@@ -338,14 +340,11 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* ========================================== */}
-            {/* 📌 [NEW] 가입 정보 대조/리뷰 모달창 */}
-            {/* ========================================== */}
+            {/* 리뷰 모달창 */}
             {isReviewModalOpen && reviewingUser && (
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsReviewModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
 
-                        {/* 모달 헤더 */}
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-amber-50/50">
                             <div>
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
@@ -358,10 +357,8 @@ export default function UserManagement() {
                             <button onClick={() => setIsReviewModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-3xl font-light">&times;</button>
                         </div>
 
-                        {/* 모달 콘텐츠 (유저 정보 + 신분증 + 결제) */}
                         <div className="p-8 space-y-8 overflow-y-auto max-h-[60vh] custom-scrollbar">
 
-                            {/* 💡 [수정] 입력된 회원 정보 블록에 생일 및 상세 정보 추가 */}
                             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 grid grid-cols-2 gap-6">
                                 <div className="col-span-2 sm:col-span-1">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
@@ -388,11 +385,10 @@ export default function UserManagement() {
                                     <div className="text-sm font-bold text-slate-800">{reviewingUser.email}</div>
                                 </div>
 
-                                {/* 결제 정보 (프론트 데스크 전달용) */}
                                 <div className="col-span-2 border-t border-slate-200 pt-4 mt-2">
                                     <label className="block text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Registered Payment Details (For Front Desk)</label>
                                     <div className="flex items-center gap-4 bg-white p-3 rounded-lg border border-slate-100">
-                                        <span className="text-2xl">{reviewingUser.payment_method === 'card' ? '💳' : reviewingUser.payment_method === 'gcash' ? '📱' : '💵'}</span>
+                                        <span className="text-2xl">{reviewingUser.payment_method === 'card' ? '💳' : reviewingUser.payment_method === 'gcash' ? '📱' : reviewingUser.payment_method === 'maya' ? '💵' : '❓'}</span>
                                         <div>
                                             <p className="text-xs font-bold text-slate-800 uppercase">{reviewingUser.payment_method || 'N/A'} - {reviewingUser.payment_acc_name || 'No Name'}</p>
                                             <p className="text-xs text-slate-500 font-mono">
@@ -403,10 +399,9 @@ export default function UserManagement() {
                                 </div>
                             </div>
 
-                            {/* 신분증 이미지 표시 영역 */}
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
-                                    <span>Submitted ID Document ({reviewingUser.citizen_type === 'filipino' ? 'Local' : 'Foreigner'} - {reviewingUser.id_type || 'N/A'})</span>
+                                    <span>Submitted ID Document ({reviewingUser.citizen_type === 'filipino' ? 'Local' : reviewingUser.citizen_type === 'foreigner' ? 'Foreigner' : 'Unknown'} - {reviewingUser.id_type || 'N/A'})</span>
                                     {reviewingUser.document_url ? (
                                         <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px] font-black">Verified Upload</span>
                                     ) : (
@@ -414,16 +409,23 @@ export default function UserManagement() {
                                     )}
                                 </label>
                                 <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
-                                    <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">🪪</span>
-                                    <span className="text-xs font-bold text-slate-500">ID Document Image</span>
-                                    <span className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-tight">
-                                        (The user's uploaded ID document will be displayed here securely)
-                                    </span>
+                                    {reviewingUser.document_url ? (
+                                        <img
+                                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Philippine_Identification_Card_%28PhilID%29_Sample.jpeg/640px-Philippine_Identification_Card_%28PhilID%29_Sample.jpeg"
+                                            className="w-full h-full object-cover"
+                                            alt="Uploaded ID Document"
+                                        />
+                                    ) : (
+                                        <>
+                                            <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">🪪</span>
+                                            <span className="text-xs font-bold text-slate-500">No ID Uploaded</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
+
                         </div>
 
-                        {/* 모달 하단 버튼 */}
                         <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
                             <button
                                 onClick={() => handleRejectUser(reviewingUser.email)}
@@ -439,10 +441,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-
-            {/* ========================================== */}
-            {/* 📌 기존 유저 정보 수정(Manage) 모달창 */}
-            {/* ========================================== */}
+            {/* 정보 수정 모달창 */}
             {isEditModalOpen && editingUser && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>

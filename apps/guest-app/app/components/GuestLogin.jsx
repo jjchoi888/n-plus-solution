@@ -247,18 +247,35 @@ export default function GuestLogin() {
                             {idType && (
                                 <div className="mt-4 pt-2">
                                     <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Upload Method</p>
+
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl group">
-                                            <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">📷</div>
-                                            <p className="font-bold text-slate-700 text-xs">Take Photo</p>
+                                        {/* 📸 Take Photo 버튼 */}
+                                        <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl overflow-hidden group">
+                                            {/* 💡 [수정됨] z-index를 최상위(z-20)로 올리고, 나머지 아이콘/텍스트는 pointer-events-none 처리하여 클릭 방해 요소를 완전히 제거했습니다. */}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            />
+                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform relative z-10 pointer-events-none">📷</div>
+                                            <p className="font-bold text-slate-700 text-xs relative z-10 pointer-events-none">Take Photo</p>
                                         </div>
-                                        <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl group">
-                                            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
-                                            <p className="font-bold text-slate-700 text-xs">Gallery</p>
+
+                                        {/* 🖼️ Gallery 버튼 */}
+                                        <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl overflow-hidden group">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            />
+                                            <div className="text-3xl mb-1 group-hover:scale-110 transition-transform relative z-10 pointer-events-none">🖼️</div>
+                                            <p className="font-bold text-slate-700 text-xs relative z-10 pointer-events-none">Gallery</p>
                                         </div>
                                     </div>
+
                                     {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-3 rounded-lg border border-green-100">ID Attached Successfully ✓</p>}
                                 </div>
                             )}
