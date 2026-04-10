@@ -351,20 +351,27 @@ export default function MainPortal() {
 
   const completeOnboarding = async () => {
     try {
+      // 💡 [수정] 누락되었던 모든 데이터를 페이로드(payload)에 담아서 백엔드로 전송!
       const payload = {
         email: user.email,
-        phone: phone,
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
+        phone: phone || guestPhone,
+        first_name: user.first_name || guestFirstName || '',
+        last_name: user.last_name || guestLastName || '',
+        dob: dob || '', // 생일 추가
+        nationality: guestNationality || user.nationality || '', // 국적 추가
+        citizen_type: citizenType || '', // 내/외국인
+        id_type: idType || 'Passport', // 신분증 종류
+        document_url: idUploaded ? 'verified_upload' : '', // 신분증 업로드 여부
+        payment_method: paymentMethod || '', // 카드/GCash/Maya
+        payment_acc_name: accName || cardName || '', // 결제자명
+        payment_acc_num: accNum || cardNum || '', // 결제번호
         membership_status: 'pending'
       };
 
-      // 💡 [핵심 수정] 프론트엔드 프록시를 타도록 상대 경로(/api/...)로 원복!
       const response = await axios.post("/api/members/join-rewards", payload);
 
       if (response.data && response.data.success) {
         const updatedUser = response.data.member;
-
         const finalUser = {
           ...updatedUser,
           name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
@@ -374,7 +381,6 @@ export default function MainPortal() {
 
         localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
         setUser(finalUser);
-
         setIsMembershipActive(false);
         setShowOnboarding(false);
 
@@ -390,7 +396,7 @@ export default function MainPortal() {
         alert("🚨 A network error occurred while connecting to the server. Please try again.");
       }
     }
-  };
+  };  
 
   useEffect(() => {
     const fetchAllData = async () => {

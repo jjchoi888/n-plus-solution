@@ -338,43 +338,62 @@ export default function UserManagement() {
                             <button onClick={() => setIsReviewModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-3xl font-light">&times;</button>
                         </div>
 
-                        {/* 모달 콘텐츠 (유저 정보 + 신분증) */}
+                        {/* 모달 콘텐츠 (유저 정보 + 신분증 + 결제) */}
                         <div className="p-8 space-y-8 overflow-y-auto max-h-[60vh] custom-scrollbar">
 
-                            {/* 입력된 회원 정보 블록 */}
+                            {/* 💡 [수정] 입력된 회원 정보 블록에 생일 및 상세 정보 추가 */}
                             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 grid grid-cols-2 gap-6">
-                                <div>
+                                <div className="col-span-2 sm:col-span-1">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
                                     <div className="text-sm font-bold text-slate-800">{reviewingUser.name}</div>
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nationality</label>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date of Birth</label>
                                     <div className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                                        <span className="text-lg">🌍</span> {reviewingUser.nationality}
+                                        <span>🎂</span> {reviewingUser.dob || 'Not Provided'}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nationality</label>
+                                    <div className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                                        <span className="text-lg">🌍</span> {reviewingUser.nationality || 'Unknown'}
+                                    </div>
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone Number</label>
                                     <div className="text-sm font-bold text-slate-800">{reviewingUser.phone || 'N/A'}</div>
                                 </div>
-                                <div>
+                                <div className="col-span-2">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</label>
                                     <div className="text-sm font-bold text-slate-800">{reviewingUser.email}</div>
+                                </div>
+
+                                {/* 결제 정보 (프론트 데스크 전달용) */}
+                                <div className="col-span-2 border-t border-slate-200 pt-4 mt-2">
+                                    <label className="block text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Registered Payment Details (For Front Desk)</label>
+                                    <div className="flex items-center gap-4 bg-white p-3 rounded-lg border border-slate-100">
+                                        <span className="text-2xl">{reviewingUser.payment_method === 'card' ? '💳' : reviewingUser.payment_method === 'gcash' ? '📱' : '💵'}</span>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-800 uppercase">{reviewingUser.payment_method || 'N/A'} - {reviewingUser.payment_acc_name || 'No Name'}</p>
+                                            <p className="text-xs text-slate-500 font-mono">
+                                                {reviewingUser.payment_acc_num ? `**** **** **** ${reviewingUser.payment_acc_num.slice(-4)}` : 'No Account Number'}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* 신분증 이미지 표시 영역 */}
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
-                                    <span>Submitted ID Document</span>
-                                    <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px]">Verified Upload</span>
+                                    <span>Submitted ID Document ({reviewingUser.citizen_type === 'filipino' ? 'Local' : 'Foreigner'} - {reviewingUser.id_type || 'N/A'})</span>
+                                    {reviewingUser.document_url ? (
+                                        <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px] font-black">Verified Upload</span>
+                                    ) : (
+                                        <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[9px] font-black">Missing</span>
+                                    )}
                                 </label>
                                 <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
-
-                                    {/* 💡 향후 백엔드에서 이미지 URL(document_url)을 내려준다면 아래 주석을 풀고 img 태그를 사용하세요. 
-                                        현재는 Placeholder로 UI 프레임만 완벽하게 잡아두었습니다. */}
-                                    {/* <img src={reviewingUser.document_url} className="w-full h-full object-contain" alt="ID Document" /> */}
-
                                     <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">🪪</span>
                                     <span className="text-xs font-bold text-slate-500">ID Document Image</span>
                                     <span className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-tight">
@@ -382,7 +401,6 @@ export default function UserManagement() {
                                     </span>
                                 </div>
                             </div>
-
                         </div>
 
                         {/* 모달 하단 버튼 */}
