@@ -200,7 +200,8 @@ export default function MainPortal() {
         setUser(parsedUser);
         setIsMembershipActive(parsedUser.is_membership_active || false);
 
-        axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
+        // 💡 [핵심 수정] 절대 경로(https://api...)를 상대 경로(/api/...)로 원복!
+        axios.get(`/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
           headers: { 'Cache-Control': 'no-cache' }
         })
           .then(res => {
@@ -209,7 +210,6 @@ export default function MainPortal() {
               const finalUser = {
                 ...freshUser,
                 name: `${freshUser.first_name || ''} ${freshUser.last_name || ''}`.trim() || 'Guest User',
-                // 💡 Basic 완전 삭제. 기본값은 MEMBER
                 tierName: freshUser.tier_id || 'MEMBER',
                 membership_status: freshUser.membership_status
               };
@@ -255,14 +255,14 @@ export default function MainPortal() {
         membership_status: 'pending'
       };
 
-      const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
+      // 💡 [핵심 수정] 프론트엔드 프록시를 타도록 상대 경로(/api/...)로 원복!
+      const response = await axios.post('/api/members/auth', payload);
 
       if (response.data && response.data.success) {
         const freshUser = response.data.member || {
           ...payload,
           name: `${guestFirstName} ${guestLastName}`.trim(),
           is_membership_active: false,
-          // 💡 Basic에서 MEMBER로 기본값 수정
           tierName: "MEMBER",
           total_points: 0
         };
@@ -301,7 +301,8 @@ export default function MainPortal() {
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
 
-      const response = await axios.post('https://api.hotelnplus.com/api/members/auth', {
+      // 💡 [핵심 수정] 프론트엔드 프록시를 타도록 상대 경로(/api/...)로 원복!
+      const response = await axios.post('/api/members/auth', {
         hotel_code: 'NPLUS01',
         email: gUser.email,
         first_name: gUser.displayName ? gUser.displayName.split(' ')[0] : 'Guest',
@@ -358,7 +359,8 @@ export default function MainPortal() {
         membership_status: 'pending'
       };
 
-      const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", payload);
+      // 💡 [핵심 수정] 프론트엔드 프록시를 타도록 상대 경로(/api/...)로 원복!
+      const response = await axios.post("/api/members/join-rewards", payload);
 
       if (response.data && response.data.success) {
         const updatedUser = response.data.member;
@@ -366,7 +368,6 @@ export default function MainPortal() {
         const finalUser = {
           ...updatedUser,
           name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
-          // 💡 Basic에서 MEMBER로 기본값 수정
           tierName: 'MEMBER',
           membership_status: 'pending'
         };
