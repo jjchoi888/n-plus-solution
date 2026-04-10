@@ -192,36 +192,49 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // 💡 데이터 동기화 useEffect
-  useEffect(() => {
+  // 💡 데이터 동기화 (DB 지워지면 로그아웃되도록 강력 조치)
+  const syncWithServer = () => {
     const savedUser = localStorage.getItem('nplus_guest_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
-        // 승인 대기 로직 적용을 위해 무조건 true로 강제하지 않고 저장된 값 사용
         setIsMembershipActive(parsedUser.is_membership_active || false);
 
-        axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}`)
+        axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        })
           .then(res => {
-            if (res.data && res.data.success) {
+            if (res.data && res.data.success && res.data.member) {
               const freshUser = res.data.member;
               const finalUser = {
                 ...freshUser,
                 name: `${freshUser.first_name || ''} ${freshUser.last_name || ''}`.trim() || 'Guest User',
                 tierName: freshUser.tier_id || 'Basic',
-                // 백엔드 상태를 정확히 로컬에 동기화
                 membership_status: freshUser.membership_status
               };
 
               localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
               setUser(finalUser);
               setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
+            } else {
+              // 💡 [핵심] DB를 밀어버려서 회원이 없다면? 유령 데이터를 파괴합니다!
+              handleGuestLogout();
             }
           })
-          .catch(err => console.error("Sync error:", err));
+          .catch(err => {
+            if (err.response && err.response.status === 404) {
+              // 💡 DB에서 404를 반환해도 즉시 삭제
+              handleGuestLogout();
+            }
+            console.error("Sync error:", err);
+          });
       } catch (e) { }
     }
+  };
+
+  useEffect(() => {
+    syncWithServer();
   }, []);
 
   const handleGuestLogout = () => {
@@ -229,50 +242,64 @@ export default function MainPortal() {
     localStorage.removeItem('nplus_session_key');
     setUser(null);
     setIsMembershipActive(false);
-    window.location.reload();
+    // UI 초기화를 위해 새로고침 대신 상태만 비웁니다.
   };
 
-  // 💡 로그인 / 회원가입 제출 처리
+  // 💡 [핵심 수정] 로그인/가입 통합 로직: 가짜 API 버리고 진짜 백엔드로 통신!
   const handleGuestAuthSubmit = async (e) => {
     e.preventDefault();
     try {
-      const endpoint = guestAuthMode === 'LOGIN' ? '/api/guest-login' : '/api/guest-register';
-      const payload = guestAuthMode === 'LOGIN'
-        ? { email: guestEmail, password: guestPw }
-        : { email: guestEmail, password: guestPw, first_name: guestFirstName, last_name: guestLastName, phone: guestPhone, nationality: guestNationality };
-
-      await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(() => null);
-
-      // 💡 [수정됨] 회원가입 시 즉시 Active 처리 금지
-      const userData = {
+      const payload = {
         email: guestEmail,
-        name: guestAuthMode === 'REGISTER' ? `${guestFirstName} ${guestLastName}` : "Guest User",
+        pin: guestPw, // 임시로 비밀번호를 PIN 검증에 사용
         first_name: guestFirstName,
         last_name: guestLastName,
-        phone: guestPhone || phone,
+        phone: guestPhone,
         nationality: guestNationality,
-        is_membership_active: false, // 💡 무조건 대기
-        membership_status: 'pending', // 💡 상태값 추가
-        tierName: "Basic",
-        total_points: 0
+        membership_status: 'pending' // 무조건 승인 대기
       };
 
-      localStorage.setItem('nplus_guest_user', JSON.stringify(userData));
-      setUser(userData);
-      setShowGuestAuthModal(false);
-      setAlertMessage(guestAuthMode === 'LOGIN' ? "Welcome back!" : "Account created successfully!");
+      // 💡 가짜 /api/guest-register 대신 진짜 서버 DB에 쏩니다!
+      const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
-      setGuestEmail(""); setGuestPw(""); setGuestFirstName(""); setGuestLastName(""); setGuestPhone(""); setGuestNationality("");
+      if (response.data && response.data.success) {
+        // DB 저장이 확정된 후에만 로컬 스토리지 생성
+        const freshUser = response.data.member || {
+          ...payload,
+          name: `${guestFirstName} ${guestLastName}`.trim(),
+          is_membership_active: false,
+          tierName: "Basic",
+          total_points: 0
+        };
+
+        freshUser.membership_status = 'pending';
+
+        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+        localStorage.setItem('nplus_session_key', JSON.stringify({ email: guestEmail }));
+
+        setUser(freshUser);
+        setIsMembershipActive(false);
+        setShowGuestAuthModal(false);
+
+        if (response.data.isNew) {
+          alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
+        } else {
+          setAlertMessage("Welcome back!");
+          syncWithServer(); // 기존 회원 로그인 시 최신 상태 즉시 동기화
+        }
+
+        // 폼 초기화
+        setGuestEmail(""); setGuestPw(""); setGuestFirstName(""); setGuestLastName(""); setGuestPhone(""); setGuestNationality("");
+      } else {
+        setAlertMessage("❌ " + (response.data.message || "Authentication failed."));
+      }
     } catch (err) {
-      setAlertMessage("Server connection error.");
+      console.error("Auth Error:", err);
+      setAlertMessage("🚨 Server connection error. Please ensure backend is running.");
     }
   };
 
-  // 💡 구글 연동 로그인 함수
+  // 구글 연동 로그인 함수
   const handleGoogleLogin = async () => {
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
@@ -291,16 +318,16 @@ export default function MainPortal() {
       });
 
       if (response.data.success) {
-        // 백엔드에서 받아온 데이터 그대로 세팅
-        localStorage.setItem('nplus_guest_user', JSON.stringify(response.data.member));
-        setUser(response.data.member);
+        const freshUser = response.data.member;
+        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+        localStorage.setItem('nplus_session_key', JSON.stringify({ email: gUser.email }));
+        setUser(freshUser);
 
-        // 💡 [수정됨] DB에서 온 실제 상태값으로 활성화 여부 판단
-        setIsMembershipActive(response.data.member.is_membership_active === 1 || response.data.member.is_membership_active === true);
+        setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
         setShowGuestAuthModal(false);
 
         if (response.data.isNew) {
-          setAlertMessage('Your application has been submitted. Pending HQ review.');
+          alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
         } else {
           setAlertMessage('Welcome back!');
         }
@@ -328,7 +355,6 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [수정됨] 온보딩 완료 시 무조건 Pending(대기) 상태로 넘깁니다. (1000포인트 자동 지급 중지)
   const completeOnboarding = async () => {
     try {
       const payload = {
@@ -336,7 +362,7 @@ export default function MainPortal() {
         phone: phone,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        membership_status: 'pending' // 💡 대기 상태 명시
+        membership_status: 'pending' // 대기 상태 명시
       };
 
       const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", payload);
@@ -347,19 +373,16 @@ export default function MainPortal() {
         const finalUser = {
           ...updatedUser,
           name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
-          tierName: 'Basic', // 💡 승인 전엔 무조건 Basic
+          tierName: 'Basic',
           membership_status: 'pending'
         };
 
-        // 로컬 정보 덮어쓰기
         localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
         setUser(finalUser);
 
-        // 💡 중요: 즉시 승인(True)을 하지 않고 False로 두어 대기 상태 유지
         setIsMembershipActive(false);
         setShowOnboarding(false);
 
-        // 💡 24시간 내 리뷰 안내 영문 팝업
         alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
       } else {
         alert("❌ Failed to join rewards: " + response.data.message);
@@ -563,6 +586,14 @@ export default function MainPortal() {
           setShowGuestAuthModal(true);
         }}
       />
+
+      {/* 💡 임시 알림창 UI 처리 */}
+      {alertMessage && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl z-[300] animate-fade-in-up font-bold text-sm">
+          {alertMessage}
+          <button onClick={() => setAlertMessage("")} className="ml-4 text-slate-400 hover:text-white">&times;</button>
+        </div>
+      )}
 
       {searchData ? (
         <section className="w-full max-w-6xl mx-auto mt-28 px-4 animate-fade-in-up relative z-10 pb-20 flex-grow">
