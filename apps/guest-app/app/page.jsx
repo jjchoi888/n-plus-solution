@@ -7,6 +7,9 @@ import axios from 'axios';
 export default function HomePage() {
     const router = useRouter();
 
+    // 💡 [수정됨] 앱 초기 로딩 상태 (데이터 동기화 중 화면 깜박임 및 무한 루프 방지)
+    const [isAppLoading, setIsAppLoading] = useState(true);
+
     // Auth & Security States
     const [user, setUser] = useState(null);
     const [isMembershipActive, setIsMembershipActive] = useState(false);
@@ -59,36 +62,46 @@ export default function HomePage() {
         };
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-        const savedUser = localStorage.getItem('nplus_guest_user');
-        if (savedUser) {
-            const parsedUser = JSON.parse(savedUser);
-            setUser(parsedUser);
-            setIsMembershipActive(parsedUser.is_membership_active === 1 || parsedUser.is_membership_active === true);
-            setMembershipStatus(parsedUser.membership_status || 'active');
+        // 💡 [수정됨] 로그인/가입 화면에서 만든 새로운 세션 키(nplus_session_key)를 확인합니다.
+        const sessionData = localStorage.getItem('nplus_session_key');
+        const legacyData = localStorage.getItem('nplus_guest_user'); // 이전 버전 호환성 유지
 
-            // 유저가 있으면 앱 접속 시 잠금 상태로 설정 (PIN 요구)
+        const targetSession = sessionData ? JSON.parse(sessionData) : (legacyData ? JSON.parse(legacyData) : null);
+
+        if (targetSession && targetSession.email) {
+            // 유저 세션이 있으면 앱 접속 시 잠금 상태로 설정 (PIN 요구)
             setIsUnlocked(false);
 
-            axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
+            axios.get(`https://api.hotelnplus.com/api/members/profile?email=${targetSession.email}&t=${Date.now()}`, {
                 headers: { 'Cache-Control': 'no-cache' }
             })
                 .then(res => {
                     if (res.data && res.data.success && res.data.member) {
                         const freshUser = {
-                            ...parsedUser, // 유지할 로컬 데이터 (PIN 등)
+                            ...targetSession, // 로컬 데이터(세션 또는 PIN) 유지
                             ...res.data.member,
                             name: `${res.data.member.first_name || ''} ${res.data.member.last_name || ''}`.trim() || 'Guest User'
                         };
-                        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+                        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser)); // 데이터 동기화
                         setUser(freshUser);
                         setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
                         setMembershipStatus(freshUser.membership_status || 'active');
+                    } else {
+                        // 서버 연결 실패 시에도 락스크린 유지를 위해 기본 데이터 렌더링
+                        setUser(targetSession);
                     }
                 })
-                .catch(err => console.error("Home sync error:", err));
+                .catch(err => {
+                    console.error("Home sync error:", err);
+                    setUser(targetSession);
+                })
+                .finally(() => {
+                    setIsAppLoading(false); // 💡 검증이 끝나면 로딩 해제
+                });
         } else {
-            // 로그인 안된 상태면 화면 바로 표시
+            // 처음 방문자 (세션 없음)
             setIsUnlocked(true);
+            setIsAppLoading(false); // 💡 검증이 끝나면 로딩 해제
         }
 
         axios.get('https://api.hotelnplus.com/api/hotels')
@@ -110,6 +123,8 @@ export default function HomePage() {
     }, [hotels.length]);
 
     const handleLogout = () => {
+        // 💡 [수정됨] 세션 키와 기존 유저 데이터를 모두 삭제합니다.
+        localStorage.removeItem('nplus_session_key');
         localStorage.removeItem('nplus_guest_user');
         setUser(null);
         setIsMembershipActive(false);
@@ -174,7 +189,10 @@ export default function HomePage() {
                     pin: pin
                 };
 
+                // 💡 [수정됨] 가입 로직에서도 서버 세션 키를 생성합니다.
+                localStorage.setItem('nplus_session_key', JSON.stringify({ email: payload.email }));
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
+
                 setUser(finalUser);
                 setIsMembershipActive(false);
                 setMembershipStatus('pending');
@@ -205,7 +223,7 @@ export default function HomePage() {
             const newPin = loginPin + num;
             setLoginPin(newPin);
             if (newPin.length === 4) {
-                if (newPin === user.pin) {
+                if (newPin === user?.pin) {
                     setIsUnlocked(true);
                 } else {
                     setTimeout(() => {
@@ -233,11 +251,20 @@ export default function HomePage() {
         }
     };
 
+    // 💡 [수정됨] 0. 데이터 로딩 화면 (화면 깜박임 방지)
+    if (isAppLoading) {
+        return (
+            <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50">
+                <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
+                <div className="text-slate-400 font-bold animate-pulse text-sm">Loading N+ Rewards...</div>
+            </div>
+        );
+    }
+
     // 💡 1. 락스크린 (보안 화면): 네비게이션 바와 헤더 숨김 처리
     if (user && !isUnlocked) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
-                {/* layout.jsx의 네비게이션과 헤더를 강제로 숨기는 스타일 주입 */}
                 <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
 
                 <div className="text-center mb-8">
@@ -289,7 +316,7 @@ export default function HomePage() {
         );
     }
 
-    // 💡 2. 온보딩 화면: 네비게이션 바와 헤더 숨김 처리
+    // 💡 2. 온보딩 화면 (내부 팝업용 - 기존 코드 유지)
     if (showOnboarding) {
         return (
             <div className="fixed inset-0 bg-slate-50 z-[100] flex flex-col font-sans text-slate-700">
