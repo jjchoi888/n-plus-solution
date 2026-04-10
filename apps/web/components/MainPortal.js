@@ -170,14 +170,11 @@ export default function MainPortal() {
 
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
 
-  // =========================================================
-  // 💡 [NEW] 게스트 로그인 / 회원가입 (스크린샷 기반 100% 매칭)
-  // =========================================================
   const [user, setUser] = useState(null);
   const [isMembershipActive, setIsMembershipActive] = useState(false);
 
   const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
-  const [guestAuthMode, setGuestAuthMode] = useState('REGISTER'); // 💡 기본 상태: 회원가입
+  const [guestAuthMode, setGuestAuthMode] = useState('REGISTER');
 
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPw, setGuestPw] = useState("");
@@ -186,7 +183,6 @@ export default function MainPortal() {
   const [guestPhone, setGuestPhone] = useState("");
   const [guestNationality, setGuestNationality] = useState("");
 
-  // guest-app의 3단계 온보딩 로직 연동을 위한 상태 유지
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardStep, setOnboardStep] = useState(1);
   const [phone, setPhone] = useState('');
@@ -196,33 +192,31 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // 💡 [NEW] 페이지 로드 시 백엔드에서 최신 데이터를 가져와 상태 동기화 (HQ 어드민 실시간 반영)
+  // 💡 데이터 동기화 useEffect
   useEffect(() => {
     const savedUser = localStorage.getItem('nplus_guest_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
-        // 1차: 일단 로컬 데이터로 화면을 빠르게 렌더링 (깜빡임 방지)
         setUser(parsedUser);
-        if (parsedUser.is_membership_active) setIsMembershipActive(true);
+        // 승인 대기 로직 적용을 위해 무조건 true로 강제하지 않고 저장된 값 사용
+        setIsMembershipActive(parsedUser.is_membership_active || false);
 
-        // 2차: 백엔드에 찔러서 방금 HQ 관리자가 바꾼 포인트나 등급이 있는지 최신화!
         axios.get(`https://api.hotelnplus.com/api/members/profile?email=${parsedUser.email}`)
           .then(res => {
             if (res.data && res.data.success) {
               const freshUser = res.data.member;
-
-              // 규격 통일 (이름, 등급 등)
               const finalUser = {
                 ...freshUser,
                 name: `${freshUser.first_name || ''} ${freshUser.last_name || ''}`.trim() || 'Guest User',
-                tierName: freshUser.tier_id || 'Basic'
+                tierName: freshUser.tier_id || 'Basic',
+                // 백엔드 상태를 정확히 로컬에 동기화
+                membership_status: freshUser.membership_status
               };
 
-              // 최신 데이터를 로컬 스토리지와 화면 상태에 완전히 덮어씌움
               localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
               setUser(finalUser);
-              setIsMembershipActive(freshUser.is_membership_active === 1);
+              setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
             }
           })
           .catch(err => console.error("Sync error:", err));
@@ -232,12 +226,13 @@ export default function MainPortal() {
 
   const handleGuestLogout = () => {
     localStorage.removeItem('nplus_guest_user');
+    localStorage.removeItem('nplus_session_key');
     setUser(null);
     setIsMembershipActive(false);
     window.location.reload();
   };
 
-  // 💡 통합 회원가입/로그인 제출 처리
+  // 💡 로그인 / 회원가입 제출 처리
   const handleGuestAuthSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -246,14 +241,13 @@ export default function MainPortal() {
         ? { email: guestEmail, password: guestPw }
         : { email: guestEmail, password: guestPw, first_name: guestFirstName, last_name: guestLastName, phone: guestPhone, nationality: guestNationality };
 
-      // API 호출 처리 (백엔드가 연결 안되어있을 경우를 대비해 fetch 실패 시 에러 무시)
       await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).catch(() => null);
 
-      // 로컬 스토리지에 guest-app과 동일한 규격으로 유저 데이터 저장
+      // 💡 [수정됨] 회원가입 시 즉시 Active 처리 금지
       const userData = {
         email: guestEmail,
         name: guestAuthMode === 'REGISTER' ? `${guestFirstName} ${guestLastName}` : "Guest User",
@@ -261,7 +255,8 @@ export default function MainPortal() {
         last_name: guestLastName,
         phone: guestPhone || phone,
         nationality: guestNationality,
-        is_membership_active: false,
+        is_membership_active: false, // 💡 무조건 대기
+        membership_status: 'pending', // 💡 상태값 추가
         tierName: "Basic",
         total_points: 0
       };
@@ -271,39 +266,41 @@ export default function MainPortal() {
       setShowGuestAuthModal(false);
       setAlertMessage(guestAuthMode === 'LOGIN' ? "Welcome back!" : "Account created successfully!");
 
-      // 폼 초기화
       setGuestEmail(""); setGuestPw(""); setGuestFirstName(""); setGuestLastName(""); setGuestPhone(""); setGuestNationality("");
     } catch (err) {
       setAlertMessage("Server connection error.");
     }
   };
 
-  // 💡 [NEW] 파이어베이스 구글 연동 로그인 함수 (여기에 새로 추가!)
+  // 💡 구글 연동 로그인 함수
   const handleGoogleLogin = async () => {
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const gUser = result.user;
 
       const response = await axios.post('https://api.hotelnplus.com/api/members/auth', {
         hotel_code: 'NPLUS01',
-        email: user.email,
-        first_name: user.displayName ? user.displayName.split(' ')[0] : 'Guest',
-        last_name: user.displayName ? user.displayName.split(' ')[1] || '' : '',
-        phone: user.phoneNumber || '',
+        email: gUser.email,
+        first_name: gUser.displayName ? gUser.displayName.split(' ')[0] : 'Guest',
+        last_name: gUser.displayName ? gUser.displayName.split(' ')[1] || '' : '',
+        phone: gUser.phoneNumber || '',
         nationality: 'Unknown'
       });
 
       if (response.data.success) {
+        // 백엔드에서 받아온 데이터 그대로 세팅
         localStorage.setItem('nplus_guest_user', JSON.stringify(response.data.member));
         setUser(response.data.member);
-        setIsMembershipActive(response.data.member.is_membership_active || false);
+
+        // 💡 [수정됨] DB에서 온 실제 상태값으로 활성화 여부 판단
+        setIsMembershipActive(response.data.member.is_membership_active === 1 || response.data.member.is_membership_active === true);
         setShowGuestAuthModal(false);
 
         if (response.data.isNew) {
-          setAlertMessage('Welcome! Your N+ Rewards account has been created.');
+          setAlertMessage('Your application has been submitted. Pending HQ review.');
         } else {
           setAlertMessage('Welcome back!');
         }
@@ -331,34 +328,39 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [NEW] 리워즈 가입 즉시 전역 상태(Global State) 갱신
+  // 💡 [수정됨] 온보딩 완료 시 무조건 Pending(대기) 상태로 넘깁니다. (1000포인트 자동 지급 중지)
   const completeOnboarding = async () => {
     try {
-      // 1. 진짜 백엔드 서버로 리워즈 가입 요청 (1000포인트 적립, 등급 상향, 로그 기록)
-      const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", {
+      const payload = {
         email: user.email,
         phone: phone,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-      });
+        membership_status: 'pending' // 💡 대기 상태 명시
+      };
+
+      const response = await axios.post("https://api.hotelnplus.com/api/members/join-rewards", payload);
 
       if (response.data && response.data.success) {
         const updatedUser = response.data.member;
 
-        // 2. 백엔드가 준 최신 데이터로 규격 맞추기
         const finalUser = {
           ...updatedUser,
           name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'Guest User',
-          tierName: updatedUser.tier_id
+          tierName: 'Basic', // 💡 승인 전엔 무조건 Basic
+          membership_status: 'pending'
         };
 
-        // 3. 로컬 스토리지와 화면 전역 상태 즉시 갈아끼우기 (새로고침 없이 반영)
+        // 로컬 정보 덮어쓰기
         localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
         setUser(finalUser);
-        setIsMembershipActive(true);
+
+        // 💡 중요: 즉시 승인(True)을 하지 않고 False로 두어 대기 상태 유지
+        setIsMembershipActive(false);
         setShowOnboarding(false);
 
-        alert("🎉 Welcome to n+ Rewards! 1,000 bonus points have been successfully credited to your account.");
+        // 💡 24시간 내 리뷰 안내 영문 팝업
+        alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
       } else {
         alert("❌ Failed to join rewards: " + response.data.message);
       }
@@ -468,7 +470,7 @@ export default function MainPortal() {
       setSearchData(null);
     } else if (action === 'CONTACT') {
       setIsContactOpen(true);
-    } else if (action === 'MYPAGE') { // 💡 추가
+    } else if (action === 'MYPAGE') {
       setActiveView("MYPAGE");
     }
   };
@@ -550,7 +552,6 @@ export default function MainPortal() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
 
-      {/* 💡 Navbar에 guest Auth 관련 prop 전달 */}
       <Navbar
         currentLang={lang}
         setLang={setLang}
@@ -558,7 +559,7 @@ export default function MainPortal() {
         user={user}
         onLogout={handleGuestLogout}
         onLoginClick={() => {
-          setGuestAuthMode('REGISTER'); // 로그인 버튼 클릭 시 무조건 회원가입 창부터 띄움
+          setGuestAuthMode('REGISTER');
           setShowGuestAuthModal(true);
         }}
       />
@@ -841,11 +842,10 @@ export default function MainPortal() {
 
       ) : activeView === "MYPAGE" ? (
         <div className="w-full flex-grow bg-slate-50">
-          {/* 💡 props에 onJoinRewards를 추가하여 온보딩 함수를 연결합니다. */}
           <MyPage
             user={user}
             onBack={() => setActiveView("HOME")}
-            onJoinRewards={startOnboarding} // MyPage에서 버튼 누르면 가입 온보딩 시작
+            onJoinRewards={startOnboarding}
           />
         </div>
 
@@ -1055,12 +1055,9 @@ export default function MainPortal() {
                         }}
                       >
                         <img
-                          /* 💡 데이터에 image_url이 없으면 imageUrl 또는 thumbnail을 확인하고, 
-                             모두 없으면 기본 샘플 이미지를 보여주도록 방어 코드를 넣었습니다. */
                           src={dest.image_url || dest.imageUrl || dest.main_image || dest.thumbnail || "/hero1.png"}
                           alt={dest.name}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          /* 이미지 로딩 실패 시 빈 화면 대신 기본 이미지로 대체 */
                           onError={(e) => { e.target.src = "/hero1.png"; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -1143,7 +1140,6 @@ export default function MainPortal() {
           <div>
             <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs">Stay Updated</h4>
             <p className="text-sm mb-6">Get the latest our solutions news.</p>
-            {/* 푸터 SNS 아이콘 영역 (에러 방지를 위해 안전한 텍스트로 대체) */}
             <div className="flex gap-4">
               <a href="#" className="text-slate-400 hover:text-white transition-all text-sm font-bold">Facebook</a>
               <a href="#" className="text-slate-400 hover:text-white transition-all text-sm font-bold">Twitter</a>
