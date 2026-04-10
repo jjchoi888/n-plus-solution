@@ -24,11 +24,12 @@ export default function UserManagement() {
     const [emailForm, setEmailForm] = useState({ subject: "", content: "", imageUrl: "" });
     const [isSending, setIsSending] = useState(false);
 
-    // 💡 [NEW] 유저 관리(Manage) 모달 상태
+    // 유저 관리(Manage) 모달 상태
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
-    // 💡 [NEW] 포인트 로그 상태 및 검색 필터
+
+    // 포인트 로그 상태 및 검색 필터
     const [pointsLogs, setPointsLogs] = useState([]);
     const [logSearch, setLogSearch] = useState("");
     const [logFilterTier, setLogFilterTier] = useState("ALL");
@@ -55,9 +56,9 @@ export default function UserManagement() {
                 if (res.data && res.data.members) {
                     setUsers(res.data.members);
 
-                // 💡 [NEW] 포인트 로그도 함께 가져옵니다.
-                const logRes = await axios.get("https://api.hotelnplus.com/api/hq/points-log").catch(() => ({ data: { logs: [] } }));
-                if (logRes.data && logRes.data.logs) setPointsLogs(logRes.data.logs);
+                    // 포인트 로그도 함께 가져옵니다.
+                    const logRes = await axios.get("https://api.hotelnplus.com/api/hq/points-log").catch(() => ({ data: { logs: [] } }));
+                    if (logRes.data && logRes.data.logs) setPointsLogs(logRes.data.logs);
                 }
             } catch (err) {
                 console.error("Data load failure:", err);
@@ -109,8 +110,7 @@ export default function UserManagement() {
         } finally { setIsSending(false); }
     };
 
-    // 💡 [NEW] 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
-    // 💡 [NEW] 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
+    // 유저 수정(Manage) 실제 DB 저장 로직 (영어 알림 적용)
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
@@ -143,10 +143,10 @@ export default function UserManagement() {
             if (res.data && res.data.success) {
                 alert(`✅ Successfully activated membership for ${userEmail}.`);
 
-                // 로컬 상태 즉시 업데이트 (화면 새로고침 없이 리스트에 반영)
+                // 로컬 상태 즉시 업데이트 (화면 새로고침 없이 리스트에 바로 반영)
                 setUsers(users.map(u =>
                     u.email === userEmail
-                        ? { ...u, membership_status: 'active', is_membership_active: 1 }
+                        ? { ...u, membership_status: 'active', is_membership_active: 1, tier: 'MEMBER' }
                         : u
                 ));
             } else {
@@ -168,7 +168,7 @@ export default function UserManagement() {
                     { id: "ALL_USERS", label: `Total (${users.length})` },
                     { id: "BASIC", label: `Basic Users (${basicUsers.length})` },
                     { id: "MEMBERS", label: `Rewards Members (${memberUsers.length})` },
-                    { id: "POINTS_LOG", label: `Points Audit Log 📊` } // 💡 로그 탭 추가
+                    { id: "POINTS_LOG", label: `Points Audit Log 📊` }
                 ].map(t => (
                     <button key={t.id} onClick={() => { setTab(t.id); setFilterTier("ALL"); }} className={`px-5 md:px-6 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${tab === t.id ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"}`}>
                         {t.label}
@@ -267,9 +267,10 @@ export default function UserManagement() {
                                             <span className="text-[10px] text-slate-300 ml-1">pts</span>
                                         </td>
                                         <td className="p-5 text-right">
+                                            {/* 💡 [NEW] Approve & Manage 버튼 컨테이너 */}
                                             <div className="flex justify-end items-center gap-2">
-                                                {/* 💡 [NEW] 승인 대기 중(pending)일 때만 Approve 버튼 노출 */}
-                                                {u.membership_status === 'pending' && (
+                                                {/* 💡 멤버십이 활성화되지 않았거나, 상태가 pending일 때 Approve 버튼 표시 */}
+                                                {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') && (
                                                     <button
                                                         onClick={() => handleActivateUser(u.email)}
                                                         className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-xl transition-colors font-black text-xs shadow-md active:scale-95"
