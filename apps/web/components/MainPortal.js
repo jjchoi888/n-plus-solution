@@ -351,20 +351,20 @@ export default function MainPortal() {
 
   const completeOnboarding = async () => {
     try {
-      // 💡 [수정] 누락되었던 모든 데이터를 페이로드(payload)에 담아서 백엔드로 전송!
       const payload = {
         email: user.email,
         phone: phone || guestPhone,
         first_name: user.first_name || guestFirstName || '',
         last_name: user.last_name || guestLastName || '',
-        dob: dob || '', // 생일 추가
-        nationality: guestNationality || user.nationality || '', // 국적 추가
-        citizen_type: citizenType || '', // 내/외국인
-        id_type: idType || 'Passport', // 신분증 종류
-        document_url: idUploaded ? 'verified_upload' : '', // 신분증 업로드 여부
-        payment_method: paymentMethod || '', // 카드/GCash/Maya
-        payment_acc_name: accName || cardName || '', // 결제자명
-        payment_acc_num: accNum || cardNum || '', // 결제번호
+        dob: dob || '',
+        nationality: guestNationality || user.nationality || '',
+        citizen_type: citizenType || '',
+        id_type: idType || 'Passport',
+        document_url: idUploaded ? 'verified_upload' : '',
+        payment_method: paymentMethod || '',
+        payment_acc_name: accName || cardName || '',
+        payment_acc_num: accNum || cardNum || '',
+        pin: pin, // 💡 [추가!!] 사용자가 4단계에서 입력한 PIN 번호를 드디어 백엔드로 보냅니다!
         membership_status: 'pending'
       };
 

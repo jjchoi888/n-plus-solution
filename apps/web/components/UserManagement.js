@@ -169,6 +169,26 @@ export default function UserManagement() {
         }
     };
 
+    // 💡 [NEW] 거절(Reject) 처리 및 사유 전송 핸들러
+    const handleRejectUser = async (userEmail) => {
+        // 관리자가 직접 거절 사유를 입력할 수 있습니다. (앱의 알림함으로 들어갑니다)
+        const reason = window.prompt("Please enter the reason for rejection (e.g., Unclear ID photo):", "ID photo is unclear. Please re-upload a valid ID.");
+        if (reason === null) return; // 취소 누름
+
+        try {
+            const res = await axios.post("https://api.hotelnplus.com/api/members/reject", { email: userEmail, reason });
+            if (res.data && res.data.success) {
+                alert(`✅ Application marked as 'Need More Info'. Notification sent to ${userEmail}.`);
+                setIsReviewModalOpen(false);
+                fetchUsers(); // 리스트 새로고침
+            } else {
+                alert("❌ Rejection failed.");
+            }
+        } catch (err) {
+            alert("🚨 Network error.");
+        }
+    };
+
     if (loading) return <div className="p-20 text-center font-bold text-slate-400">Loading User Data...</div>;
 
     return (
@@ -405,10 +425,10 @@ export default function UserManagement() {
 
                         {/* 모달 하단 버튼 */}
                         <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
-                            <button onClick={() => {
-                                alert("Application marked as 'Need More Info'. An email will be sent to the user.");
-                                setIsReviewModalOpen(false);
-                            }} className="flex-1 py-3.5 bg-white border border-slate-200 text-red-500 font-black rounded-xl hover:bg-red-50 transition-colors shadow-sm">
+                            <button
+                                onClick={() => handleRejectUser(reviewingUser.email)}
+                                className="flex-1 py-3.5 bg-white border border-slate-200 text-red-500 font-black rounded-xl hover:bg-red-50 transition-colors shadow-sm"
+                            >
                                 Reject / Request Info
                             </button>
                             <button onClick={() => handleActivateUser(reviewingUser.email)} className="flex-1 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
