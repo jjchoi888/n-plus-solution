@@ -81,29 +81,35 @@ export default function GuestLogin() {
         setIsLoading(true);
 
         try {
+            // 💡 [핵심 수정] join-rewards 대신 통합 auth API로 쏴서 DB에 INSERT(생성) 시킵니다.
             const payload = {
                 email,
                 first_name: firstName,
                 last_name: lastName,
-                dob,
                 phone,
                 nationality,
-                citizen_type: citizenType,
-                id_type: idType,
-                payment_method: paymentMethod,
-                payment_acc_num: accNum,
-                payment_acc_name: accName,
-                pin,
+                pin, // 비밀번호 대신 PIN을 넘겨서 DB의 password_hash에 저장하도록 합니다.
                 membership_status: 'pending'
             };
 
-            const response = await axios.post('https://api.hotelnplus.com/api/members/join-rewards', payload);
+            const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
             if (response.data && response.data.success) {
-                // 클라우드 서버 저장 후 기기에는 식별용 세션키만 발급
+                // 💡 생성 성공 시 로컬 스토리지에 저장하여 앱에서 로그인 상태 유지
+                const finalUser = response.data.member || {
+                    ...payload,
+                    name: `${firstName} ${lastName}`.trim(),
+                    is_membership_active: false,
+                    tierName: 'MEMBER',
+                    total_points: 0
+                };
+
+                finalUser.membership_status = 'pending';
+
+                localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
 
-                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the n+ Rewards review is complete and your account is activated.");
+                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
                 window.location.href = '/';
             } else {
                 alert(response.data.message || "Registration failed. Please try again.");
@@ -185,7 +191,6 @@ export default function GuestLogin() {
 
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
-                                {/* 요청하신 09XX 형식으로 placeholder 수정 */}
                                 <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)}
                                     className="w-full p-3.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:border-[#009900] outline-none shadow-inner bg-slate-50" placeholder="09XX XXX XXXX" />
                             </div>
