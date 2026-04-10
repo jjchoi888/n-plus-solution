@@ -20,39 +20,40 @@ export default function NotificationsPage() {
         }
     }, []);
 
-    // 2. 백엔드에서 알림 가져오기
+    // 2. 이메일이 확인되면 백엔드에서 알림 목록 긁어오기
     useEffect(() => {
         if (!userEmail) return;
+
         const fetchNotifications = async () => {
             try {
-                const res = await axios.get(`/api/members/notifications?email=${userEmail}`);
+                // 💡 [핵심 수정] 무조건 백엔드 실서버(https://api...)로 다이렉트 요청!
+                const res = await axios.get(`https://api.hotelnplus.com/api/members/notifications?email=${userEmail}`);
+
                 if (res.data && res.data.success) {
                     setNotifications(res.data.notifications);
                 }
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
+            } catch (err) {
+                console.error("Failed to fetch notifications", err);
+            } finally {
+                setLoading(false);
+            }
         };
+
         fetchNotifications();
     }, [userEmail]);
 
     const handleMarkAsRead = async (id, isRead) => {
         if (isRead) return;
+
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
-        try { await axios.post('/api/members/notifications/read', { id }); }
-        catch (err) { console.error(err); }
+
+        try {
+            // 💡 [핵심 수정] 읽음 처리도 절대 경로로 통신!
+            await axios.post('https://api.hotelnplus.com/api/members/notifications/read', { id });
+        } catch (err) {
+            console.error("Failed to mark as read", err);
+        }
     };
-
-    if (loading) return <div className="flex-1 flex items-center justify-center h-screen bg-slate-50 font-bold text-slate-400">Loading...</div>;
-
-    if (!userEmail) {
-        return (
-            <div className="flex-1 flex flex-col justify-center items-center h-screen bg-slate-50 p-6 text-center">
-                <div className="text-5xl mb-4 opacity-50">🔒</div>
-                <h3 className="text-lg font-black text-slate-800 mb-2">Please Log In</h3>
-                <p className="text-sm text-slate-500 font-medium">Log in to view your notifications.</p>
-            </div>
-        );
-    }
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 pb-24 animate-fade-in">

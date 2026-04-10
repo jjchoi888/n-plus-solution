@@ -128,18 +128,17 @@ export default function GuestLogin() {
 
         try {
             const payload = {
-                email, first_name: firstName, last_name: lastName, phone, nationality, dob, // 💡 생일(dob) 포함
-                citizen_type: citizenType, id_type: idType, document_url: idUploaded, // 💡 진짜 사진 포함
+                email, first_name: firstName, last_name: lastName, phone, nationality, dob,
+                citizen_type: citizenType, id_type: idType,
+                document_url: idUploaded, // 압축된 사진 데이터 
                 payment_method: paymentMethod, payment_acc_name: accName, payment_acc_num: accNum,
-                pin, // 💡 PIN 포함
-                membership_status: 'pending'
+                pin, membership_status: 'pending'
             };
 
-            // 💡 [핵심] '/api/members/auth' 가 아니라 '/api/members/join-rewards' 로 보냅니다!!!
-            const response = await axios.post('/api/members/join-rewards', payload);
+            // 💡 [초강력 핵심] 무조건 절대 경로로 쏴서 프록시 증발 현상을 막습니다!!!
+            const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
             if (response.data && response.data.success) {
-                // ... 하단 성공 로직은 기존과 동일
                 const finalUser = response.data.member || {
                     ...payload, name: `${firstName} ${lastName}`.trim(), is_membership_active: false, tierName: 'MEMBER', total_points: 0
                 };
@@ -147,16 +146,16 @@ export default function GuestLogin() {
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
-                localStorage.setItem('guest_pin', pin); // 기기에도 PIN 저장
+                localStorage.setItem('guest_pin', pin); // 기기에 PIN 번호 기록
 
-                alert("Your application for n+ Rewards membership has been successfully submitted.");
+                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
                 window.location.href = '/';
             } else {
-                alert(response.data.message || "Registration failed.");
+                alert(response.data.message || "Registration failed. Please try again.");
             }
         } catch (error) {
             console.error("Join Error:", error);
-            alert("Error connecting to server.");
+            alert("Error connecting to server. Please try again.");
         } finally {
             setIsLoading(false);
         }
