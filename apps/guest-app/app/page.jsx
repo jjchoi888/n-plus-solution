@@ -33,7 +33,9 @@ export default function HomePage() {
     // Step 2: 신분증 정보
     const [citizenType, setCitizenType] = useState('');
     const [idType, setIdType] = useState('');
-    const [idUploaded, setIdUploaded] = useState(false);
+
+    // 💡 [수정] false가 아니라 빈 문자열("")로 변경합니다!
+    const [idUploaded, setIdUploaded] = useState('');
 
     // Step 3: 결제 정보
     const [paymentMethod, setPaymentMethod] = useState('');
@@ -127,6 +129,40 @@ export default function HomePage() {
         }, 3500);
         return () => clearInterval(timer);
     }, [hotels.length]);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                } else {
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // 진짜 사진 데이터를 압축해서 저장합니다!
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                setIdUploaded(compressedBase64);
+            };
+        };
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('nplus_session_key');
@@ -445,17 +481,33 @@ export default function HomePage() {
                                     <p className="text-xs font-semibold text-slate-500 mb-3 text-center uppercase">Choose Upload Method</p>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
-                                            <input type="file" accept="image/*" capture="environment" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            {/* 💡 [수정됨] onChange 이벤트에 handleFileChange 함수를 연결합니다. */}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                onChange={handleFileChange}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">📷</div>
                                             <p className="font-bold text-slate-700 text-xs">Take Photo</p>
                                         </div>
                                         <div className="border-2 border-slate-200 bg-white p-4 text-center relative hover:border-[#009900] transition-colors rounded-md group">
-                                            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files.length > 0) setIdUploaded(true) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            {/* 💡 [수정됨] onChange 이벤트에 handleFileChange 함수를 연결합니다. */}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
                                             <p className="font-bold text-slate-700 text-xs">Gallery</p>
                                         </div>
                                     </div>
-                                    {idUploaded && <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-2">ID Attached Successfully ✓</p>}
+                                    {/* 💡 [수정됨] idUploaded가 빈 문자열이 아닐 때(사진이 찼을 때) 완료 메시지를 띄웁니다. */}
+                                    {idUploaded && idUploaded.length > 100 && (
+                                        <p className="text-[#009900] font-bold text-sm text-center mt-4 bg-green-50 py-2">ID Attached Successfully ✓</p>
+                                    )}
                                 </div>
                             )}
                         </div>
