@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-// 💡 [추가] 라우팅(페이지 이동)을 위해 useRouter 임포트!
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 export default function NotificationsPage() {
-    const router = useRouter(); // 💡 [추가] 버튼 클릭 시 이동을 위한 훅
+    const router = useRouter();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userEmail, setUserEmail] = useState("");
@@ -32,7 +31,11 @@ export default function NotificationsPage() {
                 const res = await axios.get(`https://api.hotelnplus.com/api/members/notifications?email=${userEmail}`);
 
                 if (res.data && res.data.success) {
-                    setNotifications(res.data.notifications);
+                    // 💡 [수정] 2번 요청: 최신 알림이 맨 위로 오도록 시간순(내림차순) 정렬
+                    const sortedNotifs = res.data.notifications.sort((a, b) => {
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    });
+                    setNotifications(sortedNotifs);
                 }
             } catch (err) {
                 console.error("Failed to fetch notifications", err);
@@ -56,6 +59,16 @@ export default function NotificationsPage() {
         }
     };
 
+    // 💡 [추가] 2번 요청: 날짜와 시간을 예쁘게 포맷팅하는 함수
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true
+        });
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 pb-24 animate-fade-in">
             <div className="bg-white p-6 shadow-sm border-b border-slate-200 sticky top-0 z-10">
@@ -73,18 +86,21 @@ export default function NotificationsPage() {
                             <div className="flex items-start gap-4">
                                 <div className="text-4xl mt-1">{(notif.title.includes("Failed") || notif.title.includes("Action") || notif.title.includes("Reject")) ? "⚠️" : "🔔"}</div>
                                 <div className="flex-1 w-full">
-                                    {/* 💡 [수정] 텍스트 크기를 기존 text-sm/text-xs에서 크게 확대했습니다. */}
-                                    <h4 className="text-[17px] font-black mb-2 leading-tight text-slate-800">{notif.title}</h4>
+                                    <h4 className="text-[17px] font-black mb-1 leading-tight text-slate-800">{notif.title}</h4>
+
+                                    {/* 💡 [추가] 2번 요청: 알림 날짜와 시간 표시 */}
+                                    <p className="text-[11px] text-slate-400 font-semibold mb-2 tracking-wide uppercase">
+                                        {formatDate(notif.created_at)}
+                                    </p>
+
                                     <p className="text-[15px] text-slate-600 font-bold leading-relaxed">{notif.message}</p>
 
-                                    {/* 💡 [스마트 버튼] ID 검증 실패 등 특정 단어가 포함된 알림일 때만 나타납니다. */}
                                     {(notif.title.includes("Failed") || notif.title.includes("Action") || notif.title.includes("Reject")) && (
                                         <button
                                             onClick={(e) => {
-                                                e.stopPropagation(); // 💡 [중요] 버튼 클릭 시 알림 카드 자체가 눌리는 현상(이벤트 버블링) 방지!
-                                                // 💡 [중요] 아래 경로('/join-rewards')가 실제 가입 페이지 주소와 일치해야 합니다! 
-                                                // 만약 파일명이 다르면 (예: '/login') 거기에 맞게 바꿔주세요.
-                                                router.push('/join-rewards?step=2');
+                                                e.stopPropagation();
+                                                // 💡 [수정] 3번 요청 (404 해결): 올바른 가입 페이지 경로인 '/login'으로 수정!
+                                                router.push('/login?step=2');
                                             }}
                                             className="mt-4 w-full bg-red-50 hover:bg-red-100 text-red-600 font-black py-3 rounded-xl border border-red-200 transition-transform active:scale-95 flex items-center justify-center gap-2 text-[15px]"
                                         >
