@@ -80,6 +80,11 @@ function BookRoomContent() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+    // 💡 [신규 추가] 포인트 결제를 위한 State
+    const [userPoints, setUserPoints] = useState(0);
+    const [pointPolicy, setPointPolicy] = useState({ max_pct: 100, min_unit: 1 });
+    const [pointsToUse, setPointsToUse] = useState(0);
+
     const [allHotels, setAllHotels] = useState([]);
     const [provinces, setProvinces] = useState([]);
     const [cities, setCities] = useState([]);
@@ -115,6 +120,8 @@ function BookRoomContent() {
         if (savedUser) {
             const user = JSON.parse(savedUser);
             setIsLoggedIn(true);
+            setUserPoints(Number(user.total_points) || 0); // 💡 [신규] 유저의 보유 포인트 로드
+
             setBookingData(prev => ({
                 ...prev,
                 first_name: user.first_name || '',
@@ -124,6 +131,14 @@ function BookRoomContent() {
                 nationality: user.nationality || 'Philippines'
             }));
         }
+
+        // 💡 [신규] HQ의 포인트 정책(Policy) 불러오기
+        axios.get('https://api.hotelnplus.com/api/settings/point-policy')
+            .then(res => {
+                if (res.data && res.data.success) {
+                    setPointPolicy(res.data.policy);
+                }
+            }).catch(() => { });
 
         axios.get('https://api.hotelnplus.com/api/hotels')
             .then(res => {
@@ -284,6 +299,31 @@ function BookRoomContent() {
 
     const totalSelectedRoomCount = Object.values(selectedRooms).reduce((acc, cur) => acc + cur, 0);
 
+    // 💡 [신규 추가] 실시간 금액 계산 로직
+    let subTotal = 0;
+    Object.entries(selectedRooms).forEach(([roomName, qty]) => {
+        const matchedRoom = roomTypes.find(r => r.name === roomName);
+        const price = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
+        subTotal += (price * qty);
+    });
+
+    const maxPointsByPolicy = Math.floor(subTotal * (pointPolicy.max_pct / 100));
+    const maxUsablePoints = Math.min(userPoints, maxPointsByPolicy);
+    const finalAmount = Math.max(0, subTotal - pointsToUse);
+
+    const handlePointChange = (e) => {
+        let val = Number(e.target.value) || 0;
+        if (val < 0) val = 0;
+        if (val > maxUsablePoints) val = maxUsablePoints;
+        setPointsToUse(val);
+    };
+
+    const applyMaxPoints = () => {
+        const unit = pointPolicy.min_unit || 1;
+        const leveledMax = Math.floor(maxUsablePoints / unit) * unit;
+        setPointsToUse(leveledMax);
+    };
+
     const handleNextStep = () => {
         if (!bookingData.hotel_code) return alert("Please select a hotel destination.");
         if (totalSelectedRoomCount === 0) return alert("Please select at least one room to proceed.");
@@ -294,18 +334,24 @@ function BookRoomContent() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // 💡 [신규] 제출 전 포인트 단위 검증
+        if (pointsToUse > 0 && pointPolicy.min_unit > 1) {
+            if (pointsToUse % pointPolicy.min_unit !== 0) {
+                return alert(`Points must be used in multiples of ${pointPolicy.min_unit}.`);
+            }
+        }
+
         setIsLoading(true);
 
         try {
             const bookingPayloads = [];
-            let totalAmount = 0;
 
             Object.entries(selectedRooms).forEach(([roomName, qty]) => {
                 const matchedRoom = roomTypes.find(r => r.name === roomName);
                 const price = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
 
                 for (let i = 0; i < qty; i++) {
-                    totalAmount += price;
                     bookingPayloads.push({
                         hotel_code: bookingData.hotel_code,
                         channel: 'Guest App',
@@ -322,13 +368,17 @@ function BookRoomContent() {
                         kids: kids,
                         infants: infants,
                         payment_method: paymentMethod,
+                        total_price: price, // 💡 [버그 수정] 누락되었던 원본 객실 가격 전송!
                         promo_code: (initialPromo && bookingData.hotel_code === initialHotel) ? initialPromo : null
                     });
                 }
             });
 
+            // 💡 [신규] 페이로드에 총 포인트 사용량과 최종 결제 금액 추가!
             const response = await axios.post('https://api.hotelnplus.com/api/public/reservations/batch-create', {
-                bookings: bookingPayloads
+                bookings: bookingPayloads,
+                total_points_used: pointsToUse,
+                final_total_amount: finalAmount
             });
 
             if (response.data.success || response.status === 200 || response.status === 201) {
@@ -341,7 +391,7 @@ function BookRoomContent() {
                     checkIn: bookingData.check_in_date,
                     checkOut: bookingData.check_out_date,
                     rooms: selectedRooms,
-                    totalAmount: totalAmount,
+                    totalAmount: finalAmount, // 히스토리에도 최종 결제액 저장
                     status: 'Pending',
                     createdAt: new Date().toISOString()
                 };
@@ -774,7 +824,6 @@ function BookRoomContent() {
                             ))}
                         </div>
 
-                        {/* Step 2 요약 화면에도 프로모 코드 명시 */}
                         {initialPromo && bookingData.hotel_code === initialHotel && (
                             <div className="mt-4 mb-4 border border-green-500/50 bg-green-900/30 p-3 rounded-none flex justify-between items-center">
                                 <span className="text-[10px] font-medium text-green-300 uppercase tracking-widest">Promo Code Applied</span>
@@ -840,7 +889,7 @@ function BookRoomContent() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 relative overflow-hidden">
+                    <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 relative overflow-hidden mb-6">
                         <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 mt-1">
                             <span className="text-lg">💳</span> Payment Method
                         </h2>
@@ -867,12 +916,71 @@ function BookRoomContent() {
                         </p>
                     </div>
 
-                    <div className="pt-8 pb-10">
-                        <button type="submit" disabled={isLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-none font-bold text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 active:scale-95">
+                    {/* 💡 [신규] 포인트 복합 결제 (Hybrid Payment) UI 영역 */}
+                    {isLoggedIn && userPoints > 0 && (
+                        <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 mb-6 border-l-4 border-l-emerald-500">
+                            <h2 className="text-sm font-black text-slate-800 mb-3 flex items-center gap-2 mt-1">
+                                <span className="text-lg text-emerald-500">💎</span> Pay with Points
+                            </h2>
+                            <div className="bg-slate-50 p-4 border border-slate-100 rounded-lg">
+                                <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Balance</span>
+                                    <span className="font-black text-emerald-600 text-lg flex items-baseline gap-1">
+                                        {userPoints.toLocaleString()} <span className="text-[10px] text-slate-500 uppercase">pts</span>
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-xs font-black text-slate-700">Points to Apply</label>
+                                        <span className="text-[10px] text-slate-400 font-bold">Max: {maxUsablePoints.toLocaleString()} pts (Up to {pointPolicy.max_pct}%)</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            value={pointsToUse || ''}
+                                            onChange={handlePointChange}
+                                            placeholder="0"
+                                            className="flex-1 p-3 border border-slate-300 rounded-lg outline-none focus:border-emerald-500 text-right font-black text-slate-800"
+                                        />
+                                        <button type="button" onClick={applyMaxPoints} className="px-5 py-3 bg-slate-800 text-white text-xs font-black rounded-lg hover:bg-slate-700 transition-colors tracking-widest uppercase">
+                                            Max
+                                        </button>
+                                    </div>
+                                    {pointPolicy.min_unit > 1 && (
+                                        <p className="text-[10px] text-emerald-600 font-bold mt-2 bg-emerald-50 w-fit px-2 py-1 rounded">
+                                            * Must be used in multiples of {pointPolicy.min_unit.toLocaleString()} pts
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 💡 [신규] 최종 결제 금액 요약(Summary) 패널 */}
+                    <div className="bg-slate-900 text-white p-6 rounded-t-2xl shadow-xl border-b border-slate-800">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-slate-400 font-medium">Subtotal</span>
+                            <span className="text-sm font-bold">₱ {subTotal.toLocaleString()}</span>
+                        </div>
+                        {pointsToUse > 0 && (
+                            <div className="flex justify-between items-center mb-2 text-emerald-400">
+                                <span className="text-sm font-bold flex items-center gap-1">💎 Points Applied</span>
+                                <span className="text-sm font-black">- ₱ {pointsToUse.toLocaleString()}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-700">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total to Pay</span>
+                            <span className="text-3xl font-black text-white">₱ {finalAmount.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <div className="pb-10">
+                        <button type="submit" disabled={isLoading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-5 rounded-b-2xl font-black text-lg shadow-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 active:scale-95 tracking-wide">
                             {isLoading ? (
                                 <><span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span> Processing...</>
                             ) : (
-                                'Confirm Booking ➔'
+                                'Confirm & Pay ➔'
                             )}
                         </button>
                     </div>
