@@ -63,47 +63,48 @@ export default function HomePage() {
         };
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-        // 💡 [수정됨] 로그인/가입 화면에서 만든 새로운 세션 키(nplus_session_key)를 확인합니다.
         const sessionData = localStorage.getItem('nplus_session_key');
-        const legacyData = localStorage.getItem('nplus_guest_user'); // 이전 버전 호환성 유지
-
+        const legacyData = localStorage.getItem('nplus_guest_user');
         const targetSession = sessionData ? JSON.parse(sessionData) : (legacyData ? JSON.parse(legacyData) : null);
 
         if (targetSession && targetSession.email) {
-            // 유저 세션이 있으면 앱 접속 시 잠금 상태로 설정 (PIN 요구)
             setIsUnlocked(false);
 
-            axios.get(`https://api.hotelnplus.com/api/members/profile?email=${targetSession.email}&t=${Date.now()}`, {
-                headers: { 'Cache-Control': 'no-cache' }
-            })
-                .then(res => {
-                    if (res.data && res.data.success && res.data.member) {
-                        const freshUser = {
-                            ...targetSession, // 로컬 데이터(세션 또는 PIN) 유지
-                            ...res.data.member,
-                            name: `${res.data.member.first_name || ''} ${res.data.member.last_name || ''}`.trim() || 'Guest User'
-                        };
-                        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser)); // 데이터 동기화
-                        setUser(freshUser);
-                        setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
-                        setMembershipStatus(freshUser.membership_status || 'active');
-                    } else {
-                        // 서버 연결 실패 시에도 락스크린 유지를 위해 기본 데이터 렌더링
-                        setUser(targetSession);
-                        setMembershipStatus(targetSession.membership_status || 'pending');
-                    }
+            // 💡 [핵심 수정] 서버에서 최신 상태를 긁어오는 함수를 따로 만듭니다.
+            const fetchProfile = () => {
+                axios.get(`https://api.hotelnplus.com/api/members/profile?email=${targetSession.email}&t=${Date.now()}`, {
+                    headers: { 'Cache-Control': 'no-cache' }
                 })
-                .catch(err => {
-                    console.error("Home sync error:", err);
-                    setUser(targetSession);
-                })
-                .finally(() => {
-                    setIsAppLoading(false); // 💡 검증이 끝나면 로딩 해제
-                });
+                    .then(res => {
+                        if (res.data && res.data.success && res.data.member) {
+                            const freshUser = {
+                                ...targetSession,
+                                ...res.data.member,
+                                name: `${res.data.member.first_name || ''} ${res.data.member.last_name || ''}`.trim() || 'Guest User'
+                            };
+                            localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+                            setUser(freshUser);
+                            setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
+                            setMembershipStatus(freshUser.membership_status || 'active');
+                        }
+                    })
+                    .finally(() => {
+                        setIsAppLoading(false);
+                    });
+            };
+
+            // 처음 화면 켤 때 1번 실행
+            fetchProfile();
+            // 💡 [추가] 5초마다 몰래 최신 상태인지 확인합니다. (HQ에서 승인 누르면 화면이 알아서 카드로 변신함!)
+            const interval = setInterval(fetchProfile, 5000);
+            return () => {
+                clearInterval(interval);
+                window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+            };
+
         } else {
-            // 처음 방문자 (세션 없음)
             setIsUnlocked(true);
-            setIsAppLoading(false); // 💡 검증이 끝나면 로딩 해제
+            setIsAppLoading(false);
         }
 
         axios.get('https://api.hotelnplus.com/api/hotels')
@@ -546,9 +547,9 @@ export default function HomePage() {
                             </button>
                         </div>
                     ) : isMembershipActive ? (
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0 mt-4">
-                            <div className="absolute -right-4 -top-4 text-8xl opacity-10">👑</div>
-                            <div className="flex justify-between items-start mb-6">
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0 mt-4">
+                                {/* ❌ 👑 이모티콘이 있던 줄 삭제됨 */}
+                                <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-widest mb-1">Membership</p>
                                     <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">

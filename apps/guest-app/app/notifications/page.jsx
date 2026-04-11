@@ -26,7 +26,8 @@ export default function NotificationsPage() {
 
         const fetchNotifications = async () => {
             try {
-                const res = await axios.get(`https://api.hotelnplus.com/api/members/notifications?email=${userEmail}`);
+                // 💡 [수정] 혹시 모를 캐시를 방지하기 위해 t 파라미터 추가
+                const res = await axios.get(`https://api.hotelnplus.com/api/members/notifications?email=${userEmail}&t=${Date.now()}`);
                 if (res.data && res.data.success) {
                     const sortedNotifs = res.data.notifications.sort((a, b) => {
                         return new Date(b.created_at) - new Date(a.created_at);
@@ -60,19 +61,11 @@ export default function NotificationsPage() {
         });
     };
 
-    // 💡 [핵심 수정] 하드코딩 제거! 메시지 내용을 분석해서 동적으로 버튼 UI와 이동할 단계를 결정합니다.
     const getDynamicButtonConfig = (message) => {
         const msg = (message || "").toLowerCase();
-
-        if (msg.includes("payment")) {
-            return { step: 3, text: "Fix Payment Details", icon: "💳" };
-        } else if (msg.includes("id document") || msg.includes("photo")) {
-            return { step: 2, text: "Fix ID Document", icon: "📸" };
-        } else if (msg.includes("personal info") || msg.includes("name") || msg.includes("birth")) {
-            return { step: 1, text: "Fix Personal Info", icon: "👤" };
-        }
-
-        // 어떤 것도 명확히 체크 안 되고 Custom Message만 왔을 경우의 기본값
+        if (msg.includes("payment")) return { step: 3, text: "Fix Payment Details", icon: "💳" };
+        if (msg.includes("id document") || msg.includes("photo")) return { step: 2, text: "Fix ID Document", icon: "📸" };
+        if (msg.includes("personal info") || msg.includes("name") || msg.includes("birth")) return { step: 1, text: "Fix Personal Info", icon: "👤" };
         return { step: 1, text: "Review Application", icon: "📝" };
     };
 
@@ -86,9 +79,7 @@ export default function NotificationsPage() {
                     <div className="text-center mt-20 text-slate-400 font-bold">No Notifications Yet</div>
                 ) : (
                     notifications.map((notif) => {
-                        // 알림이 수정 요청인지 확인
                         const isActionRequired = notif.title.includes("Failed") || notif.title.includes("Action") || notif.title.includes("Reject");
-                        // 동적 버튼 설정 가져오기
                         const btnConfig = getDynamicButtonConfig(notif.message);
 
                         return (
@@ -105,17 +96,26 @@ export default function NotificationsPage() {
                                         </p>
                                         <p className="text-[15px] text-slate-600 font-bold leading-relaxed">{notif.message}</p>
 
-                                        {/* 💡 하드코딩 제거: btnConfig 객체에서 동적으로 텍스트와 스텝 번호를 뽑아옵니다 */}
-                                        {isActionRequired && (
+                                        {/* 💡 [핵심 수정] 안 읽은 상태일 때만 액션 버튼 표시! */}
+                                        {isActionRequired && !notif.is_read && (
                                             <button
-                                                onClick={(e) => {
+                                                onClick={async (e) => {
                                                     e.stopPropagation();
+                                                    // 💡 이동하기 전에 무조건 읽음 처리(빨간 점 제거)부터 서버에 꽂아버립니다.
+                                                    await handleMarkAsRead(notif.id, notif.is_read);
                                                     router.push(`/login?step=${btnConfig.step}`);
                                                 }}
                                                 className="mt-4 w-full bg-red-50 hover:bg-red-100 text-red-600 font-black py-3 rounded-xl border border-red-200 transition-transform active:scale-95 flex items-center justify-center gap-2 text-[15px]"
                                             >
                                                 <span>{btnConfig.icon}</span> {btnConfig.text}
                                             </button>
+                                        )}
+
+                                        {/* 💡 이미 클릭해서 읽은 액션 알림은 회색 완료 상태로 변경 */}
+                                        {isActionRequired && notif.is_read && (
+                                            <div className="mt-4 w-full bg-slate-50 text-slate-400 font-bold py-3 rounded-xl border border-slate-200 text-center text-[13px]">
+                                                Action Completed ✓
+                                            </div>
                                         )}
                                     </div>
                                 </div>
