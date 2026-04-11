@@ -296,7 +296,8 @@ export default function UserManagement() {
                                         </td>
                                         <td className="p-5 text-right">
                                             <div className="flex justify-end items-center gap-2">
-                                                {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') && (
+                                                {/* 💡 [수정] 대기 중이면 Review(주황색), 승인 완료면 View(회색) 버튼 표시 */}
+                                                {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') ? (
                                                     <button
                                                         onClick={() => {
                                                             setReviewingUser(u);
@@ -306,7 +307,18 @@ export default function UserManagement() {
                                                     >
                                                         Review 👀
                                                     </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            setReviewingUser(u);
+                                                            setIsReviewModalOpen(true);
+                                                        }}
+                                                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 px-4 py-1.5 rounded-xl transition-colors font-black text-xs shadow-sm active:scale-95"
+                                                    >
+                                                        View 👁️
+                                                    </button>
                                                 )}
+
                                                 <button
                                                     onClick={() => {
                                                         setEditingUser({ ...u, tier: displayTier });
@@ -386,15 +398,27 @@ export default function UserManagement() {
                             </div>
                         </div>
                         <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
-                            <button
-                                onClick={() => setShowRejectModal(true)} // 💡 모달 오픈 트리거
-                                className="flex-1 py-3.5 bg-white border border-slate-200 text-red-500 font-black rounded-xl hover:bg-red-50 transition-colors shadow-sm"
-                            >
-                                Reject / Request Info
-                            </button>
-                            <button onClick={() => handleActivateUser(reviewingUser.email)} className="flex-1 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
-                                Approve & Activate ✓
-                            </button>
+                            {/* 💡 [수정] 대기 중일 때만 처리 버튼을 보여주고, 이미 승인된 상태면 닫기 버튼만 보여줌 */}
+                            {(!reviewingUser.is_membership_active || String(reviewingUser.membership_status).toLowerCase() === 'pending') ? (
+                                <>
+                                    <button
+                                        onClick={() => setShowRejectModal(true)}
+                                        className="flex-1 py-3.5 bg-white border border-slate-200 text-red-500 font-black rounded-xl hover:bg-red-50 transition-colors shadow-sm"
+                                    >
+                                        Reject / Request Info
+                                    </button>
+                                    <button onClick={() => handleActivateUser(reviewingUser.email)} className="flex-1 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
+                                        Approve & Activate ✓
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={() => setIsReviewModalOpen(false)}
+                                    className="flex-1 py-3.5 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 shadow-md transition-all active:scale-95"
+                                >
+                                    Close View
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
