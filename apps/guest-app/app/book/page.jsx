@@ -115,12 +115,14 @@ function BookRoomContent() {
         nationality: 'Philippines'
     });
 
+    const [promoDiscount, setPromoDiscount] = useState(0);
+
     useEffect(() => {
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) {
             const user = JSON.parse(savedUser);
             setIsLoggedIn(true);
-            setUserPoints(Number(user.total_points) || 0); // 💡 [신규] 유저의 보유 포인트 로드
+            setUserPoints(Number(user.total_points) || 0);
 
             setBookingData(prev => ({
                 ...prev,
@@ -132,11 +134,24 @@ function BookRoomContent() {
             }));
         }
 
-        // 💡 [신규] HQ의 포인트 정책(Policy) 불러오기
+        // 💡 [수정] 프로모션 검증 시 타겟 객실(promoTarget) 정보도 같이 저장합니다!
+        if (initialPromo && initialHotel) {
+            axios.post('https://api.hotelnplus.com/api/public/promo/validate', {
+                code: initialPromo, hotel_code: initialHotel
+            }).then(res => {
+                if (res.data && res.data.success) {
+                    setPromoDiscount(res.data.promo.value); // 예: 25 (%)
+                    setPointPolicy(prev => ({ ...prev, promoTarget: res.data.promo.target_room_type }));
+                }
+            }).catch(e => console.error("Promo validation failed"));
+        }
+
+        // 💡 HQ의 포인트 정책(Policy) 불러오기
         axios.get('https://api.hotelnplus.com/api/settings/point-policy')
             .then(res => {
                 if (res.data && res.data.success) {
-                    setPointPolicy(res.data.policy);
+                    // 포인트 정책을 불러와서 업데이트하되, 위에서 저장한 promoTarget이 날아가지 않게 보존합니다.
+                    setPointPolicy(prev => ({ ...res.data.policy, promoTarget: prev.promoTarget }));
                 }
             }).catch(() => { });
 
@@ -212,7 +227,7 @@ function BookRoomContent() {
 
         fetchAvailability();
     }, [bookingData.hotel_code, bookingData.check_in_date, bookingData.check_out_date, roomTypes]);
-
+    
     const handleProvinceChange = (e) => {
         const prov = e.target.value;
         setSelectedProvince(prov);
@@ -299,13 +314,39 @@ function BookRoomContent() {
 
     const totalSelectedRoomCount = Object.values(selectedRooms).reduce((acc, cur) => acc + cur, 0);
 
-    // 💡 [신규 추가] 실시간 금액 계산 로직
-    let subTotal = 0;
+    // 💡 [핵심 수정] 프로모션 타겟 객실을 파악하고 정확하게 할인을 적용하는 계산기
+    let rawSubTotal = 0;
+    let promoDiscountedTotal = 0;
+
+    // 백엔드에서 받은 타겟 룸타입 문자열을 배열로 안전하게 파싱합니다.
+    let targetRooms = [];
+    try {
+        targetRooms = typeof pointPolicy.promoTarget === 'string'
+            ? JSON.parse(pointPolicy.promoTarget)
+            : (pointPolicy.promoTarget || ['All Rooms']);
+    } catch (e) {
+        targetRooms = ['All Rooms'];
+    }
+
     Object.entries(selectedRooms).forEach(([roomName, qty]) => {
         const matchedRoom = roomTypes.find(r => r.name === roomName);
         const price = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
-        subTotal += (price * qty);
+        const roomTotal = price * qty;
+
+        rawSubTotal += roomTotal;
+
+        // 내가 고른 방이 프로모션 대상인지 확인합니다 ('All Rooms' 이면 무조건 적용)
+        const isEligible = targetRooms.includes('All Rooms') || targetRooms.includes(roomName);
+
+        if (isEligible && promoDiscount > 0) {
+            promoDiscountedTotal += roomTotal * (1 - (promoDiscount / 100));
+        } else {
+            promoDiscountedTotal += roomTotal;
+        }
     });
+
+    // 할인 적용 여부에 따라 subTotal 결정
+    const subTotal = promoDiscount > 0 ? promoDiscountedTotal : rawSubTotal;
 
     const maxPointsByPolicy = Math.floor(subTotal * (pointPolicy.max_pct / 100));
     const maxUsablePoints = Math.min(userPoints, maxPointsByPolicy);
@@ -373,25 +414,23 @@ function BookRoomContent() {
                 }
             });
 
-            // 💡 [변경] 즉시 확정이 아닌 '가계약(Pending)' 생성 API 호출 (백엔드가 이 URL을 지원해야 합니다)
+            // 💡 [변경] 즉시 확정이 아닌 '가계약(Pending)' 생성 API 호출
             const response = await axios.post('https://api.hotelnplus.com/api/public/reservations/batch-create', {
                 bookings: bookingPayloads,
                 total_points_used: pointsToUse,
                 final_total_amount: finalAmount,
-                // 결제 대기 상태임을 명시적으로 서버에 알림
                 status: 'PENDING_PAYMENT'
             });
 
             if (response.data.success || response.status === 200 || response.status === 201) {
-                // 💡 [핵심] 서버가 생성해 준 예약 묶음 ID(또는 첫 번째 예약 ID)를 받습니다.
                 const primaryResId = response.data.res_ids ? response.data.res_ids[0] : 'TEMP_ID';
                 const selectedHotel = allHotels.find(h => h.code === bookingData.hotel_code);
 
-                // 가상 결제창으로 넘길 데이터를 Base64로 안전하게 포장합니다.
+                // 가상 결제창으로 넘길 데이터 포장
                 const checkoutData = {
                     res_ids: response.data.res_ids || [primaryResId],
                     hotel_name: selectedHotel?.name || bookingData.hotel_code,
-                    hotel_code: bookingData.hotel_code, // 결제사 목록을 불러오기 위해 추가
+                    hotel_code: bookingData.hotel_code,
                     amount: finalAmount,
                     points_used: pointsToUse,
                     method: paymentMethod,
@@ -402,7 +441,7 @@ function BookRoomContent() {
                 };
                 const encodedData = btoa(JSON.stringify(checkoutData));
 
-                // 💡 [변경] 가상 결제창 페이지로 리다이렉트 시킵니다!
+                // 가상 결제창 페이지로 리다이렉트
                 window.location.href = `/payment/checkout?data=${encodedData}`;
 
             } else {

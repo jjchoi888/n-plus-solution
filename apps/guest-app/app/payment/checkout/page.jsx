@@ -11,24 +11,58 @@ function CheckoutContent() {
     const [cardNumber, setCardNumber] = useState('');
     const [phoneNum, setPhoneNum] = useState('');
 
+    // 💡 [신규] 2분(120초) 타임아웃 State
+    const [timeLeft, setTimeLeft] = useState(120);
+
     useEffect(() => {
         const dataParam = searchParams.get('data');
         if (dataParam) {
             try {
-                const decoded = JSON.parse(atob(dataParam));
-                setCheckoutData(decoded);
-            } catch (e) {
-                console.error("Invalid checkout data");
-            }
+                setCheckoutData(JSON.parse(atob(dataParam)));
+            } catch (e) { }
         }
     }, [searchParams]);
+
+    // 💡 [신규] 카운트다운 로직
+    useEffect(() => {
+        if (!checkoutData || timeLeft <= 0) return;
+
+        const timerId = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timerId);
+                    handleCancelPayment(true); // 0초가 되면 강제 취소!
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timerId);
+    }, [checkoutData, timeLeft]);
+
+    // 💡 [신규] 가예약(Hold) 취소 로직
+    const handleCancelPayment = async (isAuto = false) => {
+        if (!isAuto && !window.confirm("Are you sure you want to cancel this payment? Your room reservation will be released.")) return;
+
+        setIsProcessing(true);
+        try {
+            // DB에서 가예약 건 삭제 처리
+            await axios.post('https://api.hotelnplus.com/api/public/payment/cancel', {
+                res_ids: checkoutData.res_ids
+            });
+            if (isAuto) alert("Payment session expired. Your reservation hold has been released.");
+            window.location.href = "/"; // 홈으로 안전하게 돌려보냅니다.
+        } catch (e) {
+            window.location.href = "/";
+        }
+    };
 
     const handlePayNow = async (e) => {
         e.preventDefault();
         setIsProcessing(true);
 
         try {
-            // 💡 [핵심] 백엔드로 결제 확정 및 포인트 차감 요청을 보냅니다!
             const response = await axios.post('https://api.hotelnplus.com/api/public/payment/process', {
                 res_ids: checkoutData.res_ids,
                 hotel_code: checkoutData.hotel_code,
@@ -39,38 +73,41 @@ function CheckoutContent() {
             });
 
             if (response.data && response.data.success) {
-                // 결제가 성공하면 영수증(Success) 페이지로 이동합니다.
                 const successData = btoa(JSON.stringify({
-                    ...checkoutData,
-                    transaction_id: response.data.transaction_id
+                    ...checkoutData, transaction_id: response.data.transaction_id
                 }));
-                // 다음 스텝에서 만들 성공 페이지 URL입니다.
                 window.location.href = `/payment/success?data=${successData}`;
             } else {
                 alert("Payment processing failed: " + response.data.message);
                 setIsProcessing(false);
             }
         } catch (error) {
-            console.error("Payment Error:", error);
             alert("Network error during payment. Please try again.");
             setIsProcessing(false);
         }
     };
 
-    if (!checkoutData) {
-        return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading Secure Checkout...</div>;
-    }
+    if (!checkoutData) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading Secure Checkout...</div>;
 
     const isCard = checkoutData.method === 'Credit / Debit Card';
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
 
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-            {/* 가상 PG 헤더 */}
-            <div className="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md">
-                <div className="font-black text-lg tracking-widest flex items-center gap-2">
-                    <span className="text-emerald-500">n+</span> SECURE PAY
+            {/* 💡 [신규] 뒤로가기 버튼과 타이머가 적용된 헤더 */}
+            <div className="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => handleCancelPayment(false)} className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-full hover:bg-slate-700 transition-colors text-xl pb-1">
+                        ←
+                    </button>
+                    <div className="font-black text-lg tracking-widest flex items-center gap-2">
+                        <span className="text-emerald-500">n+</span> SECURE PAY
+                    </div>
                 </div>
-                <div className="text-[10px] font-bold text-slate-400 border border-slate-700 px-2 py-1 rounded">TEST MODE</div>
+                <div className={`font-mono font-bold px-3 py-1 rounded-lg border ${timeLeft < 30 ? 'bg-red-500/20 border-red-500 text-red-400 animate-pulse' : 'border-slate-700 text-slate-300'}`}>
+                    ⏱ {minutes}:{seconds.toString().padStart(2, '0')}
+                </div>
             </div>
 
             <div className="flex-1 p-4 md:p-8 flex items-center justify-center">
@@ -94,7 +131,6 @@ function CheckoutContent() {
                             </div>
                         </div>
 
-                        {/* 결제 수단에 따른 가짜 입력 폼 */}
                         {isCard ? (
                             <div className="space-y-4">
                                 <div>
