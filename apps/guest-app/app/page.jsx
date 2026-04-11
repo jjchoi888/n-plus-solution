@@ -216,10 +216,12 @@ export default function HomePage() {
                 email: email,
                 citizen_type: citizenType,
                 id_type: idType,
+                // 💡 [핵심 추가] 드디어 신분증 사진 데이터가 서버로 가는 포장 박스에 들어갑니다!
+                document_url: idUploaded,
                 payment_method: paymentMethod,
                 payment_acc_name: accName,
                 payment_acc_num: accNum,
-                pin: pin, // 백엔드로 PIN 전달
+                pin: pin,
                 membership_status: 'pending'
             };
 
@@ -233,7 +235,6 @@ export default function HomePage() {
                     pin: pin
                 };
 
-                // 💡 [수정됨] 가입 로직에서도 서버 세션 키를 생성합니다.
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email: payload.email }));
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
 
@@ -243,7 +244,6 @@ export default function HomePage() {
                 setIsUnlocked(true);
                 setShowOnboarding(false);
 
-                // 💡 [수정] 24시간 이내 리뷰 안내를 영어로 변경
                 alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
             } else {
                 alert("Failed to join rewards: " + response.data.message);
