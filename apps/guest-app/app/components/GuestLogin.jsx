@@ -62,14 +62,14 @@ function GuestLoginContent() {
                 if (parsed.email) setEmail(parsed.email);
 
                 const fullUser = localStorage.getItem('nplus_guest_user');
-                if (fullUser) {
+                if (fullUser && !searchParams.get('step')) {
                     router.replace('/');
                     return;
                 }
             } catch (e) { }
         }
         setIsCheckingDevice(false);
-    }, [router]);
+    }, [router, searchParams]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
