@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// 💡 [수정] URL 파라미터를 읽기 위해 useSearchParams 추가
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
@@ -18,6 +19,7 @@ const FILIPINO_IDS = [
 
 export default function GuestLogin() {
     const router = useRouter();
+    const searchParams = useSearchParams(); // 💡 [추가] 파라미터 추적기 활성화
 
     const [isCheckingDevice, setIsCheckingDevice] = useState(true);
     const [onboardStep, setOnboardStep] = useState(1);
@@ -34,7 +36,7 @@ export default function GuestLogin() {
     // Step 2: 신분증
     const [citizenType, setCitizenType] = useState(''); // 'filipino' | 'foreigner'
     const [idType, setIdType] = useState('');
-    const [idUploaded, setIdUploaded] = useState(""); // 💡 [추가] 텍스트 파일(Base64)이 담길 곳
+    const [idUploaded, setIdUploaded] = useState("");
 
     // Step 3: 결제 정보
     const [paymentMethod, setPaymentMethod] = useState(''); // 'card' | 'gcash' | 'maya'
@@ -45,17 +47,38 @@ export default function GuestLogin() {
     const [pin, setPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
 
-    // 기기 상태 확인 (세션 키가 있으면 메인화면 락스크린으로 패스)
+    // 💡 [추가] 스마트 알림 연동: 주소창에 ?step=2 가 있으면 2단계로 직행!
+    useEffect(() => {
+        const stepParam = searchParams.get('step');
+        if (stepParam) {
+            const stepNum = parseInt(stepParam, 10);
+            if (stepNum >= 1 && stepNum <= 4) {
+                setOnboardStep(stepNum);
+            }
+        }
+    }, [searchParams]);
+
+    // 💡 [추가] 기존에 입력했던 이메일 정보라도 끌어오기 (선택 사항: 이미 이메일을 치고 튕긴 유저를 위해)
     useEffect(() => {
         const sessionKey = localStorage.getItem('nplus_session_key');
         if (sessionKey) {
-            router.replace('/');
-        } else {
-            setIsCheckingDevice(false);
+            try {
+                const parsed = JSON.parse(sessionKey);
+                if (parsed.email) setEmail(parsed.email);
+
+                // 만약 완전 로그인된 상태라면 메인으로 보냄
+                const fullUser = localStorage.getItem('nplus_guest_user');
+                if (fullUser) {
+                    router.replace('/');
+                    return;
+                }
+            } catch (e) { }
         }
+        setIsCheckingDevice(false);
     }, [router]);
 
-    // 💡 [최종 진화] 사진 화질은 유지하면서 용량을 획기적으로 압축 (5MB -> 100KB 수준)
+
+    // 💡 [최종 진화] 사진 화질은 유지하면서 용량을 획기적으로 압축
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -66,13 +89,11 @@ export default function GuestLogin() {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-                // 1. 최대 해상도 설정 (보통 신분증 식별은 800px 이면 충분합니다)
                 const MAX_WIDTH = 800;
                 const MAX_HEIGHT = 800;
                 let width = img.width;
                 let height = img.height;
 
-                // 2. 비율을 유지하면서 크기 줄이기
                 if (width > height) {
                     if (width > MAX_WIDTH) {
                         height *= MAX_WIDTH / width;
@@ -85,17 +106,13 @@ export default function GuestLogin() {
                     }
                 }
 
-                // 3. 가상의 도화지(Canvas)에 줄어든 크기로 그림 그리기
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // 4. JPEG 포맷으로 변환하며 화질을 70%로 압축 (용량이 1/20 수준으로 줄어듦)
                 const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-                // 압축된 데이터를 최종 저장
                 setIdUploaded(compressedBase64);
             };
         };
@@ -130,14 +147,13 @@ export default function GuestLogin() {
             const payload = {
                 email, first_name: firstName, last_name: lastName, phone, nationality, dob,
                 citizen_type: citizenType, id_type: idType,
-                document_url: idUploaded, // 압축된 사진 데이터 
+                document_url: idUploaded,
                 payment_method: paymentMethod, payment_acc_name: accName, payment_acc_num: accNum,
                 pin, membership_status: 'pending'
             };
 
             console.log("🚀 [전송되는 Payload 확인]:", payload);
 
-            // 💡 [초강력 핵심] 무조건 절대 경로로 쏴서 프록시 증발 현상을 막습니다!!!
             const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
             if (response.data && response.data.success) {
@@ -148,7 +164,7 @@ export default function GuestLogin() {
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
-                localStorage.setItem('guest_pin', pin); // 기기에 PIN 번호 기록
+                localStorage.setItem('guest_pin', pin);
 
                 alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
                 window.location.href = '/';
@@ -288,7 +304,6 @@ export default function GuestLogin() {
                                 <div className="mt-4 pt-2">
                                     <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Upload Method</p>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {/* 💡 [핵심 수정] z-index 최상위 설정 및 handleFileChange 연동. 클릭 영역 넓힘! */}
                                         <div className="border-2 border-slate-200 bg-slate-50 p-4 text-center relative hover:border-[#009900] transition-colors rounded-xl overflow-hidden group">
                                             <input type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
                                             <div className="text-3xl mb-1 group-hover:scale-110 transition-transform relative z-10 pointer-events-none">📷</div>

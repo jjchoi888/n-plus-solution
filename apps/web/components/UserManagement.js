@@ -405,16 +405,19 @@ export default function UserManagement() {
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
                                     <span>Submitted ID Document ({reviewingUser.citizen_type === 'filipino' ? 'Local' : reviewingUser.citizen_type === 'foreigner' ? 'Foreigner' : 'Unknown'} - {reviewingUser.id_type || 'N/A'})</span>
-                                    {reviewingUser.document_url && reviewingUser.document_url.length > 100 ? (
+
+                                    {/* 💡 [수정] length > 100 조건 삭제. document_url이 존재하기만 하면 Verified로 인정! */}
+                                    {reviewingUser.document_url ? (
                                         <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[9px] font-black">Verified Upload</span>
                                     ) : (
                                         <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[9px] font-black">Missing</span>
                                     )}
                                 </label>
+
                                 <div className="w-full h-56 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 relative overflow-hidden group">
 
-                                    {/* 💡 DB에 사진 텍스트(Base64)가 100자 이상 저장되어 있으면 진짜 사진을 무조건 화면에 뿌립니다! */}
-                                    {reviewingUser.document_url && reviewingUser.document_url.length > 100 ? (
+                                    {/* 💡 [수정] 여기도 length > 100 조건 삭제. 존재하면 무조건 img 태그로 뿌림! */}
+                                    {reviewingUser.document_url ? (
                                         <img
                                             src={reviewingUser.document_url}
                                             className="w-full h-full object-contain bg-black"
