@@ -114,6 +114,7 @@ function CheckoutContent() {
                 <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 animate-fade-in-up">
                     <div className="p-6 bg-slate-50 border-b border-slate-100 text-center">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{checkoutData.hotel_name}</p>
+                        <p className="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded inline-block mb-2">{checkoutData.total_nights} Night(s)</p>
                         <h2 className="text-3xl font-black text-slate-800">₱ {Number(checkoutData.amount).toLocaleString()}</h2>
                         {checkoutData.points_used > 0 && (
                             <p className="text-[10px] font-bold text-emerald-600 mt-2 bg-emerald-50 w-fit mx-auto px-2 py-0.5 rounded-full">

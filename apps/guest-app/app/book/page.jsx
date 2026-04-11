@@ -315,7 +315,16 @@ function BookRoomContent() {
 
     const totalSelectedRoomCount = Object.values(selectedRooms).reduce((acc, cur) => acc + cur, 0);
 
-    // 💡 [핵심 수정] 프로모션 타겟 객실을 파악하고 정확하게 할인을 적용하는 계산기
+    // ===== 👇 여기서부터 복사해서 통째로 덮어써주세요 👇 =====
+
+    // 💡 [긴급 수정] 체류 일수(Nights) 계산 로직 추가
+    const checkInDate = new Date(bookingData.check_in_date);
+    const checkOutDate = new Date(bookingData.check_out_date);
+    // 시간 차이를 구해서 일수로 변환 (최소 1박 보장)
+    const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+    let totalNights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    if (totalNights <= 0 || isNaN(totalNights)) totalNights = 1;
+
     let rawSubTotal = 0;
     let promoDiscountedTotal = 0;
 
@@ -331,8 +340,10 @@ function BookRoomContent() {
 
     Object.entries(selectedRooms).forEach(([roomName, qty]) => {
         const matchedRoom = roomTypes.find(r => r.name === roomName);
-        const price = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
-        const roomTotal = price * qty;
+        const pricePerNight = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
+
+        // 💡 [수정] (객실 1박 단가) × (예약 객실 수) × (체류 일수)
+        const roomTotal = pricePerNight * qty * totalNights;
 
         rawSubTotal += roomTotal;
 
@@ -390,7 +401,10 @@ function BookRoomContent() {
 
             Object.entries(selectedRooms).forEach(([roomName, qty]) => {
                 const matchedRoom = roomTypes.find(r => r.name === roomName);
-                const price = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
+                const pricePerNight = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
+
+                // 💡 [수정] 백엔드로 보낼 때도 1박 단가가 아닌 '해당 방의 총 가격(단가*박수)'을 보냅니다.
+                const roomTotalForPayload = pricePerNight * totalNights;
 
                 for (let i = 0; i < qty; i++) {
                     bookingPayloads.push({
@@ -409,7 +423,7 @@ function BookRoomContent() {
                         kids: kids,
                         infants: infants,
                         payment_method: paymentMethod,
-                        total_price: price,
+                        total_price: roomTotalForPayload, // 💡 업데이트된 방 가격
                         promo_code: (initialPromo && bookingData.hotel_code === initialHotel) ? initialPromo : null
                     });
                 }
@@ -439,8 +453,8 @@ function BookRoomContent() {
                     check_in_date: bookingData.check_in_date,
                     check_out_date: bookingData.check_out_date,
                     rooms: selectedRooms,
-                    // 👇 이 줄을 추가해서 결제창으로 번호를 넘깁니다.
-                    payment_acc_num: bookingData.payment_acc_num
+                    payment_acc_num: bookingData.payment_acc_num, // 회원 카드번호 넘기기
+                    total_nights: totalNights // 영수증 표시용 박수 전달
                 };
 
                 const encodedData = btoa(JSON.stringify(checkoutData));
