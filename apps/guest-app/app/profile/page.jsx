@@ -74,7 +74,11 @@ export default function ProfilePage() {
 
                         <div className="bg-white/10 rounded-none p-4 backdrop-blur-md border border-white/10">
                             <p className="text-[10px] text-slate-300 mb-1 uppercase font-bold tracking-wider">Available Reward Points</p>
-                            <p className="text-3xl font-black tracking-wider text-white">₱ {(user.total_points || 0).toLocaleString()}</p>
+                            {/* 💡 [수정] 페소 기호를 삭제하고 flex 정렬과 'points' 텍스트를 추가했습니다. */}
+                            <p className="text-3xl font-black tracking-wider text-white flex items-baseline gap-1.5">
+                                {(user.total_points || 0).toLocaleString()}
+                                <span className="text-sm font-bold text-slate-300">points</span>
+                            </p>
                         </div>
                     </div>
                 ) : (

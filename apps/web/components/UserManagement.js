@@ -29,7 +29,6 @@ export default function UserManagement() {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [reviewingUser, setReviewingUser] = useState(null);
 
-    // 💡 [추가] 스마트 반려(Reject) 모달용 State
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectReasons, setRejectReasons] = useState({
         step1_info: false,
@@ -41,6 +40,11 @@ export default function UserManagement() {
     const [pointsLogs, setPointsLogs] = useState([]);
     const [logSearch, setLogSearch] = useState("");
     const [logFilterTier, setLogFilterTier] = useState("ALL");
+
+    // 💡 [신규 추가] 포인트 정책 설정용 State
+    const [policyMaxPct, setPolicyMaxPct] = useState(100);
+    const [policyMinUnit, setPolicyMinUnit] = useState(1);
+    const [isSavingPolicy, setIsSavingPolicy] = useState(false);
 
     const modules = useMemo(() => ({
         toolbar: [
@@ -99,6 +103,18 @@ export default function UserManagement() {
         fetchUsers();
         const interval = setInterval(fetchUsers, 10000);
         return () => clearInterval(interval);
+    }, []);
+
+    // 💡 [신규 추가] 포인트 정책 설정 데이터 불러오기
+    useEffect(() => {
+        axios.get('/api/settings/point-policy')
+            .then(res => {
+                if (res.data && res.data.success) {
+                    setPolicyMaxPct(res.data.policy.max_pct);
+                    setPolicyMinUnit(res.data.policy.min_unit);
+                }
+            })
+            .catch(e => console.error("Failed to load point policy", e));
     }, []);
 
     const basicUsers = users.filter(u => !u.is_membership_active);
@@ -176,10 +192,8 @@ export default function UserManagement() {
         }
     };
 
-    // 💡 [수정] 반려 최종 실행 함수 (모달에서 호출됨)
     const executeReject = async (userEmail, reasonMessage, targetStep) => {
         try {
-            // 💡 백엔드에 target_step 데이터도 같이 넘겨서 앱으로 전달되게 합니다!
             const res = await axios.post("/api/members/reject", {
                 email: userEmail,
                 reason: reasonMessage,
@@ -198,6 +212,26 @@ export default function UserManagement() {
         }
     };
 
+    // 💡 [신규 추가] 포인트 정책 저장 함수
+    const handleSavePolicy = async () => {
+        setIsSavingPolicy(true);
+        try {
+            const res = await axios.post('/api/settings/point-policy', {
+                max_pct: policyMaxPct,
+                min_unit: policyMinUnit
+            });
+            if (res.data && res.data.success) {
+                alert("✅ Point policy has been successfully updated!");
+            } else {
+                alert("❌ Failed to update policy.");
+            }
+        } catch (error) {
+            alert("🚨 Network error while saving.");
+        } finally {
+            setIsSavingPolicy(false);
+        }
+    };
+
     if (loading) return <div className="p-20 text-center font-bold text-slate-400">Loading User Data...</div>;
 
     return (
@@ -207,7 +241,8 @@ export default function UserManagement() {
                     { id: "ALL_USERS", label: `Total (${users.length})` },
                     { id: "BASIC", label: `Pending Users (${basicUsers.length})` },
                     { id: "MEMBERS", label: `Rewards Members (${memberUsers.length})` },
-                    { id: "POINTS_LOG", label: `Points Audit Log 📊` }
+                    { id: "POINTS_LOG", label: `Points Audit Log 📊` },
+                    { id: "POINT_POLICY", label: `Point Policy ⚙️` } // 💡 탭 추가
                 ].map(t => (
                     <button key={t.id} onClick={() => { setTab(t.id); setFilterTier("ALL"); }} className={`px-5 md:px-6 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${tab === t.id ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"}`}>
                         {t.label}
@@ -218,23 +253,26 @@ export default function UserManagement() {
                 </button>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="relative flex-1 min-w-[200px]">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2">🔍</span>
-                        <input type="text" placeholder="Search name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold" />
+            {/* 유저 리스트 관련 탭에서만 검색바 노출 */}
+            {(tab !== "POINTS_LOG" && tab !== "POINT_POLICY") && (
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 animate-fade-in">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="relative flex-1 min-w-[200px]">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2">🔍</span>
+                            <input type="text" placeholder="Search name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold" />
+                        </div>
+                        <select value={filterTier} onChange={e => setFilterTier(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-emerald-500 cursor-pointer">
+                            {tiers.map(t => <option key={t} value={t}>Tier: {t}</option>)}
+                        </select>
+                        <select value={filterNation} onChange={e => setFilterNation(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-emerald-500 cursor-pointer">
+                            {nations.map(n => <option key={n} value={n}>{n === "ALL" ? "All Nationalities" : n}</option>)}
+                        </select>
+                        <button onClick={() => setIsEmailModalOpen(true)} className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-black hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center gap-2">
+                            <span>📧</span> Write Campaign Email ({displayUsers.length})
+                        </button>
                     </div>
-                    <select value={filterTier} onChange={e => setFilterTier(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-emerald-500 cursor-pointer">
-                        {tiers.map(t => <option key={t} value={t}>Tier: {t}</option>)}
-                    </select>
-                    <select value={filterNation} onChange={e => setFilterNation(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-emerald-500 cursor-pointer">
-                        {nations.map(n => <option key={n} value={n}>{n === "ALL" ? "All Nationalities" : n}</option>)}
-                    </select>
-                    <button onClick={() => setIsEmailModalOpen(true)} className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-black hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center gap-2">
-                        <span>📧</span> Write Campaign Email ({displayUsers.length})
-                    </button>
                 </div>
-            </div>
+            )}
 
             {tab === "POINTS_LOG" && (
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
@@ -273,8 +311,59 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {tab !== "POINTS_LOG" && (
-                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* 💡 [신규 추가] 포인트 정책 설정 화면 */}
+            {tab === "POINT_POLICY" && (
+                <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-3xl animate-fade-in mx-auto">
+                    <h2 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
+                        <span className="text-2xl">⚙️</span> Reward Point Usage Policy
+                    </h2>
+                    <p className="text-sm font-bold text-slate-500 mb-8">Configure the rules for guests applying points to their bookings.</p>
+
+                    <div className="space-y-8">
+                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <label className="block text-base font-black text-slate-800 mb-1">Maximum Usage Percentage (%)</label>
+                            <p className="text-xs font-bold text-slate-400 mb-5">Set the maximum percentage of the total booking amount that can be paid with points.</p>
+                            <div className="flex items-center gap-5">
+                                <input
+                                    type="range" min="1" max="100"
+                                    value={policyMaxPct} onChange={(e) => setPolicyMaxPct(Number(e.target.value))}
+                                    className="flex-1 accent-emerald-500 cursor-pointer h-2 bg-slate-200 rounded-lg appearance-none"
+                                />
+                                <div className="w-28 relative">
+                                    <input
+                                        type="number" value={policyMaxPct} onChange={(e) => setPolicyMaxPct(Number(e.target.value))}
+                                        className="w-full p-3 bg-white border border-slate-200 rounded-xl text-base font-black text-center outline-none focus:border-emerald-500 shadow-sm"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <label className="block text-base font-black text-slate-800 mb-1">Minimum Usage Unit (Points)</label>
+                            <p className="text-xs font-bold text-slate-400 mb-5">Guests must use points in multiples of this unit (e.g., 100, 1000). 1 Point = 1 Peso.</p>
+                            <div className="relative max-w-xs">
+                                <input
+                                    type="number" min="1" step="1"
+                                    value={policyMinUnit} onChange={(e) => setPolicyMinUnit(Number(e.target.value))}
+                                    className="w-full p-4 pl-5 pr-16 bg-white border border-slate-200 rounded-xl text-base font-black outline-none focus:border-emerald-500 shadow-sm"
+                                />
+                                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">pts</span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleSavePolicy} disabled={isSavingPolicy}
+                            className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 shadow-xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-lg"
+                        >
+                            {isSavingPolicy ? "Saving Policy..." : "Save Point Policy ➔"}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {(tab !== "POINTS_LOG" && tab !== "POINT_POLICY") && (
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
                     <table className="w-full text-left text-sm font-bold">
                         <thead className="bg-slate-50 border-b border-slate-100 font-black text-slate-500 uppercase text-[11px] tracking-widest">
                             <tr><th className="p-5">User Info</th><th className="p-5">Nationality</th><th className="p-5">Tier Status</th><th className="p-5">Points</th><th className="p-5 text-right">Actions</th></tr>
@@ -301,7 +390,6 @@ export default function UserManagement() {
                                         </td>
                                         <td className="p-5 text-right">
                                             <div className="flex justify-end items-center gap-2">
-                                                {/* 💡 [수정] 대기 중이면 Review(주황색), 승인 완료면 View(회색) 버튼 표시 */}
                                                 {(!u.is_membership_active || String(u.membership_status).toLowerCase() === 'pending') ? (
                                                     <button
                                                         onClick={() => {
@@ -344,7 +432,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 메인 리뷰 모달창 */}
+            {/* 리뷰 모달창 */}
             {isReviewModalOpen && reviewingUser && (
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[90] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsReviewModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
@@ -403,7 +491,6 @@ export default function UserManagement() {
                             </div>
                         </div>
                         <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
-                            {/* 💡 [수정] 대기 중일 때만 처리 버튼을 보여주고, 이미 승인된 상태면 닫기 버튼만 보여줌 */}
                             {(!reviewingUser.is_membership_active || String(reviewingUser.membership_status).toLowerCase() === 'pending') ? (
                                 <>
                                     <button
@@ -429,7 +516,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 💡 [새로 추가된 스마트 반려(Reject) 모달창] */}
+            {/* 스마트 반려(Reject) 모달창 */}
             {showRejectModal && reviewingUser && (
                 <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowRejectModal(false)}>
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
@@ -500,7 +587,6 @@ export default function UserManagement() {
                             </button>
                             <button
                                 onClick={() => {
-                                    // 💡 체크된 단계 중 가장 낮은(빠른) 단계를 찾습니다.
                                     let targetStep = 0;
                                     if (rejectReasons.step1_info) targetStep = 1;
                                     else if (rejectReasons.step2_id) targetStep = 2;
@@ -510,7 +596,6 @@ export default function UserManagement() {
                                         return alert("Please select at least one reason or provide a message.");
                                     }
 
-                                    // 백엔드로 보낼 최종 메시지 조합
                                     let finalMessage = "Action Required: Please re-submit your application.";
                                     const reasons = [];
                                     if (rejectReasons.step1_info) reasons.push("Personal Info");
@@ -523,7 +608,6 @@ export default function UserManagement() {
                                         finalMessage = customRejectMessage;
                                     }
 
-                                    // 백엔드로 전송
                                     executeReject(reviewingUser.email, finalMessage, targetStep);
                                 }}
                                 className="flex-1 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 shadow-md"
