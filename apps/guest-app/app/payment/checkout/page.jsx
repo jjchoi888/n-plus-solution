@@ -132,27 +132,64 @@ function CheckoutContent() {
                             </div>
                         </div>
 
+                        // ===== 💡 수정할 부분 (checkout/page.jsx 의 form 태그 안쪽) =====
+
+                        {/* 결제 수단에 따른 폼 */}
                         {isCard ? (
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Card Number</label>
-                                    <input type="text" required maxLength="19" placeholder="0000 0000 0000 0000" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl font-mono outline-none focus:border-slate-800" />
+                                    <input
+                                        type="text"
+                                        required
+                                        maxLength="19"
+                                        placeholder="0000 0000 0000 0000"
+                                        value={cardNumber}
+                                        onChange={(e) => setCardNumber(e.target.value)}
+                                        autoComplete="new-password" // 💡 강력한 자동완성 방어
+                                        name="random_card_field_987" // 💡 크롬 속이기
+                                        className="w-full p-3 border border-slate-300 rounded-xl font-mono outline-none focus:border-slate-800 text-slate-700 font-black"
+                                    />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Expiry (MM/YY)</label>
-                                        <input type="text" required placeholder="12/26" className="w-full p-3 border border-slate-300 rounded-xl font-mono outline-none focus:border-slate-800" />
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="MM/YY"
+                                            autoComplete="new-password" // 💡 강력한 자동완성 방어
+                                            name="random_exp_field_456" // 💡 크롬 속이기
+                                            className="w-full p-3 border border-slate-300 rounded-xl font-mono outline-none focus:border-slate-800 text-slate-700 font-black text-center"
+                                        />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">CVC</label>
-                                        <input type="password" required maxLength="3" placeholder="•••" className="w-full p-3 border border-slate-300 rounded-xl font-mono outline-none focus:border-slate-800" />
+                                        <input
+                                            type="password"
+                                            required
+                                            maxLength="4"
+                                            placeholder="•••"
+                                            autoComplete="new-password" // 💡 강력한 자동완성 방어
+                                            name="random_cvc_field_123" // 💡 크롬 속이기
+                                            className="w-full p-3 border border-slate-300 rounded-xl font-mono outline-none focus:border-slate-800 text-slate-700 font-black tracking-widest text-center"
+                                        />
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{checkoutData.method} Mobile Number</label>
-                                <input type="tel" required placeholder="09XX XXX XXXX" value={phoneNum} onChange={(e) => setPhoneNum(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl font-bold outline-none focus:border-slate-800" />
+                                <input
+                                    type="tel"
+                                    required
+                                    placeholder="09XX XXX XXXX"
+                                    value={phoneNum}
+                                    onChange={(e) => setPhoneNum(e.target.value)}
+                                    autoComplete="new-password" // 💡 강력한 자동완성 방어
+                                    name="random_phone_field_321" // 💡 크롬 속이기
+                                    className="w-full p-3 border border-slate-300 rounded-xl font-bold outline-none focus:border-slate-800 text-slate-700 font-black"
+                                />
                             </div>
                         )}
 
