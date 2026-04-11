@@ -69,11 +69,11 @@ export default function HomePage() {
         const legacyData = localStorage.getItem('nplus_guest_user');
         const targetSession = sessionData ? JSON.parse(sessionData) : (legacyData ? JSON.parse(legacyData) : null);
 
-        
+
         if (targetSession && targetSession.email) {
             // 💡 [수정] 무조건 잠그지 않고, 이번 접속에서 이미 풀었었는지 확인합니다!
             const alreadyUnlocked = sessionStorage.getItem('is_unlocked_this_session');
-            setIsUnlocked(alreadyUnlocked === 'true');    
+            setIsUnlocked(alreadyUnlocked === 'true');
 
             // 💡 [핵심 수정] 서버에서 최신 상태를 긁어오는 함수를 따로 만듭니다.
             const fetchProfile = () => {
@@ -604,9 +604,9 @@ export default function HomePage() {
                             </button>
                         </div>
                     ) : isMembershipActive ? (
-                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0 mt-4">
-                                {/* ❌ 👑 이모티콘이 있던 줄 삭제됨 */}
-                                <div className="flex justify-between items-start mb-6">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg mb-6 relative overflow-hidden rounded-xl shrink-0 mt-4">
+                            {/* ❌ 👑 이모티콘이 있던 줄 삭제됨 */}
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-widest mb-1">Membership</p>
                                     <p className="text-[#009900] font-bold text-sm uppercase tracking-widest">
@@ -628,7 +628,10 @@ export default function HomePage() {
                             <div className="bg-white/10 p-4 backdrop-blur-md border border-white/10 rounded-lg flex justify-between items-center">
                                 <div>
                                     <p className="text-[10px] text-slate-300 mb-1 uppercase font-semibold tracking-wider">Available Reward Points</p>
-                                    <p className="text-2xl md:text-3xl font-bold tracking-wider text-white">₱ {user.total_points ? user.total_points.toLocaleString() : 0}</p>
+                                    <p className="text-2xl md:text-3xl font-bold tracking-wider text-white flex items-baseline gap-1.5">
+                                        {user.total_points ? user.total_points.toLocaleString() : 0}
+                                        <span className="text-sm font-bold text-slate-300">points</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>

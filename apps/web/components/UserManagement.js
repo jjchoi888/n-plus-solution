@@ -259,7 +259,12 @@ export default function UserManagement() {
                                             <div className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md inline-block mt-1">{log.member_email}</div>
                                         </td>
                                         <td className="p-4 text-slate-600">{log.description}</td>
-                                        <td className="p-4 text-right font-black text-emerald-500 text-lg">+{log.points_added.toLocaleString()}</td>
+                                        <td className="p-4 text-right">
+                                            <span className="font-black text-emerald-500 text-lg">
+                                                +{log.points_added.toLocaleString()}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 ml-1 font-bold">points</span>
+                                        </td>
                                     </tr>
                                 ))}
                             {pointsLogs.length === 0 && <tr><td colSpan="4" className="p-10 text-center text-slate-400">No point logs available.</td></tr>}
