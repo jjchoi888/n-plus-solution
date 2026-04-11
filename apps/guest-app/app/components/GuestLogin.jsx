@@ -54,6 +54,7 @@ function GuestLoginContent() {
         }
     }, [searchParams]);
 
+    // 💡 [수정] 가입된 유저라도 ?step= 을 달고 왔으면 쫓아내지 않고, 기존 정보(특히 PIN!)를 세팅합니다.
     useEffect(() => {
         const sessionKey = localStorage.getItem('nplus_session_key');
         if (sessionKey) {
@@ -62,9 +63,36 @@ function GuestLoginContent() {
                 if (parsed.email) setEmail(parsed.email);
 
                 const fullUser = localStorage.getItem('nplus_guest_user');
-                if (fullUser && !searchParams.get('step')) {
-                    router.replace('/');
-                    return;
+                const savedPin = localStorage.getItem('guest_pin'); // 💡 저장된 PIN 불러오기
+
+                if (fullUser) {
+                    const parsedFull = JSON.parse(fullUser);
+                    // 기존 정보들을 미리 채워줍니다 (이름, 국적, 결제정보 등)
+                    setFirstName(parsedFull.first_name || '');
+                    setLastName(parsedFull.last_name || '');
+                    setPhone(parsedFull.phone || '');
+                    setDob(parsedFull.dob || '');
+                    setNationality(parsedFull.nationality || '');
+                    setCitizenType(parsedFull.citizen_type || '');
+                    setIdType(parsedFull.id_type || '');
+                    setPaymentMethod(parsedFull.payment_method || '');
+                    setAccName(parsedFull.payment_acc_name || '');
+                    setAccNum(parsedFull.payment_acc_num || '');
+
+                    // 💡 [핵심] 기존 PIN 번호 복구!
+                    if (savedPin) {
+                        setPin(savedPin);
+                        setConfirmPin(savedPin);
+                    } else if (parsedFull.pin) {
+                        setPin(parsedFull.pin);
+                        setConfirmPin(parsedFull.pin);
+                    }
+
+                    // step 파라미터가 없으면 락스크린(또는 메인)으로 쫓아냄
+                    if (!searchParams.get('step')) {
+                        router.replace('/');
+                        return;
+                    }
                 }
             } catch (e) { }
         }
@@ -130,8 +158,9 @@ function GuestLoginContent() {
     };
 
     const handleSubmit = async () => {
-        if (pin.length !== 4) return alert("Please enter a 4-digit PIN.");
-        if (pin !== confirmPin) return alert("The PIN numbers do not match.");
+        // 💡 [수정] 4단계에서 정상적으로 입력한 경우에만 길이 체크를 엄격하게 하고, 
+        // 다른 단계(예: 2단계 재업로드)에서 넘어왔을 때는 기존 PIN을 유지하도록 완화합니다.
+        if (!pin || pin.length !== 4) return alert("Please enter or re-enter a 4-digit PIN.");
 
         setIsLoading(true);
 
@@ -141,7 +170,7 @@ function GuestLoginContent() {
                 citizen_type: citizenType, id_type: idType,
                 document_url: idUploaded,
                 payment_method: paymentMethod, payment_acc_name: accName, payment_acc_num: accNum,
-                pin, membership_status: 'pending'
+                pin, membership_status: 'pending' // 💡 복구된 기존 PIN이 함께 전송됨!
             };
 
             const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
@@ -151,12 +180,17 @@ function GuestLoginContent() {
                     ...payload, name: `${firstName} ${lastName}`.trim(), is_membership_active: false, tierName: 'MEMBER', total_points: 0
                 };
                 finalUser.membership_status = 'pending';
+                // 💡 [핵심] PIN 정보 명시적 저장
+                finalUser.pin = pin;
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
-                localStorage.setItem('guest_pin', pin);
+                localStorage.setItem('guest_pin', pin); // 💡 로컬에도 확실히 저장
 
-                alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
+                alert("Your application has been successfully updated and submitted.");
+
+                // 💡 [핵심] 재업로드 완료 후, 확실하게 락스크린(홈)으로 이동하면서 
+                // 강제로 페이지를 새로고침하여 바뀐 상태(PIN 등)를 앱 전체에 재적용시킵니다.
                 window.location.href = '/';
             } else {
                 alert(response.data.message || "Registration failed. Please try again.");
