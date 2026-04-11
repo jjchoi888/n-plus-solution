@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-// 💡 [수정] URL 파라미터를 읽기 위해 useSearchParams 추가
+// 💡 1. Suspense를 추가로 불러옵니다.
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
@@ -17,15 +17,15 @@ const FILIPINO_IDS = [
     "PRC ID", "SSS/GSIS ID", "PhilHealth ID", "Voter's ID"
 ];
 
-export default function GuestLogin() {
+// 💡 2. 기존의 메인 함수 이름을 GuestLoginContent로 살짝 바꿉니다.
+function GuestLoginContent() {
     const router = useRouter();
-    const searchParams = useSearchParams(); // 💡 [추가] 파라미터 추적기 활성화
+    const searchParams = useSearchParams();
 
     const [isCheckingDevice, setIsCheckingDevice] = useState(true);
     const [onboardStep, setOnboardStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Step 1: 기본 정보
     const [email, setEmail] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -33,21 +33,17 @@ export default function GuestLogin() {
     const [phone, setPhone] = useState('');
     const [nationality, setNationality] = useState('');
 
-    // Step 2: 신분증
-    const [citizenType, setCitizenType] = useState(''); // 'filipino' | 'foreigner'
+    const [citizenType, setCitizenType] = useState('');
     const [idType, setIdType] = useState('');
     const [idUploaded, setIdUploaded] = useState("");
 
-    // Step 3: 결제 정보
-    const [paymentMethod, setPaymentMethod] = useState(''); // 'card' | 'gcash' | 'maya'
+    const [paymentMethod, setPaymentMethod] = useState('');
     const [accNum, setAccNum] = useState('');
     const [accName, setAccName] = useState('');
 
-    // Step 4: PIN
     const [pin, setPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
 
-    // 💡 [추가] 스마트 알림 연동: 주소창에 ?step=2 가 있으면 2단계로 직행!
     useEffect(() => {
         const stepParam = searchParams.get('step');
         if (stepParam) {
@@ -58,7 +54,6 @@ export default function GuestLogin() {
         }
     }, [searchParams]);
 
-    // 💡 [추가] 기존에 입력했던 이메일 정보라도 끌어오기 (선택 사항: 이미 이메일을 치고 튕긴 유저를 위해)
     useEffect(() => {
         const sessionKey = localStorage.getItem('nplus_session_key');
         if (sessionKey) {
@@ -66,7 +61,6 @@ export default function GuestLogin() {
                 const parsed = JSON.parse(sessionKey);
                 if (parsed.email) setEmail(parsed.email);
 
-                // 만약 완전 로그인된 상태라면 메인으로 보냄
                 const fullUser = localStorage.getItem('nplus_guest_user');
                 if (fullUser) {
                     router.replace('/');
@@ -77,8 +71,6 @@ export default function GuestLogin() {
         setIsCheckingDevice(false);
     }, [router]);
 
-
-    // 💡 [최종 진화] 사진 화질은 유지하면서 용량을 획기적으로 압축
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -152,8 +144,6 @@ export default function GuestLogin() {
                 pin, membership_status: 'pending'
             };
 
-            console.log("🚀 [전송되는 Payload 확인]:", payload);
-
             const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
             if (response.data && response.data.success) {
@@ -194,7 +184,6 @@ export default function GuestLogin() {
 
             <div className="bg-white p-6 shadow-xl border border-slate-100 rounded-2xl w-full max-w-md mx-auto flex flex-col min-h-[600px] animate-fade-in-up">
 
-                {/* 상단 헤더 및 진행 바 */}
                 <div className="text-center mb-6 shrink-0">
                     <div className="flex items-center gap-2 mb-3 justify-center">
                         <img src="/logo192.png" alt="N+ Logo" className="h-8 w-auto object-contain" />
@@ -213,10 +202,7 @@ export default function GuestLogin() {
                     </div>
                 </div>
 
-                {/* 중앙 컨텐츠 영역 */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-1">
-
-                    {/* STEP 1: 기본 정보 */}
                     {onboardStep === 1 && (
                         <div className="space-y-4 animate-fade-in">
                             <div>
@@ -267,7 +253,6 @@ export default function GuestLogin() {
                         </div>
                     )}
 
-                    {/* STEP 2: 신분증 정보 */}
                     {onboardStep === 2 && (
                         <div className="space-y-5 animate-fade-in">
                             <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Identity Verification</label>
@@ -321,7 +306,6 @@ export default function GuestLogin() {
                         </div>
                     )}
 
-                    {/* STEP 3: 결제 정보 */}
                     {onboardStep === 3 && (
                         <div className="space-y-5 animate-fade-in">
                             <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Payment Details</label>
@@ -357,7 +341,6 @@ export default function GuestLogin() {
                         </div>
                     )}
 
-                    {/* STEP 4: PIN 설정 */}
                     {onboardStep === 4 && (
                         <div className="space-y-5 animate-fade-in">
                             <div className="text-center mb-4">
@@ -381,7 +364,6 @@ export default function GuestLogin() {
                     )}
                 </div>
 
-                {/* 하단 공통 버튼 영역 */}
                 <div className="pt-6 shrink-0 border-t border-slate-100 mt-4">
                     {onboardStep < 4 ? (
                         <button onClick={nextStep}
@@ -395,7 +377,6 @@ export default function GuestLogin() {
                         </button>
                     )}
 
-                    {/* 뒤로 가기 버튼 (Step 1 초과일 때만 보임) */}
                     {onboardStep > 1 && (
                         <button onClick={() => setOnboardStep(onboardStep - 1)} className="w-full mt-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
                             ← Back to previous step
@@ -405,5 +386,18 @@ export default function GuestLogin() {
 
             </div>
         </div>
+    );
+}
+
+// 💡 3. 위에서 선언한 GuestLoginContent를 Suspense 보호막으로 감싸서 최종 내보냅니다!
+export default function GuestLogin() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="text-slate-500 font-bold">Loading...</div>
+            </div>
+        }>
+            <GuestLoginContent />
+        </Suspense>
     );
 }
