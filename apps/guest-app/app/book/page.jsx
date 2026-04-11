@@ -395,7 +395,10 @@ function BookRoomContent() {
                     amount: finalAmount,
                     points_used: pointsToUse,
                     method: paymentMethod,
-                    customer_email: bookingData.email
+                    customer_email: bookingData.email,
+                    check_in_date: bookingData.check_in_date,
+                    check_out_date: bookingData.check_out_date,
+                    rooms: selectedRooms
                 };
                 const encodedData = btoa(JSON.stringify(checkoutData));
 
