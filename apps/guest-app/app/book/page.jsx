@@ -335,7 +335,6 @@ function BookRoomContent() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 💡 [신규] 제출 전 포인트 단위 검증
         if (pointsToUse > 0 && pointPolicy.min_unit > 1) {
             if (pointsToUse % pointPolicy.min_unit !== 0) {
                 return alert(`Points must be used in multiples of ${pointPolicy.min_unit}.`);
@@ -368,46 +367,48 @@ function BookRoomContent() {
                         kids: kids,
                         infants: infants,
                         payment_method: paymentMethod,
-                        total_price: price, // 💡 [버그 수정] 누락되었던 원본 객실 가격 전송!
+                        total_price: price,
                         promo_code: (initialPromo && bookingData.hotel_code === initialHotel) ? initialPromo : null
                     });
                 }
             });
 
-            // 💡 [신규] 페이로드에 총 포인트 사용량과 최종 결제 금액 추가!
+            // 💡 [변경] 즉시 확정이 아닌 '가계약(Pending)' 생성 API 호출 (백엔드가 이 URL을 지원해야 합니다)
             const response = await axios.post('https://api.hotelnplus.com/api/public/reservations/batch-create', {
                 bookings: bookingPayloads,
                 total_points_used: pointsToUse,
-                final_total_amount: finalAmount
+                final_total_amount: finalAmount,
+                // 결제 대기 상태임을 명시적으로 서버에 알림
+                status: 'PENDING_PAYMENT'
             });
 
             if (response.data.success || response.status === 200 || response.status === 201) {
+                // 💡 [핵심] 서버가 생성해 준 예약 묶음 ID(또는 첫 번째 예약 ID)를 받습니다.
+                const primaryResId = response.data.res_ids ? response.data.res_ids[0] : 'TEMP_ID';
                 const selectedHotel = allHotels.find(h => h.code === bookingData.hotel_code);
-                const reqId = 'REQ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
 
-                const newBookingHistory = {
-                    id: reqId,
-                    hotelName: selectedHotel?.name || bookingData.hotel_code,
-                    checkIn: bookingData.check_in_date,
-                    checkOut: bookingData.check_out_date,
-                    rooms: selectedRooms,
-                    totalAmount: finalAmount, // 히스토리에도 최종 결제액 저장
-                    status: 'Pending',
-                    createdAt: new Date().toISOString()
+                // 가상 결제창으로 넘길 데이터를 Base64로 안전하게 포장합니다.
+                const checkoutData = {
+                    res_ids: response.data.res_ids || [primaryResId],
+                    hotel_name: selectedHotel?.name || bookingData.hotel_code,
+                    hotel_code: bookingData.hotel_code, // 결제사 목록을 불러오기 위해 추가
+                    amount: finalAmount,
+                    points_used: pointsToUse,
+                    method: paymentMethod,
+                    customer_email: bookingData.email
                 };
+                const encodedData = btoa(JSON.stringify(checkoutData));
 
-                const existingHistory = JSON.parse(localStorage.getItem('nplus_my_bookings') || '[]');
-                localStorage.setItem('nplus_my_bookings', JSON.stringify([newBookingHistory, ...existingHistory]));
+                // 💡 [변경] 가상 결제창 페이지로 리다이렉트 시킵니다!
+                window.location.href = `/payment/checkout?data=${encodedData}`;
 
-                alert("Booking request submitted and payment processed! Awaiting hotel confirmation.");
-                window.location.href = '/profile';
             } else {
                 alert("Failed to submit booking request. Please try again.");
+                setIsLoading(false);
             }
         } catch (error) {
             console.error("Booking Error:", error);
             alert("Network error occurred while processing your booking.");
-        } finally {
             setIsLoading(false);
         }
     };
