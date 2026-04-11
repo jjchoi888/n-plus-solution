@@ -223,17 +223,29 @@ export default function HomePage() {
         startOnboarding();
     };
 
-    const handleLoginPinInput = (num) => {
+    // 💡 [수정] PIN 번호를 로컬이 아닌 백엔드 서버에 직접 물어봐서 검증합니다!
+    const handleLoginPinInput = async (num) => {
         if (loginPin.length < 4) {
             const newPin = loginPin + num;
             setLoginPin(newPin);
+
             if (newPin.length === 4) {
-                if (newPin === user?.pin) {
-                    setIsUnlocked(true);
-                } else {
+                try {
+                    // 💡 서버에 이메일과 입력한 PIN을 보내서 맞는지 확인 요청
+                    const res = await axios.post('https://api.hotelnplus.com/api/members/verify-pin', {
+                        email: user.email,
+                        pin: newPin
+                    });
+
+                    if (res.data && res.data.success) {
+                        setIsUnlocked(true); // PIN이 맞으면 잠금 해제!
+                    } else {
+                        throw new Error("Invalid PIN");
+                    }
+                } catch (error) {
                     setTimeout(() => {
                         alert('Incorrect PIN. Please try again.');
-                        setLoginPin('');
+                        setLoginPin(''); // 틀리면 입력창 초기화
                     }, 100);
                 }
             }
@@ -270,7 +282,6 @@ export default function HomePage() {
     if (user && !isUnlocked) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center font-sans text-white p-6">
-                {/* layout.jsx의 네비게이션과 헤더를 강제로 숨기는 스타일 주입 */}
                 <style dangerouslySetInnerHTML={{ __html: `nav, header { display: none !important; } body { padding-bottom: 0 !important; }` }} />
 
                 <div className="text-center mb-8">
@@ -278,6 +289,8 @@ export default function HomePage() {
                         <img src="/logo192.png" alt="Logo" className="w-12 h-12 object-contain" />
                     </div>
                     <h2 className="text-2xl font-bold mb-1">Welcome Back</h2>
+                    {/* 💡 [추가] 대표님 제안대로 누구의 락스크린인지 이메일을 명확히 표시! */}
+                    <p className="text-emerald-400 text-sm font-semibold mb-2">{user.email}</p>
                     <p className="text-slate-400 text-sm">Enter your PIN to unlock</p>
                 </div>
 
