@@ -130,7 +130,8 @@ function BookRoomContent() {
                 last_name: user.last_name || '',
                 email: user.email || '',
                 phone: user.phone || '',
-                nationality: user.nationality || 'Philippines'
+                nationality: user.nationality || 'Philippines',
+                payment_acc_num: user.payment_acc_num || ''
             }));
         }
 
@@ -227,7 +228,7 @@ function BookRoomContent() {
 
         fetchAvailability();
     }, [bookingData.hotel_code, bookingData.check_in_date, bookingData.check_out_date, roomTypes]);
-    
+
     const handleProvinceChange = (e) => {
         const prov = e.target.value;
         setSelectedProvince(prov);
@@ -437,8 +438,11 @@ function BookRoomContent() {
                     customer_email: bookingData.email,
                     check_in_date: bookingData.check_in_date,
                     check_out_date: bookingData.check_out_date,
-                    rooms: selectedRooms
+                    rooms: selectedRooms,
+                    // 👇 이 줄을 추가해서 결제창으로 번호를 넘깁니다.
+                    payment_acc_num: bookingData.payment_acc_num
                 };
+
                 const encodedData = btoa(JSON.stringify(checkoutData));
 
                 // 가상 결제창 페이지로 리다이렉트
@@ -1000,12 +1004,29 @@ function BookRoomContent() {
                         </div>
                     )}
 
-                    {/* 💡 [신규] 최종 결제 금액 요약(Summary) 패널 */}
                     <div className="bg-slate-900 text-white p-6 rounded-t-2xl shadow-xl border-b border-slate-800">
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-slate-400 font-medium">Subtotal</span>
-                            <span className="text-sm font-bold">₱ {subTotal.toLocaleString()}</span>
-                        </div>
+                        {promoDiscount > 0 ? (
+                            <>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-xs text-slate-400 font-medium">Original Price</span>
+                                    <span className="text-xs font-bold line-through text-slate-500">₱ {rawSubTotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3 text-emerald-400 bg-emerald-900/30 p-2 rounded-lg border border-emerald-800">
+                                    <span className="text-xs font-bold flex items-center gap-1">🎉 Promo Applied ({promoDiscount}%)</span>
+                                    <span className="text-sm font-black">- ₱ {(rawSubTotal - promoDiscountedTotal).toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2 pt-2 border-t border-slate-700">
+                                    <span className="text-sm text-slate-300 font-medium">Subtotal</span>
+                                    <span className="text-sm font-bold">₱ {subTotal.toLocaleString()}</span>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-slate-400 font-medium">Subtotal</span>
+                                <span className="text-sm font-bold">₱ {subTotal.toLocaleString()}</span>
+                            </div>
+                        )}
+
                         {pointsToUse > 0 && (
                             <div className="flex justify-between items-center mb-2 text-emerald-400">
                                 <span className="text-sm font-bold flex items-center gap-1">💎 Points Applied</span>
