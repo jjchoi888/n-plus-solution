@@ -67,8 +67,11 @@ export default function HomePage() {
         const legacyData = localStorage.getItem('nplus_guest_user');
         const targetSession = sessionData ? JSON.parse(sessionData) : (legacyData ? JSON.parse(legacyData) : null);
 
+        
         if (targetSession && targetSession.email) {
-            setIsUnlocked(false);
+            // 💡 [수정] 무조건 잠그지 않고, 이번 접속에서 이미 풀었었는지 확인합니다!
+            const alreadyUnlocked = sessionStorage.getItem('is_unlocked_this_session');
+            setIsUnlocked(alreadyUnlocked === 'true');    
 
             // 💡 [핵심 수정] 서버에서 최신 상태를 긁어오는 함수를 따로 만듭니다.
             const fetchProfile = () => {
@@ -126,9 +129,10 @@ export default function HomePage() {
     }, [hotels.length]);
 
     const handleLogout = () => {
-        // 💡 [수정됨] 세션 키와 기존 유저 데이터를 모두 삭제합니다.
         localStorage.removeItem('nplus_session_key');
         localStorage.removeItem('nplus_guest_user');
+        // 💡 [추가] 로그아웃하면 확실하게 잠금 해제 기억도 지워버립니다.
+        sessionStorage.removeItem('is_unlocked_this_session');
         setUser(null);
         setIsMembershipActive(false);
         setMembershipStatus('');
@@ -232,14 +236,15 @@ export default function HomePage() {
 
             if (newPin.length === 4) {
                 try {
-                    // 💡 서버에 이메일과 입력한 PIN을 보내서 맞는지 확인 요청
                     const res = await axios.post('https://api.hotelnplus.com/api/members/verify-pin', {
                         email: user.email,
                         pin: newPin
                     });
 
                     if (res.data && res.data.success) {
-                        setIsUnlocked(true); // PIN이 맞으면 잠금 해제!
+                        setIsUnlocked(true);
+                        // 💡 [추가] PIN이 맞으면 브라우저 탭을 끄기 전까지 다시 묻지 않도록 기억합니다!
+                        sessionStorage.setItem('is_unlocked_this_session', 'true');
                     } else {
                         throw new Error("Invalid PIN");
                     }
