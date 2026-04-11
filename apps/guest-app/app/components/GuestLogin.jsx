@@ -135,6 +135,8 @@ export default function GuestLogin() {
                 pin, membership_status: 'pending'
             };
 
+            console.log("🚀 [전송되는 Payload 확인]:", payload);
+
             // 💡 [초강력 핵심] 무조건 절대 경로로 쏴서 프록시 증발 현상을 막습니다!!!
             const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
 
