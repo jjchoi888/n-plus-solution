@@ -165,15 +165,24 @@ export default function HomePage() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('nplus_session_key');
-        localStorage.removeItem('nplus_guest_user');
-        // 💡 [추가] 로그아웃하면 확실하게 잠금 해제 기억도 지워버립니다.
-        sessionStorage.removeItem('is_unlocked_this_session');
-        setUser(null);
-        setIsMembershipActive(false);
-        setMembershipStatus('');
-        setIsUnlocked(true);
-        window.location.reload();
+        sessionStorage.removeItem('is_unlocked_this_session'); // 세션(잠금해제 상태)만 날림
+        setIsUnlocked(false);
+        window.location.reload(); // 새로고침하면 알아서 락스크린(PIN 입력창)이 뜹니다.
+    };
+
+    // 💡 2. 락스크린에서 "Sign in with different account" 누를 때 (이 기기에서 완전 초기화)
+    const handleFullSignOut = () => {
+        if (window.confirm("This will remove your account from this device. Continue?")) {
+            localStorage.removeItem('nplus_session_key');
+            localStorage.removeItem('nplus_guest_user');
+            localStorage.removeItem('guest_pin');
+            sessionStorage.removeItem('is_unlocked_this_session');
+            setUser(null);
+            setIsMembershipActive(false);
+            setMembershipStatus('');
+            setIsUnlocked(true);
+            window.location.reload();
+        }
     };
 
     const startOnboarding = () => {
@@ -402,7 +411,7 @@ export default function HomePage() {
                         {isResetting ? 'Sending Link...' : 'Forgot PIN?'}
                     </button>
 
-                    <button onClick={handleLogout} className="text-slate-500 text-xs underline block mx-auto pt-2 border-t border-slate-800 w-full">
+                    <button onClick={handleFullSignOut} className="text-slate-500 text-xs underline block mx-auto pt-2 border-t border-slate-800 w-full">
                         Sign in with different account
                     </button>
                 </div>

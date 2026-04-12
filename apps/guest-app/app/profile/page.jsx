@@ -42,11 +42,8 @@ export default function ProfilePage() {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('nplus_guest_user');
-        localStorage.removeItem('nplus_session_key');
         sessionStorage.removeItem('is_unlocked_this_session');
-        setUser(null);
-        window.location.href = '/';
+        window.location.href = '/'; // 홈 화면으로 쫓아내면 홈 화면이 알아서 PIN 입력창을 띄웁니다.
     };
 
     // 💡 정보 수정 제출 함수
