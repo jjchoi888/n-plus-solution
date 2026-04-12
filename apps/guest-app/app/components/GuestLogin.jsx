@@ -150,15 +150,16 @@ function GuestLoginContent() {
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
                     step: 1, email, phone, first_name: firstName, last_name: lastName, dob
                 });
-                if (res.data.isDuplicate) {
+
+                if (res.data && res.data.isDuplicate) {
                     setIsLoading(false);
-                    return alert(res.data.message); // 중복이면 에러 띄우고 강제 종료!
+                    return alert(res.data.message); // ⛔ 중복이면 여기서 에러 띄우고 강제 종료!
                 }
             } catch (e) {
                 console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                // 💡 [핵심] 서버 에러가 나더라도 무작정 넘어가지 않도록 막아줍니다!
-                return alert("Cannot verify duplicate info right now. Please try again or contact support.");
+                // 💡 [핵심] 서버에 API가 없거나 통신 에러가 나도 절대 그냥 넘어가지 못하게 막습니다!
+                return alert("API Connection Error: Could not reach the duplicate check API. Please check if the backend server (api.hotelnplus.com) has been updated and restarted.");
             }
             setIsLoading(false);
         }
@@ -179,20 +180,21 @@ function GuestLoginContent() {
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
                     step: 3, payment_acc_num: accNum
                 });
-                if (res.data.isDuplicate) {
+
+                if (res.data && res.data.isDuplicate) {
                     setIsLoading(false);
-                    return alert(res.data.message); // 중복이면 에러 띄우고 강제 종료!
+                    return alert(res.data.message); // ⛔ 중복이면 여기서 에러 띄우고 강제 종료!
                 }
             } catch (e) {
                 console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                // 💡 [핵심] 서버 에러가 나더라도 무작정 넘어가지 않도록 막아줍니다!
-                return alert("Cannot verify payment info right now. Please try again or contact support.");
+                // 💡 [핵심] 통신 에러 시 절대 못 넘어가게 막습니다.
+                return alert("API Connection Error: Failed to verify payment info with the server.");
             }
             setIsLoading(false);
         }
 
-        // 검증을 무사히 통과했을 때만 다음 단계로 1을 더해 이동합니다!
+        // 💡 모든 검증을 무사히 에러 없이 통과했을 때만 다음 단계로 이동!
         setOnboardStep(onboardStep + 1);
     };
 
