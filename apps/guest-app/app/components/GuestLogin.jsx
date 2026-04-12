@@ -132,8 +132,8 @@ function GuestLoginContent() {
         };
     };
 
-    // 💡 [초강력 수정] 에러가 나거나 가짜 성공 시 절대 못 넘어가게 원천 봉쇄!
     const nextStep = async () => {
+        // 💡 1단계: 개인정보 입력 및 중복 검사
         if (onboardStep === 1) {
             if (!email || !firstName || !lastName || !dob || !phone || !nationality) {
                 return alert('Please fill in all personal information fields.');
@@ -141,33 +141,40 @@ function GuestLoginContent() {
 
             setIsLoading(true);
             try {
+                // 운영 서버(api.hotelnplus.com)로 중복 검사 요청
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
                     step: 1, email, phone, first_name: firstName, last_name: lastName, dob
                 });
 
-                // 💡 [핵심 방어] 백엔드 API가 아직 없어서 가짜 응답(HTML)이 온 경우 차단!
-                if (!res.data || typeof res.data.isDuplicate === 'undefined') {
+                // ⛔ 백엔드에서 중복으로 판정하면 여기서 즉각 에러창 띄우고 완전 정지!
+                if (res.data && res.data.isDuplicate) {
                     setIsLoading(false);
-                    return alert("System Alert: The backend server is not updated yet. Please restart/deploy your backend server.");
-                }
-
-                if (res.data.isDuplicate) {
-                    setIsLoading(false);
-                    return alert(res.data.message); // 중복이면 에러 메시지 띄우고 정지!
+                    return alert(res.data.message);
                 }
             } catch (e) {
+                console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                return alert("Connection Error: Could not verify data. Please check if the backend API is running.");
+                // ⛔ [핵심] 라이브 서버에 API 코드가 없어서 에러가 난 경우, 절대 못 넘어가게 막습니다!
+                return alert("🚨 [서버 연결 에러] 중복 검사 API를 찾을 수 없습니다. 백엔드(server.js)가 api.hotelnplus.com 서버에 배포 및 재시작되었는지 확인해 주세요.");
             }
+
+            // 검증을 무사히 통과했을 때만 명시적으로 2단계로 이동
             setIsLoading(false);
+            setOnboardStep(2);
+            return;
         }
 
+        // 💡 2단계: 신분증 업로드 확인
         if (onboardStep === 2) {
             if (!citizenType) return alert('Please select Filipino or Foreigner.');
             if (!idType) return alert('Please select an ID type.');
             if (!idUploaded) return alert('Please upload your ID or take a photo.');
+
+            setOnboardStep(3);
+            return;
         }
 
+        // 💡 3단계: 결제정보 입력 및 중복 검사
         if (onboardStep === 3) {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accNum || !accName) return alert('Please fill in your payment details.');
@@ -178,24 +185,21 @@ function GuestLoginContent() {
                     step: 3, payment_acc_num: accNum
                 });
 
-                if (!res.data || typeof res.data.isDuplicate === 'undefined') {
+                if (res.data && res.data.isDuplicate) {
                     setIsLoading(false);
-                    return alert("System Alert: The backend server is not updated yet.");
-                }
-
-                if (res.data.isDuplicate) {
-                    setIsLoading(false);
-                    return alert(res.data.message); // 중복이면 에러 메시지 띄우고 정지!
+                    return alert(res.data.message); // ⛔ 중복이면 강제 정지!
                 }
             } catch (e) {
+                console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                return alert("Connection Error: Could not verify payment info.");
+                return alert("🚨 [서버 연결 에러] 결제정보 중복 검사에 실패했습니다. 서버 상태를 확인해 주세요.");
             }
-            setIsLoading(false);
-        }
 
-        // 모든 검증을 무사히 통과했을 때만 다음 단계로!
-        setOnboardStep(onboardStep + 1);
+            // 검증 통과 시에만 최종 4단계로 이동
+            setIsLoading(false);
+            setOnboardStep(4);
+            return;
+        }
     };
 
     const handleSubmit = async () => {
