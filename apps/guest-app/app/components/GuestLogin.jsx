@@ -1,6 +1,5 @@
 'use client';
 
-// 💡 1. Suspense를 추가로 불러옵니다.
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
@@ -17,7 +16,6 @@ const FILIPINO_IDS = [
     "PRC ID", "SSS/GSIS ID", "PhilHealth ID", "Voter's ID"
 ];
 
-// 💡 2. 기존의 메인 함수 이름을 GuestLoginContent로 살짝 바꿉니다.
 function GuestLoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -54,7 +52,6 @@ function GuestLoginContent() {
         }
     }, [searchParams]);
 
-    // 💡 [수정] 가입된 유저라도 ?step= 을 달고 왔으면 쫓아내지 않고, 기존 정보(특히 PIN!)를 세팅합니다.
     useEffect(() => {
         const sessionKey = localStorage.getItem('nplus_session_key');
         if (sessionKey) {
@@ -63,11 +60,10 @@ function GuestLoginContent() {
                 if (parsed.email) setEmail(parsed.email);
 
                 const fullUser = localStorage.getItem('nplus_guest_user');
-                const savedPin = localStorage.getItem('guest_pin'); // 💡 저장된 PIN 불러오기
+                const savedPin = localStorage.getItem('guest_pin');
 
                 if (fullUser) {
                     const parsedFull = JSON.parse(fullUser);
-                    // 기존 정보들을 미리 채워줍니다 (이름, 국적, 결제정보 등)
                     setFirstName(parsedFull.first_name || '');
                     setLastName(parsedFull.last_name || '');
                     setPhone(parsedFull.phone || '');
@@ -79,7 +75,6 @@ function GuestLoginContent() {
                     setAccName(parsedFull.payment_acc_name || '');
                     setAccNum(parsedFull.payment_acc_num || '');
 
-                    // 💡 [핵심] 기존 PIN 번호 복구!
                     if (savedPin) {
                         setPin(savedPin);
                         setConfirmPin(savedPin);
@@ -88,7 +83,6 @@ function GuestLoginContent() {
                         setConfirmPin(parsedFull.pin);
                     }
 
-                    // step 파라미터가 없으면 락스크린(또는 메인)으로 쫓아냄
                     if (!searchParams.get('step')) {
                         router.replace('/');
                         return;
@@ -138,28 +132,32 @@ function GuestLoginContent() {
         };
     };
 
+    // 💡 [초강력 수정] 에러가 나거나 가짜 성공 시 절대 못 넘어가게 원천 봉쇄!
     const nextStep = async () => {
         if (onboardStep === 1) {
             if (!email || !firstName || !lastName || !dob || !phone || !nationality) {
                 return alert('Please fill in all personal information fields.');
             }
 
-            // 💡 1단계 데이터 백엔드 실시간 검증
             setIsLoading(true);
             try {
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
                     step: 1, email, phone, first_name: firstName, last_name: lastName, dob
                 });
 
-                if (res.data && res.data.isDuplicate) {
+                // 💡 [핵심 방어] 백엔드 API가 아직 없어서 가짜 응답(HTML)이 온 경우 차단!
+                if (!res.data || typeof res.data.isDuplicate === 'undefined') {
                     setIsLoading(false);
-                    return alert(res.data.message); // ⛔ 중복이면 여기서 에러 띄우고 강제 종료!
+                    return alert("System Alert: The backend server is not updated yet. Please restart/deploy your backend server.");
+                }
+
+                if (res.data.isDuplicate) {
+                    setIsLoading(false);
+                    return alert(res.data.message); // 중복이면 에러 메시지 띄우고 정지!
                 }
             } catch (e) {
-                console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                // 💡 [핵심] 서버에 API가 없거나 통신 에러가 나도 절대 그냥 넘어가지 못하게 막습니다!
-                return alert("API Connection Error: Could not reach the duplicate check API. Please check if the backend server (api.hotelnplus.com) has been updated and restarted.");
+                return alert("Connection Error: Could not verify data. Please check if the backend API is running.");
             }
             setIsLoading(false);
         }
@@ -174,27 +172,29 @@ function GuestLoginContent() {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accNum || !accName) return alert('Please fill in your payment details.');
 
-            // 💡 3단계 결제 정보 백엔드 실시간 검증
             setIsLoading(true);
             try {
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
                     step: 3, payment_acc_num: accNum
                 });
 
-                if (res.data && res.data.isDuplicate) {
+                if (!res.data || typeof res.data.isDuplicate === 'undefined') {
                     setIsLoading(false);
-                    return alert(res.data.message); // ⛔ 중복이면 여기서 에러 띄우고 강제 종료!
+                    return alert("System Alert: The backend server is not updated yet.");
+                }
+
+                if (res.data.isDuplicate) {
+                    setIsLoading(false);
+                    return alert(res.data.message); // 중복이면 에러 메시지 띄우고 정지!
                 }
             } catch (e) {
-                console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                // 💡 [핵심] 통신 에러 시 절대 못 넘어가게 막습니다.
-                return alert("API Connection Error: Failed to verify payment info with the server.");
+                return alert("Connection Error: Could not verify payment info.");
             }
             setIsLoading(false);
         }
 
-        // 💡 모든 검증을 무사히 에러 없이 통과했을 때만 다음 단계로 이동!
+        // 모든 검증을 무사히 통과했을 때만 다음 단계로!
         setOnboardStep(onboardStep + 1);
     };
 
@@ -226,16 +226,11 @@ function GuestLoginContent() {
                 localStorage.setItem('guest_pin', pin);
 
                 alert("Your application has been successfully updated and submitted.");
-
                 window.location.href = '/';
             } else {
                 alert(response.data.message || "Registration failed. Please try again.");
             }
         } catch (error) {
-            console.error("Join Error:", error);
-
-            // 💡 [핵심 방어막] 백엔드에서 409(중복 데이터)나 401(PIN 오류)로 튕겨냈을 때, 
-            // 백엔드가 보낸 세밀한 에러 메시지(The information you entered...)를 그대로 화면에 띄웁니다!
             if (error.response && error.response.data && error.response.data.message) {
                 alert(error.response.data.message);
             } else {
@@ -446,7 +441,7 @@ function GuestLoginContent() {
                         <button onClick={nextStep} disabled={isLoading}
                             className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-green-900/20 transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50">
                             {isLoading ? <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block"></span> Checking...</> : 'Next Step ➔'}
-                        </button>    
+                        </button>
                     ) : (
                         <button onClick={handleSubmit} disabled={isLoading}
                             className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold text-base shadow-lg transition-transform active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2">
@@ -466,7 +461,6 @@ function GuestLoginContent() {
     );
 }
 
-// 💡 3. 위에서 선언한 GuestLoginContent를 Suspense 보호막으로 감싸서 최종 내보냅니다!
 export default function GuestLogin() {
     return (
         <Suspense fallback={
