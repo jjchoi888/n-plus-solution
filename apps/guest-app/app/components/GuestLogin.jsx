@@ -141,24 +141,28 @@ function GuestLoginContent() {
 
             setIsLoading(true);
             try {
-                // 운영 서버(api.hotelnplus.com)로 중복 검사 요청
+                // 운영 서버로 중복 검사 요청
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
                     step: 1, email, phone, first_name: firstName, last_name: lastName, dob
                 });
 
-                // ⛔ 백엔드에서 중복으로 판정하면 여기서 즉각 에러창 띄우고 완전 정지!
-                if (res.data && res.data.isDuplicate) {
+                // 🚨 [방어막 1] 백엔드에 새 API가 없어서 엉뚱한 값이 왔을 때 완벽 차단!
+                if (!res.data || typeof res.data.isDuplicate === 'undefined') {
+                    setIsLoading(false);
+                    return alert("🚨 [서버 미업데이트 확인]\n새로운 중복 검사 API가 서버에 없습니다!\n백엔드(server.js) 코드가 api.hotelnplus.com 에 배포/재시작 되었는지 확인해 주세요.\n\n현재 서버 응답: " + JSON.stringify(res.data).substring(0, 100));
+                }
+
+                // 🚨 [방어막 2] 백엔드가 중복으로 판정하면 여기서 즉각 에러창 띄우고 완전 정지!
+                if (res.data.isDuplicate) {
                     setIsLoading(false);
                     return alert(res.data.message);
                 }
             } catch (e) {
-                console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                // ⛔ [핵심] 라이브 서버에 API 코드가 없어서 에러가 난 경우, 절대 못 넘어가게 막습니다!
-                return alert("🚨 [서버 연결 에러] 중복 검사 API를 찾을 수 없습니다. 백엔드(server.js)가 api.hotelnplus.com 서버에 배포 및 재시작되었는지 확인해 주세요.");
+                return alert("🚨 [서버 통신 에러]\nAPI를 찾을 수 없습니다.\n상세: " + e.message);
             }
 
-            // 검증을 무사히 통과했을 때만 명시적으로 2단계로 이동
+            // 검증을 무사히 통과했을 때만 2단계로 이동
             setIsLoading(false);
             setOnboardStep(2);
             return;
@@ -185,14 +189,18 @@ function GuestLoginContent() {
                     step: 3, payment_acc_num: accNum
                 });
 
-                if (res.data && res.data.isDuplicate) {
+                if (!res.data || typeof res.data.isDuplicate === 'undefined') {
                     setIsLoading(false);
-                    return alert(res.data.message); // ⛔ 중복이면 강제 정지!
+                    return alert("🚨 [서버 미업데이트 확인] 결제 검사 API가 없습니다.");
+                }
+
+                if (res.data.isDuplicate) {
+                    setIsLoading(false);
+                    return alert(res.data.message);
                 }
             } catch (e) {
-                console.error("Duplicate Check Error:", e);
                 setIsLoading(false);
-                return alert("🚨 [서버 연결 에러] 결제정보 중복 검사에 실패했습니다. 서버 상태를 확인해 주세요.");
+                return alert("🚨 [서버 통신 에러] " + e.message);
             }
 
             // 검증 통과 시에만 최종 4단계로 이동
