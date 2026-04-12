@@ -138,28 +138,59 @@ function GuestLoginContent() {
         };
     };
 
-    const nextStep = () => {
+    const nextStep = async () => {
         if (onboardStep === 1) {
             if (!email || !firstName || !lastName || !dob || !phone || !nationality) {
                 return alert('Please fill in all personal information fields.');
             }
+
+            // 💡 [추가] 1단계 데이터 백엔드 실시간 검증
+            setIsLoading(true);
+            try {
+                const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
+                    step: 1, email, phone, first_name: firstName, last_name: lastName, dob
+                });
+                if (res.data.isDuplicate) {
+                    setIsLoading(false);
+                    return alert(res.data.message); // 중복이면 여기서 에러 띄우고 정지!
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            setIsLoading(false);
         }
+
         if (onboardStep === 2) {
             if (!citizenType) return alert('Please select Filipino or Foreigner.');
             if (!idType) return alert('Please select an ID type.');
             if (!idUploaded) return alert('Please upload your ID or take a photo.');
         }
+
         if (onboardStep === 3) {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accNum || !accName) return alert('Please fill in your payment details.');
+
+            // 💡 [추가] 3단계 결제 정보 백엔드 실시간 검증
+            setIsLoading(true);
+            try {
+                const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
+                    step: 3, payment_acc_num: accNum
+                });
+                if (res.data.isDuplicate) {
+                    setIsLoading(false);
+                    return alert(res.data.message); // 중복이면 여기서 에러 띄우고 정지!
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            setIsLoading(false);
         }
 
+        // 검증을 무사히 통과했을 때만 다음 단계로 이동합니다.
         setOnboardStep(onboardStep + 1);
     };
 
     const handleSubmit = async () => {
-        // 💡 [수정] 4단계에서 정상적으로 입력한 경우에만 길이 체크를 엄격하게 하고, 
-        // 다른 단계(예: 2단계 재업로드)에서 넘어왔을 때는 기존 PIN을 유지하도록 완화합니다.
         if (!pin || pin.length !== 4) return alert("Please enter or re-enter a 4-digit PIN.");
 
         setIsLoading(true);
@@ -170,7 +201,7 @@ function GuestLoginContent() {
                 citizen_type: citizenType, id_type: idType,
                 document_url: idUploaded,
                 payment_method: paymentMethod, payment_acc_name: accName, payment_acc_num: accNum,
-                pin, membership_status: 'pending' // 💡 복구된 기존 PIN이 함께 전송됨!
+                pin, membership_status: 'pending'
             };
 
             const response = await axios.post('https://api.hotelnplus.com/api/members/auth', payload);
@@ -180,24 +211,28 @@ function GuestLoginContent() {
                     ...payload, name: `${firstName} ${lastName}`.trim(), is_membership_active: false, tierName: 'MEMBER', total_points: 0
                 };
                 finalUser.membership_status = 'pending';
-                // 💡 [핵심] PIN 정보 명시적 저장
                 finalUser.pin = pin;
 
                 localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
                 localStorage.setItem('nplus_session_key', JSON.stringify({ email }));
-                localStorage.setItem('guest_pin', pin); // 💡 로컬에도 확실히 저장
+                localStorage.setItem('guest_pin', pin);
 
                 alert("Your application has been successfully updated and submitted.");
 
-                // 💡 [핵심] 재업로드 완료 후, 확실하게 락스크린(홈)으로 이동하면서 
-                // 강제로 페이지를 새로고침하여 바뀐 상태(PIN 등)를 앱 전체에 재적용시킵니다.
                 window.location.href = '/';
             } else {
                 alert(response.data.message || "Registration failed. Please try again.");
             }
         } catch (error) {
             console.error("Join Error:", error);
-            alert("Error connecting to server. Please try again.");
+
+            // 💡 [핵심 방어막] 백엔드에서 409(중복 데이터)나 401(PIN 오류)로 튕겨냈을 때, 
+            // 백엔드가 보낸 세밀한 에러 메시지(The information you entered...)를 그대로 화면에 띄웁니다!
+            if (error.response && error.response.data && error.response.data.message) {
+                alert(error.response.data.message);
+            } else {
+                alert("Error connecting to server. Please try again.");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -400,9 +435,9 @@ function GuestLoginContent() {
 
                 <div className="pt-6 shrink-0 border-t border-slate-100 mt-4">
                     {onboardStep < 4 ? (
-                        <button onClick={nextStep}
-                            className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-green-900/20 transition-transform active:scale-95 flex justify-center items-center gap-2">
-                            Next Step ➔
+                        <button onClick={nextStep} disabled={isLoading}
+                            className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-green-900/20 transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50">
+                            {isLoading ? <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block"></span> Checking...</> : 'Next Step ➔'}
                         </button>
                     ) : (
                         <button onClick={handleSubmit} disabled={isLoading}
