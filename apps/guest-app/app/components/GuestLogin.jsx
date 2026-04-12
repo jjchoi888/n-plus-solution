@@ -144,7 +144,7 @@ function GuestLoginContent() {
                 return alert('Please fill in all personal information fields.');
             }
 
-            // 💡 [추가] 1단계 데이터 백엔드 실시간 검증
+            // 💡 1단계 데이터 백엔드 실시간 검증
             setIsLoading(true);
             try {
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
@@ -152,10 +152,13 @@ function GuestLoginContent() {
                 });
                 if (res.data.isDuplicate) {
                     setIsLoading(false);
-                    return alert(res.data.message); // 중복이면 여기서 에러 띄우고 정지!
+                    return alert(res.data.message); // 중복이면 에러 띄우고 강제 종료!
                 }
             } catch (e) {
                 console.error("Duplicate Check Error:", e);
+                setIsLoading(false);
+                // 💡 [핵심] 서버 에러가 나더라도 무작정 넘어가지 않도록 막아줍니다!
+                return alert("Cannot verify duplicate info right now. Please try again or contact support.");
             }
             setIsLoading(false);
         }
@@ -170,7 +173,7 @@ function GuestLoginContent() {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accNum || !accName) return alert('Please fill in your payment details.');
 
-            // 💡 [추가] 3단계 결제 정보 백엔드 실시간 검증
+            // 💡 3단계 결제 정보 백엔드 실시간 검증
             setIsLoading(true);
             try {
                 const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
@@ -178,15 +181,18 @@ function GuestLoginContent() {
                 });
                 if (res.data.isDuplicate) {
                     setIsLoading(false);
-                    return alert(res.data.message); // 중복이면 여기서 에러 띄우고 정지!
+                    return alert(res.data.message); // 중복이면 에러 띄우고 강제 종료!
                 }
             } catch (e) {
                 console.error("Duplicate Check Error:", e);
+                setIsLoading(false);
+                // 💡 [핵심] 서버 에러가 나더라도 무작정 넘어가지 않도록 막아줍니다!
+                return alert("Cannot verify payment info right now. Please try again or contact support.");
             }
             setIsLoading(false);
         }
 
-        // 검증을 무사히 통과했을 때만 다음 단계로 이동합니다.
+        // 검증을 무사히 통과했을 때만 다음 단계로 1을 더해 이동합니다!
         setOnboardStep(onboardStep + 1);
     };
 
