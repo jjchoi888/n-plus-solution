@@ -96,22 +96,20 @@ export default function NotificationsPage() {
                                         </p>
                                         <p className="text-[15px] text-slate-600 font-bold leading-relaxed">{notif.message}</p>
 
-                                        {/* 💡 [핵심 수정] 안 읽은 상태일 때만 액션 버튼 표시! */}
+                                        {/* 💡 [수정] 강제 이동(router.push) 제거! 읽음 처리만 하고 알림을 없앱니다. */}
                                         {isActionRequired && !notif.is_read && (
                                             <button
                                                 onClick={async (e) => {
                                                     e.stopPropagation();
-                                                    // 💡 이동하기 전에 무조건 읽음 처리(빨간 점 제거)부터 서버에 꽂아버립니다.
                                                     await handleMarkAsRead(notif.id, notif.is_read);
-                                                    router.push(`/login?step=${btnConfig.step}`);
+                                                    alert("Issue noted. Please go to 'My Profile' to update your details.");
                                                 }}
                                                 className="mt-4 w-full bg-red-50 hover:bg-red-100 text-red-600 font-black py-3 rounded-xl border border-red-200 transition-transform active:scale-95 flex items-center justify-center gap-2 text-[15px]"
                                             >
-                                                <span>{btnConfig.icon}</span> {btnConfig.text}
+                                                <span>📝</span> Acknowledge & Fix Profile
                                             </button>
                                         )}
 
-                                        {/* 💡 이미 클릭해서 읽은 액션 알림은 회색 완료 상태로 변경 */}
                                         {isActionRequired && notif.is_read && (
                                             <div className="mt-4 w-full bg-slate-50 text-slate-400 font-bold py-3 rounded-xl border border-slate-200 text-center text-[13px]">
                                                 Action Completed ✓
