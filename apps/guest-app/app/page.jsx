@@ -181,21 +181,54 @@ export default function HomePage() {
         setOnboardStep(1);
     };
 
-    const nextStep = () => {
+    const nextStep = async () => {
         if (onboardStep === 1) {
             if (!firstName || !lastName || !dob || !phone || !nationality || !email) {
                 return alert('Please fill in all personal information fields.');
             }
+
+            // 💡 [핵심] 1단계 개인정보 백엔드 중복 검사!
+            try {
+                const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
+                    step: 1, email, phone, first_name: firstName, last_name: lastName, dob
+                });
+
+                // 중복이면 즉시 차단!
+                if (res.data && res.data.isDuplicate) {
+                    return alert(res.data.message);
+                }
+            } catch (e) {
+                console.error("Duplicate Check Error:", e);
+                return alert("API Connection Error: Could not verify duplicate info. Is the backend updated?");
+            }
         }
+
         if (onboardStep === 2) {
             if (!citizenType) return alert('Please select Filipino or Foreigner.');
             if (!idType) return alert('Please select an ID type.');
             if (!idUploaded) return alert('Please upload your ID or take a photo.');
         }
+
         if (onboardStep === 3) {
             if (!paymentMethod) return alert('Please select a payment method.');
             if (!accName || !accNum) return alert('Please fill in your payment details.');
+
+            // 💡 [핵심] 3단계 결제 정보 백엔드 중복 검사!
+            try {
+                const res = await axios.post('https://api.hotelnplus.com/api/members/check-duplicate', {
+                    step: 3, payment_acc_num: accNum
+                });
+
+                // 중복이면 즉시 차단!
+                if (res.data && res.data.isDuplicate) {
+                    return alert(res.data.message);
+                }
+            } catch (e) {
+                console.error("Duplicate Check Error:", e);
+                return alert("API Connection Error: Could not verify payment info.");
+            }
         }
+
         if (onboardStep === 4) {
             if (pin.length !== 4) return alert('Please enter a 4-digit PIN.');
             if (pin !== confirmPin) return alert('PIN numbers do not match.');
