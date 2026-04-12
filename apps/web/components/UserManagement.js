@@ -178,17 +178,20 @@ export default function UserManagement() {
 
     const handleActivateUser = async (userEmail) => {
         if (!window.confirm(`Are you sure you want to approve and activate membership for ${userEmail}?`)) return;
+
         try {
+            // 💡 위에서 수정한 백엔드 API를 호출 (여기서 승인+알림 발송이 한 번에 처리됨)
             const res = await axios.put("/api/members/activate", { email: userEmail });
+
             if (res.data && res.data.success) {
-                alert(`✅ Successfully activated membership for ${userEmail}.`);
-                setIsReviewModalOpen(false);
-                fetchUsers();
+                alert(`✅ Successfully activated membership for ${userEmail}. A welcome notification has been sent to their app.`);
+                setIsReviewModalOpen(false); // 모달창 닫기
+                fetchUsers(); // 즉시 리스트 새로고침
             } else {
                 alert("❌ Activation failed: " + res.data.message);
             }
         } catch (err) {
-            alert("🚨 A network error occurred during activation.");
+            alert("🚨 A network error occurred during activation. Please check the server connection.");
         }
     };
 
