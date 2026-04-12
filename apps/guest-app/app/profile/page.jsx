@@ -216,30 +216,38 @@ export default function ProfilePage() {
                             <button onClick={() => setShowEditModal(false)} className="text-xl font-bold text-slate-400 hover:text-white">✕</button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50">
+                        <div className="p-6 overflow-y-auto flex-1 space-y-5 bg-slate-50">
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Email Address (Read-only)</label>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Email Address (Login ID)</label>
                                 <input type="text" readOnly value={editData.email} className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-400 bg-slate-200 cursor-not-allowed" />
+                                <p className="text-[9px] font-bold text-slate-400 mt-1.5">* Email cannot be changed as it is your unique identifier.</p>
                             </div>
-                            <div className="flex gap-3">
-                                <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">First Name</label><input type="text" value={editData.first_name || ''} onChange={e => setEditData({ ...editData, first_name: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" /></div>
-                                <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Last Name</label><input type="text" value={editData.last_name || ''} onChange={e => setEditData({ ...editData, last_name: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" /></div>
-                            </div>
-                            <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Phone Number</label><input type="tel" value={editData.phone || ''} onChange={e => setEditData({ ...editData, phone: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" /></div>
-                            <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Nationality</label><input type="text" value={editData.nationality || ''} onChange={e => setEditData({ ...editData, nationality: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" /></div>
 
-                            <div className="border-t border-slate-200 pt-4 mt-2">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Phone Number</label>
+                                <input type="tel" value={editData.phone || ''} onChange={e => setEditData({ ...editData, phone: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" />
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-5 mt-2">
+                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Payment Method</label>
+                                <select value={editData.payment_method || ''} onChange={e => setEditData({ ...editData, payment_method: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none mb-4 bg-white cursor-pointer">
+                                    <option value="">-- Select Method --</option>
+                                    <option value="card">💳 Card</option>
+                                    <option value="gcash">📱 GCash</option>
+                                    <option value="maya">💵 Maya</option>
+                                </select>
+
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Payment Account Name</label>
-                                <input type="text" value={editData.payment_acc_name || ''} onChange={e => setEditData({ ...editData, payment_acc_name: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none mb-3" />
+                                <input type="text" value={editData.payment_acc_name || ''} onChange={e => setEditData({ ...editData, payment_acc_name: e.target.value.toUpperCase() })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none mb-4 uppercase" placeholder="e.g. JOHN DOE" />
 
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Payment Account Number</label>
-                                <input type="text" value={editData.payment_acc_num || ''} onChange={e => setEditData({ ...editData, payment_acc_num: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" />
+                                <input type="text" value={editData.payment_acc_num || ''} onChange={e => setEditData({ ...editData, payment_acc_num: e.target.value })} className="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold focus:border-[#009900] outline-none" placeholder="e.g. 09XX XXX XXXX" />
                             </div>
                         </div>
 
                         <div className="p-4 border-t border-slate-100 bg-white flex gap-3 shrink-0">
-                            <button onClick={() => setShowEditModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">Cancel</button>
-                            <button onClick={handleUpdateProfile} disabled={isUpdating} className="flex-[2] py-3 bg-[#009900] text-white font-black rounded-xl hover:bg-[#008000] shadow-md disabled:opacity-50">
+                            <button onClick={() => setShowEditModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                            <button onClick={handleUpdateProfile} disabled={isUpdating} className="flex-[2] py-3 bg-[#009900] text-white font-black rounded-xl hover:bg-[#008000] shadow-md disabled:opacity-50 transition-colors">
                                 {isUpdating ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
