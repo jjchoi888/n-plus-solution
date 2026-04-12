@@ -155,7 +155,7 @@ function GuestLoginContent() {
                     return alert(res.data.message); // 중복이면 여기서 에러 띄우고 정지!
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Duplicate Check Error:", e);
             }
             setIsLoading(false);
         }
@@ -181,7 +181,7 @@ function GuestLoginContent() {
                     return alert(res.data.message); // 중복이면 여기서 에러 띄우고 정지!
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Duplicate Check Error:", e);
             }
             setIsLoading(false);
         }
@@ -438,7 +438,7 @@ function GuestLoginContent() {
                         <button onClick={nextStep} disabled={isLoading}
                             className="w-full bg-[#009900] hover:bg-[#008000] text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-green-900/20 transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50">
                             {isLoading ? <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block"></span> Checking...</> : 'Next Step ➔'}
-                        </button>
+                        </button>    
                     ) : (
                         <button onClick={handleSubmit} disabled={isLoading}
                             className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold text-base shadow-lg transition-transform active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2">
