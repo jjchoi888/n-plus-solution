@@ -80,7 +80,7 @@ function BookRoomContent() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // 💡 [신규 추가] 포인트 결제를 위한 State
+    // 포인트 결제를 위한 State
     const [userPoints, setUserPoints] = useState(0);
     const [pointPolicy, setPointPolicy] = useState({ max_pct: 100, min_unit: 1 });
     const [pointsToUse, setPointsToUse] = useState(0);
@@ -103,6 +103,15 @@ function BookRoomContent() {
     const [selectedRooms, setSelectedRooms] = useState({});
     const [availability, setAvailability] = useState({});
     const [paymentMethod, setPaymentMethod] = useState('Credit / Debit Card');
+
+    // 💡 [대리 예약 기능] 체크인 주체 상태 및 지인 정보 폼
+    const [checkinType, setCheckinType] = useState('self'); // 'self' or 'guest'
+    const [guestInfo, setGuestInfo] = useState({
+        guestFirstName: '',
+        guestLastName: '',
+        guestEmail: '',
+        guestPhone: ''
+    });
 
     const [bookingData, setBookingData] = useState({
         hotel_code: '',
@@ -135,23 +144,20 @@ function BookRoomContent() {
             }));
         }
 
-        // 💡 [수정] 프로모션 검증 시 타겟 객실(promoTarget) 정보도 같이 저장합니다!
         if (initialPromo && initialHotel) {
             axios.post('https://api.hotelnplus.com/api/public/promo/validate', {
                 code: initialPromo, hotel_code: initialHotel
             }).then(res => {
                 if (res.data && res.data.success) {
-                    setPromoDiscount(res.data.promo.value); // 예: 25 (%)
+                    setPromoDiscount(res.data.promo.value);
                     setPointPolicy(prev => ({ ...prev, promoTarget: res.data.promo.target_room_type }));
                 }
             }).catch(e => console.error("Promo validation failed"));
         }
 
-        // 💡 HQ의 포인트 정책(Policy) 불러오기
         axios.get('https://api.hotelnplus.com/api/settings/point-policy')
             .then(res => {
                 if (res.data && res.data.success) {
-                    // 포인트 정책을 불러와서 업데이트하되, 위에서 저장한 promoTarget이 날아가지 않게 보존합니다.
                     setPointPolicy(prev => ({ ...res.data.policy, promoTarget: prev.promoTarget }));
                 }
             }).catch(() => { });
@@ -315,12 +321,8 @@ function BookRoomContent() {
 
     const totalSelectedRoomCount = Object.values(selectedRooms).reduce((acc, cur) => acc + cur, 0);
 
-    // ===== 👇 여기서부터 복사해서 통째로 덮어써주세요 👇 =====
-
-    // 💡 [긴급 수정] 체류 일수(Nights) 계산 로직 추가
     const checkInDate = new Date(bookingData.check_in_date);
     const checkOutDate = new Date(bookingData.check_out_date);
-    // 시간 차이를 구해서 일수로 변환 (최소 1박 보장)
     const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
     let totalNights = Math.ceil(timeDiff / (1000 * 3600 * 24));
     if (totalNights <= 0 || isNaN(totalNights)) totalNights = 1;
@@ -328,7 +330,6 @@ function BookRoomContent() {
     let rawSubTotal = 0;
     let promoDiscountedTotal = 0;
 
-    // 백엔드에서 받은 타겟 룸타입 문자열을 배열로 안전하게 파싱합니다.
     let targetRooms = [];
     try {
         targetRooms = typeof pointPolicy.promoTarget === 'string'
@@ -341,13 +342,10 @@ function BookRoomContent() {
     Object.entries(selectedRooms).forEach(([roomName, qty]) => {
         const matchedRoom = roomTypes.find(r => r.name === roomName);
         const pricePerNight = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
-
-        // 💡 [수정] (객실 1박 단가) × (예약 객실 수) × (체류 일수)
         const roomTotal = pricePerNight * qty * totalNights;
 
         rawSubTotal += roomTotal;
 
-        // 내가 고른 방이 프로모션 대상인지 확인합니다 ('All Rooms' 이면 무조건 적용)
         const isEligible = targetRooms.includes('All Rooms') || targetRooms.includes(roomName);
 
         if (isEligible && promoDiscount > 0) {
@@ -357,9 +355,7 @@ function BookRoomContent() {
         }
     });
 
-    // 할인 적용 여부에 따라 subTotal 결정
     const subTotal = promoDiscount > 0 ? promoDiscountedTotal : rawSubTotal;
-
     const maxPointsByPolicy = Math.floor(subTotal * (pointPolicy.max_pct / 100));
     const maxUsablePoints = Math.min(userPoints, maxPointsByPolicy);
     const finalAmount = Math.max(0, subTotal - pointsToUse);
@@ -388,6 +384,11 @@ function BookRoomContent() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // 💡 [대리 예약 기능] 제출 전 지인 이름 필수 검사
+        if (checkinType === 'guest' && (!guestInfo.guestFirstName || !guestInfo.guestLastName)) {
+            return alert("Please enter the Guest's First and Last Name.");
+        }
+
         if (pointsToUse > 0 && pointPolicy.min_unit > 1) {
             if (pointsToUse % pointPolicy.min_unit !== 0) {
                 return alert(`Points must be used in multiples of ${pointPolicy.min_unit}.`);
@@ -398,12 +399,11 @@ function BookRoomContent() {
 
         try {
             const bookingPayloads = [];
+            const payerName = `${bookingData.first_name} ${bookingData.last_name}`.trim();
 
             Object.entries(selectedRooms).forEach(([roomName, qty]) => {
                 const matchedRoom = roomTypes.find(r => r.name === roomName);
                 const pricePerNight = matchedRoom ? (matchedRoom.basePrice || matchedRoom.price || 0) : 0;
-
-                // 💡 [수정] 백엔드로 보낼 때도 1박 단가가 아닌 '해당 방의 총 가격(단가*박수)'을 보냅니다.
                 const roomTotalForPayload = pricePerNight * totalNights;
 
                 for (let i = 0; i < qty; i++) {
@@ -413,9 +413,10 @@ function BookRoomContent() {
                         room_type: roomName,
                         check_in_date: bookingData.check_in_date,
                         check_out_date: bookingData.check_out_date,
+                        // 💡 [대리 예약] 결제자 이름으로 일단 세팅 (서버에서 checkin_type에 따라 덮어씀)
                         guest_name: qty > 1 || Object.keys(selectedRooms).length > 1
-                            ? `${bookingData.first_name} ${bookingData.last_name} (${roomName} - ${i + 1})`.trim()
-                            : `${bookingData.first_name} ${bookingData.last_name}`.trim(),
+                            ? `${payerName} (${roomName} - ${i + 1})`
+                            : payerName,
                         email: bookingData.email,
                         phone: bookingData.phone,
                         nationality: bookingData.nationality,
@@ -423,13 +424,20 @@ function BookRoomContent() {
                         kids: kids,
                         infants: infants,
                         payment_method: paymentMethod,
-                        total_price: roomTotalForPayload, // 💡 업데이트된 방 가격
-                        promo_code: (initialPromo && bookingData.hotel_code === initialHotel) ? initialPromo : null
+                        total_price: roomTotalForPayload,
+                        promo_code: (initialPromo && bookingData.hotel_code === initialHotel) ? initialPromo : null,
+
+                        // 💡 [대리 예약] 추가 데이터 전송
+                        checkin_type: checkinType,
+                        guest_first_name: guestInfo.guestFirstName,
+                        guest_last_name: guestInfo.guestLastName,
+                        guest_email: guestInfo.guestEmail,
+                        guest_phone: guestInfo.guestPhone
                     });
                 }
             });
 
-            // 💡 [변경] 즉시 확정이 아닌 '가계약(Pending)' 생성 API 호출
+            // 가계약(Pending) 생성
             const response = await axios.post('https://api.hotelnplus.com/api/public/reservations/batch-create', {
                 bookings: bookingPayloads,
                 total_points_used: pointsToUse,
@@ -449,17 +457,17 @@ function BookRoomContent() {
                     amount: finalAmount,
                     points_used: pointsToUse,
                     method: paymentMethod,
-                    customer_email: bookingData.email,
+                    customer_email: bookingData.email, // 결제자 메일
                     check_in_date: bookingData.check_in_date,
                     check_out_date: bookingData.check_out_date,
                     rooms: selectedRooms,
-                    payment_acc_num: bookingData.payment_acc_num, // 회원 카드번호 넘기기
-                    total_nights: totalNights // 영수증 표시용 박수 전달
+                    payment_acc_num: bookingData.payment_acc_num,
+                    total_nights: totalNights
                 };
 
                 const encodedData = btoa(JSON.stringify(checkoutData));
 
-                // 가상 결제창 페이지로 리다이렉트
+                // 결제창 페이지로 리다이렉트
                 window.location.href = `/payment/checkout?data=${encodedData}`;
 
             } else {
@@ -499,7 +507,7 @@ function BookRoomContent() {
             <div className="p-4 md:p-6 space-y-6 max-w-2xl mx-auto">
 
                 <div className={`transition-all duration-300 ${step === 1 ? 'block opacity-100' : 'hidden opacity-0'}`}>
-
+                    {/* ... 기존 Location, Date, Room Type 선택 영역 ... */}
                     <div className="bg-white p-5 rounded-none shadow-sm border border-slate-200 mb-6">
                         <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <span className="text-lg">📍</span> Select Location
@@ -660,22 +668,14 @@ function BookRoomContent() {
                                         <div>
                                             <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Check-in</label>
                                             <input
-                                                type="date"
-                                                name="check_in_date"
-                                                value={bookingData.check_in_date}
-                                                min={getDefaultDate(0)}
-                                                onChange={handleChange}
+                                                type="date" name="check_in_date" value={bookingData.check_in_date} min={getDefaultDate(0)} onChange={handleChange}
                                                 className="w-full p-3 border border-slate-200 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none bg-slate-50 shadow-inner"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Check-out</label>
                                             <input
-                                                type="date"
-                                                name="check_out_date"
-                                                value={bookingData.check_out_date}
-                                                min={bookingData.check_in_date ? new Date(new Date(bookingData.check_in_date).getTime() + 86400000).toISOString().split('T')[0] : getDefaultDate(0)}
-                                                onChange={handleChange}
+                                                type="date" name="check_out_date" value={bookingData.check_out_date} min={bookingData.check_in_date ? new Date(new Date(bookingData.check_in_date).getTime() + 86400000).toISOString().split('T')[0] : getDefaultDate(0)} onChange={handleChange}
                                                 className="w-full p-3 border border-slate-200 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none bg-slate-50 shadow-inner"
                                             />
                                         </div>
@@ -750,7 +750,6 @@ function BookRoomContent() {
                                     </div>
                                 </div>
 
-                                {/* 💡 프로모션 자동 적용 시각적 피드백 */}
                                 {initialPromo && bookingData.hotel_code === initialHotel && (
                                     <div className="bg-green-50 border-l-4 border-[#009900] p-4 mb-6 flex justify-between items-center shadow-sm">
                                         <div>
@@ -767,11 +766,9 @@ function BookRoomContent() {
 
                                 <div className="space-y-4">
                                     {roomTypes.length > 0 ? roomTypes.map(rt => {
-
                                         const currentQty = selectedRooms[rt.name] || 0;
                                         const isSelected = currentQty > 0;
                                         const availCount = availability[rt.name];
-
                                         let config = {};
                                         try { config = typeof rt.roomConfig === 'string' ? JSON.parse(rt.roomConfig) : (rt.roomConfig || {}); } catch (e) { }
 
@@ -780,15 +777,10 @@ function BookRoomContent() {
                                         const maxGuests = config.maxGuests || rt.maxGuests || 2;
                                         const desc = config.description || rt.description?.en || rt.description || '';
                                         const price = rt.basePrice || rt.price || 0;
-
                                         const roomImgRaw = rt.app_images && rt.app_images.length > 0 ? rt.app_images[0] : null;
 
                                         return (
-                                            <div
-                                                key={rt.id}
-                                                className={`rounded-none border-2 transition-all shadow-sm relative overflow-hidden group flex flex-col
-                                                    ${isSelected ? 'border-[#009900] bg-green-50/20' : 'border-slate-200 bg-white'}`}
-                                            >
+                                            <div key={rt.id} className={`rounded-none border-2 transition-all shadow-sm relative overflow-hidden group flex flex-col ${isSelected ? 'border-[#009900] bg-green-50/20' : 'border-slate-200 bg-white'}`}>
                                                 <div className="h-44 w-full relative bg-slate-100 overflow-hidden">
                                                     {roomImgRaw ? (
                                                         <img src={roomImgRaw} alt={rt.name} className="w-full h-full object-cover" />
@@ -802,7 +794,6 @@ function BookRoomContent() {
                                                             {currentQty} Selected
                                                         </div>
                                                     )}
-
                                                     <h3 className="absolute bottom-4 left-4 font-bold text-xl text-white leading-tight pr-4">{rt.name}</h3>
                                                 </div>
 
@@ -812,9 +803,7 @@ function BookRoomContent() {
                                                         <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-semibold shadow-sm">🛏️ {bedType}</span>
                                                         <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-none text-[10px] font-semibold shadow-sm">👥 Max: {maxGuests} Guests</span>
                                                     </div>
-
                                                     {desc && <p className="text-xs text-slate-500 font-medium mb-5 line-clamp-2 leading-relaxed flex-1">{desc}</p>}
-
                                                     <div className="mt-auto pt-4 border-t border-slate-100">
                                                         {availCount !== undefined && (
                                                             <div className={`mb-2 inline-flex items-center gap-1 border px-2 py-0.5 rounded-none text-[9px] font-bold ${availCount > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
@@ -856,7 +845,6 @@ function BookRoomContent() {
                                     )}
                                 </div>
                             </div>
-
                         </div>
                     )}
 
@@ -885,13 +873,6 @@ function BookRoomContent() {
                             ))}
                         </div>
 
-                        {initialPromo && bookingData.hotel_code === initialHotel && (
-                            <div className="mt-4 mb-4 border border-green-500/50 bg-green-900/30 p-3 rounded-none flex justify-between items-center">
-                                <span className="text-[10px] font-medium text-green-300 uppercase tracking-widest">Promo Code Applied</span>
-                                <span className="text-sm font-bold text-green-400">{initialPromo}</span>
-                            </div>
-                        )}
-
                         <p className="text-[10px] font-medium text-slate-400 mb-4">{adults} Adults, {kids} Kids{infants > 0 ? `, ${infants} Infants` : ''} · {totalSelectedRoomCount} Room(s)</p>
                         <div className="flex items-center gap-2 text-xs font-medium text-green-200 bg-slate-700/50 p-2.5 rounded-none inline-flex">
                             <span>{bookingData.check_in_date}</span>
@@ -901,14 +882,36 @@ function BookRoomContent() {
                     </div>
 
                     <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 mb-6">
+
+                        {/* 💡 [대리 예약 기능] 체크인 주체 선택 (본인/지인) */}
+                        <div className="space-y-4 border-b border-slate-100 pb-6 mb-6">
+                            <h3 className="text-sm font-bold text-slate-800">Who is checking in?</h3>
+                            <div className="flex flex-col gap-3">
+                                <label className={`border-2 p-3.5 rounded-xl cursor-pointer transition-all flex items-center gap-3 ${checkinType === 'self' ? 'border-[#009900] bg-green-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                                    <input type="radio" name="checkin_type" value="self" checked={checkinType === 'self'} onChange={() => setCheckinType('self')} className="w-5 h-5 accent-[#009900]" />
+                                    <div>
+                                        <span className="font-black text-sm text-slate-800 block">I am checking in</span>
+                                        <span className="text-xs font-bold text-slate-500">Book for myself</span>
+                                    </div>
+                                </label>
+                                <label className={`border-2 p-3.5 rounded-xl cursor-pointer transition-all flex items-center gap-3 ${checkinType === 'guest' ? 'border-[#009900] bg-green-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                                    <input type="radio" name="checkin_type" value="guest" checked={checkinType === 'guest'} onChange={() => setCheckinType('guest')} className="w-5 h-5 accent-[#009900]" />
+                                    <div>
+                                        <span className="font-black text-sm text-slate-800 block">Booking for someone else</span>
+                                        <span className="text-xs font-bold text-slate-500">I am paying for a guest</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* 예약자(결제자) 본인 정보 */}
                         {isLoggedIn && (
                             <div className="float-right bg-green-100 text-green-700 text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-none border border-green-200 mb-2">
                                 ✨ Autofilled
                             </div>
                         )}
-
                         <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 mt-1 clear-both">
-                            <span className="text-lg">👤</span> Guest Information
+                            <span className="text-lg">👤</span> {checkinType === 'guest' ? 'Your Details (Payer)' : 'Guest Information'}
                         </h2>
 
                         <div className="space-y-4">
@@ -924,20 +927,17 @@ function BookRoomContent() {
                                         className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="Doe" />
                                 </div>
                             </div>
-
                             <div>
                                 <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Email Address</label>
                                 <input type="email" name="email" required value={bookingData.email} onChange={handleChange}
                                     className={`w-full p-3 border border-slate-300 rounded-none text-sm font-medium focus:border-[#009900] outline-none shadow-sm ${isLoggedIn ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'text-slate-800'}`}
                                     readOnly={isLoggedIn} />
                             </div>
-
                             <div>
                                 <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Phone Number</label>
                                 <input type="tel" name="phone" required value={bookingData.phone} onChange={handleChange}
                                     className="w-full p-3 border border-slate-300 rounded-none text-sm font-medium text-slate-800 focus:border-[#009900] outline-none shadow-sm" placeholder="09" />
                             </div>
-
                             <div>
                                 <label className="block text-[10px] font-medium text-slate-500 mb-1 uppercase tracking-wider">Nationality</label>
                                 <select name="nationality" required value={bookingData.nationality} onChange={handleChange}
@@ -948,6 +948,20 @@ function BookRoomContent() {
                                 </select>
                             </div>
                         </div>
+
+                        {/* 💡 지인 정보 폼 (guest 선택 시에만 렌더링) */}
+                        {checkinType === 'guest' && (
+                            <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-fade-in space-y-4">
+                                <h3 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2">Guest Details (Checking-in)</h3>
+                                <p className="text-[10px] text-slate-500 mb-2">The booking confirmation will also be sent to this email.</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div><input type="text" required value={guestInfo.guestFirstName} onChange={e => setGuestInfo({ ...guestInfo, guestFirstName: e.target.value.toUpperCase() })} className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-bold focus:border-[#009900] outline-none uppercase" placeholder="First Name *" /></div>
+                                    <div><input type="text" required value={guestInfo.guestLastName} onChange={e => setGuestInfo({ ...guestInfo, guestLastName: e.target.value.toUpperCase() })} className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-bold focus:border-[#009900] outline-none uppercase" placeholder="Last Name *" /></div>
+                                </div>
+                                <div><input type="email" value={guestInfo.guestEmail} onChange={e => setGuestInfo({ ...guestInfo, guestEmail: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-bold focus:border-[#009900] outline-none" placeholder="Guest Email (Optional)" /></div>
+                                <div><input type="tel" value={guestInfo.guestPhone} onChange={e => setGuestInfo({ ...guestInfo, guestPhone: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-bold focus:border-[#009900] outline-none" placeholder="Guest Phone (Optional)" /></div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 relative overflow-hidden mb-6">
@@ -977,7 +991,6 @@ function BookRoomContent() {
                         </p>
                     </div>
 
-                    {/* 💡 [신규] 포인트 복합 결제 (Hybrid Payment) UI 영역 */}
                     {isLoggedIn && userPoints > 0 && (
                         <div className="bg-white p-6 rounded-none shadow-sm border border-slate-200 mb-6 border-l-4 border-l-emerald-500">
                             <h2 className="text-sm font-black text-slate-800 mb-3 flex items-center gap-2 mt-1">
