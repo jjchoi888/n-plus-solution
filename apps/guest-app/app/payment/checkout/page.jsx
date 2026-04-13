@@ -132,8 +132,6 @@ function CheckoutContent() {
                             </div>
                         </div>
 
-                        // ===== 💡 수정할 부분 (checkout/page.jsx 의 form 태그 안쪽) =====
-
                         {/* 결제 수단에 따른 폼 */}
                         {isCard ? (
                             <div className="space-y-4">
