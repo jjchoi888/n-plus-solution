@@ -12,12 +12,12 @@ export default function MemberDashboard({ hotelCode }) {
     // 💡 비밀번호 변경 폼 상태
     const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
 
-    // 💡 1. 상태(State) 초기화 (가짜 데이터 제거)
+    // 💡 상태(State) 초기화 (가짜 데이터 제거)
     const [user, setUser] = useState({});
     const [upcomingBookings, setUpcomingBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 💡 2. 실제 로그인한 유저 정보 및 DB 예약 내역 불러오기
+    // 💡 실제 로그인한 유저 정보 및 DB 예약 내역 불러오기
     useEffect(() => {
         const loadUserData = async () => {
             try {
@@ -29,7 +29,6 @@ export default function MemberDashboard({ hotelCode }) {
                 setUser(parsedUser);
 
                 // 백엔드 API에서 해당 유저의 실제 예약 내역 호출
-                // (※ 주의: 백엔드 API 경로가 다를 경우 '/api/members/bookings' 부분을 실제 경로로 맞춰주세요)
                 const res = await axios.get(`/api/members/bookings?email=${parsedUser.email}`);
 
                 if (res.data && res.data.success) {
@@ -68,15 +67,14 @@ export default function MemberDashboard({ hotelCode }) {
         doc.save(`Receipt_${booking.id}.pdf`);
     };
 
-    // 💡 예약 취소 및 환불금 자동 계산 로직
-    // 💡 3. 실제 서버와 연동되는 예약 취소 로직
+    // 💡 실제 서버와 연동되는 예약 취소 로직
     const handleCancelRequest = async (booking) => {
         const today = new Date();
         const checkInDate = new Date(booking.check_in);
         const diffTime = checkInDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // 환불 정책 계산 (1일전 0%, 2일전 20%, 3일전 50%, 4일이상 100%)
+        // 환불 정책 계산
         let refundPercent = 100;
         if (diffDays <= 1) refundPercent = 0;
         else if (diffDays === 2) refundPercent = 20;
@@ -93,7 +91,7 @@ export default function MemberDashboard({ hotelCode }) {
 
         if (window.confirm(confirmMsg)) {
             try {
-                // 💡 실제 백엔드에 취소 요청 (API 경로 확인 필요)
+                // 💡 실제 백엔드에 취소 요청
                 const res = await axios.post('/api/members/bookings/cancel', {
                     booking_id: booking.id,
                     refund_amount: refundAmount
@@ -122,6 +120,13 @@ export default function MemberDashboard({ hotelCode }) {
         setPwForm({ current: '', newPw: '', confirm: '' });
     };
 
+    // 💡 구글 로그인 유저 판별 (이메일 로그인 유저만 비밀번호 변경 가능)
+    const isGoogleUser = user?.auth_provider === 'google' || user?.password === null || !user?.password;
+
+    if (isLoading) {
+        return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold bg-slate-50">Loading dashboard...</div>;
+    }
+
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans mt-[72px]">
 
@@ -141,7 +146,6 @@ export default function MemberDashboard({ hotelCode }) {
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1">
-                    {/* 💡 요청하신 메뉴 순서: Bookings -> Receipts -> Profile */}
                     {[
                         { id: 'BOOKINGS', label: 'My Bookings', icon: '🛎️' },
                         { id: 'RECEIPTS', label: 'Receipts', icon: '🧾' },
@@ -165,53 +169,73 @@ export default function MemberDashboard({ hotelCode }) {
                     {activeTab === 'BOOKINGS' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-3xl font-black text-slate-800">My Bookings</h2>
-                            <div className="space-y-4">
-                                {upcomingBookings.map(b => (
-                                    <div key={b.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row group hover:border-blue-300 transition-all">
-                                        <div className="w-full sm:w-48 h-40 sm:h-auto overflow-hidden">
-                                            <img src={b.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="room" />
-                                        </div>
-                                        <div className="p-6 flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="text-xl font-black text-slate-800">{b.hotel_name}</h3>
-                                                    <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">Confirmed</span>
+
+                            {/* 💡 예약 데이터가 없을 경우 처리 */}
+                            {upcomingBookings.length === 0 ? (
+                                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">
+                                    <div className="text-5xl mb-4">🧳</div>
+                                    <h3 className="text-lg font-bold text-slate-700 mb-2">No bookings found.</h3>
+                                    <p className="text-sm text-slate-500">You don't have any upcoming reservations.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {upcomingBookings.map(b => (
+                                        <div key={b.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row group hover:border-blue-300 transition-all">
+                                            <div className="w-full sm:w-48 h-40 sm:h-auto overflow-hidden">
+                                                <img src={b.thumbnail || "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=300&auto=format&fit=crop"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="room" />
+                                            </div>
+                                            <div className="p-6 flex-1 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h3 className="text-xl font-black text-slate-800">{b.hotel_name}</h3>
+                                                        <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">{b.status || 'CONFIRMED'}</span>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-blue-600 mb-4">{b.room_type}</p>
+                                                    <div className="grid grid-cols-2 gap-4 text-sm font-bold text-slate-500">
+                                                        <div><span className="block text-[10px] text-slate-400 uppercase mb-1 tracking-tighter">Check-in</span>{b.check_in}</div>
+                                                        <div><span className="block text-[10px] text-slate-400 uppercase mb-1 tracking-tighter">Check-out</span>{b.check_out}</div>
+                                                    </div>
                                                 </div>
-                                                <p className="text-sm font-bold text-blue-600 mb-4">{b.room_type}</p>
-                                                <div className="grid grid-cols-2 gap-4 text-sm font-bold text-slate-500">
-                                                    <div><span className="block text-[10px] text-slate-400 uppercase mb-1 tracking-tighter">Check-in</span>{b.check_in}</div>
-                                                    <div><span className="block text-[10px] text-slate-400 uppercase mb-1 tracking-tighter">Check-out</span>{b.check_out}</div>
+                                                <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-50">
+                                                    <span className="text-lg font-black text-slate-800">₱ {(b.total_amount || 0).toLocaleString()}</span>
+                                                    <button onClick={() => handleCancelRequest(b)} className="text-red-500 text-xs font-black hover:underline">Cancel Booking</button>
                                                 </div>
                                             </div>
-                                            <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-50">
-                                                <span className="text-lg font-black text-slate-800">₱ {b.total_amount.toLocaleString()}</span>
-                                                <button onClick={() => handleCancelRequest(b)} className="text-red-500 text-xs font-black hover:underline">Cancel Booking</button>
-                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {activeTab === 'RECEIPTS' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-3xl font-black text-slate-800">Receipts & Folios</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {upcomingBookings.map(b => (
-                                    <div key={`rcpt-${b.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group">
-                                        <div className="mb-8">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🧾</div>
-                                                <span className="text-[10px] font-mono font-bold text-slate-400">#{b.id}</span>
+
+                            {/* 💡 예약 데이터가 없을 경우 처리 */}
+                            {upcomingBookings.length === 0 ? (
+                                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">
+                                    <div className="text-5xl mb-4">🧾</div>
+                                    <h3 className="text-lg font-bold text-slate-700 mb-2">No receipts available.</h3>
+                                    <p className="text-sm text-slate-500">Book a stay to generate receipts.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {upcomingBookings.map(b => (
+                                        <div key={`rcpt-${b.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group">
+                                            <div className="mb-8">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🧾</div>
+                                                    <span className="text-[10px] font-mono font-bold text-slate-400">#{b.id}</span>
+                                                </div>
+                                                <h4 className="font-black text-slate-800 mb-1">{b.hotel_name}</h4>
+                                                <p className="text-xs font-bold text-slate-500">{b.check_in} ~ {b.check_out}</p>
                                             </div>
-                                            <h4 className="font-black text-slate-800 mb-1">{b.hotel_name}</h4>
-                                            <p className="text-xs font-bold text-slate-500">{b.check_in} ~ {b.check_out}</p>
+                                            <button onClick={() => handleDownloadReceipt(b)} className="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Download PDF</button>
                                         </div>
-                                        <button onClick={() => handleDownloadReceipt(b)} className="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Download PDF</button>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -223,39 +247,44 @@ export default function MemberDashboard({ hotelCode }) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
-                                        <input type="text" defaultValue={user.name} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="text" defaultValue={user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim()} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
-                                        <input type="email" value={user.email} disabled className="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-slate-400 cursor-not-allowed" />
+                                        <div className="relative">
+                                            <input type="email" value={user.email || ''} disabled className="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-slate-400 cursor-not-allowed" />
+                                            {isGoogleUser && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl">G</span>}
+                                        </div>
                                     </div>
                                 </div>
                                 <button className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
                             </div>
 
-                            {/* 💡 비밀번호 변경 섹션 추가 */}
-                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 mt-8">
-                                <h3 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-4">Change Password</h3>
-                                <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
-                                        <input type="password" required value={pwForm.current} onChange={e => setPwForm({ ...pwForm, current: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* 💡 구글 연동 유저가 아닐 때만 비밀번호 변경 섹션 렌더링 */}
+                            {!isGoogleUser && (
+                                <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 mt-8">
+                                    <h3 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-4">Change Password</h3>
+                                    <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
-                                            <input type="password" required value={pwForm.newPw} onChange={e => setPwForm({ ...pwForm, newPw: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                                            <input type="password" required value={pwForm.current} onChange={e => setPwForm({ ...pwForm, current: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New</label>
-                                            <input type="password" required value={pwForm.confirm} onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                                                <input type="password" required value={pwForm.newPw} onChange={e => setPwForm({ ...pwForm, newPw: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New</label>
+                                                <input type="password" required value={pwForm.confirm} onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="pt-2">
-                                        <button type="submit" className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all active:scale-95 shadow-md text-sm">Update Password</button>
-                                    </div>
-                                </form>
-                            </div>
+                                        <div className="pt-2">
+                                            <button type="submit" className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all active:scale-95 shadow-md text-sm">Update Password</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
 
                         </div>
                     )}
