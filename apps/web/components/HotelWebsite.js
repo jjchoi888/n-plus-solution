@@ -520,9 +520,9 @@ export default function HotelWebsite({ domain }) {
                             ) : (
                                 <div className="hidden sm:flex items-center gap-3">
                                     <span className="text-xs font-black text-slate-500 uppercase">{user.first_name || user.name}</span>
-                                    <button onClick={() => window.location.href = `/member?hotel=${hotelCode}`} className="px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm">
-                                        My Page
-                                    </button>
+                                        <button onClick={() => { setActiveMenu('MYPAGE'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm">
+                                            My Page
+                                        </button>
                                     <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">Logout</button>
                                 </div>
                             )}
@@ -876,7 +876,7 @@ export default function HotelWebsite({ domain }) {
                     </section>
                 )}
 
-                {/* 📍 CONTACT */}
+                {/* 📍 CONTACT 섹션 */}
                 {activeMenu === 'CONTACT' && (
                     <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
                         <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8">
@@ -903,6 +903,13 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </section>
+                )}
+
+                {/* 💡 [추가된 부분] 고객용 MY PAGE 화면 렌더링 */}
+                {activeMenu === 'MYPAGE' && (
+                    <div className="w-full flex-grow bg-slate-50 min-h-screen">
+                        <MemberDashboard hotelCode={hotelCode} />
+                    </div>
                 )}
 
                 {/* 💡 Secure Checkout 모달창 */}
