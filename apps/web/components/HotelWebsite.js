@@ -150,6 +150,65 @@ export default function HotelWebsite({ domain }) {
     const [selectedPromo, setSelectedPromo] = useState(null);
     const [appliedPromo, setAppliedPromo] = useState(null);
 
+    const [user, setUser] = useState(null);
+    const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+    const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // LOGIN, REGISTER, FORGOT_PASSWORD
+    const [authForm, setAuthForm] = useState({ email: '', pw: '', first: '', last: '', phone: '', nationality: '' });
+
+    // 💡 [추가할 부분] 로그인/가입/로그아웃 핸들러
+    useEffect(() => {
+        const savedUser = localStorage.getItem('nplus_guest_user');
+        if (savedUser) setUser(JSON.parse(savedUser));
+    }, []);
+
+    const handleAuthSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                hotel_code: hotelCode,
+                email: authForm.email,
+                pin: authForm.pw,
+                first_name: authForm.first,
+                last_name: authForm.last,
+                phone: authForm.phone,
+                nationality: authForm.nationality || 'Philippines',
+                membership_status: 'active' // 개별웹 회원은 기본 활성 상태로 간주
+            };
+
+            // 💡 프록시를 타는 프론트엔드 API 호출
+            const res = await fetch('/api/members/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                const freshUser = data.member || { ...payload, name: `${payload.first_name} ${payload.last_name}`.trim() };
+                localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+                setUser(freshUser);
+                setShowGuestAuthModal(false);
+                setAlertMessage(`Welcome ${guestAuthMode === 'REGISTER' ? 'to our hotel' : 'back'}!`);
+                // 로그인 완료 시 예약자 정보 자동 채우기
+                setFirstName(freshUser.first_name || '');
+                setLastName(freshUser.last_name || '');
+                setGuestEmail(freshUser.email || '');
+                setGuestPhone(freshUser.phone || '');
+            } else {
+                setAlertMessage("❌ " + (data.message || "Authentication failed."));
+            }
+        } catch (err) {
+            setAlertMessage("🚨 Server connection error.");
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('nplus_guest_user');
+        setUser(null);
+        setAlertMessage("You have been logged out.");
+        setActiveMenu('HOME'); // 홈으로 이동
+    };
+
     // 💡 독립 도메인 대응형 hotelCode 추출기
     const getEffectiveHotelCode = () => {
         if (typeof window === 'undefined') return 'sample001';
@@ -395,6 +454,22 @@ export default function HotelWebsite({ domain }) {
                             <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                                 <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                             </select>
+
+                            {/* 💡 로그인 / 마이페이지 버튼 추가 */}
+                            {!user ? (
+                                <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className="hidden sm:block px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
+                                    Log In / Sign Up
+                                </button>
+                            ) : (
+                                <div className="hidden sm:flex items-center gap-3">
+                                    <span className="text-xs font-black text-slate-500 uppercase">{user.first_name || user.name}</span>
+                                    <button onClick={() => window.location.href = `/member?hotel=${hotelCode}`} className="px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm">
+                                        My Page
+                                    </button>
+                                    <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">Logout</button>
+                                </div>
+                            )}
+
                             <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
                             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
                         </div>
@@ -1091,6 +1166,102 @@ export default function HotelWebsite({ domain }) {
                         </div>
                     </footer>
                 )}
+
+                {/* 💡 고객 인증(Auth) 모달창 */}
+                {showGuestAuthModal && (
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
+                        <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-3xl" onClick={e => e.stopPropagation()}>
+                            <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <div className="flex justify-end mb-2">
+                                    <button onClick={() => setShowGuestAuthModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+                                </div>
+
+                                {guestAuthMode === 'LOGIN' ? (
+                                    <div className="animate-fade-in-up">
+                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">Log In to {safeConfig.welcome_title || 'Hotel'}</h2>
+                                        <form onSubmit={handleAuthSubmit} className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                            </div>
+                                            <div className="flex justify-end mt-1 mb-2">
+                                                <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">Forgot Password?</button>
+                                            </div>
+                                            <div className="pt-2">
+                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">Log In</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                ) : guestAuthMode === 'REGISTER' ? (
+                                    <div className="animate-fade-in-up">
+                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">Create Account</h2>
+                                        <form onSubmit={handleAuthSubmit} className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">First Name</label>
+                                                    <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="John" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Last Name</label>
+                                                    <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="Doe" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Phone Number</label>
+                                                <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="09..." />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                            </div>
+                                            <div className="pt-2">
+                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">Sign Up</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                ) : guestAuthMode === 'FORGOT_PASSWORD' ? (
+                                    <div className="animate-fade-in-up">
+                                        <h2 className="text-2xl font-black text-slate-800 mb-2 text-center">Reset Password</h2>
+                                        <p className="text-xs font-bold text-slate-500 mb-6 text-center leading-relaxed">Enter your registered email address to receive a reset link.</p>
+                                        <form onSubmit={(e) => { e.preventDefault(); alert('A password reset link has been sent if the email exists.'); setGuestAuthMode('LOGIN'); }} className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Registered Email</label>
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                            </div>
+                                            <div className="pt-2">
+                                                <button type="submit" className="w-full bg-slate-800 text-white font-black py-3.5 rounded-xl hover:bg-slate-700 transition-colors shadow-md text-sm">Send Reset Link</button>
+                                            </div>
+                                            <div className="text-center pt-4">
+                                                <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-xs font-bold text-slate-500 hover:underline flex items-center justify-center gap-1 mx-auto">
+                                                    <span>←</span> Back to Login
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                ) : null}
+
+                                {guestAuthMode !== 'FORGOT_PASSWORD' && (
+                                    <div className="text-center pt-8 mt-8 border-t border-slate-100">
+                                        {guestAuthMode === 'LOGIN' ? (
+                                            <p className="text-sm font-bold text-slate-500">Don't have an account? <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="theme-text hover:underline">Sign up</button></p>
+                                        ) : (
+                                            <p className="text-sm font-bold text-slate-500">Already a member? <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="theme-text hover:underline">Log in</button></p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
             </div>
         </>
     );

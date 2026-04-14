@@ -240,6 +240,10 @@ export default function MainPortal() {
     localStorage.removeItem('nplus_session_key');
     setUser(null);
     setIsMembershipActive(false);
+
+    // 💡 [추가된 코드] 로그아웃 시 즉시 메인 홈 화면으로 강제 이동
+    setActiveView("HOME");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleGuestAuthSubmit = async (e) => {

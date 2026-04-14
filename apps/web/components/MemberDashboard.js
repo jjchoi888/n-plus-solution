@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import axios from 'axios';
 
 export default function MemberDashboard({ hotelCode }) {
     const isSingleHotel = !!hotelCode;
@@ -11,26 +12,44 @@ export default function MemberDashboard({ hotelCode }) {
     // 💡 비밀번호 변경 폼 상태
     const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
 
-    const [user] = useState({
-        name: "Juan Dela Cruz",
-        email: "juan.delacruz@example.com",
-        phone: "0912 345 6789",
-        member_since: "2025-10-12"
-    });
+    // 💡 1. 상태(State) 초기화 (가짜 데이터 제거)
+    const [user, setUser] = useState({});
+    const [upcomingBookings, setUpcomingBookings] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [upcomingBookings] = useState([
-        {
-            id: "RES-88291A",
-            hotel_name: hotelCode ? `Hotel ${hotelCode}` : "Bayfront Hotel Subic",
-            room_type: "Deluxe Ocean View",
-            check_in: "2026-05-20",
-            check_out: "2026-05-22",
-            status: "CONFIRMED",
-            total_amount: 12500,
-            paid_amount: 12500,
-            thumbnail: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=300&auto=format&fit=crop"
-        }
-    ]);
+    // 💡 2. 실제 로그인한 유저 정보 및 DB 예약 내역 불러오기
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                // 로컬 스토리지에서 현재 로그인한 유저 정보 가져오기
+                const savedUser = localStorage.getItem('nplus_guest_user');
+                if (!savedUser) return;
+
+                const parsedUser = JSON.parse(savedUser);
+                setUser(parsedUser);
+
+                // 백엔드 API에서 해당 유저의 실제 예약 내역 호출
+                // (※ 주의: 백엔드 API 경로가 다를 경우 '/api/members/bookings' 부분을 실제 경로로 맞춰주세요)
+                const res = await axios.get(`/api/members/bookings?email=${parsedUser.email}`);
+
+                if (res.data && res.data.success) {
+                    let fetchBookings = res.data.bookings || [];
+
+                    // 개별웹으로 접속한 경우(?hotel=A001), 해당 호텔 예약만 필터링
+                    if (hotelCode) {
+                        fetchBookings = fetchBookings.filter(b => b.hotel_code === hotelCode);
+                    }
+                    setUpcomingBookings(fetchBookings);
+                }
+            } catch (error) {
+                console.error("Failed to load real bookings:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadUserData();
+    }, [hotelCode]);
 
     const handleDownloadReceipt = (booking) => {
         const doc = new jsPDF();
@@ -49,9 +68,47 @@ export default function MemberDashboard({ hotelCode }) {
         doc.save(`Receipt_${booking.id}.pdf`);
     };
 
-    const handleCancelRequest = (booking) => {
-        if (window.confirm(`Are you sure you want to cancel booking ${booking.id}?\nRefund will be calculated based on hotel policy.`)) {
-            alert("Cancellation request sent to the hotel.");
+    // 💡 예약 취소 및 환불금 자동 계산 로직
+    // 💡 3. 실제 서버와 연동되는 예약 취소 로직
+    const handleCancelRequest = async (booking) => {
+        const today = new Date();
+        const checkInDate = new Date(booking.check_in);
+        const diffTime = checkInDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // 환불 정책 계산 (1일전 0%, 2일전 20%, 3일전 50%, 4일이상 100%)
+        let refundPercent = 100;
+        if (diffDays <= 1) refundPercent = 0;
+        else if (diffDays === 2) refundPercent = 20;
+        else if (diffDays === 3) refundPercent = 50;
+
+        const refundAmount = (booking.paid_amount * refundPercent) / 100;
+
+        const confirmMsg =
+            `Are you sure you want to cancel booking ${booking.id}?\n\n` +
+            `• Days until Check-in: ${diffDays} day(s)\n` +
+            `• Applied Refund Policy: ${refundPercent}%\n` +
+            `• Estimated Refund Amount: ₱${refundAmount.toLocaleString()}\n\n` +
+            `Do you want to proceed with the cancellation?`;
+
+        if (window.confirm(confirmMsg)) {
+            try {
+                // 💡 실제 백엔드에 취소 요청 (API 경로 확인 필요)
+                const res = await axios.post('/api/members/bookings/cancel', {
+                    booking_id: booking.id,
+                    refund_amount: refundAmount
+                });
+
+                if (res.data && res.data.success) {
+                    setUpcomingBookings(prev => prev.filter(b => b.id !== booking.id));
+                    alert("✅ Booking has been successfully cancelled.\nThe refund will be processed according to the policy.");
+                } else {
+                    alert("❌ Failed to cancel booking: " + res.data.message);
+                }
+            } catch (error) {
+                console.error("Cancellation Error:", error);
+                alert("🚨 Server error occurred during cancellation.");
+            }
         }
     };
 
