@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import UserManagement from "./UserManagement";
+import MemberManagement from './MemberManagement';
 
 const BASE_URL = '';
 
@@ -11,13 +12,15 @@ const TAB_TITLES = {
     SETTLEMENT: "Commission Settlement",
     BILLING: "Billing & Commission Management",
     DOMAINS: "Custom Domain Assignments",
-    USERS: "Member Management" // 💡 타이틀 변경됨
+    MEMBERS: "Members Management",
+    USERS: "Rewards Management" // 💡 타이틀 변경됨
 };
 
 const SIDEBAR_MENUS = [
     { id: "DASHBOARD", label: "HQ Overview", icon: "📊" },
     { id: "PARTNERS", label: "Partner Hotels", icon: "🏨" },
-    { id: "USERS", label: "Members", icon: "👤" }, // 💡 메뉴 이름 변경됨
+    { id: "MEMBERS", label: "Members", icon: "👤" },
+    { id: "USERS", label: "n+ Rewards Club", icon: "🎁" }, // 💡 메뉴 이름 변경됨
     { id: "AGENTS", label: "Sales Agents", icon: "🤝" },
     { id: "SETTLEMENT", label: "Commissions", icon: "💰" },
     { id: "BILLING", label: "Billing & Plans", icon: "💳" },
@@ -717,6 +720,12 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
+                    {activeTab === "MEMBERS" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto">
+                            <MemberManagement />
+                        </div>
+                    )}
+                    
                     {activeTab === "USERS" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
                             <UserManagement />
