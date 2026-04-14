@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { app } from '../lib/firebase';
+import MemberDashboard from "./MemberDashboard";
 
 const BASE_URL = '';
 
