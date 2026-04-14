@@ -4,12 +4,13 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function MemberDashboard({ hotelCode }) {
-    // 💡 hotelCode가 있으면 개별 호텔 모드, 없으면 통합 포털 모드
     const isSingleHotel = !!hotelCode;
-    const [activeTab, setActiveTab] = useState('BOOKINGS'); // PROFILE, BOOKINGS, RECEIPTS
+    const [activeTab, setActiveTab] = useState('BOOKINGS');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // --- 가짜 데이터 (추후 API 연동) ---
+    // 💡 비밀번호 변경 폼 상태
+    const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
+
     const [user] = useState({
         name: "Juan Dela Cruz",
         email: "juan.delacruz@example.com",
@@ -31,7 +32,6 @@ export default function MemberDashboard({ hotelCode }) {
         }
     ]);
 
-    // --- 핸들러 함수 ---
     const handleDownloadReceipt = (booking) => {
         const doc = new jsPDF();
         doc.text("OFFICIAL RECEIPT", 105, 20, null, null, "center");
@@ -55,8 +55,18 @@ export default function MemberDashboard({ hotelCode }) {
         }
     };
 
+    // 💡 비밀번호 변경 실행 함수
+    const handlePasswordChange = (e) => {
+        e.preventDefault();
+        if (pwForm.newPw !== pwForm.confirm) {
+            return alert("New passwords do not match.");
+        }
+        alert("✅ Password updated successfully!");
+        setPwForm({ current: '', newPw: '', confirm: '' });
+    };
+
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans">
+        <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans mt-[72px]">
 
             {/* 📱 모바일 메뉴 버튼 */}
             <div className="md:hidden bg-white p-4 border-b flex justify-between items-center sticky top-0 z-50">
@@ -69,15 +79,16 @@ export default function MemberDashboard({ hotelCode }) {
                 <div className="p-8 border-b border-slate-50">
                     <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Guest Portal</h2>
                     <h1 className="text-xl font-black text-slate-800 leading-tight">
-                        {isSingleHotel ? `Hotel ${hotelCode}` : "n+ Rewards"}
+                        {isSingleHotel ? `Hotel ${hotelCode}` : "My Account"}
                     </h1>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1">
+                    {/* 💡 요청하신 메뉴 순서: Bookings -> Receipts -> Profile */}
                     {[
                         { id: 'BOOKINGS', label: 'My Bookings', icon: '🛎️' },
-                        { id: 'PROFILE', label: 'My Profile', icon: '👤' },
-                        { id: 'RECEIPTS', label: 'Receipts', icon: '🧾' }
+                        { id: 'RECEIPTS', label: 'Receipts', icon: '🧾' },
+                        { id: 'PROFILE', label: 'My Profile', icon: '👤' }
                     ].map(menu => (
                         <button
                             key={menu.id}
@@ -88,10 +99,6 @@ export default function MemberDashboard({ hotelCode }) {
                         </button>
                     ))}
                 </nav>
-
-                <div className="p-4 border-t border-slate-50">
-                    <button className="w-full py-3 bg-slate-100 text-slate-500 rounded-xl font-bold hover:bg-red-50 hover:text-red-500 transition-colors">Logout</button>
-                </div>
             </div>
 
             {/* 🚀 메인 콘텐츠 영역 */}
@@ -130,25 +137,6 @@ export default function MemberDashboard({ hotelCode }) {
                         </div>
                     )}
 
-                    {activeTab === 'PROFILE' && (
-                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-slate-800">My Profile</h2>
-                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
-                                        <input type="text" defaultValue={user.name} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
-                                        <input type="email" value={user.email} disabled className="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-slate-400 cursor-not-allowed" />
-                                    </div>
-                                </div>
-                                <button className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
-                            </div>
-                        </div>
-                    )}
-
                     {activeTab === 'RECEIPTS' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-3xl font-black text-slate-800">Receipts & Folios</h2>
@@ -170,6 +158,50 @@ export default function MemberDashboard({ hotelCode }) {
                         </div>
                     )}
 
+                    {activeTab === 'PROFILE' && (
+                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-slate-800">My Profile</h2>
+
+                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                                        <input type="text" defaultValue={user.name} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                                        <input type="email" value={user.email} disabled className="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-slate-400 cursor-not-allowed" />
+                                    </div>
+                                </div>
+                                <button className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
+                            </div>
+
+                            {/* 💡 비밀번호 변경 섹션 추가 */}
+                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 mt-8">
+                                <h3 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-4">Change Password</h3>
+                                <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                                        <input type="password" required value={pwForm.current} onChange={e => setPwForm({ ...pwForm, current: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                                            <input type="password" required value={pwForm.newPw} onChange={e => setPwForm({ ...pwForm, newPw: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New</label>
+                                            <input type="password" required value={pwForm.confirm} onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all tracking-widest" placeholder="••••••••" />
+                                        </div>
+                                    </div>
+                                    <div className="pt-2">
+                                        <button type="submit" className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all active:scale-95 shadow-md text-sm">Update Password</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                    )}
                 </div>
             </main>
         </div>
