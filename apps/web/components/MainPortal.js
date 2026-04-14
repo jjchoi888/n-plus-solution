@@ -6,7 +6,7 @@ import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { app } from '../lib/firebase';
 import axios from 'axios';
-import MyPage from "./MyPage";
+import MemberDashboard from "./MemberDashboard";
 
 const heroImages = [
   "/hero1.png",
@@ -276,6 +276,10 @@ export default function MainPortal() {
         setIsMembershipActive(false);
         setShowGuestAuthModal(false);
 
+        // 💡 [추가!!] 이메일 로그인/가입 성공 시에도 바로 마이페이지로 이동
+        setActiveView("MYPAGE");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         if (response.data.isNew) {
           alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
         } else {
@@ -301,34 +305,59 @@ export default function MainPortal() {
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
 
-      // 💡 [핵심 수정] 프론트엔드 프록시를 타도록 상대 경로(/api/...)로 원복!
-      const response = await axios.post('/api/members/auth', {
-        hotel_code: 'NPLUS01',
-        email: gUser.email,
-        first_name: gUser.displayName ? gUser.displayName.split(' ')[0] : 'Guest',
-        last_name: gUser.displayName ? gUser.displayName.split(' ')[1] || '' : '',
-        phone: gUser.phoneNumber || '',
-        nationality: 'Unknown'
-      });
+      try {
+        const response = await axios.post('/api/members/auth', {
+          hotel_code: 'NPLUS01',
+          email: gUser.email,
+          first_name: gUser.displayName ? gUser.displayName.split(' ')[0] : 'Guest',
+          last_name: gUser.displayName ? gUser.displayName.split(' ')[1] || '' : '',
+          phone: gUser.phoneNumber || '',
+          nationality: 'Unknown'
+        });
 
-      if (response.data.success) {
-        const freshUser = response.data.member;
-        localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
-        localStorage.setItem('nplus_session_key', JSON.stringify({ email: gUser.email }));
-        setUser(freshUser);
+        if (response.data.success) {
+          const freshUser = response.data.member;
+          localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
+          localStorage.setItem('nplus_session_key', JSON.stringify({ email: gUser.email }));
+          setUser(freshUser);
+          setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
+          setShowGuestAuthModal(false);
 
-        setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
-        setShowGuestAuthModal(false);
+          // 💡 [핵심] 로그인 성공 시 마이페이지로 화면 즉시 전환
+          setActiveView("MYPAGE");
+          window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        if (response.data.isNew) {
-          alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
+          if (response.data.isNew) {
+            alert("Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.");
+          } else {
+            setAlertMessage('Welcome back!');
+          }
+        }
+      } catch (apiError) {
+        // 💡 [409 에러 해결] 이미 가입된 유저라면 프로필 정보를 긁어와서 강제 로그인 처리
+        if (apiError.response && apiError.response.status === 409) {
+          const profileRes = await axios.get(`/api/members/profile?email=${gUser.email}`);
+          if (profileRes.data && profileRes.data.success && profileRes.data.member) {
+            const existingUser = profileRes.data.member;
+            localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
+            setUser(existingUser);
+            setShowGuestAuthModal(false);
+
+            // 💡 [핵심] 마이페이지로 이동
+            setActiveView("MYPAGE");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setAlertMessage('Welcome back!');
+          } else {
+            setAlertMessage("Failed to retrieve existing account data.");
+          }
         } else {
-          setAlertMessage('Welcome back!');
+          console.error("API Error:", apiError);
+          setAlertMessage("Server connection error during Google Login.");
         }
       }
     } catch (error) {
-      console.error("Google Login Error:", error);
-      setAlertMessage("Google sign-in failed. Please try again.");
+      console.error("Google Popup Error:", error);
+      setAlertMessage("Google sign-in failed or was cancelled. Please try again.");
     }
   };
 
@@ -871,16 +900,12 @@ export default function MainPortal() {
           </section>
         </div>
 
-      ) : activeView === "MYPAGE" ? (
-        <div className="w-full flex-grow bg-slate-50">
-          <MyPage
-            user={user}
-            onBack={() => setActiveView("HOME")}
-            onJoinRewards={startOnboarding}
-          />
-        </div>
-
-      ) : (
+          ) : activeView === "MYPAGE" ? (
+            <div className="w-full flex-grow bg-slate-50 mt-[72px]">
+              {/* 💡 새로 만든 고객용 마이페이지 대시보드로 교체 */}
+              <MemberDashboard hotelCode={null} />
+            </div>
+          ) : (
 
         <div className="w-full flex-grow flex flex-col items-center animate-fade-in">
           <section className="relative w-full min-h-[75vh] md:min-h-[85vh] flex flex-col items-center justify-center mt-[72px] pb-16 md:pb-0 pt-10 md:pt-0">
