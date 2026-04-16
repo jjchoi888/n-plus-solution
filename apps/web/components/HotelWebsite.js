@@ -590,11 +590,14 @@ export default function HotelWebsite({ domain }) {
     const activeAtt = attractions[activeAttIdx] || {};
     const isAttSliderAuto = !activeAtt.display_style || activeAtt.display_style === 'slider';
 
+    const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
+    const isRoomSliderAuto = !activeRoom?.roomConfig?.display_style || activeRoom.roomConfig.display_style === 'slider';
+
     useEffect(() => {
         let timer;
         if (activeMenu === 'HOME' && sliderImages.length > 1 && isMainSliderAuto) {
             timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % sliderImages.length), 4000);
-        } else if (activeMenu === 'ROOMS') {
+        } else if (activeMenu === 'ROOMS' && isRoomSliderAuto) { // 👈 [여기 수정됨] isRoomSliderAuto 조건 추가
             timer = setInterval(() => setRoomSlideIdx(prev => prev + 1), 3500);
         } else if (activeMenu === 'FACILITIES' && isFacSliderAuto) {
             timer = setInterval(() => setFacSlideIdx(prev => prev + 1), 3500);
@@ -602,7 +605,7 @@ export default function HotelWebsite({ domain }) {
             timer = setInterval(() => setAttSlideIdx(prev => prev + 1), 3500);
         }
         return () => clearInterval(timer);
-    }, [activeMenu, sliderImages.length, isMainSliderAuto, isFacSliderAuto, isAttSliderAuto]);
+    }, [activeMenu, sliderImages.length, isMainSliderAuto, isFacSliderAuto, isAttSliderAuto, isRoomSliderAuto]);
 
     // 수동 슬라이드 조작
     const nextMainSlide = () => setCurrentSlide(prev => (prev + 1) % sliderImages.length);
@@ -613,8 +616,6 @@ export default function HotelWebsite({ domain }) {
 
     const nextAttSlide = (imgCount) => setAttSlideIdx(prev => (prev + 1) % imgCount);
     const prevAttSlide = (imgCount) => setAttSlideIdx(prev => (prev === 0 ? imgCount - 1 : prev - 1));
-
-    const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
 
     useEffect(() => {
         if (checkIn && checkOut && activeRoom && activeMenu === 'ROOMS') {
@@ -883,16 +884,22 @@ export default function HotelWebsite({ domain }) {
                                                         <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="room" />
                                                     ))}
                                                     {/* 💡 [수정] 객실 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
-                                                    {activeRoom.images.length > 1 && (
+                                                    {activeRoom.images.length > 1 && !isRoomSliderAuto && (
                                                         <>
-                                                            <button onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                            <button
+                                                                onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1); }}
+                                                                className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100"
+                                                            >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                             </button>
-                                                            <button onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev + 1); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                            <button
+                                                                onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev + 1); }}
+                                                                className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100"
+                                                            >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                             </button>
 
-                                                            {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
+                                                            {/* 위치 표시 점(Dots) */}
                                                             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
                                                                 {activeRoom.images.map((_, idx) => (
                                                                     <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(roomSlideIdx % activeRoom.images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
