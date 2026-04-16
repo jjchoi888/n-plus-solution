@@ -718,16 +718,22 @@ export default function HotelWebsite({ domain }) {
                                 ))
                             )}
 
+                            {/* 💡 [수정] 메인 슬라이더: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
                             {!isMainSliderAuto && sliderImages.length > 1 && (
                                 <>
-                                    <button onClick={prevMainSlide} className="absolute left-4 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                    <button onClick={prevMainSlide} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                     </button>
-                                    <button onClick={nextMainSlide} className="absolute right-4 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                    <button onClick={nextMainSlide} className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                     </button>
-                                    <div className="absolute inset-y-0 left-0 w-1/4 z-20 md:hidden" onClick={prevMainSlide}></div>
-                                    <div className="absolute inset-y-0 right-0 w-1/4 z-20 md:hidden" onClick={nextMainSlide}></div>
+
+                                    {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
+                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+                                        {sliderImages.map((_, idx) => (
+                                            <div key={`dot_${idx}`} className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all shadow-sm ${currentSlide === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                        ))}
+                                    </div>
                                 </>
                             )}
 
@@ -876,14 +882,22 @@ export default function HotelWebsite({ domain }) {
                                                     {activeRoom.images.map((img, idx) => (
                                                         <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="room" />
                                                     ))}
+                                                    {/* 💡 [수정] 객실 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
                                                     {activeRoom.images.length > 1 && (
                                                         <>
-                                                            <button onClick={() => setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                            <button onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                             </button>
-                                                            <button onClick={() => setRoomSlideIdx(prev => prev + 1)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                            <button onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev + 1); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                             </button>
+
+                                                            {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
+                                                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
+                                                                {activeRoom.images.map((_, idx) => (
+                                                                    <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(roomSlideIdx % activeRoom.images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                                                ))}
+                                                            </div>
                                                         </>
                                                     )}
                                                 </>
@@ -1000,16 +1014,22 @@ export default function HotelWebsite({ domain }) {
                                                             <img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" />
                                                         ))}
 
+                                                        {/* 💡 [수정] 부대시설 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
                                                         {!isFacSliderAuto && images.length > 1 && (
                                                             <>
-                                                                <button onClick={() => prevFacSlide(images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                <button onClick={() => prevFacSlide(images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                                 </button>
-                                                                <button onClick={() => nextFacSlide(images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                <button onClick={() => nextFacSlide(images.length)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                                 </button>
-                                                                <div className="absolute inset-y-0 left-0 w-1/4 z-20 md:hidden" onClick={() => prevFacSlide(images.length)}></div>
-                                                                <div className="absolute inset-y-0 right-0 w-1/4 z-20 md:hidden" onClick={() => nextFacSlide(images.length)}></div>
+
+                                                                {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
+                                                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
+                                                                    {images.map((_, idx) => (
+                                                                        <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(facSlideIdx % images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                                                    ))}
+                                                                </div>
                                                             </>
                                                         )}
                                                     </>
@@ -1050,16 +1070,22 @@ export default function HotelWebsite({ domain }) {
                                                             <img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" />
                                                         ))}
 
+                                                        {/* 💡 [수정] 관광지 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
                                                         {!isAttSliderAuto && images.length > 1 && (
                                                             <>
-                                                                <button onClick={() => prevAttSlide(images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                <button onClick={() => prevAttSlide(images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                                 </button>
-                                                                <button onClick={() => nextAttSlide(images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                <button onClick={() => nextAttSlide(images.length)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                                 </button>
-                                                                <div className="absolute inset-y-0 left-0 w-1/4 z-20 md:hidden" onClick={() => prevAttSlide(images.length)}></div>
-                                                                <div className="absolute inset-y-0 right-0 w-1/4 z-20 md:hidden" onClick={() => nextAttSlide(images.length)}></div>
+
+                                                                {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
+                                                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
+                                                                    {images.map((_, idx) => (
+                                                                        <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(attSlideIdx % images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                                                    ))}
+                                                                </div>
                                                             </>
                                                         )}
                                                     </>
