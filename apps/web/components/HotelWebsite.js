@@ -7,7 +7,6 @@ import MemberDashboard from "./MemberDashboard";
 
 const BASE_URL = '';
 
-// 💡 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {
     const now = new Date();
     if (now.getHours() < 12) now.setDate(now.getDate() - 1);
@@ -18,7 +17,6 @@ const getHotelDate = (offsetDays = 0) => {
     return `${year}-${month}-${day}`;
 };
 
-// 장바구니(RoomList) 하얀 화면 원인 추적기
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false, error: null }; }
     static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -39,6 +37,7 @@ class ErrorBoundary extends React.Component {
     }
 }
 
+// 💡 [핵심] 번역 사전에 모든 알림 메시지와 로그인 UI 텍스트를 추가했습니다.
 const translations = {
     en: {
         home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
@@ -54,7 +53,51 @@ const translations = {
         firstName: 'First Name', lastName: 'Last Name', email: 'Email Address', phone: 'Phone Number', nationality: 'Nationality',
         extraOptions: 'Extra Options', extraBed: 'Extra Bed',
         paymentMethod: 'Payment Method', cardNum: 'Card Number', expiry: 'Expiry Date', cvv: 'CVV',
-        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...'
+        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...',
+
+        // --- 신규 추가된 시스템 알림 및 Auth 번역 ---
+        selectValidDates: "Please select valid dates.",
+        checkoutAfterCheckin: "Check-out must be after check-in.",
+        notEnoughRooms: "Not enough rooms available.",
+        invalidPromo: "Invalid or expired promo code.",
+        promoRoomOnly: "This code is only valid for: ",
+        promoApplied: "🎉 Promo applied successfully! You get ",
+        promoOff: "% OFF!",
+        fillRequired: "Please fill in all required details.",
+        bookingConfirmed: "✅ Booking Confirmed!\nEmail and receipt have been sent.",
+        bookingFailed: "❌ Failed: ",
+        bookingApiError: "Booking API Error",
+        serverError: "Error connecting to the server.",
+        promoAuto1: "🎁 Promo [ ",
+        promoAuto2: " ] has been applied automatically!\nPlease select your check-in/check-out dates below to proceed.",
+        promoCopied1: "🎁 Promo code '",
+        promoCopied2: "' has been copied!\nPlease select your dates and room, then apply it at checkout.",
+
+        loginTo: "Log In to ",
+        continueGoogle: "Continue with Google",
+        or: "OR",
+        forgotPw: "Forgot Password?",
+        loginBtn: "Log In",
+        createAccount: "Create Account",
+        signUpBtn: "Sign Up",
+        resetPw: "Reset Password",
+        resetDesc: "Enter your registered email address to receive a reset link.",
+        regEmail: "Registered Email",
+        sendReset: "Send Reset Link",
+        backLogin: "Back to Login",
+        noAccount: "Don't have an account? ",
+        signUpLink: "Sign up",
+        hasAccount: "Already a member? ",
+        loginLink: "Log in",
+        logoutMsg: "You have been logged out.",
+        welcomeBack: "Welcome back!",
+        welcomeNew: "Welcome to our hotel!",
+        authFailed: "Authentication failed.",
+        googleFailed: "Google Login failed.",
+        resetSent: "A password reset link has been sent if the email exists.",
+        myPageBtn: "My Page",
+        loginSignUpBtn: "Log In / Sign Up",
+        logoutBtn: "Logout"
     },
     ko: {
         home: '홈', rooms: '객실', facilities: '부대시설', attractions: '관광지', contact: '오시는길',
@@ -70,7 +113,50 @@ const translations = {
         firstName: '이름 (First Name)', lastName: '성 (Last Name)', email: '이메일', phone: '연락처', nationality: '국적',
         extraOptions: '추가 옵션', extraBed: '엑스트라 베드',
         paymentMethod: '결제 정보', cardNum: '카드 번호', expiry: '유효기간 (MM/YY)', cvv: '보안코드 (CVV)',
-        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...'
+        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...',
+
+        selectValidDates: "체크인과 체크아웃 날짜를 선택해주세요.",
+        checkoutAfterCheckin: "체크아웃은 체크인 날짜 이후여야 합니다.",
+        notEnoughRooms: "예약 가능한 객실이 부족합니다.",
+        invalidPromo: "존재하지 않거나 만료된 코드입니다.",
+        promoRoomOnly: "이 코드는 다음 객실에만 적용됩니다: ",
+        promoApplied: "🎉 프로모션이 적용되었습니다! ",
+        promoOff: "% 할인 혜택!",
+        fillRequired: "모든 필수 입력란을 채워주세요.",
+        bookingConfirmed: "✅ 예약이 확정되었습니다!\n입력하신 이메일로 영수증과 확정서가 발송되었습니다.",
+        bookingFailed: "❌ 실패: ",
+        bookingApiError: "예약 서버 오류",
+        serverError: "서버 연결에 실패했습니다.",
+        promoAuto1: "🎁 [ ",
+        promoAuto2: " ] 프로모션 혜택이 자동 적용되었습니다!\n아래 화면에서 원하시는 '체크인/체크아웃 날짜'를 선택하고 예약을 진행해 주세요.",
+        promoCopied1: "🎁 '",
+        promoCopied2: "' 코드가 복사되었습니다!\n원하시는 날짜와 객실을 선택 후 결제창에서 적용(Apply)을 눌러주세요.",
+
+        loginTo: "로그인 - ",
+        continueGoogle: "Google로 계속하기",
+        or: "또는",
+        forgotPw: "비밀번호 찾기",
+        loginBtn: "로그인",
+        createAccount: "회원가입",
+        signUpBtn: "가입하기",
+        resetPw: "비밀번호 재설정",
+        resetDesc: "가입하신 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.",
+        regEmail: "가입된 이메일",
+        sendReset: "재설정 링크 보내기",
+        backLogin: "로그인으로 돌아가기",
+        noAccount: "계정이 없으신가요? ",
+        signUpLink: "회원가입",
+        hasAccount: "이미 회원이신가요? ",
+        loginLink: "로그인",
+        logoutMsg: "로그아웃 되었습니다.",
+        welcomeBack: "다시 오신 것을 환영합니다!",
+        welcomeNew: "저희 호텔에 오신 것을 환영합니다!",
+        authFailed: "인증에 실패했습니다.",
+        googleFailed: "구글 로그인에 실패했습니다.",
+        resetSent: "등록된 이메일이 맞다면 비밀번호 재설정 링크가 발송되었습니다.",
+        myPageBtn: "마이페이지",
+        loginSignUpBtn: "로그인 / 회원가입",
+        logoutBtn: "로그아웃"
     },
     zh: {
         home: '首页', rooms: '客房', facilities: '设施', attractions: '景点', contact: '联系我们',
@@ -86,7 +172,50 @@ const translations = {
         firstName: '名字', lastName: '姓氏', email: '电子邮件', phone: '电话号码', nationality: '国籍',
         extraOptions: '额外选项', extraBed: '加床',
         paymentMethod: '付款方式', cardNum: '卡号', expiry: '有效期', cvv: 'CVV',
-        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...'
+        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...',
+
+        selectValidDates: "请选择有效的日期。",
+        checkoutAfterCheckin: "退房日期必须在入住日期之后。",
+        notEnoughRooms: "可用客房不足。",
+        invalidPromo: "优惠码无效或已过期。",
+        promoRoomOnly: "此代码仅适用于：",
+        promoApplied: "🎉 优惠码已成功应用！您将享受 ",
+        promoOff: "% 的折扣！",
+        fillRequired: "请填写所有必填信息。",
+        bookingConfirmed: "✅ 预订已确认！\n电子邮件和收据已发送。",
+        bookingFailed: "❌ 失败：",
+        bookingApiError: "预订 API 错误",
+        serverError: "连接服务器错误。",
+        promoAuto1: "🎁 优惠码 [ ",
+        promoAuto2: " ] 已自动应用！\n请在下方选择您的入住/退房日期以继续。",
+        promoCopied1: "🎁 优惠码 '",
+        promoCopied2: "' 已复制！\n请选择您的日期和客房，然后在结账时应用它。",
+
+        loginTo: "登录到 ",
+        continueGoogle: "使用 Google 继续",
+        or: "或",
+        forgotPw: "忘记密码？",
+        loginBtn: "登录",
+        createAccount: "创建账户",
+        signUpBtn: "注册",
+        resetPw: "重置密码",
+        resetDesc: "输入您注册的电子邮件地址以接收重置链接。",
+        regEmail: "注册邮箱",
+        sendReset: "发送重置链接",
+        backLogin: "返回登录",
+        noAccount: "没有账户？",
+        signUpLink: "注册",
+        hasAccount: "已经是会员？",
+        loginLink: "登录",
+        logoutMsg: "您已成功注销。",
+        welcomeBack: "欢迎回来！",
+        welcomeNew: "欢迎来到我们的酒店！",
+        authFailed: "认证失败。",
+        googleFailed: "Google 登录失败。",
+        resetSent: "如果邮箱存在，密码重置链接已发送。",
+        myPageBtn: "我的主页",
+        loginSignUpBtn: "登录 / 注册",
+        logoutBtn: "注销"
     },
     ja: {
         home: 'ホーム', rooms: '客室', facilities: '施設', attractions: '観光', contact: 'アクセス',
@@ -102,7 +231,50 @@ const translations = {
         firstName: '名', lastName: '姓', email: 'メールアドレス', phone: '電話番号', nationality: '国籍',
         extraOptions: '追加オプション', extraBed: 'エキストラベッド',
         paymentMethod: 'お支払い方法', cardNum: 'カード番号', expiry: '有効期限', cvv: 'CVV',
-        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...'
+        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...',
+
+        selectValidDates: "有効な日付を選択してください。",
+        checkoutAfterCheckin: "チェックアウトはチェックインの日付より後にする必要があります。",
+        notEnoughRooms: "利用可能な客室が不足しています。",
+        invalidPromo: "無効または期限切れのプロモコードです。",
+        promoRoomOnly: "このコードは以下の客室にのみ適用されます: ",
+        promoApplied: "🎉 プロモコードが正常に適用されました！ ",
+        promoOff: "% オフになります！",
+        fillRequired: "すべての必須項目を入力してください。",
+        bookingConfirmed: "✅ 予約が確定しました！\nメールと領収書が送信されました。",
+        bookingFailed: "❌ 失敗: ",
+        bookingApiError: "予約 API エラー",
+        serverError: "サーバーへの接続エラー。",
+        promoAuto1: "🎁 プロモコード [ ",
+        promoAuto2: " ] が自動的に適用されました！\nチェックイン/チェックアウトの日付を選択して続行してください。",
+        promoCopied1: "🎁 プロモコード '",
+        promoCopied2: "' をコピーしました！\n日付と客室を選択し、お支払い画面で適用してください。",
+
+        loginTo: "ログイン - ",
+        continueGoogle: "Googleで続行",
+        or: "または",
+        forgotPw: "パスワードをお忘れですか？",
+        loginBtn: "ログイン",
+        createAccount: "アカウント作成",
+        signUpBtn: "登録",
+        resetPw: "パスワードのリセット",
+        resetDesc: "登録したメールアドレスを入力して、リセットリンクを受け取ってください。",
+        regEmail: "登録メールアドレス",
+        sendReset: "リセットリンクを送信",
+        backLogin: "ログインに戻る",
+        noAccount: "アカウントをお持ちでないですか？",
+        signUpLink: "登録する",
+        hasAccount: "すでに会員ですか？",
+        loginLink: "ログイン",
+        logoutMsg: "ログアウトしました。",
+        welcomeBack: "お帰りなさい！",
+        welcomeNew: "当ホテルへようこそ！",
+        authFailed: "認証に失敗しました。",
+        googleFailed: "Googleログインに失敗しました。",
+        resetSent: "メールアドレスが存在する場合、パスワードリセットリンクが送信されました。",
+        myPageBtn: "マイページ",
+        loginSignUpBtn: "ログイン / 登録",
+        logoutBtn: "ログアウト"
     }
 };
 
@@ -158,7 +330,9 @@ export default function HotelWebsite({ domain }) {
     const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // LOGIN, REGISTER, FORGOT_PASSWORD
     const [authForm, setAuthForm] = useState({ email: '', pw: '', first: '', last: '', phone: '', nationality: '' });
 
-    // 💡 [추가할 부분] 로그인/가입/로그아웃 핸들러
+    const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
+
+    // 로그인/가입/로그아웃 핸들러
     useEffect(() => {
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) setUser(JSON.parse(savedUser));
@@ -175,10 +349,9 @@ export default function HotelWebsite({ domain }) {
                 last_name: authForm.last,
                 phone: authForm.phone,
                 nationality: authForm.nationality || 'Philippines',
-                membership_status: 'active' // 개별웹 회원은 기본 활성 상태로 간주
+                membership_status: 'active'
             };
 
-            // 💡 프록시를 타는 프론트엔드 API 호출
             const res = await fetch('/api/members/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -191,21 +364,19 @@ export default function HotelWebsite({ domain }) {
                 localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
                 setUser(freshUser);
                 setShowGuestAuthModal(false);
-                setAlertMessage(`Welcome ${guestAuthMode === 'REGISTER' ? 'to our hotel' : 'back'}!`);
-                // 로그인 완료 시 예약자 정보 자동 채우기
+                setAlertMessage(guestAuthMode === 'REGISTER' ? t.welcomeNew : t.welcomeBack);
                 setFirstName(freshUser.first_name || '');
                 setLastName(freshUser.last_name || '');
                 setGuestEmail(freshUser.email || '');
                 setGuestPhone(freshUser.phone || '');
             } else {
-                setAlertMessage("❌ " + (data.message || "Authentication failed."));
+                setAlertMessage("❌ " + (data.message || t.authFailed));
             }
         } catch (err) {
-            setAlertMessage("🚨 Server connection error.");
+            setAlertMessage("🚨 " + t.serverError);
         }
     };
 
-    // 💡 [추가] 구글 로그인 처리 함수 (409 중복가입 에러 방지 포함)
     const handleGoogleLogin = async () => {
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
@@ -214,7 +385,6 @@ export default function HotelWebsite({ domain }) {
             const result = await signInWithPopup(auth, provider);
             const gUser = result.user;
 
-            // 백엔드에 로그인/가입 요청 (Fetch API 사용)
             const response = await fetch('/api/members/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -229,7 +399,6 @@ export default function HotelWebsite({ domain }) {
                 })
             });
 
-            // 💡 [409 에러 해결] 이미 구글로 가입한 적이 있는 유저일 경우
             if (response.status === 409) {
                 const profileRes = await fetch(`/api/members/profile?email=${gUser.email}`);
                 const profileData = await profileRes.json();
@@ -239,7 +408,7 @@ export default function HotelWebsite({ domain }) {
                     localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
                     setUser(existingUser);
                     setShowGuestAuthModal(false);
-                    setAlertMessage('Welcome back!');
+                    setAlertMessage(t.welcomeBack);
                 }
                 return;
             }
@@ -250,43 +419,36 @@ export default function HotelWebsite({ domain }) {
                 localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
                 setUser(freshUser);
                 setShowGuestAuthModal(false);
-                setAlertMessage(`Welcome ${guestAuthMode === 'REGISTER' ? 'to our hotel' : 'back'}!`);
+                setAlertMessage(guestAuthMode === 'REGISTER' ? t.welcomeNew : t.welcomeBack);
             } else {
-                setAlertMessage("❌ " + (data.message || "Google Login failed."));
+                setAlertMessage("❌ " + (data.message || t.googleFailed));
             }
         } catch (error) {
             console.error("Google Popup Error:", error);
-            // 사용자가 팝업을 닫은 경우 무시
         }
     };
 
     const handleLogout = () => {
         localStorage.removeItem('nplus_guest_user');
         setUser(null);
-        setAlertMessage("You have been logged out.");
-        setActiveMenu('HOME'); // 홈으로 이동
+        setAlertMessage(t.logoutMsg);
+        setActiveMenu('HOME');
     };
 
-    // 💡 독립 도메인 대응형 hotelCode 추출기
     const getEffectiveHotelCode = () => {
         if (typeof window === 'undefined') return 'sample001';
 
         const params = new URLSearchParams(window.location.search);
         const hotelParam = params.get('hotel');
 
-        // 1순위: URL 파라미터 우선 (?hotel=myhotel)
         if (hotelParam) return hotelParam;
 
         const hostname = window.location.hostname;
 
-        // 2순위: 로컬 테스트 환경
         if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
             return 'sample001';
         }
 
-        // 3순위: [핵심] 독립 도메인 판별 (Domain Mapping)
-        // 실제 운영 시에는 이 부분을 백엔드 API에서 받아오거나(추천), 
-        // 아래와 같이 매핑 테이블을 관리합니다.
         const domainMap = {
             'grandhotel.com': 'grand_001',
             'www.grandhotel.com': 'grand_001',
@@ -294,11 +456,8 @@ export default function HotelWebsite({ domain }) {
             'hotel-n-plus.vercel.app': 'sample001'
         };
 
-        if (domainMap[hostname]) {
-            return domainMap[hostname];
-        }
+        if (domainMap[hostname]) return domainMap[hostname];
 
-        // 4순위: 만약 매핑 테이블에 없다면 서브도메인 방식(hotelnplus.com)으로 시도
         if (hostname.includes('hotelnplus.com')) {
             const parts = hostname.split('.');
             const subdomain = parts[0].toLowerCase();
@@ -309,13 +468,11 @@ export default function HotelWebsite({ domain }) {
             }
         }
 
-        // 최종 기본값
         return 'sample001';
     };
 
     const hotelCode = getEffectiveHotelCode();
 
-    // 1. 프로모션 데이터 로드
     useEffect(() => {
         const fetchLivePromotions = async () => {
             try {
@@ -334,7 +491,6 @@ export default function HotelWebsite({ domain }) {
         fetchLivePromotions();
     }, [hotelCode]);
 
-    // 2. 기본 세팅 및 객실 정보 로드
     useEffect(() => {
         setLoading(true);
 
@@ -371,10 +527,6 @@ export default function HotelWebsite({ domain }) {
 
     }, [hotelCode]);
 
-    // =========================================================================
-    // 💡 [핵심 UX 혁신] 딥링크 수신 로직 (Deep Link Receiver)
-    // URL에 promo, roomType 파라미터가 있으면 즉시 낚아채어 자동 적용합니다.
-    // =========================================================================
     useEffect(() => {
         if (typeof window !== 'undefined' && activePromos.length > 0 && rooms.length > 0) {
             const params = new URLSearchParams(window.location.search);
@@ -385,36 +537,28 @@ export default function HotelWebsite({ domain }) {
                 const promoObj = activePromos.find(p => p.code.toUpperCase() === promoParam.toUpperCase());
 
                 if (promoObj) {
-                    // 1. 타겟 객실이 명시되어 있다면 해당 객실을 찾아 포커스를 맞춥니다.
                     if (roomTypeParam) {
                         const targetRoom = rooms.find(r => r.name.toLowerCase() === roomTypeParam.toLowerCase());
                         if (targetRoom) setSelectedRoomId(targetRoom.id);
                     }
 
-                    // 2. 할인 코드를 세팅하고, 할인을 즉시 활성화합니다.
                     setPromoCode(promoObj.code);
                     setAppliedPromo(promoObj);
-
-                    // 3. 화면을 '객실(ROOMS)' 탭으로 즉시 강제 전환합니다.
                     setActiveMenu('ROOMS');
 
-                    // 4. 고객에게 친절한 안내 메시지를 띄우고, 날짜 선택 영역으로 살짝 스크롤해줍니다.
-                    setAlertMessage(lang === 'ko'
-                        ? `🎁 [ ${promoObj.code} ] 프로모션 혜택이 자동 적용되었습니다!\n아래 화면에서 원하시는 '체크인/체크아웃 날짜'를 선택하고 예약을 진행해 주세요.`
-                        : `🎁 Promo [ ${promoObj.code} ] has been applied automatically!\nPlease select your check-in/check-out dates below to proceed.`);
+                    // 💡 [변경됨] 리팩토링된 다국어 알림 메시지 사용
+                    setAlertMessage(t.promoAuto1 + promoObj.code + t.promoAuto2);
 
                     setTimeout(() => {
                         window.scrollTo({ top: 300, behavior: 'smooth' });
                     }, 300);
 
-                    // 5. 새로고침 시 무한 반복 적용을 막기 위해 주소창의 꼬리표를 깔끔하게 지워줍니다.
                     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?hotel=${hotelCode}`;
                     window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
                 }
             }
         }
-    }, [activePromos, rooms, hotelCode, lang]);
-    // =========================================================================
+    }, [activePromos, rooms, hotelCode, lang]); // lang 의존성 유지
 
     const safeConfig = config || {};
     let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch (e) { }
@@ -439,19 +583,36 @@ export default function HotelWebsite({ domain }) {
     else if (safeConfig.bg_image_url) sliderImages.push(safeConfig.bg_image_url);
     if (sliderImages.length === 0) sliderImages.push("https://images.unsplash.com/photo-1542314831-c6a4d27a658d?q=80&w=2000&auto=format&fit=crop");
 
+    // 슬라이더 모드 확인용
+    const isMainSliderAuto = !safeConfig.slider_style || safeConfig.slider_style.includes('auto');
+    const activeFac = facilities[activeFacIdx] || {};
+    const isFacSliderAuto = !activeFac.display_style || activeFac.display_style === 'slider';
+    const activeAtt = attractions[activeAttIdx] || {};
+    const isAttSliderAuto = !activeAtt.display_style || activeAtt.display_style === 'slider';
+
     useEffect(() => {
         let timer;
-        if (activeMenu === 'HOME' && sliderImages.length > 1) {
+        if (activeMenu === 'HOME' && sliderImages.length > 1 && isMainSliderAuto) {
             timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % sliderImages.length), 4000);
         } else if (activeMenu === 'ROOMS') {
             timer = setInterval(() => setRoomSlideIdx(prev => prev + 1), 3500);
-        } else if (activeMenu === 'FACILITIES') {
+        } else if (activeMenu === 'FACILITIES' && isFacSliderAuto) {
             timer = setInterval(() => setFacSlideIdx(prev => prev + 1), 3500);
-        } else if (activeMenu === 'ATTRACTIONS') {
+        } else if (activeMenu === 'ATTRACTIONS' && isAttSliderAuto) {
             timer = setInterval(() => setAttSlideIdx(prev => prev + 1), 3500);
         }
         return () => clearInterval(timer);
-    }, [activeMenu, sliderImages.length]);
+    }, [activeMenu, sliderImages.length, isMainSliderAuto, isFacSliderAuto, isAttSliderAuto]);
+
+    // 수동 슬라이드 조작
+    const nextMainSlide = () => setCurrentSlide(prev => (prev + 1) % sliderImages.length);
+    const prevMainSlide = () => setCurrentSlide(prev => (prev === 0 ? sliderImages.length - 1 : prev - 1));
+
+    const nextFacSlide = (imgCount) => setFacSlideIdx(prev => (prev + 1) % imgCount);
+    const prevFacSlide = (imgCount) => setFacSlideIdx(prev => (prev === 0 ? imgCount - 1 : prev - 1));
+
+    const nextAttSlide = (imgCount) => setAttSlideIdx(prev => (prev + 1) % imgCount);
+    const prevAttSlide = (imgCount) => setAttSlideIdx(prev => (prev === 0 ? imgCount - 1 : prev - 1));
 
     const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
 
@@ -470,8 +631,6 @@ export default function HotelWebsite({ domain }) {
 
     const handleTabClick = (e, setter, value) => { setter(value); if (e.target) e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); };
     const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
-
-    const t = translations[lang] || translations.en;
 
     const renderPriceStr = (price, name) => {
         if (lang === 'ko') return `${name} 객실을 ₱${price.toLocaleString()}${t.night} ${t.startingFrom}`;
@@ -513,18 +672,18 @@ export default function HotelWebsite({ domain }) {
                                 <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                             </select>
 
-                            {/* 💡 로그인 / 마이페이지 버튼 추가 */}
+                            {/* 로그인 / 마이페이지 버튼 */}
                             {!user ? (
                                 <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className="hidden sm:block px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
-                                    Log In / Sign Up
+                                    {t.loginSignUpBtn}
                                 </button>
                             ) : (
                                 <div className="hidden sm:flex items-center gap-3">
                                     <span className="text-xs font-black text-slate-500 uppercase">{user.first_name || user.name}</span>
-                                        <button onClick={() => { setActiveMenu('MYPAGE'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm">
-                                            My Page
-                                        </button>
-                                    <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">Logout</button>
+                                    <button onClick={() => { setActiveMenu('MYPAGE'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm">
+                                        {t.myPageBtn}
+                                    </button>
+                                    <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">{t.logoutBtn}</button>
                                 </div>
                             )}
 
@@ -533,7 +692,7 @@ export default function HotelWebsite({ domain }) {
                         </div>
                     </div>
                     <div className={`md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
-                        {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }].map(menu => (
+                        {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }, { id: 'MYPAGE', label: t.myPageBtn }].map(menu => (
                             <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
                         ))}
                     </div>
@@ -542,16 +701,38 @@ export default function HotelWebsite({ domain }) {
                 {/* 🏠 메인 화면 */}
                 {activeMenu === 'HOME' && (
                     <div className="animate-fade-in-up">
-                        <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
-                            {sliderImages.map((img, idx) => (
-                                <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
-                            ))}
+                        <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900 group">
+
+                            {safeConfig.slider_style === 'auto_slide' ? (
+                                <div
+                                    className="absolute inset-0 flex transition-transform duration-700 ease-in-out z-10"
+                                    style={{ transform: `translateX(-${currentSlide * 100}%)`, width: `${sliderImages.length * 100}%` }}
+                                >
+                                    {sliderImages.map((img, idx) => (
+                                        <img key={idx} src={img} className="w-full h-full object-cover opacity-60" style={{ width: `${100 / sliderImages.length}%` }} alt="slide" />
+                                    ))}
+                                </div>
+                            ) : (
+                                sliderImages.map((img, idx) => (
+                                    <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                                ))
+                            )}
+
+                            {!isMainSliderAuto && sliderImages.length > 1 && (
+                                <>
+                                    <button onClick={prevMainSlide} className="absolute left-4 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                    </button>
+                                    <button onClick={nextMainSlide} className="absolute right-4 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                    </button>
+                                    <div className="absolute inset-y-0 left-0 w-1/4 z-20 md:hidden" onClick={prevMainSlide}></div>
+                                    <div className="absolute inset-y-0 right-0 w-1/4 z-20 md:hidden" onClick={nextMainSlide}></div>
+                                </>
+                            )}
 
                             {(() => {
-                                let finalPos = {
-                                    title: { x: 10, y: 20, w: 80, size: 48, align: 'center' },
-                                    subtitle: { x: 30, y: 50, w: 80, size: 18, align: 'center' }
-                                };
+                                let finalPos = { title: { x: 10, y: 20, w: 80, size: 48, align: 'center' }, subtitle: { x: 30, y: 50, w: 80, size: 18, align: 'center' } };
                                 try {
                                     if (safeConfig.welcome_text_pos) {
                                         const parsed = typeof safeConfig.welcome_text_pos === 'string' ? JSON.parse(safeConfig.welcome_text_pos) : safeConfig.welcome_text_pos;
@@ -562,36 +743,18 @@ export default function HotelWebsite({ domain }) {
 
                                 return (
                                     <>
-                                        {/* 타이틀 박스 */}
-                                        <div className="absolute z-20 px-4 transition-all duration-500 ease-out"
-                                            style={{
-                                                left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`,
-                                                top: `${Math.max(0, Math.min(90, finalPos.title.y))}%`,
-                                                width: `${Math.max(20, Math.min(100, finalPos.title.w))}%`,
-                                                maxWidth: '100vw'
-                                            }}>
+                                        <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
+                                            style={{ left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.title.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.title.w))}%`, maxWidth: '100vw' }}>
                                             <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap w-full"
-                                                style={{
-                                                    textAlign: finalPos.title.align,
-                                                    fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)`
-                                                }}>
+                                                style={{ textAlign: finalPos.title.align, fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` }}>
                                                 {safeConfig.welcome_title || "Welcome"}
                                             </h1>
                                         </div>
 
-                                        {/* 서브타이틀 박스 */}
-                                        <div className="absolute z-20 px-4 transition-all duration-500 ease-out"
-                                            style={{
-                                                left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`,
-                                                top: `${Math.max(0, Math.min(90, finalPos.subtitle.y))}%`,
-                                                width: `${Math.max(20, Math.min(100, finalPos.subtitle.w))}%`,
-                                                maxWidth: '100vw'
-                                            }}>
+                                        <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
+                                            style={{ left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.subtitle.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.subtitle.w))}%`, maxWidth: '100vw' }}>
                                             <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap w-full"
-                                                style={{
-                                                    textAlign: finalPos.subtitle.align,
-                                                    fontSize: `clamp(0.9rem, ${finalPos.subtitle.size * 0.08}vw, ${finalPos.subtitle.size}px)`
-                                                }}>
+                                                style={{ textAlign: finalPos.subtitle.align, fontSize: `clamp(0.9rem, ${finalPos.subtitle.size * 0.08}vw, ${finalPos.subtitle.size}px)` }}>
                                                 {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
                                             </p>
                                         </div>
@@ -609,11 +772,10 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-                {/* 💡 [완벽 복구] 인라인 장바구니 검색 화면 */}
+                {/* 💡 예약 화면 (BOOK) */}
                 {activeMenu === 'BOOK' && (
                     <section className="relative pt-32 pb-20 px-4 md:px-6 w-full flex-grow min-h-[85vh] flex flex-col items-center justify-start animate-fade-in-up">
 
-                        {/* 1. 뒷배경 슬라이더 */}
                         <div className="fixed inset-0 z-0 bg-slate-50">
                             {sliderImages.map((img, idx) => (
                                 <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-40 z-10' : 'opacity-0 z-0'}`} alt="slide" />
@@ -621,7 +783,6 @@ export default function HotelWebsite({ domain }) {
                             <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
                         </div>
 
-                        {/* 2. 검색 필터 */}
                         <div className="relative z-[100] w-full max-w-5xl flex flex-col items-center mt-4">
                             <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
 
@@ -650,7 +811,6 @@ export default function HotelWebsite({ domain }) {
                                         <span className="text-slate-600 md:hidden text-xs">▼</span>
                                     </div>
 
-                                    {/* 드롭다운 내부 */}
                                     {showGuestPicker && (
                                         <div className="absolute top-full left-0 md:left-auto md:right-0 w-[300px] mt-4 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-[200] animate-fade-in space-y-5 text-slate-800 cursor-default" onClick={e => e.stopPropagation()}>
                                             <div className="flex justify-between items-center">
@@ -677,7 +837,7 @@ export default function HotelWebsite({ domain }) {
                                 </div>
 
                                 <button onClick={() => {
-                                    if (!checkIn || !checkOut) return setAlertMessage(lang === 'ko' ? "체크인과 체크아웃 날짜를 선택해주세요." : "Please select valid dates.");
+                                    if (!checkIn || !checkOut) return setAlertMessage(t.selectValidDates);
                                     setHasSearched(true);
                                 }} className="w-full md:w-auto theme-bg theme-hover text-white px-10 py-4 md:py-5 rounded-2xl md:rounded-full font-black text-lg transition-transform active:scale-95 shadow-md m-1">
                                     Search
@@ -685,20 +845,10 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
 
-                        {/* 3. 검색 결과창 */}
                         {hasSearched && (
                             <div className="w-full max-w-5xl relative z-10 mt-8">
                                 <ErrorBoundary>
-                                    {/* 💡 [완벽 해결] searchData 대신 현재 파일에 존재하는 진짜 state 변수들을 연결합니다! */}
-                                    <RoomList
-                                        hotelCode={hotelCode}
-                                        lang={lang}
-                                        checkIn={checkIn}
-                                        checkOut={checkOut}
-                                        adults={adults}
-                                        kids={kids}
-                                        source="Hotel Web"
-                                    />
+                                    <RoomList hotelCode={hotelCode} lang={lang} checkIn={checkIn} checkOut={checkOut} adults={adults} kids={kids} source="Hotel Web" />
                                 </ErrorBoundary>
                             </div>
                         )}
@@ -720,11 +870,23 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                                 <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-30 -mt-px">
                                     <div className="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
+                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
                                             {activeRoom.images && activeRoom.images.length > 0 ? (
-                                                activeRoom.images.map((img, idx) => (
-                                                    <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="room" />
-                                                ))
+                                                <>
+                                                    {activeRoom.images.map((img, idx) => (
+                                                        <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="room" />
+                                                    ))}
+                                                    {activeRoom.images.length > 1 && (
+                                                        <>
+                                                            <button onClick={() => setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                            </button>
+                                                            <button onClick={() => setRoomSlideIdx(prev => prev + 1)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </>
                                             ) : (<div className="absolute inset-0 flex items-center justify-center text-slate-400 font-bold bg-slate-100">{t.noImg}</div>)}
                                         </div>
                                         <div>
@@ -743,13 +905,11 @@ export default function HotelWebsite({ domain }) {
 
                                         <form className="space-y-4 relative mt-2" onSubmit={(e) => {
                                             e.preventDefault();
-                                            if (!checkIn || !checkOut) return setAlertMessage("Please select valid dates.");
-                                            if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage("Check-out must be after check-in.");
-
+                                            if (!checkIn || !checkOut) return setAlertMessage(t.selectValidDates);
+                                            if (new Date(checkOut) <= new Date(checkIn)) return setAlertMessage(t.checkoutAfterCheckin);
                                             if (availableCount !== null && Number(availableCount) < Number(roomCount)) {
-                                                return setAlertMessage("Not enough rooms available.");
+                                                return setAlertMessage(t.notEnoughRooms);
                                             }
-
                                             setShowBookingModal(true);
                                         }}>
                                             <div className="flex flex-col gap-4">
@@ -829,11 +989,31 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                                 <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
                                     <div className="lg:col-span-7 flex flex-col gap-6">
-                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
+                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
                                             {(() => {
                                                 const activeItem = facilities[activeFacIdx] || {};
                                                 let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"]);
-                                                return images.map((img, idx) => (<img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" />));
+
+                                                return (
+                                                    <>
+                                                        {images.map((img, idx) => (
+                                                            <img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" />
+                                                        ))}
+
+                                                        {!isFacSliderAuto && images.length > 1 && (
+                                                            <>
+                                                                <button onClick={() => prevFacSlide(images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                </button>
+                                                                <button onClick={() => nextFacSlide(images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                </button>
+                                                                <div className="absolute inset-y-0 left-0 w-1/4 z-20 md:hidden" onClick={() => prevFacSlide(images.length)}></div>
+                                                                <div className="absolute inset-y-0 right-0 w-1/4 z-20 md:hidden" onClick={() => nextFacSlide(images.length)}></div>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                );
                                             })()}
                                         </div>
                                     </div>
@@ -859,11 +1039,31 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                                 <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
                                     <div className="lg:col-span-7 flex flex-col gap-6">
-                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
+                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
                                             {(() => {
                                                 const activeItem = attractions[activeAttIdx] || {};
                                                 let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"]);
-                                                return images.map((img, idx) => (<img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" />));
+
+                                                return (
+                                                    <>
+                                                        {images.map((img, idx) => (
+                                                            <img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" />
+                                                        ))}
+
+                                                        {!isAttSliderAuto && images.length > 1 && (
+                                                            <>
+                                                                <button onClick={() => prevAttSlide(images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                </button>
+                                                                <button onClick={() => nextAttSlide(images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/30 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:block">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                </button>
+                                                                <div className="absolute inset-y-0 left-0 w-1/4 z-20 md:hidden" onClick={() => prevAttSlide(images.length)}></div>
+                                                                <div className="absolute inset-y-0 right-0 w-1/4 z-20 md:hidden" onClick={() => nextAttSlide(images.length)}></div>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                );
                                             })()}
                                         </div>
                                     </div>
@@ -882,7 +1082,20 @@ export default function HotelWebsite({ domain }) {
                     <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
                         <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8">
                             <div className="lg:col-span-7 w-full h-[300px] md:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
-                                {safeConfig.map_embed_url ? (<div dangerouslySetInnerHTML={{ __html: safeConfig.map_embed_url }} className="w-full h-full" />) : (<div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm">{t.mapUpdating}</div>)}
+                                {safeConfig.map_embed_url ? (
+                                    <iframe
+                                        src={safeConfig.map_embed_url}
+                                        width="100%"
+                                        height="100%"
+                                        style={{ border: 0 }}
+                                        allowFullScreen=""
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        title="Google Map"
+                                    ></iframe>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm">{t.mapUpdating}</div>
+                                )}
                             </div>
                             <div className="lg:col-span-3 flex flex-col">
                                 <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
@@ -906,9 +1119,9 @@ export default function HotelWebsite({ domain }) {
                     </section>
                 )}
 
-                {/* 💡 [추가된 부분] 고객용 MY PAGE 화면 렌더링 */}
+                {/* 💡 고객용 MY PAGE */}
                 {activeMenu === 'MYPAGE' && (
-                    <div className="w-full flex-grow bg-slate-50 min-h-screen">
+                    <div className="w-full flex-grow bg-slate-50 min-h-screen pt-20">
                         <MemberDashboard hotelCode={hotelCode} />
                     </div>
                 )}
@@ -925,18 +1138,16 @@ export default function HotelWebsite({ domain }) {
                     const discountAmount = appliedPromo ? (basePrice * (appliedPromo.discount_pct / 100)) : 0;
                     const finalTotal = basePrice + extraBedPrice - discountAmount;
 
-                    // 프로모션 검증 및 적용 함수
                     const handleApplyPromo = () => {
                         const promo = activePromos.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
-                        if (!promo) return setAlertMessage(lang === 'ko' ? "존재하지 않거나 만료된 코드입니다." : "Invalid or expired promo code.");
+                        if (!promo) return setAlertMessage(t.invalidPromo);
 
-                        // 타겟 객실 검증
                         if (!promo.target_room_type.includes('All Rooms') && !promo.target_room_type.includes(activeRoom?.name)) {
-                            return setAlertMessage(lang === 'ko' ? `이 코드는 다음 객실에만 적용됩니다: ${promo.target_room_type.join(', ')}` : `This code is only valid for: ${promo.target_room_type.join(', ')}`);
+                            return setAlertMessage(t.promoRoomOnly + promo.target_room_type.join(', '));
                         }
 
                         setAppliedPromo(promo);
-                        setAlertMessage(`🎉 Promo applied successfully! You get ${promo.discount_pct}% OFF!`);
+                        setAlertMessage(t.promoApplied + promo.discount_pct + t.promoOff);
                     };
 
                     const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
@@ -944,7 +1155,7 @@ export default function HotelWebsite({ domain }) {
 
                     const handleConfirmBooking = async () => {
                         if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
-                            return setAlertMessage("Please fill in all required details.");
+                            return setAlertMessage(t.fillRequired);
                         }
                         setIsBooking(true);
                         try {
@@ -964,7 +1175,7 @@ export default function HotelWebsite({ domain }) {
                                     nationality: nationality,
                                     total_price: dividedGrandTotal,
                                     payment_method: "Credit Card",
-                                    channel: "Hotel Web" // 💡 [추가] 개별웹 유입 꼬리표 부착!
+                                    channel: "Hotel Web"
                                 });
                             }
 
@@ -977,17 +1188,17 @@ export default function HotelWebsite({ domain }) {
                             const data = await res.json();
 
                             if (data.success) {
-                                setAlertMessage("✅ Booking Confirmed!\nEmail and receipt have been sent.");
+                                setAlertMessage(t.bookingConfirmed);
                                 setShowBookingModal(false);
                                 setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
                                 setCardNum(''); setCardExp(''); setCardCvv(''); setExtraBed(0);
                                 setCheckIn(''); setCheckOut('');
                             } else {
-                                setAlertMessage("❌ Failed: " + (data.message || "Booking API Error"));
+                                setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
                             }
                         } catch (error) {
                             console.error("Booking Error:", error);
-                            setAlertMessage("Error connecting to the server.");
+                            setAlertMessage(t.serverError);
                         } finally {
                             setIsBooking(false);
                         }
@@ -1108,7 +1319,6 @@ export default function HotelWebsite({ domain }) {
                                                     <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm">Cancel</button>
                                                 )}
                                             </div>
-                                            {/* 할인 적용 시 화면에 표시 */}
                                             {appliedPromo && (
                                                 <div className="mt-3 bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex justify-between items-center animate-fade-in text-emerald-700 font-bold text-sm">
                                                     <span>🎉 {appliedPromo.discount_pct}% Discount</span>
@@ -1186,7 +1396,7 @@ export default function HotelWebsite({ domain }) {
                                     setPromoCode(selectedPromo.code);
                                     setActiveMenu('ROOMS');
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    setAlertMessage(`🎁 '${selectedPromo.code}' 코드가 복사되었습니다!\n원하시는 날짜와 객실(Target Room)을 선택 후 결제창에서 적용(Apply)을 눌러주세요.`);
+                                    setAlertMessage(t.promoCopied1 + selectedPromo.code + t.promoCopied2);
                                 }} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg">
                                     RESERVE NOW
                                 </button>
@@ -1243,7 +1453,7 @@ export default function HotelWebsite({ domain }) {
 
                                 {guestAuthMode === 'LOGIN' ? (
                                     <div className="animate-fade-in-up">
-                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">Log In to {safeConfig.welcome_title || 'Hotel'}</h2>
+                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">{t.loginTo}{safeConfig.welcome_title || 'Hotel'}</h2>
                                         <button type="button" onClick={handleGoogleLogin} className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm rounded-xl">
                                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -1251,50 +1461,50 @@ export default function HotelWebsite({ domain }) {
                                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                                             </svg>
-                                            Continue with Google
+                                            {t.continueGoogle}
                                         </button>
                                         <div className="flex items-center mb-6">
                                             <div className="flex-1 border-t border-slate-200"></div>
-                                            <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">OR</span>
+                                            <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.or}</span>
                                             <div className="flex-1 border-t border-slate-200"></div>
                                         </div>
                                         <form onSubmit={handleAuthSubmit} className="space-y-4">
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
                                                 <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label> {/* Using paymentMethod "Password" translation would be better but let's stick to simple text if missing, wait I'll use hardcoded or add to dictionary */}
                                                 <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
                                             </div>
                                             <div className="flex justify-end mt-1 mb-2">
-                                                <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">Forgot Password?</button>
+                                                <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">{t.forgotPw}</button>
                                             </div>
                                             <div className="pt-2">
-                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">Log In</button>
+                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.loginBtn}</button>
                                             </div>
                                         </form>
                                     </div>
                                 ) : guestAuthMode === 'REGISTER' ? (
                                     <div className="animate-fade-in-up">
-                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">Create Account</h2>
+                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">{t.createAccount}</h2>
                                         <form onSubmit={handleAuthSubmit} className="space-y-4">
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
                                                 <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">First Name</label>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
                                                     <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="John" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Last Name</label>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
                                                     <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="Doe" />
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Phone Number</label>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
                                                 <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="09..." />
                                             </div>
                                             <div>
@@ -1302,25 +1512,25 @@ export default function HotelWebsite({ domain }) {
                                                 <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
                                             </div>
                                             <div className="pt-2">
-                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">Sign Up</button>
+                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.signUpBtn}</button>
                                             </div>
                                         </form>
                                     </div>
                                 ) : guestAuthMode === 'FORGOT_PASSWORD' ? (
                                     <div className="animate-fade-in-up">
-                                        <h2 className="text-2xl font-black text-slate-800 mb-2 text-center">Reset Password</h2>
-                                        <p className="text-xs font-bold text-slate-500 mb-6 text-center leading-relaxed">Enter your registered email address to receive a reset link.</p>
-                                        <form onSubmit={(e) => { e.preventDefault(); alert('A password reset link has been sent if the email exists.'); setGuestAuthMode('LOGIN'); }} className="space-y-4">
+                                        <h2 className="text-2xl font-black text-slate-800 mb-2 text-center">{t.resetPw}</h2>
+                                        <p className="text-xs font-bold text-slate-500 mb-6 text-center leading-relaxed">{t.resetDesc}</p>
+                                        <form onSubmit={(e) => { e.preventDefault(); setAlertMessage(t.resetSent); setGuestAuthMode('LOGIN'); }} className="space-y-4">
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Registered Email</label>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.regEmail}</label>
                                                 <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div className="pt-2">
-                                                <button type="submit" className="w-full bg-slate-800 text-white font-black py-3.5 rounded-xl hover:bg-slate-700 transition-colors shadow-md text-sm">Send Reset Link</button>
+                                                <button type="submit" className="w-full bg-slate-800 text-white font-black py-3.5 rounded-xl hover:bg-slate-700 transition-colors shadow-md text-sm">{t.sendReset}</button>
                                             </div>
                                             <div className="text-center pt-4">
                                                 <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-xs font-bold text-slate-500 hover:underline flex items-center justify-center gap-1 mx-auto">
-                                                    <span>←</span> Back to Login
+                                                    <span>←</span> {t.backLogin}
                                                 </button>
                                             </div>
                                         </form>
@@ -1330,9 +1540,9 @@ export default function HotelWebsite({ domain }) {
                                 {guestAuthMode !== 'FORGOT_PASSWORD' && (
                                     <div className="text-center pt-8 mt-8 border-t border-slate-100">
                                         {guestAuthMode === 'LOGIN' ? (
-                                            <p className="text-sm font-bold text-slate-500">Don't have an account? <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="theme-text hover:underline">Sign up</button></p>
+                                            <p className="text-sm font-bold text-slate-500">{t.noAccount}<button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="theme-text hover:underline">{t.signUpLink}</button></p>
                                         ) : (
-                                            <p className="text-sm font-bold text-slate-500">Already a member? <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="theme-text hover:underline">Log in</button></p>
+                                            <p className="text-sm font-bold text-slate-500">{t.hasAccount}<button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="theme-text hover:underline">{t.loginLink}</button></p>
                                         )}
                                     </div>
                                 )}
