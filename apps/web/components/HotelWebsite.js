@@ -590,7 +590,13 @@ export default function HotelWebsite({ domain }) {
     const activeAtt = attractions[activeAttIdx] || {};
     const isAttSliderAuto = !activeAtt.display_style || activeAtt.display_style === 'slider';
 
-    const activeRoom = rooms.find(r => r.id === selectedRoomId) || rooms[0];
+    // 💡 [혁신 1] 프로모션이 적용되면, 해당 프로모션에 허용된 객실 타입만 남기고 싹 필터링합니다!
+    const visibleRooms = appliedPromo && Array.isArray(appliedPromo.target_room_type) && !appliedPromo.target_room_type.includes('All Rooms')
+        ? rooms.filter(r => appliedPromo.target_room_type.includes(r.name))
+        : rooms;
+
+    // 💡 [혁신 2] 전체 객실(rooms) 대신 필터링된 객실(visibleRooms) 안에서 포커스를 잡습니다.
+    const activeRoom = visibleRooms.find(r => r.id === selectedRoomId) || visibleRooms[0];
     const isRoomSliderAuto = !activeRoom?.roomConfig?.display_style || activeRoom.roomConfig.display_style === 'slider';
 
     useEffect(() => {
@@ -865,12 +871,25 @@ export default function HotelWebsite({ domain }) {
                 {/* 🛏️ 개별 ROOMS 탭 */}
                 {activeMenu === 'ROOMS' && (
                     <section className="pt-24 md:pt-32 pb-40 md:pb-56 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow relative z-20">
-                        {rooms.length > 0 && activeRoom ? (
+                        {/* 💡 rooms 대신 visibleRooms를 사용합니다 */}
+                        {visibleRooms.length > 0 && activeRoom ? (
                             <div className="relative z-30">
+
+                                {/* 💡 [안내 배너] 고객에게 현재 프로모션 모드임을 명확히 알려줍니다 */}
+                                {appliedPromo && !appliedPromo.target_room_type.includes('All Rooms') && (
+                                    <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm shadow-sm animate-fade-in">
+                                        <span className="text-lg">🎁</span>
+                                        <span>Only rooms eligible for <b>{appliedPromo.code}</b> ({appliedPromo.discount_pct}% OFF) are shown below.</span>
+                                        <button onClick={() => { setAppliedPromo(null); setPromoCode(''); }} className="ml-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1 rounded-md text-[10px] md:text-xs transition-colors shadow-sm border border-emerald-200">
+                                            Show All Rooms
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x relative z-10">
-                                    {rooms.map(r => (
+                                    {visibleRooms.map(r => (
                                         <button key={r.id} onClick={(e) => handleTabClick(e, setSelectedRoomId, r.id)}
-                                            className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${selectedRoomId === r.id ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
+                                            className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${selectedRoomId === r.id || activeRoom.id === r.id ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
                                             {r.name}
                                         </button>
                                     ))}
@@ -1461,9 +1480,28 @@ export default function HotelWebsite({ domain }) {
                                 <button onClick={() => {
                                     setShowPromoModal(false);
                                     setPromoCode(selectedPromo.code);
+
+                                    // 💡 [혁신 3] 사용자가 귀찮게 Apply를 누를 필요 없이 즉시 할인을 장착(Inject)합니다!
+                                    setAppliedPromo(selectedPromo);
+
+                                    // 💡 [혁신 4] 프로모션이 적용되는 첫 번째 방으로 포커스를 강제 이동시킵니다.
+                                    let firstValidId = null;
+                                    if (selectedPromo.target_room_type.includes('All Rooms')) {
+                                        firstValidId = rooms.length > 0 ? rooms[0].id : null;
+                                    } else {
+                                        const validRoom = rooms.find(r => selectedPromo.target_room_type.includes(r.name));
+                                        if (validRoom) firstValidId = validRoom.id;
+                                    }
+                                    if (firstValidId) setSelectedRoomId(firstValidId);
+
                                     setActiveMenu('ROOMS');
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    setAlertMessage(t.promoCopied1 + selectedPromo.code + t.promoCopied2);
+
+                                    // 💡 고객에게 자동 적용되었다고 안심시켜주는 멘트로 변경!
+                                    const msg = lang === 'ko'
+                                        ? `🎁 '${selectedPromo.code}' 할인이 자동 적용되었습니다!\n화면에는 해당 프로모션이 가능한 객실만 표시됩니다.`
+                                        : `🎁 Promo '${selectedPromo.code}' is now ACTIVE!\nWe've filtered the eligible rooms. The discount is automatically applied at checkout!`;
+                                    setAlertMessage(msg);
                                 }} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg">
                                     RESERVE NOW
                                 </button>
