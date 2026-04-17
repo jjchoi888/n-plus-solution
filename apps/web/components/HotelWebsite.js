@@ -1161,22 +1161,25 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 💡 Secure Checkout 모달창 */}
                 {showBookingModal && (() => {
+                    // 1. 날짜 및 숙박 일수 계산
                     const start = new Date(checkIn);
                     const end = new Date(checkOut);
                     const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 
-                    // 💡 [핵심 수정 1] 글자가 이어붙는 버그를 원천 차단하기 위해 순수 숫자로 강제 변환
+                    // 2. 숫자로 강제 변환 (문자열 이어붙기 버그 원천 차단)
                     const roomPrice = Number(activeRoom?.price || activeRoom?.basePrice || 0);
                     const safeRoomCount = Number(roomCount || 1);
                     const safeExtraBed = Number(extraBed || 0);
 
+                    // 3. 기본 금액 계산
                     const basePrice = roomPrice * nights * safeRoomCount;
                     const extraBedPrice = safeExtraBed * 1000 * nights;
 
+                    // 4. 프로모션 할인 금액 계산
                     const discountPct = appliedPromo ? Number(appliedPromo.discount_pct || 0) : 0;
                     const discountAmount = appliedPromo ? (basePrice * discountPct) / 100 : 0;
 
-                    // 💡 [핵심 수정 2] 정상적인 덧셈/뺄셈 계산 완료
+                    // 5. 💡 최종 결제 금액 도출 (이 금액이 서버 장부에 꽂힙니다!)
                     const finalTotal = basePrice + extraBedPrice - discountAmount;
 
                     // 💡 프로모션 적용 함수
@@ -1184,7 +1187,6 @@ export default function HotelWebsite({ domain }) {
                         const promo = activePromos.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
                         if (!promo) return setAlertMessage(t.invalidPromo);
 
-                        // 타겟 객실 검증
                         if (!promo.target_room_type.includes('All Rooms') && !promo.target_room_type.includes(activeRoom?.name)) {
                             return setAlertMessage(t.promoRoomOnly + promo.target_room_type.join(', '));
                         }
@@ -1193,12 +1195,14 @@ export default function HotelWebsite({ domain }) {
                         setAlertMessage(t.promoApplied + promo.discount_pct + t.promoOff);
                     };
 
+                    // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async () => {
                         if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
                             return setAlertMessage(t.fillRequired);
                         }
                         setIsBooking(true);
                         try {
+                            // 💡 [핵심] 여러 객실을 예약했을 때, 각 방마다 할인된 최종 금액을 1/N 로 나눠서 서버에 보냅니다.
                             const dividedGrandTotal = finalTotal / safeRoomCount;
                             let bookingPayloads = [];
 
@@ -1213,10 +1217,12 @@ export default function HotelWebsite({ domain }) {
                                     email: guestEmail,
                                     phone: guestPhone,
                                     nationality: nationality,
-                                    // 💡 [핵심 수정 3] 백엔드로 할인된 '최종 금액'과 '프로모션 세부 정보'를 던집니다!
+
+                                    // 💡 [핵심] 이제 할인 정보와 최종 할인가가 정확히 서버(b.total_price)로 넘어갑니다!
                                     total_price: dividedGrandTotal,
                                     promo_code: appliedPromo ? appliedPromo.code : null,
                                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
+
                                     payment_method: "Credit Card",
                                     channel: "Hotel Web"
                                 });
@@ -1255,6 +1261,8 @@ export default function HotelWebsite({ domain }) {
                                     {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                                 </div>
                                 <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+
+                                    {/* 1. 게스트 정보 입력 (왼쪽 영역) */}
                                     <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                                         <section>
                                             <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
@@ -1327,7 +1335,7 @@ export default function HotelWebsite({ domain }) {
                                         </section>
                                     </div>
 
-                                    {/* 💡 [UI 개선] 우측 영수증(Summary) 패널 변경 */}
+                                    {/* 2. 결제 영수증(Summary) 패널 (우측 영역) */}
                                     <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto lg:h-full lg:overflow-y-auto">
                                         <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
 
@@ -1346,14 +1354,13 @@ export default function HotelWebsite({ domain }) {
                                             <div className="w-full">
                                                 <div className="flex justify-between w-full">
                                                     <p className="font-black theme-text text-lg leading-tight">{activeRoom?.name}</p>
-                                                    <div className="bg-white border theme-border theme-text font-black px-3 py-1 rounded-lg text-xs self-start">
+                                                    <div className="bg-white border theme-border theme-text font-black px-3 py-1 rounded-lg text-xs self-start shadow-sm">
                                                         x {safeRoomCount}
                                                     </div>
                                                 </div>
-                                                {/* 명확한 가격 계산식 표시 */}
                                                 <div className="mt-3 space-y-1.5 border-t theme-border pt-3">
                                                     <p className="flex justify-between text-slate-600 text-xs font-bold">
-                                                        <span>Base: ₱{(activeRoom?.price || 0).toLocaleString()} x {nights} {t.night.replace('/', '')}</span>
+                                                        <span>Base: ₱{roomPrice.toLocaleString()} x {nights} {t.night.replace('/', '')}</span>
                                                         <span>₱{basePrice.toLocaleString()}</span>
                                                     </p>
                                                     {safeExtraBed > 0 && (
@@ -1363,7 +1370,7 @@ export default function HotelWebsite({ domain }) {
                                                         </p>
                                                     )}
                                                     {appliedPromo && (
-                                                        <p className="flex justify-between text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-md mt-1">
+                                                        <p className="flex justify-between text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-md mt-1 border border-emerald-100">
                                                             <span>- Discount ({appliedPromo.discount_pct}%)</span>
                                                             <span>- ₱{discountAmount.toLocaleString()}</span>
                                                         </p>
@@ -1379,7 +1386,7 @@ export default function HotelWebsite({ domain }) {
                                                 {!appliedPromo ? (
                                                     <button type="button" onClick={handleApplyPromo} disabled={isBooking || !promoCode} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm disabled:opacity-50">{t.apply}</button>
                                                 ) : (
-                                                    <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm">Cancel</button>
+                                                    <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm border border-red-200">Cancel</button>
                                                 )}
                                             </div>
                                         </div>
@@ -1387,7 +1394,6 @@ export default function HotelWebsite({ domain }) {
                                         <div className="mt-auto pt-6 border-t border-slate-300">
                                             <div className="flex justify-between items-end mb-6">
                                                 <span className="font-black text-slate-800 text-xl">{t.total}</span>
-                                                {/* 💡 [핵심] 여기서 최종 계산된 금액을 보여줍니다! */}
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                             </div>
                                             <button onClick={handleConfirmBooking} disabled={isBooking} className="w-full theme-bg theme-hover text-white py-4 rounded-2xl font-black transition-transform active:scale-95 shadow-xl disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
