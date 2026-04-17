@@ -429,7 +429,7 @@ export default function MainPortal() {
         alert("🚨 A network error occurred while connecting to the server. Please try again.");
       }
     }
-  };  
+  };
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -904,12 +904,12 @@ export default function MainPortal() {
           </section>
         </div>
 
-          ) : activeView === "MYPAGE" ? (
-            <div className="w-full flex-grow bg-slate-50 mt-[72px]">
-              {/* 💡 새로 만든 고객용 마이페이지 대시보드로 교체 */}
-              <MemberDashboard hotelCode={null} />
-            </div>
-          ) : (
+      ) : activeView === "MYPAGE" ? (
+        <div className="w-full flex-grow bg-slate-50 mt-[72px]">
+          {/* 💡 새로 만든 고객용 마이페이지 대시보드로 교체 */}
+          <MemberDashboard hotelCode={null} />
+        </div>
+      ) : (
 
         <div className="w-full flex-grow flex flex-col items-center animate-fade-in">
           <section className="relative w-full min-h-[75vh] md:min-h-[85vh] flex flex-col items-center justify-center mt-[72px] pb-16 md:pb-0 pt-10 md:pt-0">
@@ -1026,12 +1026,15 @@ export default function MainPortal() {
                             onClick={() => {
                               const matchedHotel = partnerHotels.find(h => h.code === promo.hotel_code);
 
+                              // 💡 [핵심 혁신 1] 개별웹으로 넘길 때 딥링크(URL)에 &autoApply=true 파라미터를 추가해서 보냅니다!
                               const baseUrl = matchedHotel?.domain
                                 ? `https://${matchedHotel.domain}`
                                 : `/?hotel=${promo.hotel_code}`;
 
                               const separator = baseUrl.includes('?') ? '&' : '?';
-                              const deepLink = `${baseUrl}${separator}promo=${promo.code}&roomType=${encodeURIComponent(promo.target_room_type)}`;
+
+                              // 이 링크를 타고 가면 개별웹이 프로모션을 자동 장착하게 됩니다.
+                              const deepLink = `${baseUrl}${separator}promo=${promo.code}&roomType=${encodeURIComponent(promo.target_room_type)}&autoApply=true`;
 
                               window.open(deepLink, '_blank');
                             }}

@@ -532,6 +532,8 @@ export default function HotelWebsite({ domain }) {
             const params = new URLSearchParams(window.location.search);
             const promoParam = params.get('promo');
             const roomTypeParam = params.get('roomType');
+            // 💡 통합웹에서 보낸 '자동 적용' 신호를 잡습니다.
+            const autoApplyParam = params.get('autoApply');
 
             if (promoParam) {
                 const promoObj = activePromos.find(p => p.code.toUpperCase() === promoParam.toUpperCase());
@@ -543,23 +545,33 @@ export default function HotelWebsite({ domain }) {
                     }
 
                     setPromoCode(promoObj.code);
-                    setAppliedPromo(promoObj);
+
+                    // 💡 [핵심 혁신 2] 통합웹에서 온 손님이거나 autoApply 신호가 있으면 귀찮은 'Apply' 버튼 없이 즉시 장착!
+                    if (autoApplyParam === 'true') {
+                        setAppliedPromo(promoObj);
+                    }
+
                     setActiveMenu('ROOMS');
 
-                    // 💡 [변경됨] 리팩토링된 다국어 알림 메시지 사용
-                    setAlertMessage(t.promoAuto1 + promoObj.code + t.promoAuto2);
+                    // 💡 [변경] 고객을 안심시키는 세련된 알림창
+                    const msg = lang === 'ko'
+                        ? `🎁 [ ${promoObj.code} ] 프로모션 혜택이 자동 적용되었습니다!\n화면에는 해당 프로모션이 가능한 객실만 표시됩니다.`
+                        : `🎁 Promo [ ${promoObj.code} ] is now ACTIVE!\nWe've filtered the eligible rooms. The discount is automatically applied at checkout!`;
+
+                    setAlertMessage(msg);
 
                     setTimeout(() => {
                         window.scrollTo({ top: 300, behavior: 'smooth' });
                     }, 300);
 
+                    // URL 깔끔하게 청소
                     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?hotel=${hotelCode}`;
                     window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
                 }
             }
         }
-    }, [activePromos, rooms, hotelCode, lang]); // lang 의존성 유지
-
+    }, [activePromos, rooms, hotelCode, lang]);
+    
     const safeConfig = config || {};
     let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch (e) { }
     let sns = {}; try { if (safeConfig.sns_json) { sns = typeof safeConfig.sns_json === 'string' ? JSON.parse(safeConfig.sns_json) : safeConfig.sns_json; if (typeof sns === 'string') sns = JSON.parse(sns); } } catch (e) { }
