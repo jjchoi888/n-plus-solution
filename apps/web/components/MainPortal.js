@@ -514,8 +514,18 @@ export default function MainPortal() {
     }
   }, []);
 
+  const handleSearchResults = (data) => {
+    // 💡 [수정] 검색을 누를 때 브라우저 뒤로 가기 기록을 하나 만듭니다.
+    window.history.pushState({ page: 'search' }, '');
+    setSearchData(data);
+  };
+
   const handleMenuClick = (action) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 💡 [수정] 메뉴를 클릭할 때 브라우저에 가상의 히스토리를 하나 쌓습니다.
+    window.history.pushState({ page: action }, '');
+
     if (action === 'HOME') {
       setActiveView("HOME");
       setSearchData(null);
@@ -939,7 +949,7 @@ export default function MainPortal() {
                     <span className="text-emerald-600">✨</span> {t.bookPartner}
                   </h3>
                 </div>
-                <BookingBar lang={lang} onSearchResults={setSearchData} hotels={partnerHotels} preselectedHotelCode={selectedPromoHotel} />
+                <BookingBar lang={lang} onSearchResults={handleSearchResults} hotels={partnerHotels} preselectedHotelCode={selectedPromoHotel} />
               </div>
             </div>
           </section>
