@@ -183,9 +183,9 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       });
       const data = await response.json();
 
-      if (data.success) {
-        setModal({ show: true, type: 'success', title: t.success, message: t.successMsg, highlight: data.res_ids.join('\n') });
-        setIsCheckoutOpen(false); setCart({}); setExtraBeds(0); setAppliedPromo(null); setPromoInput("");
+      if (data.success && data.paymentUrl) {
+        // 💡 [핵심] 결제 링크를 성공적으로 받아오면, AQWIRE 결제창으로 화면 이동
+        window.location.href = data.paymentUrl;
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
       }
