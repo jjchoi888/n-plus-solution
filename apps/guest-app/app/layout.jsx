@@ -2,20 +2,20 @@ import './globals.css';
 import Link from 'next/link';
 import BottomNav from './components/BottomNav';
 
-// 💡 1. PWA를 위한 모바일 뷰포트 및 테마 컬러 설정 추가
+// 💡 1. Add mobile viewport and theme color settings for PWA
 export const viewport = {
-    themeColor: '#ffffff', // 앱 상단 상태바 색상 (현재 헤더가 bg-white이므로 흰색으로 맞춤)
+    themeColor: '#ffffff', // App top status bar color (matched to white since header is bg-white)
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
-    userScalable: false, // 터치 시 화면이 확대되는 것을 방지하여 네이티브 앱 같은 경험 제공
+    userScalable: false, // Prevent zoom on touch to provide a native app-like experience
 };
 
-// 💡 2. 기존 메타데이터에 PWA manifest 및 iOS(Apple) 지원 속성 추가
+// 💡 2. Add PWA manifest and iOS (Apple) support properties to existing metadata
 export const metadata = {
     title: 'N+ Rewards & Booking',
     description: 'Book your stay and earn rewards.',
-    manifest: '/manifest.webmanifest', // Next.js App Router가 manifest.js를 빌드하여 제공하는 기본 경로
+    manifest: '/manifest.webmanifest', // Default path where Next.js App Router serves the built manifest
     appleWebApp: {
         capable: true,
         statusBarStyle: 'default',
@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
                 <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-slate-100">
                     <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
                         <Link href="/" className="flex items-center gap-2.5">
-                            {/* 💡 요청하신 대로 "n+" 부분이 텍스트가 아닌 로고 이미지로 처리되어 있습니다 */}
+                            {/* 💡 As requested, the "n+" part is rendered as a logo image instead of text */}
                             <img src="/logo192.png" alt="N+ Logo" className="h-8 w-auto object-contain" />
                             <span className="text-lg font-bold text-slate-800 tracking-tight">Rewards</span>
                         </Link>

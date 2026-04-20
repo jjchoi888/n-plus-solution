@@ -13,18 +13,18 @@ const TAB_TITLES = {
     BILLING: "Billing & Commission Management",
     DOMAINS: "Custom Domain Assignments",
     MEMBERS: "Members Management",
-    USERS: "Rewards Management" // 💡 타이틀 변경됨
+    USERS: "n+ Rewards Club"
 };
 
 const SIDEBAR_MENUS = [
-    { id: "DASHBOARD", label: "HQ Overview", icon: "📊" },
-    { id: "PARTNERS", label: "Partner Hotels", icon: "🏨" },
-    { id: "MEMBERS", label: "Members", icon: "👤" },
-    { id: "USERS", label: "n+ Rewards Club", icon: "🎁" }, // 💡 메뉴 이름 변경됨
-    { id: "AGENTS", label: "Sales Agents", icon: "🤝" },
-    { id: "SETTLEMENT", label: "Commissions", icon: "💰" },
-    { id: "BILLING", label: "Billing & Plans", icon: "💳" },
-    { id: "DOMAINS", label: "Domain Settings", icon: "🌐" }
+    { id: "DASHBOARD", label: "HQ Overview", icon: "📊", roles: ["SUPER_ADMIN"] },
+    { id: "PARTNERS", label: "Partner Hotels", icon: "🏨", roles: ["SUPER_ADMIN"] },
+    { id: "MEMBERS", label: "Members", icon: "👤", roles: ["SUPER_ADMIN"] },
+    { id: "USERS", label: "n+ Rewards Club", icon: "🎁", roles: ["SUPER_ADMIN"] },
+    { id: "AGENTS", label: "Sales Agents", icon: "🤝", roles: ["SUPER_ADMIN", "AGENT"] },
+    { id: "SETTLEMENT", label: "Commissions", icon: "💰", roles: ["SUPER_ADMIN", "AGENT"] },
+    { id: "BILLING", label: "Billing & Plans", icon: "💳", roles: ["SUPER_ADMIN", "AGENT"] },
+    { id: "DOMAINS", label: "Domain Settings", icon: "🌐", roles: ["SUPER_ADMIN"] }
 ];
 
 const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
@@ -70,6 +70,10 @@ const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
 
 export default function PortalAdmin() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    // 💡 Add Role State
+    const [adminRole, setAdminRole] = useState("SUPER_ADMIN");
+    const [adminAgentId, setAdminAgentId] = useState("");
+
     const [loginId, setLoginId] = useState("");
     const [loginPw, setLoginPw] = useState("");
     const [loginError, setLoginError] = useState("");
@@ -82,7 +86,6 @@ export default function PortalAdmin() {
     const [isLoading, setIsLoading] = useState(true);
     const [toastMessage, setToastMessage] = useState("");
 
-    // 💡 [NEW] 사이드바 뱃지용 대기 중 멤버 수 카운트
     const [pendingMemberCount, setPendingMemberCount] = useState(0);
 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
@@ -196,10 +199,18 @@ export default function PortalAdmin() {
         const agentMap = {};
         const roots = [];
         agents.forEach(ag => { agentMap[ag.agent_id] = { ...ag, children: [] }; });
+
         agents.forEach(ag => {
             if (ag.parent_agent_id === 'HQ' || !agentMap[ag.parent_agent_id]) roots.push(agentMap[ag.agent_id]);
             else agentMap[ag.parent_agent_id].children.push(agentMap[ag.agent_id]);
         });
+
+        // 💡 If logged in as an Agent, only show from their node downwards
+        if (adminRole === "AGENT" && adminAgentId) {
+            const myNode = agentMap[adminAgentId];
+            return myNode ? [myNode] : [];
+        }
+
         return roots;
     };
     const agentTree = buildAgentTree();
@@ -222,9 +233,22 @@ export default function PortalAdmin() {
             });
             const data = await res.json();
 
-            if (data.success && data.role === 'SUPER_ADMIN') {
+            // 💡 Both SUPER_ADMIN and AGENT can log in now
+            if (data.success && (data.role === 'SUPER_ADMIN' || data.role === 'AGENT')) {
                 sessionStorage.setItem("hq_logged_in", "true");
+                sessionStorage.setItem("hq_role", data.role);
+                sessionStorage.setItem("hq_agent_id", data.agent_id || "");
+
+                setAdminRole(data.role);
+                setAdminAgentId(data.agent_id || "");
                 setIsLoggedIn(true);
+
+                // Automatically set the first allowed tab based on role
+                if (data.role === "AGENT") {
+                    setActiveTab("AGENTS");
+                } else {
+                    setActiveTab("DASHBOARD");
+                }
             } else {
                 setLoginError("Invalid HQ credentials.");
             }
@@ -238,9 +262,12 @@ export default function PortalAdmin() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
+            // 💡 If agent, pass agent_id to fetch only their relevant data (Requires backend support)
+            const queryParam = adminRole === 'AGENT' ? `?agent_id=${adminAgentId}` : '';
+
             const [partnerRes, agentRes] = await Promise.all([
-                fetch(`${BASE_URL}/api/admin/partners`),
-                fetch(`${BASE_URL}/api/admin/agents`)
+                fetch(`${BASE_URL}/api/admin/partners${queryParam}`),
+                fetch(`${BASE_URL}/api/admin/agents${queryParam}`)
             ]);
 
             const pData = await partnerRes.json();
@@ -255,8 +282,8 @@ export default function PortalAdmin() {
         }
     };
 
-    // 💡 [NEW] 자동 업데이트용: 10초마다 대기 중인 멤버 수만 가볍게 긁어옵니다.
     const fetchPendingMembersCount = async () => {
+        if (adminRole !== "SUPER_ADMIN") return; // Agents don't need this
         try {
             const res = await fetch(`/api/hq/members`);
             const data = await res.json();
@@ -271,15 +298,21 @@ export default function PortalAdmin() {
         if (isLoggedIn) {
             fetchData();
             fetchPendingMembersCount();
-            const interval = setInterval(fetchPendingMembersCount, 10000); // 10초 주기 폴링
+            const interval = setInterval(fetchPendingMembersCount, 10000);
             return () => clearInterval(interval);
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, adminRole]);
 
     useEffect(() => {
         const isAuth = sessionStorage.getItem("hq_logged_in");
+        const role = sessionStorage.getItem("hq_role") || "SUPER_ADMIN";
+        const storedAgentId = sessionStorage.getItem("hq_agent_id") || "";
+
         if (isAuth === "true") {
+            setAdminRole(role);
+            setAdminAgentId(storedAgentId);
             setIsLoggedIn(true);
+            if (role === "AGENT") setActiveTab("AGENTS");
         }
     }, []);
 
@@ -355,11 +388,9 @@ export default function PortalAdmin() {
 
     const handleRegisterAgent = async (e) => {
         e.preventDefault();
-
         if (isIdAvailable !== true) {
             return showToast("⚠️ Please check Agent ID availability first.");
         }
-
         try {
             const res = await fetch(`${BASE_URL}/api/admin/agents/register`, {
                 method: "POST",
@@ -395,15 +426,15 @@ export default function PortalAdmin() {
                     {loginError && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm font-bold text-center p-3 rounded-xl mb-6">{loginError}</div>}
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div>
-                            <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Master ID</label>
-                            <input type="text" required value={loginId} onChange={(e) => setLoginId(e.target.value)} className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors" placeholder="Admin ID" />
+                            <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">User ID (HQ or Agent)</label>
+                            <input type="text" required value={loginId} onChange={(e) => setLoginId(e.target.value)} className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors" placeholder="Admin or Agent ID" />
                         </div>
                         <div>
                             <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Password</label>
                             <input type="password" required value={loginPw} onChange={(e) => setLoginPw(e.target.value)} className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors tracking-widest" placeholder="••••••••" />
                         </div>
                         <button type="submit" disabled={isAuthenticating} className="w-full bg-emerald-600 text-white font-black py-4 rounded-xl hover:bg-emerald-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-95 disabled:opacity-50 mt-4">
-                            {isAuthenticating ? "AUTHENTICATING..." : "ACCESS HQ PORTAL"}
+                            {isAuthenticating ? "AUTHENTICATING..." : "ACCESS PORTAL"}
                         </button>
                     </form>
                 </div>
@@ -411,7 +442,7 @@ export default function PortalAdmin() {
         );
     }
 
-    if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading HQ Dashboard...</div>;
+    if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading Dashboard...</div>;
 
     const totalPartners = partners.length;
     const activePartners = partners.filter(p => p.status === "Active").length;
@@ -426,6 +457,9 @@ export default function PortalAdmin() {
         p.code.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // 💡 Filter Sidebar menus based on user role
+    const visibleMenus = SIDEBAR_MENUS.filter(menu => menu.roles.includes(adminRole));
+
     return (
         <div className="flex h-screen bg-slate-50 font-sans font-medium selection:bg-emerald-500 selection:text-white animate-fade-in relative">
 
@@ -435,7 +469,6 @@ export default function PortalAdmin() {
                 </div>
             )}
 
-            {/* 📌 에이전트 등록 모달 (팝업창) */}
             {isAgentModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 border border-slate-200">
@@ -497,7 +530,7 @@ export default function PortalAdmin() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Parent Agency</label>
                                 <select value={newAgent.parent_agent_id} onChange={e => setNewAgent({ ...newAgent, parent_agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer bg-white">
-                                    <option value="HQ">Directly Under HQ</option>
+                                    {adminRole === "SUPER_ADMIN" && <option value="HQ">Directly Under HQ</option>}
                                     {agents.map(ag => (
                                         <option key={`opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name} ({ag.agent_id})</option>
                                     ))}
@@ -512,7 +545,7 @@ export default function PortalAdmin() {
                 </div>
             )}
 
-            {/* 📌 좌측 다크 사이드바 */}
+            {/* 📌 Left Dark Sidebar */}
             <aside className="w-64 bg-slate-950 text-slate-300 flex flex-col shadow-2xl z-20 shrink-0">
                 <div className="h-20 flex items-center px-6 border-b border-slate-800 shrink-0 bg-slate-950">
                     <div className="text-2xl font-black text-white tracking-tight flex items-center gap-1">
@@ -523,7 +556,7 @@ export default function PortalAdmin() {
                 <div className="p-6 flex-1 overflow-y-auto">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-4">Main Menu</p>
                     <nav className="space-y-2">
-                        {SIDEBAR_MENUS.map(item => (
+                        {visibleMenus.map(item => (
                             <button
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
@@ -536,8 +569,6 @@ export default function PortalAdmin() {
                                     <span className="text-lg w-6 text-center">{item.icon}</span>
                                     <span className="flex-1 whitespace-nowrap">{item.label}</span>
                                 </div>
-
-                                {/* 💡 [NEW] 사이드바 메뉴 뱃지 추가 (대기 중 멤버수 노출) */}
                                 {item.id === "USERS" && pendingMemberCount > 0 && (
                                     <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-md">
                                         {pendingMemberCount}
@@ -551,14 +582,20 @@ export default function PortalAdmin() {
                 <div className="mt-auto p-6 border-t border-slate-800">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-black text-white shadow-lg">HQ</div>
+                            <div className={`w-10 h-10 rounded-full ${adminRole === "AGENT" ? "bg-blue-600" : "bg-emerald-600"} flex items-center justify-center font-black text-white shadow-lg`}>
+                                {adminRole === "AGENT" ? "AG" : "HQ"}
+                            </div>
                             <div>
                                 <p className="text-sm font-bold text-white truncate max-w-[100px]">{loginId}</p>
-                                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Super User</p>
+                                <p className={`text-[10px] ${adminRole === "AGENT" ? "text-blue-500" : "text-emerald-500"} font-bold uppercase tracking-widest`}>
+                                    {adminRole === "AGENT" ? "Sales Agent" : "Super User"}
+                                </p>
                             </div>
                         </div>
                         <button onClick={() => {
                             sessionStorage.removeItem("hq_logged_in");
+                            sessionStorage.removeItem("hq_role");
+                            sessionStorage.removeItem("hq_agent_id");
                             setIsLoggedIn(false);
                         }} className="text-slate-500 hover:text-red-400 transition-colors p-2 outline-none focus:outline-none" title="Logout">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -567,7 +604,7 @@ export default function PortalAdmin() {
                 </div>
             </aside>
 
-            {/* 📌 메인 콘텐츠 영역 */}
+            {/* 📌 Main Content Area */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden">
                 <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
                     <h1 className="text-xl font-black text-slate-800 transition-none">
@@ -590,7 +627,7 @@ export default function PortalAdmin() {
 
                 <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
 
-                    {activeTab === "DASHBOARD" && (
+                    {activeTab === "DASHBOARD" && adminRole === "SUPER_ADMIN" && (
                         <div className="animate-fade-in space-y-8 max-w-6xl mx-auto">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
@@ -607,7 +644,6 @@ export default function PortalAdmin() {
                                     </div>
                                     <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl">📈</div>
                                 </div>
-                                {/* 💡 [교체] 채널별 예약 세부 통계 표시 */}
                                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Global Direct Bookings</p>
@@ -624,10 +660,7 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
-                    {/* ========================================================= */}
-                    {/* 💡 PARTNERS 탭 (등록/수정/삭제 기능 추가) */}
-                    {/* ========================================================= */}
-                    {activeTab === "PARTNERS" && (
+                    {activeTab === "PARTNERS" && adminRole === "SUPER_ADMIN" && (
                         <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
 
                             <div className="flex justify-between items-end mb-6 shrink-0">
@@ -637,12 +670,7 @@ export default function PortalAdmin() {
                                 </div>
                                 <button onClick={() => {
                                     setPartnerForm({
-                                        code: "",
-                                        name: "",
-                                        master_id: "",
-                                        master_pw: "",
-                                        status: "Active",
-                                        agent_id: "HQ Direct"
+                                        code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
                                     });
                                     setIsEditingPartner(false);
                                     setIsPartnerModalOpen(true);
@@ -693,12 +721,7 @@ export default function PortalAdmin() {
                                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <button onClick={() => {
                                                                     setPartnerForm({
-                                                                        code: p.code,
-                                                                        name: p.name,
-                                                                        master_id: p.master_id || "",
-                                                                        master_pw: "",
-                                                                        status: p.status,
-                                                                        agent_id: p.agent_id || "HQ Direct"
+                                                                        code: p.code, name: p.name, master_id: p.master_id || "", master_pw: "", status: p.status, agent_id: p.agent_id || "HQ Direct"
                                                                     });
                                                                     setIsEditingPartner(true);
                                                                     setIsPartnerModalOpen(true);
@@ -720,20 +743,20 @@ export default function PortalAdmin() {
                         </div>
                     )}
 
-                    {activeTab === "MEMBERS" && (
+                    {activeTab === "MEMBERS" && adminRole === "SUPER_ADMIN" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
                             <MemberManagement />
                         </div>
                     )}
-                    
-                    {activeTab === "USERS" && (
+
+                    {activeTab === "USERS" && adminRole === "SUPER_ADMIN" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
                             <UserManagement />
                         </div>
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 AGENTS 탭 - 트리 분할 레이아웃 적용 */}
+                    {/* 💡 AGENTS */}
                     {/* ========================================================= */}
                     {activeTab === "AGENTS" && (
                         <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
@@ -742,13 +765,15 @@ export default function PortalAdmin() {
                                     <h2 className="text-2xl font-black text-slate-800">Sales Representatives</h2>
                                     <p className="text-sm font-bold text-slate-500 mt-1">Manage Agency Hierarchy & Commissions</p>
                                 </div>
-                                <button onClick={() => setIsAgentModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
-                                    <span>+</span> Register New Agent
-                                </button>
+                                {/* 💡 Hide Register button if Agent */}
+                                {adminRole === "SUPER_ADMIN" && (
+                                    <button onClick={() => setIsAgentModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
+                                        <span>+</span> Register New Agent
+                                    </button>
+                                )}
                             </div>
 
                             <div className="flex-1 flex gap-6 min-h-0 pb-6">
-                                {/* 📌 좌측: 폴더 구조형 에이전트 트리 */}
                                 <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
                                     <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
                                         <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Agency Tree</h3>
@@ -772,7 +797,6 @@ export default function PortalAdmin() {
                                     </div>
                                 </div>
 
-                                {/* 📌 우측: 상세 정보 및 편집 패널 */}
                                 <div className="w-2/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
                                     {!selectedAgent ? (
                                         <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10">
@@ -785,12 +809,12 @@ export default function PortalAdmin() {
                                                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">
                                                     {isEditingAgent ? "Edit Agent Profile" : "Agent Details"}
                                                 </h3>
-                                                {!isEditingAgent && (
+                                                {/* 💡 Hide Edit/Delete if Agent (Unless it's themselves, but usually agents can't edit agents) */}
+                                                {!isEditingAgent && adminRole === "SUPER_ADMIN" && (
                                                     <div className="flex gap-2">
                                                         <button onClick={() => { setEditAgentData({ ...selectedAgent }); setIsEditingAgent(true); }} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm">
                                                             Edit ⚙️
                                                         </button>
-                                                        {/* 💡 삭제 버튼 추가 */}
                                                         <button onClick={() => handleDeleteAgent(selectedAgent.agent_id)} className="px-4 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-bold text-red-600 hover:bg-red-100 shadow-sm transition-colors">
                                                             Delete 🗑️
                                                         </button>
@@ -800,7 +824,6 @@ export default function PortalAdmin() {
 
                                             <div className="p-8 overflow-y-auto flex-1">
                                                 {!isEditingAgent ? (
-                                                    // 📖 보기 모드
                                                     <div className="space-y-6">
                                                         <div>
                                                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Company / Agent Name</div>
@@ -827,7 +850,6 @@ export default function PortalAdmin() {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    // ✏️ 수정 모드 폼
                                                     <form onSubmit={handleUpdateAgent} className="space-y-5">
                                                         <div>
                                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company / Agent Name</label>
@@ -871,7 +893,7 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* 💡 SETTLEMENT 탭 - 12% E.VAT 공제 및 롤업 커미션 정산 */}
+                    {/* 💡 SETTLEMENT */}
                     {/* ========================================================= */}
                     {activeTab === "SETTLEMENT" && (
                         <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
@@ -883,7 +905,6 @@ export default function PortalAdmin() {
                             </div>
 
                             <div className="flex-1 flex gap-6 min-h-0 pb-6">
-                                {/* 📌 좌측: 에이전트 트리 */}
                                 <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
                                     <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
                                         <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Agency</h3>
@@ -897,7 +918,6 @@ export default function PortalAdmin() {
                                     </div>
                                 </div>
 
-                                {/* 📌 우측: 정산 데이터 대시보드 */}
                                 <div className="w-2/3 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
                                     {!selectedAgent ? (
                                         <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10 bg-white">
@@ -905,7 +925,6 @@ export default function PortalAdmin() {
                                             <p className="font-bold">Select an agent from the tree to view their settlement report.</p>
                                         </div>
                                     ) : (() => {
-                                        // 💡 정산 로직 실행
                                         const settlement = calculateSettlement(selectedAgent.agent_id);
 
                                         return (
@@ -920,7 +939,6 @@ export default function PortalAdmin() {
                                                     <p className="text-xs text-slate-500 font-mono">Agent ID: {selectedAgent.agent_id}</p>
                                                 </div>
 
-                                                {/* 요약 지표 */}
                                                 <div className="p-6 shrink-0 grid grid-cols-3 gap-4">
                                                     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                                                         <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Total Gross Vol.</p>
@@ -938,7 +956,6 @@ export default function PortalAdmin() {
                                                     </div>
                                                 </div>
 
-                                                {/* 파생 매출 출처 리스트 */}
                                                 <div className="flex-1 overflow-y-auto px-6 pb-6">
                                                     <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Revenue Sources (Hotel Breakdown)</h4>
                                                     {settlement.hotelDetails.length === 0 ? (
@@ -964,14 +981,14 @@ export default function PortalAdmin() {
                                                 </div>
                                             </div>
                                         )
-                                    })}
+                                    })()}
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {/* ========================================================= */}
-                    {/* BILLING */}
+                    {/* 💡 BILLING */}
                     {/* ========================================================= */}
                     {activeTab === "BILLING" && (
                         <div className="animate-fade-in max-w-7xl mx-auto">
@@ -999,59 +1016,73 @@ export default function PortalAdmin() {
                                                     <td colSpan="5" className="p-8 text-center text-slate-400 font-bold">No partners found.</td>
                                                 </tr>
                                             ) : (
-                                                filteredPartners.map(p => (
-                                                    <tr key={`bill_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                                        <td className="p-4">
-                                                            <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
-                                                            <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span className="text-emerald-700 font-black text-sm">Enterprise Suite</span>
+                                                filteredPartners.map(p => {
+                                                    // 💡 If logged in as Agent, only show their direct properties
+                                                    if (adminRole === "AGENT" && p.agent_id !== adminAgentId) return null;
+
+                                                    return (
+                                                        <tr key={`bill_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                            <td className="p-4">
+                                                                <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
+                                                                <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span className="text-emerald-700 font-black text-sm">Enterprise Suite</span>
+                                                                    {adminRole === "SUPER_ADMIN" ? (
+                                                                        <select
+                                                                            value={p.agent_id || 'HQ Direct'}
+                                                                            onChange={(e) => handleLocalChange(p.code, 'agent_id', e.target.value)}
+                                                                            className="text-xs text-slate-600 bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer w-fit max-w-[200px] truncate"
+                                                                        >
+                                                                            <option value="HQ Direct">HQ Direct (No Commission)</option>
+                                                                            {agents.map(ag => (
+                                                                                <option key={`opt_${p.code}_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        <span className="text-xs text-slate-500 font-bold">Managed by You</span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <input
+                                                                    type="number"
+                                                                    value={p.mrr}
+                                                                    onChange={(e) => handleLocalChange(p.code, 'mrr', e.target.value)}
+                                                                    disabled={adminRole === "AGENT"} // 💡 Agent cannot change MRR
+                                                                    className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 w-28 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm disabled:bg-slate-100"
+                                                                />
+                                                            </td>
+                                                            <td className="p-4">
                                                                 <select
-                                                                    value={p.agent_id || 'HQ Direct'}
-                                                                    onChange={(e) => handleLocalChange(p.code, 'agent_id', e.target.value)}
-                                                                    className="text-xs text-slate-600 bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer w-fit max-w-[200px] truncate"
+                                                                    value={p.status}
+                                                                    onChange={(e) => handleLocalChange(p.code, 'status', e.target.value)}
+                                                                    disabled={adminRole === "AGENT"} // 💡 Agent cannot change status
+                                                                    className={`border rounded-lg px-3 py-2 text-sm outline-none shadow-sm font-black w-full max-w-[180px]
+                                                                        ${p.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                                                            p.status === 'Overdue' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-50 border-slate-300 text-slate-600'}
+                                                                        ${adminRole === "AGENT" ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                                                                 >
-                                                                    <option value="HQ Direct">HQ Direct (No Commission)</option>
-                                                                    {agents.map(ag => (
-                                                                        <option key={`opt_${p.code}_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
-                                                                    ))}
+                                                                    <option value="Active">Active</option>
+                                                                    <option value="Onboarding">Onboarding</option>
+                                                                    <option value="Overdue">Overdue (Lock System)</option>
+                                                                    <option value="Cancelled">Cancelled</option>
                                                                 </select>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <input
-                                                                type="number"
-                                                                value={p.mrr}
-                                                                onChange={(e) => handleLocalChange(p.code, 'mrr', e.target.value)}
-                                                                className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 w-28 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm"
-                                                            />
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <select
-                                                                value={p.status}
-                                                                onChange={(e) => handleLocalChange(p.code, 'status', e.target.value)}
-                                                                className={`border rounded-lg px-3 py-2 text-sm outline-none shadow-sm cursor-pointer font-black w-full max-w-[180px]
-                                                                    ${p.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                                                                        p.status === 'Overdue' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-50 border-slate-300 text-slate-600'}`}
-                                                            >
-                                                                <option value="Active">Active</option>
-                                                                <option value="Onboarding">Onboarding</option>
-                                                                <option value="Overdue">Overdue (Lock System)</option>
-                                                                <option value="Cancelled">Cancelled</option>
-                                                            </select>
-                                                        </td>
-                                                        <td className="p-4 text-right">
-                                                            <button
-                                                                onClick={() => handleSaveBilling(p)}
-                                                                className="bg-slate-900 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
-                                                            >
-                                                                Save 💾
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
+                                                            </td>
+                                                            <td className="p-4 text-right">
+                                                                {adminRole === "SUPER_ADMIN" && (
+                                                                    <button
+                                                                        onClick={() => handleSaveBilling(p)}
+                                                                        className="bg-slate-900 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
+                                                                    >
+                                                                        Save 💾
+                                                                    </button>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })
                                             )}
                                         </tbody>
                                     </table>
@@ -1061,9 +1092,9 @@ export default function PortalAdmin() {
                     )}
 
                     {/* ========================================================= */}
-                    {/* DOMAINS */}
+                    {/* 💡 DOMAINS */}
                     {/* ========================================================= */}
-                    {activeTab === "DOMAINS" && (
+                    {activeTab === "DOMAINS" && adminRole === "SUPER_ADMIN" && (
                         <div className="animate-fade-in max-w-5xl mx-auto">
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -1124,82 +1155,81 @@ export default function PortalAdmin() {
                             </div>
                         </div>
                     )}
-                </div>
 
-                {/* 💡 [신규] 파트너 등록/수정 모달창 */}
-                {isPartnerModalOpen && (
-                    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4">
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-8 border border-slate-200 flex flex-col max-h-full">
-                            <div className="flex justify-between items-center mb-6 shrink-0">
-                                <h3 className="text-xl font-black text-slate-800">
-                                    {isEditingPartner ? "⚙️ Edit Partner & Master Account" : "🏨 Register New Partner"}
-                                </h3>
-                                <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
-                            </div>
+                    {/* 💡 파트너 등록/수정 모달창 */}
+                    {isPartnerModalOpen && (
+                        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-8 border border-slate-200 flex flex-col max-h-full">
+                                <div className="flex justify-between items-center mb-6 shrink-0">
+                                    <h3 className="text-xl font-black text-slate-800">
+                                        {isEditingPartner ? "⚙️ Edit Partner & Master Account" : "🏨 Register New Partner"}
+                                    </h3>
+                                    <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
+                                </div>
 
-                            <form onSubmit={handlePartnerSubmit} className="space-y-6 overflow-y-auto pr-2">
-                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
-                                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">1. Hotel Information</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Code (PMS ID)</label>
-                                            <input type="text" required disabled={isEditingPartner} value={partnerForm.code} onChange={e => setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 disabled:bg-slate-200 disabled:text-slate-500 font-mono tracking-wider uppercase" placeholder="e.g. SKY001" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Agent</label>
-                                            <select value={partnerForm.agent_id} onChange={e => setPartnerForm({ ...partnerForm, agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 bg-white text-sm">
-                                                <option value="HQ Direct">HQ Direct (No Commission)</option>
-                                                {agents.map(ag => (
-                                                    <option key={`mod_opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Account Status</label>
-                                            <select value={partnerForm.status} onChange={e => setPartnerForm({ ...partnerForm, status: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 bg-white text-sm font-bold">
-                                                <option value="Active">Active</option>
-                                                <option value="Onboarding">Onboarding</option>
-                                                <option value="Overdue">Overdue (Lock System)</option>
-                                            </select>
-                                        </div>
-                                        {/* 등록 시에만 임시 호텔명 입력 */}
-                                        {!isEditingPartner && (
+                                <form onSubmit={handlePartnerSubmit} className="space-y-6 overflow-y-auto pr-2">
+                                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">1. Hotel Information</h4>
+                                        <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Name</label>
-                                                <input type="text" required value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 font-bold" placeholder="e.g. Sky Grand Hotel" />
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Code (PMS ID)</label>
+                                                <input type="text" required disabled={isEditingPartner} value={partnerForm.code} onChange={e => setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 disabled:bg-slate-200 disabled:text-slate-500 font-mono tracking-wider uppercase" placeholder="e.g. SKY001" />
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
-                                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest border-b border-blue-100 pb-2">2. Master Account Details</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Master User ID</label>
-                                            <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono" placeholder="e.g. Sky_Admin" />
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Agent</label>
+                                                <select value={partnerForm.agent_id} onChange={e => setPartnerForm({ ...partnerForm, agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 bg-white text-sm">
+                                                    <option value="HQ Direct">HQ Direct (No Commission)</option>
+                                                    {agents.map(ag => (
+                                                        <option key={`mod_opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{isEditingPartner ? "New Password (Optional)" : "Password"}</label>
-                                            <input type="text" required={!isEditingPartner} value={partnerForm.master_pw} onChange={e => setPartnerForm({ ...partnerForm, master_pw: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono tracking-widest" placeholder="••••••••" />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Account Status</label>
+                                                <select value={partnerForm.status} onChange={e => setPartnerForm({ ...partnerForm, status: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 bg-white text-sm font-bold">
+                                                    <option value="Active">Active</option>
+                                                    <option value="Onboarding">Onboarding</option>
+                                                    <option value="Overdue">Overdue (Lock System)</option>
+                                                </select>
+                                            </div>
+                                            {!isEditingPartner && (
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Name</label>
+                                                    <input type="text" required value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 font-bold" placeholder="e.g. Sky Grand Hotel" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                    {isEditingPartner && <p className="text-[10px] text-red-500 font-bold mt-1">* Note: Entering a password will overwrite current credentials.</p>}
-                                </div>
 
-                                <div className="pt-4 flex gap-3 shrink-0">
-                                    <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
-                                    <button type="submit" className="flex-1 px-4 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-colors">
-                                        {isEditingPartner ? "Save Changes" : "Create Partner & Account"}
-                                    </button>
-                                </div>
-                            </form>
+                                    <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
+                                        <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest border-b border-blue-100 pb-2">2. Master Account Details</h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Master User ID</label>
+                                                <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono" placeholder="e.g. Sky_Admin" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{isEditingPartner ? "New Password (Optional)" : "Password"}</label>
+                                                <input type="text" required={!isEditingPartner} value={partnerForm.master_pw} onChange={e => setPartnerForm({ ...partnerForm, master_pw: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono tracking-widest" placeholder="••••••••" />
+                                            </div>
+                                        </div>
+                                        {isEditingPartner && <p className="text-[10px] text-red-500 font-bold mt-1">* Note: Entering a password will overwrite current credentials.</p>}
+                                    </div>
+
+                                    <div className="pt-4 flex gap-3 shrink-0">
+                                        <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                                        <button type="submit" className="flex-1 px-4 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-colors">
+                                            {isEditingPartner ? "Save Changes" : "Create Partner & Account"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
+                </div>
             </main>
         </div>
     );

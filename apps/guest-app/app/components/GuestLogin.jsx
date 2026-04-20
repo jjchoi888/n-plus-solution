@@ -149,7 +149,7 @@ function GuestLoginContent() {
                 // 🚨 [방어막 1] 백엔드에 새 API가 없어서 엉뚱한 값이 왔을 때 완벽 차단!
                 if (!res.data || typeof res.data.isDuplicate === 'undefined') {
                     setIsLoading(false);
-                    return alert("🚨 [서버 미업데이트 확인]\n새로운 중복 검사 API가 서버에 없습니다!\n백엔드(server.js) 코드가 api.hotelnplus.com 에 배포/재시작 되었는지 확인해 주세요.\n\n현재 서버 응답: " + JSON.stringify(res.data).substring(0, 100));
+                    return alert("🚨 Server Update Required.\nThe validation API is missing or outdated. Please contact the administrator.\n\nServer Response: " + JSON.stringify(res.data).substring(0, 100));
                 }
 
                 // 🚨 [방어막 2] 백엔드가 중복으로 판정하면 여기서 즉각 에러창 띄우고 완전 정지!
@@ -159,7 +159,7 @@ function GuestLoginContent() {
                 }
             } catch (e) {
                 setIsLoading(false);
-                return alert("🚨 [서버 통신 에러]\nAPI를 찾을 수 없습니다.\n상세: " + e.message);
+                return alert("🚨 Server Connection Error.\nCould not reach the server.\nDetails: " + e.message);
             }
 
             // 검증을 무사히 통과했을 때만 2단계로 이동
@@ -191,7 +191,7 @@ function GuestLoginContent() {
 
                 if (!res.data || typeof res.data.isDuplicate === 'undefined') {
                     setIsLoading(false);
-                    return alert("🚨 [서버 미업데이트 확인] 결제 검사 API가 없습니다.");
+                    return alert("🚨 Server Update Required. Payment validation API is missing.");
                 }
 
                 if (res.data.isDuplicate) {
@@ -200,7 +200,7 @@ function GuestLoginContent() {
                 }
             } catch (e) {
                 setIsLoading(false);
-                return alert("🚨 [서버 통신 에러] " + e.message);
+                return alert("🚨 Server Connection Error: " + e.message);
             }
 
             // 검증 통과 시에만 최종 4단계로 이동

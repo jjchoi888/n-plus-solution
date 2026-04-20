@@ -2,13 +2,13 @@
 import { useState } from "react";
 
 export default function MyPage({ user, onBack, onJoinRewards }) {
-    // 💡 예약 내역: 하드코딩된 목업 데이터 제거 (추후 백엔드 API 연동 시 데이터가 채워짐)
+    // 💡 Booking history: Removed hardcoded mock data (Will be populated via backend API integration later)
     const [bookings] = useState([]);
 
-    // 사용자의 멤버십 가입 여부 확인 (MainPortal에서 넘겨받은 user 데이터 기반)
+    // Check user's membership status (Based on user data passed from MainPortal)
     const isMember = user?.is_membership_active === true || user?.is_membership_active === 1;
 
-    // Exclusive Benefits 내용
+    // Exclusive Benefits Content
     const membershipBenefits = [
         {
             icon: "🎁",
@@ -29,7 +29,7 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
 
     return (
         <div className="w-full max-w-5xl mx-auto pt-24 pb-20 px-4 animate-fade-in font-sans">
-            {/* 상단 헤더 & 뒤로가기 */}
+            {/* Top Header & Back Button */}
             <div className="flex items-center gap-4 mb-8">
                 <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
@@ -39,13 +39,13 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* 좌측: 프로필 & 멤버십 영역 */}
+                {/* Left Column: Profile & Membership Area */}
                 <div className="lg:col-span-1 space-y-6">
-                    {/* 멤버십 카드 */}
+                    {/* Membership Card */}
                     <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/40 transition-all"></div>
 
-                        {/* 등급 표시 */}
+                        {/* Tier Display */}
                         <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
                             {isMember ? `${user?.tier_id || 'MEMBER'}` : 'BASIC USER'}
                         </p>
@@ -56,7 +56,7 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                         <div className="space-y-4">
                             <div>
                                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Available Points</p>
-                                {/* Member는 포인트 표시, Basic은 0 */}
+                                {/* Show points for Members, 0 for Basic */}
                                 <p className="text-3xl font-black text-emerald-400">
                                     {isMember ? (user?.total_points || 0).toLocaleString() : '0'}
                                     <span className="text-sm text-slate-300 font-bold ml-1">pts</span>
@@ -68,7 +68,7 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                         </div>
                     </div>
 
-                    {/* Membership Benefits 영역 */}
+                    {/* Membership Benefits Area */}
                     <div className="bg-white rounded-3xl border border-slate-200 p-7 shadow-sm">
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Exclusive Benefits</h3>
                         <p className="text-slate-500 text-sm font-medium mb-6">Complete your profile to unlock our progressive reward tiers.</p>
@@ -87,7 +87,7 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                             ))}
                         </div>
 
-                        {/* Member가 아닐 때만 [Join n+ Rewards] 버튼 노출 */}
+                        {/* Show [Join n+ Rewards] button only if not a Member */}
                         {!isMember && (
                             <button
                                 onClick={onJoinRewards}
@@ -101,7 +101,7 @@ export default function MyPage({ user, onBack, onJoinRewards }) {
                     </div>
                 </div>
 
-                {/* 우측: 최근 예약 내역 (목업 데이터 제거됨) */}
+                {/* Right Column: Recent Bookings (Mock data removed) */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center">

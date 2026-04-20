@@ -184,7 +184,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 [핵심] 결제 링크를 성공적으로 받아오면, AQWIRE 결제창으로 화면 이동
+        // 💡 [Core] Redirect to the AQWIRE hosted checkout page upon receiving the payment URL
         window.location.href = data.paymentUrl;
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -291,7 +291,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
               </div>
               <form onSubmit={submitBooking} className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                {/* 💡 [모바일 1순위] Guest Details & Extra Options */}
+                {/* 💡 [Mobile Priority 1] Guest Details & Extra Options */}
                 <div className="lg:col-span-8 space-y-6 text-left order-1">
 
                   {/* Guest Details */}
@@ -334,7 +334,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
                 </div>
 
-                {/* 💡 [모바일 2순위] Booking Summary (PC에서는 우측 고정) */}
+                {/* 💡 [Mobile Priority 2] Booking Summary (Sticky on right for PC) */}
                 <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
                   <h3 className="text-lg font-bold text-emerald-900 mb-4 border-b border-emerald-200 pb-2 text-left">{t.summary}</h3>
 
@@ -400,13 +400,13 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                   </div>
                 </div>
 
-                {/* 💡 [모바일 3순위] Payment Method & Submit Button */}
+                {/* 💡 [Mobile Priority 3] Payment Method & Submit Button */}
                 <div className="lg:col-span-8 space-y-6 text-left order-3">
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
 
-                      {/* 💡 [카드번호 자동완성/포맷 수정] */}
+                      {/* 💡 [Card Number Auto-format/Masking] */}
                       <div className="text-left">
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label>
                         <input type="text" name="cc-number" autoComplete="cc-number" required placeholder="0000 0000 0000 0000" maxLength="19" value={formData.cardNumber}
@@ -420,7 +420,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 text-left">
-                        {/* 💡 [만료일 자동완성/포맷 수정 (MM / YY)] */}
+                        {/* 💡 [Expiry Date Auto-format (MM / YY)] */}
                         <div>
                           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label>
                           <input type="text" name="cc-exp" autoComplete="cc-exp" required placeholder="MM / YY" maxLength="7" value={formData.expiry}
@@ -433,7 +433,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                           />
                         </div>
 
-                        {/* 💡 [CVV 크롬 자동완성 차단(new-password) 및 마스킹 처리] */}
+                        {/* 💡 [Block Chrome CVV auto-fill and mask input] */}
                         <div>
                           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label>
                           <input type="password" name="secure-cvv" autoComplete="new-password" required placeholder="***" maxLength="4" value={formData.cvv}

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
 const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
 const PortalAdmin = dynamic(() => import('./PortalAdmin'), { ssr: false });
-// 💡 1. 신규 마이페이지 컴포넌트 등록
+// 💡 1. Register the new My Page (Member Dashboard) component
 const MemberDashboard = dynamic(() => import('./MemberDashboard'), { ssr: false });
 
 export default function DomainRouter({ initialHotel }) {
@@ -14,7 +14,7 @@ export default function DomainRouter({ initialHotel }) {
 
   useEffect(() => {
     const host = window.location.hostname;
-    const pathname = window.location.pathname; // 💡 현재 경로 확인용 (/member 등)
+    const pathname = window.location.pathname; // 💡 Check current path (e.g., /member)
     const params = new URLSearchParams(window.location.search);
     const hotelParam = params.get('hotel');
 
@@ -22,10 +22,10 @@ export default function DomainRouter({ initialHotel }) {
     const isSystemSubdomain = host.startsWith('app.') || host.startsWith('manage.');
     const isHQ = host === 'hq.hotelnplus.com' || host.startsWith('hq.localhost');
 
-    // 💡 2. 마이페이지 진입 조건 확인 (/member 경로로 들어왔을 때)
+    // 💡 2. Check My Page entry condition (when entering via /member path)
     if (pathname === '/member') {
       setView('MEMBER');
-      setTargetHotel(hotelParam || null); // ?hotel=A001 이 있으면 해당 호텔 모드로 작동
+      setTargetHotel(hotelParam || null); // If ?hotel=A001 exists, operate in that specific hotel's mode
       return;
     }
 
@@ -49,7 +49,7 @@ export default function DomainRouter({ initialHotel }) {
 
   if (!view) return <div className="min-h-screen bg-white" />;
 
-  // 💡 3. 화면 분기 렌더링
+  // 💡 3. Render view based on routing logic
   if (view === 'MEMBER') {
     return <MemberDashboard hotelCode={targetHotel} />;
   } else if (view === 'HQ') {

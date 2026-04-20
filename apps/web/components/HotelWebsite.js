@@ -38,6 +38,7 @@ class ErrorBoundary extends React.Component {
 }
 
 // 💡 [핵심] 번역 사전에 모든 알림 메시지와 로그인 UI 텍스트를 추가했습니다.
+// 💡 [핵심] 번역 사전에 모든 알림 메시지와 로그인 UI 텍스트를 추가했습니다.
 const translations = {
     en: {
         home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
@@ -72,6 +73,7 @@ const translations = {
         promoAuto2: " ] has been applied automatically!\nPlease select your check-in/check-out dates below to proceed.",
         promoCopied1: "🎁 Promo code '",
         promoCopied2: "' has been copied!\nPlease select your dates and room, then apply it at checkout.",
+        guestNameMissing: "Please enter the guest's First and Last Name.", // 💡 추가됨
 
         loginTo: "Log In to ",
         continueGoogle: "Continue with Google",
@@ -131,6 +133,7 @@ const translations = {
         promoAuto2: " ] 프로모션 혜택이 자동 적용되었습니다!\n아래 화면에서 원하시는 '체크인/체크아웃 날짜'를 선택하고 예약을 진행해 주세요.",
         promoCopied1: "🎁 '",
         promoCopied2: "' 코드가 복사되었습니다!\n원하시는 날짜와 객실을 선택 후 결제창에서 적용(Apply)을 눌러주세요.",
+        guestNameMissing: "투숙객의 영문 이름과 성을 모두 입력해 주세요.", // 💡 추가됨
 
         loginTo: "로그인 - ",
         continueGoogle: "Google로 계속하기",
@@ -190,6 +193,7 @@ const translations = {
         promoAuto2: " ] 已自动应用！\n请在下方选择您的入住/退房日期以继续。",
         promoCopied1: "🎁 优惠码 '",
         promoCopied2: "' 已复制！\n请选择您的日期和客房，然后在结账时应用它。",
+        guestNameMissing: "请输入入住客人的姓氏和名字。", // 💡 追加
 
         loginTo: "登录到 ",
         continueGoogle: "使用 Google 继续",
@@ -249,6 +253,7 @@ const translations = {
         promoAuto2: " ] が自動的に適用されました！\nチェックイン/チェックアウトの日付を選択して続行してください。",
         promoCopied1: "🎁 プロモコード '",
         promoCopied2: "' をコピーしました！\n日付と客室を選択し、お支払い画面で適用してください。",
+        guestNameMissing: "宿泊者の名と姓を入力してください。", // 💡 追加
 
         loginTo: "ログイン - ",
         continueGoogle: "Googleで続行",
@@ -1233,6 +1238,10 @@ export default function HotelWebsite({ domain }) {
                     const handleConfirmBooking = async () => {
                         if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
                             return setAlertMessage(t.fillRequired);
+                        }
+                        // 💡 [대리 예약] 지인 예약일 경우 지인 이름 필수 검사 추가!
+                        if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
+                            return setAlertMessage(t.guestNameMissing);
                         }
                         setIsBooking(true);
                         try {

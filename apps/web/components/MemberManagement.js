@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import dynamic from 'next/dynamic';
 
-// 리치 텍스트 에디터 (이메일 캠페인용)
+// 💡 Rich text editor for email campaigns (Dynamic import to avoid SSR issues)
 const ReactQuill = dynamic(() => import('react-quill-new'), {
     ssr: false,
     loading: () => <div className="h-[350px] bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center font-bold text-slate-400">Loading Editor...</div>
@@ -14,16 +14,16 @@ export default function MemberManagement() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // 검색 및 필터 상태
+    // Search and filter state
     const [searchTerm, setSearchTerm] = useState("");
     const [filterNation, setFilterNation] = useState("ALL");
 
-    // 이메일 캠페인 상태
+    // Email campaign state
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [emailForm, setEmailForm] = useState({ subject: "", content: "" });
     const [isSending, setIsSending] = useState(false);
 
-    // 회원 상세 보기/수정 상태
+    // Member detail view/edit state
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -40,7 +40,7 @@ export default function MemberManagement() {
         ],
     }), []);
 
-    // 💡 일반 회원 목록 불러오기
+    // 💡 Fetch general member list from the database
     const fetchUsers = async () => {
         try {
             const res = await axios.get(`/api/hq/general-members?t=${Date.now()}`, {
@@ -70,7 +70,7 @@ export default function MemberManagement() {
         fetchUsers();
     }, []);
 
-    // 검색 및 필터 적용
+    // Apply search and filtering
     const displayUsers = users.filter(u => {
         const matchSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchNation = filterNation === "ALL" || u.nationality === filterNation;
@@ -79,7 +79,7 @@ export default function MemberManagement() {
 
     const nations = ["ALL", ...new Set(users.map(u => u.nationality))];
 
-    // 📧 이메일 발송 실행
+    // 📧 Execute email campaign dispatch
     const submitEmailCampaign = async (e) => {
         e.preventDefault();
         if (!window.confirm(`Are you sure you want to send this email to ${displayUsers.length} members?`)) return;
@@ -105,7 +105,7 @@ export default function MemberManagement() {
         } finally { setIsSending(false); }
     };
 
-    // 👤 회원 정보 업데이트
+    // 👤 Update member information
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
@@ -129,7 +129,7 @@ export default function MemberManagement() {
 
     return (
         <div className="space-y-6 animate-fade-in pb-20 font-sans p-6 md:p-10 max-w-7xl mx-auto">
-            {/* 상단 타이틀 */}
+            {/* Top Title Section */}
             <div className="mb-8 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-black text-slate-800 tracking-tight">General Members</h1>
@@ -140,7 +140,7 @@ export default function MemberManagement() {
                 </button>
             </div>
 
-            {/* 필터 및 검색바 */}
+            {/* Filters and Search Bar */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="relative flex-1 min-w-[200px]">
@@ -162,7 +162,7 @@ export default function MemberManagement() {
                 </div>
             </div>
 
-            {/* 일반 회원 테이블 */}
+            {/* General Members Table */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="p-4 bg-slate-50 border-b border-slate-100">
                     <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Total Members: {displayUsers.length}</span>
@@ -204,7 +204,7 @@ export default function MemberManagement() {
                 {displayUsers.length === 0 && <div className="p-20 text-center"><p className="text-slate-400 font-black text-lg">No general members found.</p></div>}
             </div>
 
-            {/* 회원 상세 정보 모달창 */}
+            {/* Member Details Modal */}
             {isEditModalOpen && editingUser && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
@@ -235,7 +235,7 @@ export default function MemberManagement() {
                 </div>
             )}
 
-            {/* 이메일 마케팅 모달창 */}
+            {/* Email Marketing Modal */}
             {isEmailModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] border border-white/20">

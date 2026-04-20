@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import dynamic from 'next/dynamic';
 
+// Dynamic import for Rich Text Editor (ReactQuill)
 const ReactQuill = dynamic(() => import('react-quill-new'), {
     ssr: false,
     loading: () => <div className="h-[350px] bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center font-bold text-slate-400">Loading Editor...</div>
@@ -41,7 +42,7 @@ export default function UserManagement() {
     const [logSearch, setLogSearch] = useState("");
     const [logFilterTier, setLogFilterTier] = useState("ALL");
 
-    // 💡 [신규 추가] 포인트 정책 설정용 State
+    // 💡 State for Point Policy Configuration
     const [policyMaxPct, setPolicyMaxPct] = useState(100);
     const [policyMinUnit, setPolicyMinUnit] = useState(1);
     const [isSavingPolicy, setIsSavingPolicy] = useState(false);
@@ -105,7 +106,7 @@ export default function UserManagement() {
         return () => clearInterval(interval);
     }, []);
 
-    // 💡 [신규 추가] 포인트 정책 설정 데이터 불러오기
+    // 💡 Fetch Point Policy Configuration Data
     useEffect(() => {
         axios.get('/api/settings/point-policy')
             .then(res => {
@@ -149,11 +150,11 @@ export default function UserManagement() {
                 </div>
                 `
             });
-            alert("Email sending has started successfully!");
+            alert("✅ Email sending has started successfully!");
             setIsEmailModalOpen(false);
             setEmailForm({ subject: "", content: "", imageUrl: "" });
         } catch (err) {
-            alert("Error occurred during dispatch.");
+            alert("❌ Error occurred during dispatch.");
         } finally { setIsSending(false); }
     };
 
@@ -180,13 +181,13 @@ export default function UserManagement() {
         if (!window.confirm(`Are you sure you want to approve and activate membership for ${userEmail}?`)) return;
 
         try {
-            // 💡 위에서 수정한 백엔드 API를 호출 (여기서 승인+알림 발송이 한 번에 처리됨)
+            // 💡 Calls the backend API that processes approval and notification in one go
             const res = await axios.put("/api/members/activate", { email: userEmail });
 
             if (res.data && res.data.success) {
                 alert(`✅ Successfully activated membership for ${userEmail}. A welcome notification has been sent to their app.`);
-                setIsReviewModalOpen(false); // 모달창 닫기
-                fetchUsers(); // 즉시 리스트 새로고침
+                setIsReviewModalOpen(false);
+                fetchUsers();
             } else {
                 alert("❌ Activation failed: " + res.data.message);
             }
@@ -215,7 +216,7 @@ export default function UserManagement() {
         }
     };
 
-    // 💡 [신규 추가] 포인트 정책 저장 함수
+    // 💡 Point Policy Save Function
     const handleSavePolicy = async () => {
         setIsSavingPolicy(true);
         try {
@@ -245,7 +246,7 @@ export default function UserManagement() {
                     { id: "BASIC", label: `Pending Users (${basicUsers.length})` },
                     { id: "MEMBERS", label: `Rewards Members (${memberUsers.length})` },
                     { id: "POINTS_LOG", label: `Points Audit Log 📊` },
-                    { id: "POINT_POLICY", label: `Point Policy ⚙️` } // 💡 탭 추가
+                    { id: "POINT_POLICY", label: `Point Policy ⚙️` } // 💡 New Tab
                 ].map(t => (
                     <button key={t.id} onClick={() => { setTab(t.id); setFilterTier("ALL"); }} className={`px-5 md:px-6 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${tab === t.id ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"}`}>
                         {t.label}
@@ -256,7 +257,7 @@ export default function UserManagement() {
                 </button>
             </div>
 
-            {/* 유저 리스트 관련 탭에서만 검색바 노출 */}
+            {/* Display search bar only on user list related tabs */}
             {(tab !== "POINTS_LOG" && tab !== "POINT_POLICY") && (
                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 animate-fade-in">
                     <div className="flex flex-wrap items-center gap-4">
@@ -314,7 +315,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 💡 [신규 추가] 포인트 정책 설정 화면 */}
+            {/* 💡 Point Policy Settings Screen */}
             {tab === "POINT_POLICY" && (
                 <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-3xl animate-fade-in mx-auto">
                     <h2 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
@@ -435,7 +436,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 리뷰 모달창 */}
+            {/* Review Modal */}
             {isReviewModalOpen && reviewingUser && (
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[90] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsReviewModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
@@ -519,7 +520,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 스마트 반려(Reject) 모달창 */}
+            {/* Smart Reject Modal */}
             {showRejectModal && reviewingUser && (
                 <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowRejectModal(false)}>
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
@@ -622,7 +623,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 정보 수정 모달창 */}
+            {/* User Edit Modal */}
             {isEditModalOpen && editingUser && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
                     <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
@@ -675,7 +676,7 @@ export default function UserManagement() {
                 </div>
             )}
 
-            {/* 이메일 마케팅 모달창 */}
+            {/* Email Marketing Modal */}
             {isEmailModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] border border-white/20">

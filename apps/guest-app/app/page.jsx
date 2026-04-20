@@ -234,7 +234,7 @@ export default function HomePage() {
                 }
             } catch (e) {
                 console.error("Duplicate Check Error:", e);
-                return alert("API Connection Error: Could not verify payment info.");
+                return alert("Network error: Could not verify your payment information. Please try again.");
             }
         }
 
@@ -399,7 +399,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-12 space-y-5 text-center w-full max-w-[280px]">
-                    <button onClick={() => alert('Biometric login requires secure backend setup. Please use PIN for now.')} className="text-[#009900] text-sm font-semibold flex items-center justify-center gap-2 w-full">
+                    <button onClick={() => alert('Face ID and Fingerprint login will be supported in a future update. Please use your PIN for now.')} className="text-[#009900] text-sm font-semibold flex items-center justify-center gap-2 w-full">
                         <span className="text-xl">🪪</span> Use Face ID / Fingerprint
                     </button>
 

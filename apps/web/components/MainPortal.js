@@ -47,7 +47,10 @@ const translations = {
     dbProfile: "Portal Profile Settings", dbProfileDesc: "Manage how your hotel appears on the n+ booking portal.", dbProfileImg: "Main Image URL", dbProfileText: "Short Description", dbProfileBtn: "Save Profile",
     dbSupport: "Support & Helpdesk", dbInquiry: "1:1 Inquiry", dbApiGuide: "API Integration Guide", dbNotices: "System Notices",
     contactSalesTitle: "Contact Sales", sendEmail: "Send an Email", whatsapp: "WhatsApp", emailLabel: "Your Email", msgLabel: "Message", sendBtn: "Send Message", backBtn: "Back", successMsg: "Your message has been sent successfully!",
-    specialOffers: "Special Offers & Packages", promoCode: "Promo Code", validUntil: "Valid until", bookNow: "Book Now"
+    specialOffers: "Special Offers & Packages", promoCode: "Promo Code", validUntil: "Valid until", bookNow: "Book Now",
+    // Auth & Onboarding
+    firstName: 'First Name', lastName: 'Last Name', phoneStr: 'Phone Number', nationalityStr: 'Nationality',
+    loginTo: "Log In to ", continueGoogle: "Continue with Google", or: "OR", forgotPw: "Forgot Password?", createAccount: "Create Account", signUpBtn: "Sign Up", resetPw: "Reset Password", resetDesc: "Enter your registered email address to receive a reset link.", regEmail: "Registered Email", sendReset: "Send Reset Link", backLogin: "Back to Login", noAccount: "Don't have an account? ", signUpLink: "Sign up", hasAccount: "Already a member? ", loginLink: "Log in", resetSent: "A password reset link has been sent if the email exists.", welcomeBack: "Welcome back!", welcomeNew: "Welcome to n+ Rewards!", authFailed: "Authentication failed.", googleFailed: "Google Login failed.", serverError: "Server connection error.", joinSuccess: "Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.", fillRequired: "Please fill in all required details."
   },
   ko: {
     heroBadge: "올인원 호텔 소프트웨어", heroTitle: <>호텔의 혁신.<br />고객의 감동.</>, heroDesc: <>{nLogo}는 호텔 수익을 극대화하고 운영을 간소화하는 차세대 클라우드 PMS입니다. <br className="hidden md:block" />고객은 아래에서 파트너 호텔을 쉽고 빠르게 다이렉트로 예약할 수 있습니다.</>,
@@ -66,7 +69,7 @@ const translations = {
     alertDest: "은(는) n+ 호텔 솔루션 파트너입니다.\n상단의 예약 검색바를 이용해 남은 객실을 확인해 주세요.", alertDemo: "관심을 가져주셔서 감사합니다! 곧 영업팀에서 연락드리겠습니다.", close: "닫기",
     pmsPageTitle: "클라우드 PMS 솔루션", pmsPageSubtitle: "현대 호텔을 위한 궁극의 운영 체제", pmsPageDesc: "운영을 자동화하고, 글로벌 OTA와 연결하며, 수익을 창출하는 n+의 강력한 툴을 발견해보세요.",
     pmsSection1Title: "지능형 프론트 데스크", pmsSection1Desc: "체크인 속도를 높이고, 정산을 매끄럽게 처리하며, 모든 객실 상태를 실시간으로 한눈에 파악하세요. 직원의 업무 효율성을 극대화하도록 설계되었습니다.", pmsSection2Title: "양방향 채널 매니저", pmsSection2Desc: "Agoda, Booking.com, Expedia 등 주요 OTA와 즉시 연결됩니다. 요금과 가용 객실이 자동으로 동기화되어 오버부킹과 수기 입력의 번거로움을 없앱니다.", pmsSection3Title: "초저수수료 다이렉트 예약 엔진", pmsSection3Desc: "웹사이트 방문자를 다이렉트 고객으로 전환하세요. 호텔의 자체 도메인에서 단 1.5%의 수수료로 모바일에 최적화된 최신 예약 경험을 제공합니다.",
-    loginTitle: "파트너 로그인", hotelCodeStr: "호텔 코드", emailStr: "사용자 ID", pwStr: "비밀번호", loginBtn: "로그인", loginErr: "로그인 정보가 올바르지 않습니다.",
+    loginTitle: "파트너 로그인", hotelCodeStr: "호텔 코드", emailStr: "이메일 주소", pwStr: "비밀번호", loginBtn: "로그인", loginErr: "로그인 정보가 올바르지 않습니다.",
     dashTitle: "파트너 대시보드", dashSub: "호텔의 연동 정보 및 결제 내역을 관리하세요.",
     dbBilling: "자동 결제 및 영수증", dbCardReg: "결제 카드 등록", dbCardRegBtn: "카드 변경", dbInvoices: "결제 및 영수증 내역", dbReceipt: "영수증 발급",
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
@@ -76,36 +79,9 @@ const translations = {
     dbProfile: "포털 프로필 관리", dbProfileDesc: "n+ 통합 포털에 노출될 호텔 사진과 소개글을 관리하세요.", dbProfileImg: "대표 이미지 URL", dbProfileText: "한 줄 소개글", dbProfileBtn: "프로필 저장",
     dbSupport: "기술 지원 및 헬프데스크", dbInquiry: "1:1 문의하기", dbApiGuide: "API 연동 가이드", dbNotices: "시스템 공지사항",
     contactSalesTitle: "도입 문의", sendEmail: "이메일 보내기", whatsapp: "WhatsApp 문의", emailLabel: "이메일 주소", msgLabel: "문의 내용", sendBtn: "메시지 전송", backBtn: "뒤로 가기", successMsg: "메시지가 성공적으로 전송되었습니다!",
-    specialOffers: "스페셜 프로모션 & 패키지", promoCode: "할인 코드", validUntil: "유효기간", bookNow: "지금 예약하기"
-  },
-  ja: {
-    heroBadge: "オールインワン ホテルソフトウェア", heroTitle: <>ホテルの革新。<br />ゲストの感動。</>, heroDesc: <>{nLogo}は、ホテルの収益を最大化し、運営を合理化する次世代クラウドPMSです。<br className="hidden md:block" />ゲストは以下のパートナーホテルを直接予約できます。</>,
-    bookPartner: <>{nLogo} パートナーホテルを予約</>, zeroComm: "業界最安水準 1.5% 手数料", searchResults: "検索結果", whyChoose: <>{nLogo} が選ばれる理由</>, whyDesc: "当社の包括的なツールは、運用コストの削減、直接予約の増加、ゲスト体験の向上をサポートします。",
-    saasFeatures: [
-      { icon: "📉", title: "大幅なコスト削減", desc: "強力な分析アルゴリズムにより労働力管理を最適化し、高コストな経理や管理スタッフの必要性を大幅に削減します。" },
-      { icon: "🌐", title: "自社ウェブサイト＆ダイレクト予約エンジン", desc: "リアルタイム自動予約エンジンを搭載したカスタムウェブサイトにより、わずか1.5%の手数料で直接予約を促進します。" },
-      { icon: "☁️", title: "クラウド型トータルソリューション", desc: "決済、POS、予約、管理システムを単一のクラウドプラットフォームに統合し、ITの専門家不要で簡単に運用できます。" },
-      { icon: "🌱", title: "環境に配慮したペーパーレス運営", desc: "無限のクラウドストレージを活用して膨大な文書をデジタル化し、環境保護をリードするペーパーレス運用を実現します。" }
-    ],
-    partnerNetwork: "パートナーネットワーク", partnerDesc: <>世界中の何百ものホテルが{nLogo}を導入しています。私たちのネットワークに参加し、統合予約ポータルで直接露出を高めましょう。</>, viewAll: "すべてのパートナーを見る", partnerHotel: "パートナーホテル",
-    poweredBy: { pms: "n+ スマートPMS 導入", kiosk: "n+ スマートキオスク 導入", cm: "n+ チャネルマネージャー 導入", db: "n+ ダイレクト予約 導入" },
-    ctaTitle: "ホテルを革新する準備はできましたか？", ctaDesc: "高額なOTA手数料（15〜20%）はもう不要です。わずか1.5%の低手数料プラットフォームと最高のクラウドPMSで収益を最大化しましょう。", reqDemo: "デモをリクエスト", partnerLogin: "パートナーログイン",
-    footerSaaS: "n+ SaaS", footerDesc: "現代のホテリエのためのオペレーティングシステム。運営を合理化し、直接予約を増やし、収益を最大化します。", fSolutions: "ソリューション", fCompany: "会社情報", fStayUpdated: "最新情報",
-    fCloudPMS: "クラウド PMS", fChanMgr: "チャネルマネージャー", fDirectBook: "ダイレクト予約エンジン", fKiosk: "スマートキオスク API", fAbout: "n+ について", fPartners: "パートナーホテル", fPricing: "料金", fContact: "お問い合わせ", fNews: "ホスピタリティテックの最新ニュースをお届けします。", fEmail: "メールアドレス", fJoin: "登録", fRights: "無断複写・転載を禁じます。", fPrivacy: "プライバシーポリシー", fTerms: "利用規約", fSecurity: "セキュリティ",
-    alertDest: "はn+ ホテルソリューションのパートナーです。\n上の検索バーを使用して空室を確認してください。", alertDemo: "ご関心をお寄せいただきありがとうございます！担当者より追ってご連絡いたします。", close: "閉じる",
-    pmsPageTitle: "クラウド PMS ソリューション", pmsPageSubtitle: "現代ホテルのための究極のオペレーティングシステム", pmsPageDesc: "業務を自動化し、グローバルOTAと接続し、収益を牽引するn+の強力なツールを発見してください。",
-    pmsSection1Title: "インテリジェントなフロントデスク", pmsSection1Desc: "チェックインを迅速化し、会計をシームレスに管理し、すべての客室状況をリアルタイムで把握します。", pmsSection2Title: "双方向チャネルマネージャー", pmsSection2Desc: "主要なOTAと即座に接続します。料金と空室状況は自動的に同期され、オーバーブッキングを防ぎます。", pmsSection3Title: "低手数料（1.5%）の予約エンジン", pmsSection3Desc: "ウェブサイト訪問者を直接のゲストに変換します。わずか1.5%の取引手数料で、安全でモバイルフレンドリーな予約体験を提供します。",
-    loginTitle: "パートナーログイン", hotelCodeStr: "ホテルコード", emailStr: "ユーザーID", pwStr: "パスワード", loginBtn: "ログイン", loginErr: "無効な資格情報です。",
-    dashTitle: "パートナーダッシュボード", dashSub: "ホテルの統合と請求を管理します。",
-    dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
-    dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
-    dbCode: "ホテルコード設定", dbCodeDesc: "PMS同期用の6文字の英数字コード。", dbCodeBtn: "コードの更新",
-    dbPlan: "現在のプラン", dbPlanName: "n+ エンタープライズ スイート", dbPlanNext: "次回の請求日", logoutBtn: "ログアウト",
-    dbAnalytics: "パフォーマンス概要", dbBookings: "今月の直接予約", dbSaved: "節約したOTA手数料", dbOcc: "現在の稼働率",
-    dbProfile: "ポータルプロファイル設定", dbProfileDesc: "n+ポータルでのホテルの表示を管理します。", dbProfileImg: "画像 URL", dbProfileText: "短い説明", dbProfileBtn: "プロファイルを保存",
-    dbSupport: "サポートとヘルプデスク", dbInquiry: "1:1 お問い合わせ", dbApiGuide: "API ガイド", dbNotices: "システム通知",
-    contactSalesTitle: "お問い合わせ", sendEmail: "メールを送信", whatsapp: "WhatsApp", emailLabel: "メールアドレス", msgLabel: "メッセージ", sendBtn: "送信", backBtn: "戻る", successMsg: "メッセージが正常に送信されました！",
-    specialOffers: "特別プロモーション＆パッケージ", promoCode: "プロモコード", validUntil: "有効期限", bookNow: "今すぐ予約"
+    specialOffers: "스페셜 프로모션 & 패키지", promoCode: "할인 코드", validUntil: "유효기간", bookNow: "지금 예약하기",
+    firstName: '이름 (First Name)', lastName: '성 (Last Name)', phoneStr: '연락처', nationalityStr: '국적',
+    loginTo: "로그인 - ", continueGoogle: "Google로 계속하기", or: "또는", forgotPw: "비밀번호 찾기", createAccount: "회원가입", signUpBtn: "가입하기", resetPw: "비밀번호 재설정", resetDesc: "가입하신 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.", regEmail: "가입된 이메일", sendReset: "재설정 링크 보내기", backLogin: "로그인으로 돌아가기", noAccount: "계정이 없으신가요? ", signUpLink: "회원가입", hasAccount: "이미 회원이신가요? ", loginLink: "로그인", resetSent: "등록된 이메일이 맞다면 비밀번호 재설정 링크가 발송되었습니다.", welcomeBack: "다시 오신 것을 환영합니다!", welcomeNew: "n+ Rewards에 오신 것을 환영합니다!", authFailed: "인증에 실패했습니다.", googleFailed: "구글 로그인에 실패했습니다.", serverError: "서버 연결에 실패했습니다.", joinSuccess: "n+ Rewards 멤버십 가입이 성공적으로 완료되었습니다.\n\n본사 승인이 완료되면 24시간 이내에 계정이 활성화됩니다.", fillRequired: "모든 필수 입력란을 채워주세요."
   },
   zh: {
     heroBadge: "一体化酒店软件", heroTitle: <>赋能酒店。<br />愉悦宾客。</>, heroDesc: <>{nLogo} 是下一代云端 PMS，旨在最大化酒店收入并简化运营。<br className="hidden md:block" />宾客可以在下方轻松直接预订我们的合作伙伴酒店。</>,
@@ -124,7 +100,7 @@ const translations = {
     alertDest: "由 n+ 酒店解决方案提供支持。\n请使用上方的搜索栏查找可用客房。", alertDemo: "感谢您的关注！我们的销售团队将很快与您联系。", close: "关闭",
     pmsPageTitle: "云端 PMS 解决方案", pmsPageSubtitle: "现代酒店的终极操作系统", pmsPageDesc: "发现 n+ 中集成的强大工具，以自动化运营、连接全球 OTA 并增加收入。",
     pmsSection1Title: "智能前台", pmsSection1Desc: "加快入住办理速度，无缝管理账单，并实时鸟瞰所有客房状态。", pmsSection2Title: "双向渠道管理器", pmsSection2Desc: "立即连接到主要 OTA。价格和空房情况自动同步，消除超售。", pmsSection3Title: "超低佣金预订引擎", pmsSection3Desc: "将网站访问者转化为直接宾客。在您自己的域名上提供安全、现代的预订体验，交易费仅为 1.5%。",
-    loginTitle: "合作伙伴登录", hotelCodeStr: "酒店代码", emailStr: "用户 ID", pwStr: "密码", loginBtn: "登录", loginErr: "凭据无效。",
+    loginTitle: "合作伙伴登录", hotelCodeStr: "酒店代码", emailStr: "电子邮件", pwStr: "密码", loginBtn: "登录", loginErr: "凭据无效。",
     dashTitle: "合作伙伴仪表板", dashSub: "管理您酒店的集成和账单。",
     dbBilling: "账单与支付", dbCardReg: "自动支付卡", dbCardRegBtn: "更新银行卡", dbInvoices: "支付历史", dbReceipt: "收据",
     dbDomain: "域名设置", dbDomainDesc: "链接您的自定义域名以进行直接预订。", dbDomainStatus: "状态", dbLinked: "已链接", dbDomainBtn: "保存域名",
@@ -134,7 +110,40 @@ const translations = {
     dbProfile: "门户资料设置", dbProfileDesc: "管理您的酒店在 n+ 预订门户上的显示方式。", dbProfileImg: "图片网址", dbProfileText: "简短说明", dbProfileBtn: "保存资料",
     dbSupport: "支持与帮助", dbInquiry: "1:1 咨询", dbApiGuide: "API 集成指南", dbNotices: "系统通知",
     contactSalesTitle: "联系销售", sendEmail: "发送电子邮件", whatsapp: "WhatsApp", emailLabel: "您的电子邮箱", msgLabel: "留言", sendBtn: "发送消息", backBtn: "返回", successMsg: "您的消息已成功发送！",
-    specialOffers: "特别优惠与套餐", promoCode: "优惠码", validUntil: "有效期至", bookNow: "立即预订"
+    specialOffers: "特别优惠与套餐", promoCode: "优惠码", validUntil: "有效期至", bookNow: "立即预订",
+    firstName: '名字', lastName: '姓氏', phoneStr: '电话号码', nationalityStr: '国籍',
+    loginTo: "登录到 ", continueGoogle: "使用 Google 继续", or: "或", forgotPw: "忘记密码？", createAccount: "创建账户", signUpBtn: "注册", resetPw: "重置密码", resetDesc: "输入您注册的电子邮件地址以接收重置链接。", regEmail: "注册邮箱", sendReset: "发送重置链接", backLogin: "返回登录", noAccount: "没有账户？", signUpLink: "注册", hasAccount: "已经是会员？", loginLink: "登录", resetSent: "如果邮箱存在，密码重置链接已发送。", welcomeBack: "欢迎回来！", welcomeNew: "欢迎来到 n+ Rewards！", authFailed: "认证失败。", googleFailed: "Google 登录失败。", serverError: "连接服务器错误。", joinSuccess: "您的 n+ Rewards 会员申请已成功提交。\n\n总部审核完成后，您的账户将在24小时内激活。", fillRequired: "请填写所有必填信息。"
+  },
+  ja: {
+    heroBadge: "オールインワン ホテルソフトウェア", heroTitle: <>ホテルの革新。<br />ゲストの感動。</>, heroDesc: <>{nLogo}は、ホテルの収益を最大化し、運営を合理化する次世代クラウドPMSです。<br className="hidden md:block" />ゲストは以下のパートナーホテルを直接予約できます。</>,
+    bookPartner: <>{nLogo} パートナーホテルを予約</>, zeroComm: "業界最安水準 1.5% 手数料", searchResults: "検索結果", whyChoose: <>{nLogo} が選ばれる理由</>, whyDesc: "当社の包括的なツールは、運用コストの削減、直接予約の増加、ゲスト体験の向上をサポートします。",
+    saasFeatures: [
+      { icon: "📉", title: "大幅なコスト削減", desc: "強力な分析アルゴリズムにより労働力管理を最適化し、高コストな経理や管理スタッフの必要性を大幅に削減します。" },
+      { icon: "🌐", title: "自社ウェブサイト＆ダイレクト予約エンジン", desc: "リアルタイム自動予約エンジンを搭載したカスタムウェブサイトにより、わずか1.5%の手数料で直接予約を促進します。" },
+      { icon: "☁️", title: "クラウド型トータルソリューション", desc: "決済、POS、予約、管理システムを単一のクラウドプラットフォームに統合し、ITの専門家不要で簡単に運用できます。" },
+      { icon: "🌱", title: "環境に配慮したペーパーレス運営", desc: "無限のクラウドストレージを活用して膨大な文書をデジタル化し、環境保護をリードするペーパーレス運用を実現します。" }
+    ],
+    partnerNetwork: "パートナーネットワーク", partnerDesc: <>世界中の何百ものホテルが{nLogo}を導入しています。私たちのネットワークに参加し、統合予約ポータルで直接露出を高めましょう。</>, viewAll: "すべてのパートナーを見る", partnerHotel: "パートナーホテル",
+    poweredBy: { pms: "n+ スマートPMS 導入", kiosk: "n+ スマートキオスク 導入", cm: "n+ チャネルマネージャー 導入", db: "n+ ダイレクト予約 導入" },
+    ctaTitle: "ホテルを革新する準備はできましたか？", ctaDesc: "高額なOTA手数料（15〜20%）はもう不要です。わずか1.5%の低手数料プラットフォームと最高のクラウドPMSで収益を最大化しましょう。", reqDemo: "デモをリクエスト", partnerLogin: "パートナーログイン",
+    footerSaaS: "n+ SaaS", footerDesc: "現代のホテリエのためのオペレーティングシステム。運営を合理化し、直接予約を増やし、収益を最大化します。", fSolutions: "ソリューション", fCompany: "会社情報", fStayUpdated: "最新情報",
+    fCloudPMS: "クラウド PMS", fChanMgr: "チャネルマネージャー", fDirectBook: "ダイレクト予約エンジン", fKiosk: "スマートキオスク API", fAbout: "n+ について", fPartners: "パートナーホテル", fPricing: "料金", fContact: "お問い合わせ", fNews: "ホスピタリティテックの最新ニュースをお届けします。", fEmail: "メールアドレス", fJoin: "登録", fRights: "無断複写・転載を禁じます。", fPrivacy: "プライバシーポリシー", fTerms: "利用規約", fSecurity: "セキュリティ",
+    alertDest: "はn+ ホテルソリューションのパートナーです。\n上の検索バーを使用して空室を確認してください。", alertDemo: "ご関心をお寄せいただきありがとうございます！担当者より追ってご連絡いたします。", close: "閉じる",
+    pmsPageTitle: "クラウド PMS ソリューション", pmsPageSubtitle: "現代ホテルのための究極のオペレーティングシステム", pmsPageDesc: "業務を自動化し、グローバルOTAと接続し、収益を牽引するn+の強力なツールを発見してください。",
+    pmsSection1Title: "インテリジェントなフロントデスク", pmsSection1Desc: "チェックインを迅速化し、会計をシームレスに管理し、すべての客室状況をリアルタイムで把握します。", pmsSection2Title: "双方向チャネルマネージャー", pmsSection2Desc: "主要なOTAと即座に接続します。料金と空室状況は自動的に同期され、オーバーブッキングを防ぎます。", pmsSection3Title: "低手数料（1.5%）の予約エンジン", pmsSection3Desc: "ウェブサイト訪問者を直接のゲストに変換します。わずか1.5%の取引手数料で、安全でモバイルフレンドリーな予約体験を提供します。",
+    loginTitle: "パートナーログイン", hotelCodeStr: "ホテルコード", emailStr: "メールアドレス", pwStr: "パスワード", loginBtn: "ログイン", loginErr: "無効な資格情報です。",
+    dashTitle: "パートナーダッシュボード", dashSub: "ホテルの統合と請求を管理します。",
+    dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
+    dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
+    dbCode: "ホテルコード設定", dbCodeDesc: "PMS同期用の6文字の英数字コード。", dbCodeBtn: "コードの更新",
+    dbPlan: "現在のプラン", dbPlanName: "n+ エンタープライズ スイート", dbPlanNext: "次回の請求日", logoutBtn: "ログアウト",
+    dbAnalytics: "パフォーマンス概要", dbBookings: "今月の直接予約", dbSaved: "節約したOTA手数料", dbOcc: "現在の稼働率",
+    dbProfile: "ポータルプロファイル設定", dbProfileDesc: "n+ポータルでのホテルの表示を管理します。", dbProfileImg: "画像 URL", dbProfileText: "短い説明", dbProfileBtn: "プロファイルを保存",
+    dbSupport: "サポートとヘルプデスク", dbInquiry: "1:1 お問い合わせ", dbApiGuide: "API ガイド", dbNotices: "システム通知",
+    contactSalesTitle: "お問い合わせ", sendEmail: "メールを送信", whatsapp: "WhatsApp", emailLabel: "メールアドレス", msgLabel: "メッセージ", sendBtn: "送信", backBtn: "戻る", successMsg: "メッセージが正常に送信されました！",
+    specialOffers: "特別プロモーション＆パッケージ", promoCode: "プロモコード", validUntil: "有効期限", bookNow: "今すぐ予約",
+    firstName: '名', lastName: '姓', phoneStr: '電話番号', nationalityStr: '国籍',
+    loginTo: "ログイン - ", continueGoogle: "Googleで続行", or: "または", forgotPw: "パスワードをお忘れですか？", createAccount: "アカウント作成", signUpBtn: "登録", resetPw: "パスワードのリセット", resetDesc: "登録したメールアドレスを入力して、リセットリンクを受け取ってください。", regEmail: "登録メールアドレス", sendReset: "リセットリンクを送信", backLogin: "ログインに戻る", noAccount: "アカウントをお持ちでないですか？", signUpLink: "登録する", hasAccount: "すでに会員ですか？", loginLink: "ログイン", resetSent: "メールアドレスが存在する場合、パスワードリセットリンクが送信されました。", welcomeBack: "お帰りなさい！", welcomeNew: "n+ Rewardsへようこそ！", authFailed: "認証に失敗しました。", googleFailed: "Googleログインに失敗しました。", serverError: "サーバーへの接続エラー。", joinSuccess: "n+ Rewards メンバーシップの申し込みが正常に送信されました。\n\n本部の審査が完了次第、24時間以内にアカウントが有効になります。", fillRequired: "すべての必須項目を入力してください。"
   }
 };
 
@@ -1436,6 +1445,9 @@ export default function MainPortal() {
       {/* ==================================================== */}
       {/* 💡 고객 로그인 / 회원가입 / 비밀번호 찾기 모달창 */}
       {/* ==================================================== */}
+      {/* ==================================================== */}
+      {/* 💡 고객 로그인 / 회원가입 / 비밀번호 찾기 모달창 */}
+      {/* ==================================================== */}
       {showGuestAuthModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
           <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-sm" onClick={e => e.stopPropagation()}>
@@ -1451,131 +1463,127 @@ export default function MainPortal() {
                     onClick={handleGoogleLogin}
                     className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm"
                   >
-                    {/* 구글 아이콘 생략 */}
-                    <span className="text-lg">G</span> Continue with Google
+                    <span className="text-lg">G</span> {t.continueGoogle}
                   </button>
 
                   <div className="flex items-center mb-6">
                     <div className="flex-1 border-t border-slate-200"></div>
-                    <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">OR</span>
+                    <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.or}</span>
                     <div className="flex-1 border-t border-slate-200"></div>
                   </div>
 
                   <form onSubmit={handleGuestAuthSubmit} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.emailStr}</label>
                       <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">First Name</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
                         <input type="text" required value={guestFirstName} onChange={(e) => setGuestFirstName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="John" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Last Name</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
                         <input type="text" required value={guestLastName} onChange={(e) => setGuestLastName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="Doe" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Phone Number</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phoneStr}</label>
                       <input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="09" />
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.pwStr}</label>
                       <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
                     </div>
 
                     <div className="pt-2">
                       <button type="submit" className="w-full bg-[#0f172a] text-white font-bold py-3.5 hover:bg-slate-800 transition-colors shadow-md text-sm">
-                        Sign Up with Email
+                        {t.signUpBtn}
                       </button>
                     </div>
                   </form>
                 </>
               ) : guestAuthMode === 'LOGIN' ? (
                 <>
-                  <h2 className="text-2xl font-black text-slate-800 mb-6">Log In</h2>
+                  <h2 className="text-2xl font-black text-slate-800 mb-6">{t.loginBtn}</h2>
 
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
                     className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm"
                   >
-                    <span className="text-lg">G</span> Log In with Google
+                    <span className="text-lg">G</span> {t.continueGoogle}
                   </button>
 
                   <div className="flex items-center mb-6">
                     <div className="flex-1 border-t border-slate-200"></div>
-                    <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">OR</span>
+                    <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.or}</span>
                     <div className="flex-1 border-t border-slate-200"></div>
                   </div>
 
                   <form onSubmit={handleGuestAuthSubmit} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Email Address</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.emailStr}</label>
                       <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.pwStr}</label>
                       <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
                     </div>
 
-                    {/* 💡 비밀번호 분실 버튼 추가 */}
                     <div className="flex justify-end mt-1 mb-2">
                       <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold text-blue-600 hover:underline">
-                        Forgot Password?
+                        {t.forgotPw}
                       </button>
                     </div>
 
                     <div className="pt-2">
                       <button type="submit" className="w-full bg-[#0f172a] text-white font-bold py-3.5 hover:bg-slate-800 transition-colors shadow-md text-sm">
-                        Log In
+                        {t.loginBtn}
                       </button>
                     </div>
                   </form>
                 </>
               ) : guestAuthMode === 'FORGOT_PASSWORD' ? (
-                // 💡 비밀번호 재설정 (Forgot Password) 폼 추가
                 <div className="animate-fade-in-up">
-                  <h2 className="text-2xl font-black text-slate-800 mb-2">Reset Password</h2>
-                  <p className="text-xs font-bold text-slate-500 mb-6 leading-relaxed">Enter your registered email address and we'll send you a link to reset your password.</p>
+                  <h2 className="text-2xl font-black text-slate-800 mb-2">{t.resetPw}</h2>
+                  <p className="text-xs font-bold text-slate-500 mb-6 leading-relaxed">{t.resetDesc}</p>
 
                   <form onSubmit={(e) => {
                     e.preventDefault();
-                    alert(`If an account exists for ${guestEmail}, a password reset link has been sent.`);
-                    setGuestAuthMode('LOGIN'); // 발송 후 다시 로그인 창으로
+                    setAlertMessage(t.resetSent);
+                    setGuestAuthMode('LOGIN');
                   }} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Registered Email</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.regEmail}</label>
                       <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
                     </div>
                     <div className="pt-2">
                       <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3.5 hover:bg-blue-700 transition-colors shadow-md text-sm">
-                        Send Reset Link
+                        {t.sendReset}
                       </button>
                     </div>
                     <div className="text-center pt-4">
                       <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-xs font-bold text-slate-500 hover:underline flex items-center justify-center gap-1 mx-auto">
-                        <span>←</span> Back to Login
+                        <span>←</span> {t.backLogin}
                       </button>
                     </div>
                   </form>
                 </div>
               ) : null}
 
-              {/* 하단 멤버십 안내 */}
               {guestAuthMode !== 'FORGOT_PASSWORD' && (
                 <div className="text-center pt-8 mt-8 border-t border-slate-100 space-y-3">
                   {guestAuthMode === 'REGISTER' ? (
                     <div className="text-sm font-bold text-slate-500">
-                      Already a member? <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-blue-600 hover:underline">Log in</button>
+                      {t.hasAccount} <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-blue-600 hover:underline">{t.loginLink}</button>
                     </div>
                   ) : (
                     <div className="text-sm font-bold text-slate-500">
-                      Don't have an account? <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="text-blue-600 hover:underline">Sign up</button>
+                      {t.noAccount} <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="text-blue-600 hover:underline">{t.signUpLink}</button>
                     </div>
                   )}
                 </div>

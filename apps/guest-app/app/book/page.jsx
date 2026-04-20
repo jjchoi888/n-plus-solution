@@ -376,7 +376,7 @@ function BookRoomContent() {
     const handleNextStep = () => {
         if (!bookingData.hotel_code) return alert("Please select a hotel destination.");
         if (totalSelectedRoomCount === 0) return alert("Please select at least one room to proceed.");
-        if (bookingData.check_in_date >= bookingData.check_out_date) return alert("Check-out date must be after Check-in.");
+        if (bookingData.check_in_date >= bookingData.check_out_date) return alert("The check-out date must be after the check-in date.");
 
         setStep(2);
     };
@@ -386,7 +386,7 @@ function BookRoomContent() {
 
         // 💡 [대리 예약 기능] 제출 전 지인 이름 필수 검사
         if (checkinType === 'guest' && (!guestInfo.guestFirstName || !guestInfo.guestLastName)) {
-            return alert("Please enter the Guest's First and Last Name.");
+            return alert("Please enter the guest's First and Last Name.");
         }
 
         if (pointsToUse > 0 && pointPolicy.min_unit > 1) {
@@ -471,12 +471,12 @@ function BookRoomContent() {
                 window.location.href = `/payment/checkout?data=${encodedData}`;
 
             } else {
-                alert("Failed to submit booking request. Please try again.");
+                alert("Failed to submit the booking request. Please try again later.");
                 setIsLoading(false);
             }
         } catch (error) {
             console.error("Booking Error:", error);
-            alert("Network error occurred while processing your booking.");
+            alert("A network error occurred while processing your booking. Please check your connection.");
             setIsLoading(false);
         }
     };

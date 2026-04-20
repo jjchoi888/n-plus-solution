@@ -1,27 +1,27 @@
-'use client'; 
+'use client';
 
 export default function FloatingBackButton() {
-  
-  // 💡 [핵심] Next.js 기능 다 무시하고, 브라우저 자체를 홈으로 강제 새로고침하며 꽂아버리는 함수
+
+  // 💡 [Core] Bypasses Next.js routing and forces a hard browser redirect to the home page.
   const forceGoHome = (e) => {
-    e.preventDefault(); // 혹시 모를 다른 클릭 이벤트 방해 공작 차단
-    window.location.href = '/'; // 가장 강력한 원초적 이동 방법
+    e.preventDefault(); // Prevent any potential interference from other click events
+    window.location.href = '/'; // The most reliable, native way to navigate
   };
 
   return (
     <button
-      onClick={forceGoHome} // 무적의 함수 연결
+      onClick={forceGoHome} // Attach the redirect function
       aria-label="Go to Home"
-      // md:hidden -> 모바일에서만 노출
-      // z-[99999]: z-index를 극한으로 올려서 무조건 제일 위에 오게 함
+      // md:hidden -> Only visible on mobile devices
+      // z-[99999]: Extremely high z-index to ensure it's always on top
       className="md:hidden fixed z-[99999] bg-white/90 backdrop-blur text-slate-700 shadow-[0_4px_15px_rgba(0,0,0,0.15)] border border-gray-200 rounded-full flex items-center justify-center active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-slate-700/50"
-      
+
       style={{
-        width: '56px',  
-        height: '56px', 
-        bottom: '56px', 
-        right: '40px',  
-        pointerEvents: 'auto', // 💡 [핵심] 투명한 막이 덮고 있어도 이 버튼은 무조건 클릭을 인식해라!
+        width: '56px',
+        height: '56px',
+        bottom: '56px',
+        right: '40px',
+        pointerEvents: 'auto', // 💡 [Core] Ensure the button receives clicks even if covered by a transparent overlay!
         cursor: 'pointer'
       }}
     >

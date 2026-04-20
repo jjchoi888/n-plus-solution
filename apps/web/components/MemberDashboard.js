@@ -9,32 +9,32 @@ export default function MemberDashboard({ hotelCode }) {
     const [activeTab, setActiveTab] = useState('BOOKINGS');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // 💡 비밀번호 변경 폼 상태
+    // 💡 Password change form state
     const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
 
-    // 💡 상태(State) 초기화 (가짜 데이터 제거)
+    // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
     const [upcomingBookings, setUpcomingBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 💡 실제 로그인한 유저 정보 및 DB 예약 내역 불러오기
+    // 💡 Load actual logged-in user data and bookings from DB
     useEffect(() => {
         const loadUserData = async () => {
             try {
-                // 로컬 스토리지에서 현재 로그인한 유저 정보 가져오기
+                // Fetch currently logged-in user from local storage
                 const savedUser = localStorage.getItem('nplus_guest_user');
                 if (!savedUser) return;
 
                 const parsedUser = JSON.parse(savedUser);
                 setUser(parsedUser);
 
-                // 백엔드 API에서 해당 유저의 실제 예약 내역 호출
+                // Call backend API to fetch real booking history for this user
                 const res = await axios.get(`/api/members/bookings?email=${parsedUser.email}`);
 
                 if (res.data && res.data.success) {
                     let fetchBookings = res.data.bookings || [];
 
-                    // 개별웹으로 접속한 경우(?hotel=A001), 해당 호텔 예약만 필터링
+                    // If accessed via a single hotel website (?hotel=A001), filter bookings accordingly
                     if (hotelCode) {
                         fetchBookings = fetchBookings.filter(b => b.hotel_code === hotelCode);
                     }
@@ -67,14 +67,14 @@ export default function MemberDashboard({ hotelCode }) {
         doc.save(`Receipt_${booking.id}.pdf`);
     };
 
-    // 💡 실제 서버와 연동되는 예약 취소 로직
+    // 💡 Real cancellation logic integrated with the server
     const handleCancelRequest = async (booking) => {
         const today = new Date();
         const checkInDate = new Date(booking.check_in);
         const diffTime = checkInDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // 환불 정책 계산
+        // Calculate refund policy
         let refundPercent = 100;
         if (diffDays <= 1) refundPercent = 0;
         else if (diffDays === 2) refundPercent = 20;
@@ -91,7 +91,7 @@ export default function MemberDashboard({ hotelCode }) {
 
         if (window.confirm(confirmMsg)) {
             try {
-                // 💡 실제 백엔드에 취소 요청
+                // 💡 Request cancellation from the backend
                 const res = await axios.post('/api/members/bookings/cancel', {
                     booking_id: booking.id,
                     refund_amount: refundAmount
@@ -105,12 +105,12 @@ export default function MemberDashboard({ hotelCode }) {
                 }
             } catch (error) {
                 console.error("Cancellation Error:", error);
-                alert("🚨 Server error occurred during cancellation.");
+                alert("🚨 A server error occurred during cancellation.");
             }
         }
     };
 
-    // 💡 비밀번호 변경 실행 함수
+    // 💡 Execute password change
     const handlePasswordChange = (e) => {
         e.preventDefault();
         if (pwForm.newPw !== pwForm.confirm) {
@@ -120,7 +120,7 @@ export default function MemberDashboard({ hotelCode }) {
         setPwForm({ current: '', newPw: '', confirm: '' });
     };
 
-    // 💡 구글 로그인 유저 판별 (이메일 로그인 유저만 비밀번호 변경 가능)
+    // 💡 Identify Google Login user (Only email users can change passwords)
     const isGoogleUser = user?.auth_provider === 'google' || user?.password === null || !user?.password;
 
     if (isLoading) {
@@ -130,13 +130,13 @@ export default function MemberDashboard({ hotelCode }) {
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans mt-[72px]">
 
-            {/* 📱 모바일 메뉴 버튼 */}
+            {/* 📱 Mobile Menu Button */}
             <div className="md:hidden bg-white p-4 border-b flex justify-between items-center sticky top-0 z-50">
                 <span className="font-black text-blue-600">MY PAGE</span>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-2xl text-slate-600">☰</button>
             </div>
 
-            {/* 🖥️ 좌측 사이드바 */}
+            {/* 🖥️ Left Sidebar */}
             <div className={`fixed md:relative inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out z-40 w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl md:shadow-none`}>
                 <div className="p-8 border-b border-slate-50">
                     <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Guest Portal</h2>
@@ -162,7 +162,7 @@ export default function MemberDashboard({ hotelCode }) {
                 </nav>
             </div>
 
-            {/* 🚀 메인 콘텐츠 영역 */}
+            {/* 🚀 Main Content Area */}
             <main className="flex-1 p-4 md:p-12 overflow-y-auto">
                 <div className="max-w-4xl mx-auto">
 
@@ -170,7 +170,7 @@ export default function MemberDashboard({ hotelCode }) {
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-3xl font-black text-slate-800">My Bookings</h2>
 
-                            {/* 💡 예약 데이터가 없을 경우 처리 */}
+                            {/* 💡 Handling empty booking data */}
                             {upcomingBookings.length === 0 ? (
                                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">
                                     <div className="text-5xl mb-4">🧳</div>
@@ -212,7 +212,7 @@ export default function MemberDashboard({ hotelCode }) {
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-3xl font-black text-slate-800">Receipts & Folios</h2>
 
-                            {/* 💡 예약 데이터가 없을 경우 처리 */}
+                            {/* 💡 Handling empty receipt data */}
                             {upcomingBookings.length === 0 ? (
                                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">
                                     <div className="text-5xl mb-4">🧾</div>
@@ -260,7 +260,7 @@ export default function MemberDashboard({ hotelCode }) {
                                 <button className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
                             </div>
 
-                            {/* 💡 구글 연동 유저가 아닐 때만 비밀번호 변경 섹션 렌더링 */}
+                            {/* 💡 Render Password Change section ONLY if not a Google User */}
                             {!isGoogleUser && (
                                 <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 mt-8">
                                     <h3 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-4">Change Password</h3>

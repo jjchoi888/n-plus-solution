@@ -1,14 +1,13 @@
 import { initializeApp } from 'firebase/app';
 
-// 대표님의 Firebase 프로젝트 설정값 (Firebase Console에서 확인 가능)
 const firebaseConfig = {
-    apiKey: "AIzaSyAaO32y6cwOQiQWWrjCnIe-3qMnybX5Nik",
-    authDomain: "hotel-pms-5cf9e.firebaseapp.com",
-    projectId: "hotel- pms - 5cf9e",
-    storageBucket: "hotel-pms-5cf9e.firebasestorage.app",
-    messagingSenderId: "919351571745",
-    appId: "1:919351571745:web:a6bf201771e9d68dfffa60"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Firebase 앱 초기화
+// Initialize Firebase App
 export const app = initializeApp(firebaseConfig);

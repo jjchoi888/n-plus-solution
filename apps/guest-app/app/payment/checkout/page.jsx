@@ -52,7 +52,7 @@ function CheckoutContent() {
 
     // 가예약(Hold) 취소 로직
     const handleCancelPayment = async (isAuto = false) => {
-        if (!isAuto && !window.confirm("Are you sure you want to cancel this payment? Your room reservation will be released.")) return;
+        if (!isAuto && !window.confirm("Are you sure you want to cancel this payment? Your room hold will be released.")) return;
 
         setIsProcessing(true);
         try {
@@ -71,7 +71,7 @@ function CheckoutContent() {
 
         // 💡 [대리 예약] 지인 예약일 경우 이름 필수 검사
         if (checkinType === 'guest' && (!guestInfo.guestFirstName || !guestInfo.guestLastName)) {
-            return alert("Please fill in the Guest's First and Last Name.");
+            return alert("Please enter the guest's First and Last Name.");
         }
 
         setIsProcessing(true);

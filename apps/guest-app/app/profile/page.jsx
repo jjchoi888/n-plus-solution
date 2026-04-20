@@ -79,12 +79,12 @@ export default function ProfilePage() {
                 localStorage.setItem('nplus_guest_user', JSON.stringify(updatedUser));
                 setUser(updatedUser);
                 setShowEditModal(false);
-                alert("Profile successfully updated!");
+                alert("Your profile has been successfully updated.");
             } else {
-                alert(data.message || "Update failed.");
+                alert(data.message || "Failed to update profile. Please try again.");
             }
         } catch (error) {
-            alert("Network error while updating profile.");
+            alert("A network error occurred. Please check your connection and try again.");
         } finally {
             setIsUpdating(false);
         }
