@@ -170,7 +170,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           total_price: dividedGrandTotal,
           payment_method: "Credit Card",
           hotel_code: targetHotelCode,
-          channel: source
+          channel: source,
+          status: 'PENDING_PAYMENT'
         });
       }
     }

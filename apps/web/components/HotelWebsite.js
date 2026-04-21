@@ -1239,13 +1239,8 @@ export default function HotelWebsite({ domain }) {
                         if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
                             return setAlertMessage(t.fillRequired);
                         }
-                        // 💡 [대리 예약] 지인 예약일 경우 지인 이름 필수 검사 추가!
-                        if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-                            return setAlertMessage(t.guestNameMissing);
-                        }
                         setIsBooking(true);
                         try {
-                            // 💡 [핵심] 여러 객실을 예약했을 때, 각 방마다 할인된 최종 금액을 1/N 로 나눠서 서버에 보냅니다.
                             const dividedGrandTotal = finalTotal / safeRoomCount;
                             let bookingPayloads = [];
 
@@ -1260,14 +1255,12 @@ export default function HotelWebsite({ domain }) {
                                     email: guestEmail,
                                     phone: guestPhone,
                                     nationality: nationality,
-
-                                    // 💡 [핵심] 이제 할인 정보와 최종 할인가가 정확히 서버(b.total_price)로 넘어갑니다!
                                     total_price: dividedGrandTotal,
                                     promo_code: appliedPromo ? appliedPromo.code : null,
                                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
-
                                     payment_method: "Credit Card",
-                                    channel: "Hotel Web"
+                                    channel: "Hotel Web",
+                                    status: 'PENDING_PAYMENT' // 💡 [추가] 결제 전 가예약 상태 명시!
                                 });
                             }
 
@@ -1279,19 +1272,16 @@ export default function HotelWebsite({ domain }) {
 
                             const data = await res.json();
 
-                            if (data.success) {
-                                setAlertMessage(t.bookingConfirmed);
-                                setShowBookingModal(false);
-                                setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
-                                setCardNum(''); setCardExp(''); setCardCvv(''); setExtraBed(0);
-                                setCheckIn(''); setCheckOut('');
+                            // 💡 [핵심 수정] 성급하게 성공 메시지를 띄우지 않고, 즉시 결제창으로 넘깁니다!!
+                            if (data.success && data.paymentUrl) {
+                                window.location.href = data.paymentUrl;
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
+                                setIsBooking(false); // 에러 시에만 버튼 잠금 해제
                             }
                         } catch (error) {
                             console.error("Booking Error:", error);
                             setAlertMessage(t.serverError);
-                        } finally {
                             setIsBooking(false);
                         }
                     };

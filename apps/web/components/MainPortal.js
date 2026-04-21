@@ -1445,9 +1445,6 @@ export default function MainPortal() {
       {/* ==================================================== */}
       {/* 💡 고객 로그인 / 회원가입 / 비밀번호 찾기 모달창 */}
       {/* ==================================================== */}
-      {/* ==================================================== */}
-      {/* 💡 고객 로그인 / 회원가입 / 비밀번호 찾기 모달창 */}
-      {/* ==================================================== */}
       {showGuestAuthModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
           <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-sm" onClick={e => e.stopPropagation()}>
