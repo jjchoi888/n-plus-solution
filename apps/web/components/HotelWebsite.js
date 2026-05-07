@@ -529,6 +529,38 @@ export default function HotelWebsite({ domain }) {
 
     }, [hotelCode]);
 
+    // 💡 [수정] 결제 완료 후 돌아왔을 때 알림 문구를 영어로 고정
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const paymentStatus = params.get('payment');
+            const resIds = params.get('res_ids');
+
+            if (paymentStatus === 'success') {
+                // 1. 성공 알림 (영어)
+                const successMsg = `✅ Booking Confirmed! Your stay is secured.\nReservation ID: ${resIds}`;
+                setAlertMessage(successMsg);
+
+                // 2. 모달 및 상태 초기화
+                setShowBookingModal(false);
+                setIsBooking(false);
+
+                // 3. URL 파라미터 제거 (새로고침 시 중복 알림 방지)
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?hotel=${hotelCode}`;
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+            }
+            else if (paymentStatus === 'cancel') {
+                // 취소 알림 (영어)
+                setAlertMessage("❌ Payment was cancelled. Please try again.");
+                setShowBookingModal(false);
+                setIsBooking(false);
+
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?hotel=${hotelCode}`;
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+            }
+        }
+    }, [hotelCode]);
+
     useEffect(() => {
         if (typeof window !== 'undefined' && activePromos.length > 0 && rooms.length > 0) {
             const params = new URLSearchParams(window.location.search);
