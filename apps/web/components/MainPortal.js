@@ -548,12 +548,6 @@ export default function MainPortal() {
   }, []);
 
   useEffect(() => {
-    const preventRightClick = (e) => e.preventDefault();
-    document.addEventListener("contextmenu", preventRightClick);
-    return () => document.removeEventListener("contextmenu", preventRightClick);
-  }, []);
-
-  useEffect(() => {
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
       setActiveView("LOGIN");
