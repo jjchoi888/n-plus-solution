@@ -38,7 +38,6 @@ class ErrorBoundary extends React.Component {
 }
 
 // 💡 [핵심] 번역 사전에 모든 알림 메시지와 로그인 UI 텍스트를 추가했습니다.
-// 💡 [핵심] 번역 사전에 모든 알림 메시지와 로그인 UI 텍스트를 추가했습니다.
 const translations = {
     en: {
         home: 'HOME', rooms: 'ROOMS', facilities: 'FACILITIES', attractions: 'ATTRACTIONS', contact: 'CONTACT',
@@ -54,7 +53,7 @@ const translations = {
         firstName: 'First Name', lastName: 'Last Name', email: 'Email Address', phone: 'Phone Number', nationality: 'Nationality',
         extraOptions: 'Extra Options', extraBed: 'Extra Bed',
         paymentMethod: 'Payment Method', cardNum: 'Card Number', expiry: 'Expiry Date', cvv: 'CVV',
-        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...',
+        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Proceed to Payment ➔', processing: 'Processing...',
 
         // --- 신규 추가된 시스템 알림 및 Auth 번역 ---
         selectValidDates: "Please select valid dates.",
@@ -115,7 +114,7 @@ const translations = {
         firstName: '이름 (First Name)', lastName: '성 (Last Name)', email: '이메일', phone: '연락처', nationality: '국적',
         extraOptions: '추가 옵션', extraBed: '엑스트라 베드',
         paymentMethod: '결제 정보', cardNum: '카드 번호', expiry: '유효기간 (MM/YY)', cvv: '보안코드 (CVV)',
-        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...',
+        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 진행하기 ➔', processing: '처리 중...',
 
         selectValidDates: "체크인과 체크아웃 날짜를 선택해주세요.",
         checkoutAfterCheckin: "체크아웃은 체크인 날짜 이후여야 합니다.",
@@ -175,7 +174,7 @@ const translations = {
         firstName: '名字', lastName: '姓氏', email: '电子邮件', phone: '电话号码', nationality: '国籍',
         extraOptions: '额外选项', extraBed: '加床',
         paymentMethod: '付款方式', cardNum: '卡号', expiry: '有效期', cvv: 'CVV',
-        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...',
+        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '前往支付 ➔', processing: '处理中...',
 
         selectValidDates: "请选择有效的日期。",
         checkoutAfterCheckin: "退房日期必须在入住日期之后。",
@@ -235,7 +234,7 @@ const translations = {
         firstName: '名', lastName: '姓', email: 'メールアドレス', phone: '電話番号', nationality: '国籍',
         extraOptions: '追加オプション', extraBed: 'エキストラベッド',
         paymentMethod: 'お支払い方法', cardNum: 'カード番号', expiry: '有効期限', cvv: 'CVV',
-        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...',
+        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '支払いへ進む ➔', processing: '処理中...',
 
         selectValidDates: "有効な日付を選択してください。",
         checkoutAfterCheckin: "チェックアウトはチェックインの日付より後にする必要があります。",
@@ -318,9 +317,7 @@ export default function HotelWebsite({ domain }) {
     const [guestPhone, setGuestPhone] = useState('');
     const [nationality, setNationality] = useState('Philippines');
     const [extraBed, setExtraBed] = useState(0);
-    const [cardNum, setCardNum] = useState('');
-    const [cardExp, setCardExp] = useState('');
-    const [cardCvv, setCardCvv] = useState('');
+   
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
 
@@ -1236,7 +1233,7 @@ export default function HotelWebsite({ domain }) {
 
                     // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async () => {
-                        if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
+                        if (!firstName || !lastName || !guestEmail || !guestPhone) {
                             return setAlertMessage(t.fillRequired);
                         }
                         setIsBooking(true);
@@ -1343,26 +1340,6 @@ export default function HotelWebsite({ domain }) {
                                                     <button type="button" disabled={isBooking} onClick={() => setExtraBed(Math.max(0, extraBed - 1))} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">-</button>
                                                     <span className="w-4 text-center font-bold theme-text">{extraBed}</span>
                                                     <button type="button" disabled={isBooking} onClick={() => setExtraBed(extraBed + 1)} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">+</button>
-                                                </div>
-                                            </div>
-                                        </section>
-
-                                        <section>
-                                            <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">3. {t.paymentMethod}</h3>
-                                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cardNum}</label>
-                                                    <input value={cardNum} onChange={e => setCardNum(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none tracking-widest" placeholder="0000 0000 0000 0000" />
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.expiry}</label>
-                                                        <input value={cardExp} onChange={e => setCardExp(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none text-center" placeholder="MM/YY" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cvv}</label>
-                                                        <input value={cardCvv} onChange={e => setCardCvv(e.target.value)} disabled={isBooking} type="password" maxLength={4} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none text-center tracking-widest" placeholder="•••" />
-                                                    </div>
                                                 </div>
                                             </div>
                                         </section>
