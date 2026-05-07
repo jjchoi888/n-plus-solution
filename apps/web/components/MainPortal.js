@@ -42,6 +42,7 @@ const translations = {
     dbBilling: "Billing & Payments", dbCardReg: "Auto-Payment Card", dbCardRegBtn: "Update Card", dbInvoices: "Payment History", dbReceipt: "Receipt",
     dbDomain: "Domain Settings", dbDomainDesc: "Link your custom domain for direct bookings.", dbDomainStatus: "Status", dbLinked: "Linked", dbDomainBtn: "Save Domain",
     dbCode: "Hotel Code Settings", dbCodeDesc: "6-character alphanumeric code for PMS sync.", dbCodeBtn: "Update Code",
+    dbPgSettings: "Payment Gateway Settings", dbPgDesc: "Enter your PaynPlus API keys to enable direct guest payments to your hotel's account.", dbPgSecret: "Secret Key (sk_live_...)", dbPgWebhook: "Webhook Secret (whsec_...)", dbPgBtn: "Save PG Settings",
     dbPlan: "Current Plan", dbPlanName: "n+ Enterprise Suite", dbPlanNext: "Next billing date", logoutBtn: "Logout",
     dbAnalytics: "Performance Overview", dbBookings: "Monthly Direct Bookings", dbSaved: "OTA Commission Saved", dbOcc: "Current Occupancy",
     dbProfile: "Portal Profile Settings", dbProfileDesc: "Manage how your hotel appears on the n+ booking portal.", dbProfileImg: "Main Image URL", dbProfileText: "Short Description", dbProfileBtn: "Save Profile",
@@ -74,6 +75,7 @@ const translations = {
     dbBilling: "자동 결제 및 영수증", dbCardReg: "결제 카드 등록", dbCardRegBtn: "카드 변경", dbInvoices: "결제 및 영수증 내역", dbReceipt: "영수증 발급",
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
     dbCode: "호텔 코드 설정", dbCodeDesc: "시스템 연동을 위한 6자리 영어/숫자 조합 코드", dbCodeBtn: "코드 변경",
+    dbPgSettings: "결제 시스템(PG) 연동 설정", dbPgDesc: "고객의 결제 대금이 호텔 계좌로 직접 입금되도록 발급받은 PaynPlus API 키를 입력하세요.", dbPgSecret: "시크릿 키 (sk_live_...)", dbPgWebhook: "웹훅 시크릿 (whsec_...)", dbPgBtn: "결제 연동 저장",
     dbPlan: "현재 구독 플랜", dbPlanName: "n+ 엔터프라이즈 스위트", dbPlanNext: "다음 결제일", logoutBtn: "로그아웃",
     dbAnalytics: "다이렉트 예약 성과 요약", dbBookings: "이번 달 다이렉트 예약", dbSaved: "절감한 OTA 수수료", dbOcc: "현재 객실 가동률",
     dbProfile: "포털 프로필 관리", dbProfileDesc: "n+ 통합 포털에 노출될 호텔 사진과 소개글을 관리하세요.", dbProfileImg: "대표 이미지 URL", dbProfileText: "한 줄 소개글", dbProfileBtn: "프로필 저장",
@@ -105,6 +107,7 @@ const translations = {
     dbBilling: "账单与支付", dbCardReg: "自动支付卡", dbCardRegBtn: "更新银行卡", dbInvoices: "支付历史", dbReceipt: "收据",
     dbDomain: "域名设置", dbDomainDesc: "链接您的自定义域名以进行直接预订。", dbDomainStatus: "状态", dbLinked: "已链接", dbDomainBtn: "保存域名",
     dbCode: "酒店代码设置", dbCodeDesc: "用于 PMS 同步的 6 位字母数字代码。", dbCodeBtn: "更新代码",
+    dbPgSettings: "支付网关(PG)设置", dbPgDesc: "输入您的 PaynPlus API 密钥，让客人的付款直接汇入您酒店的账户。", dbPgSecret: "密钥 (sk_live_...)", dbPgWebhook: "Webhook 密钥 (whsec_...)", dbPgBtn: "保存支付设置",
     dbPlan: "当前计划", dbPlanName: "n+ 企业套件", dbPlanNext: "下一个计费日期", logoutBtn: "登出",
     dbAnalytics: "业绩概览", dbBookings: "本月直接预订", dbSaved: "节省的 OTA 佣金", dbOcc: "当前入住率",
     dbProfile: "门户资料设置", dbProfileDesc: "管理您的酒店在 n+ 预订门户上的显示方式。", dbProfileImg: "图片网址", dbProfileText: "简短说明", dbProfileBtn: "保存资料",
@@ -136,6 +139,7 @@ const translations = {
     dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
     dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
     dbCode: "ホテルコード設定", dbCodeDesc: "PMS同期用の6文字の英数字コード。", dbCodeBtn: "コードの更新",
+    dbPgSettings: "決済システム(PG)連携設定", dbPgDesc: "ゲストの支払いがホテルの口座に直接入金されるよう、PaynPlus APIキーを入力してください。", dbPgSecret: "シークレットキー (sk_live_...)", dbPgWebhook: "Webhookシークレット (whsec_...)", dbPgBtn: "決済設定を保存",
     dbPlan: "現在のプラン", dbPlanName: "n+ エンタープライズ スイート", dbPlanNext: "次回の請求日", logoutBtn: "ログアウト",
     dbAnalytics: "パフォーマンス概要", dbBookings: "今月の直接予約", dbSaved: "節約したOTA手数料", dbOcc: "現在の稼働率",
     dbProfile: "ポータルプロファイル設定", dbProfileDesc: "n+ポータルでのホテルの表示を管理します。", dbProfileImg: "画像 URL", dbProfileText: "短い説明", dbProfileBtn: "プロファイルを保存",
@@ -200,6 +204,42 @@ export default function MainPortal() {
   const [cardNum, setCardNum] = useState('');
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
+
+  // 💡 [추가] PG 연동 키 상태 변수
+  const [pgSecretKey, setPgSecretKey] = useState("");
+  const [pgWebhookSecret, setPgWebhookSecret] = useState("");
+
+  // 💡 [추가] PG 키 저장 함수
+  const handleUpdatePGSettings = async () => {
+    if (!pgSecretKey || !pgWebhookSecret) {
+      setAlertMessage("Please enter both Secret Key and Webhook Secret.");
+      return;
+    }
+
+    try {
+      // loginHotelCode는 세션이나 현재 state에서 가져옵니다.
+      const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
+
+      const res = await fetch('/api/portal/settings/pg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hotel_code: codeToSave,
+          secret_key: pgSecretKey,
+          webhook_secret: pgWebhookSecret
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setAlertMessage(`Payment gateway successfully linked for [${codeToSave.toUpperCase()}].`);
+      } else {
+        setAlertMessage(`Failed to save PG settings: ${data.message}`);
+      }
+    } catch (e) {
+      setAlertMessage("Error connecting to server while saving PG settings.");
+    }
+  };
 
   const syncWithServer = () => {
     const savedUser = localStorage.getItem('nplus_guest_user');
@@ -844,6 +884,32 @@ export default function MainPortal() {
                     </div>
                     <p className="text-[10px] text-slate-400 mt-2">* Changing this code will automatically re-sync your PMS with the portal.</p>
                   </div>
+
+                  {/* 💡 [신규 추가] 멀티테넌트 PG 연동 섹션 (여기부터) */}
+                  <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-emerald-100 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">Crucial</div>
+                    <h3 className="text-lg font-black text-slate-800 mb-1 flex items-center gap-2">💳 {t.dbPgSettings}</h3>
+                    <p className="text-sm text-slate-500 mb-6">{t.dbPgDesc}</p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.dbPgSecret}</label>
+                        <input type="password" value={pgSecretKey} onChange={e => setPgSecretKey(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500 font-mono tracking-widest bg-slate-50" placeholder="sk_live_..." />
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1">
+                          <label className="text-xs font-bold text-slate-500 block mb-1">{t.dbPgWebhook}</label>
+                          <input type="password" value={pgWebhookSecret} onChange={e => setPgWebhookSecret(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500 font-mono tracking-widest bg-slate-50" placeholder="whsec_..." />
+                        </div>
+                        <div className="flex items-end shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                          <button onClick={handleUpdatePGSettings} className="bg-emerald-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-emerald-700 shadow-md transition-colors whitespace-nowrap w-full sm:w-auto active:scale-95">
+                            {t.dbPgBtn}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* 💡 멀티테넌트 PG 연동 섹션 (여기까지) */}
 
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbDomain}</h3>

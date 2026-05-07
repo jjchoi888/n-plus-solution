@@ -8,11 +8,12 @@ const ALL_COUNTRIES = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
+// 💡 [수정됨] 결제 버튼 텍스트를 "Proceed to Payment" 톤으로 일괄 변경
 const translations = {
-  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
-  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
-  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
-  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
+  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", extraOptions: "2. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Proceed to Payment ➔", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
+  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", extraOptions: "2. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제창으로 이동 중...", pay: "결제 진행하기 ➔", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
+  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", extraOptions: "2. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "前往支付 ➔", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
+  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", extraOptions: "2. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払いへ進む ➔", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
 };
 
 const getHotelName = (code) => {
@@ -50,7 +51,9 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const [isBooking, setIsBooking] = useState(false);
 
   const [modal, setModal] = useState({ show: false, title: '', message: '', highlight: '', type: 'warning' });
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "", cardNumber: "", expiry: "", cvv: "" });
+
+  // 💡 [수정됨] 카드 정보 관련 필드 삭제
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "" });
 
   const [extraBeds, setExtraBeds] = useState(0);
   const [promoInput, setPromoInput] = useState("");
@@ -168,7 +171,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           email: formData.email,
           phone: formData.phone,
           total_price: dividedGrandTotal,
-          payment_method: "Credit Card",
+          payment_method: "Credit Card", // PaynPlus API로 넘어가므로 형식적 기재
           hotel_code: targetHotelCode,
           channel: source,
           status: 'PENDING_PAYMENT'
@@ -185,7 +188,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 [Core] Redirect to the AQWIRE hosted checkout page upon receiving the payment URL
+        // 예약 성공 시, PaynPlus 결제 링크로 이동!
         window.location.href = data.paymentUrl;
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -333,6 +336,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
+                  {/* 💡 [수정됨] 카드 정보 섹션 삭제 및 결제 버튼 텍스트 변경 */}
+                  <button type="submit" disabled={isBooking} className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
+                    {isBooking ? t.processing : t.pay}
+                  </button>
+
                 </div>
 
                 {/* 💡 [Mobile Priority 2] Booking Summary (Sticky on right for PC) */}
@@ -399,60 +407,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       <span>₱{grandTotal.toLocaleString()}</span>
                     </p>
                   </div>
-                </div>
-
-                {/* 💡 [Mobile Priority 3] Payment Method & Submit Button */}
-                <div className="lg:col-span-8 space-y-6 text-left order-3">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
-
-                      {/* 💡 [Card Number Auto-format/Masking] */}
-                      <div className="text-left">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label>
-                        <input type="text" name="cc-number" autoComplete="cc-number" required placeholder="0000 0000 0000 0000" maxLength="19" value={formData.cardNumber}
-                          onChange={e => {
-                            let val = e.target.value.replace(/\D/g, '');
-                            let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
-                            setFormData({ ...formData, cardNumber: formatted });
-                          }}
-                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none font-mono tracking-widest"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 text-left">
-                        {/* 💡 [Expiry Date Auto-format (MM / YY)] */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label>
-                          <input type="text" name="cc-exp" autoComplete="cc-exp" required placeholder="MM / YY" maxLength="7" value={formData.expiry}
-                            onChange={e => {
-                              let val = e.target.value.replace(/\D/g, '');
-                              if (val.length >= 3) val = val.slice(0, 2) + ' / ' + val.slice(2, 4);
-                              setFormData({ ...formData, expiry: val });
-                            }}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center font-mono tracking-widest"
-                          />
-                        </div>
-
-                        {/* 💡 [Block Chrome CVV auto-fill and mask input] */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label>
-                          <input type="password" name="secure-cvv" autoComplete="new-password" required placeholder="***" maxLength="4" value={formData.cvv}
-                            onChange={e => {
-                              let val = e.target.value.replace(/\D/g, '');
-                              setFormData({ ...formData, cvv: val });
-                            }}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center tracking-widest"
-                          />
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <button type="submit" disabled={isBooking} className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
-                    {isBooking ? t.processing : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
-                  </button>
                 </div>
 
               </form>
