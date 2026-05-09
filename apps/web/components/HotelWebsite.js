@@ -1265,10 +1265,15 @@ export default function HotelWebsite({ domain }) {
 
                     // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async () => {
+                        // 💡 [추가] 중복 클릭 완벽 차단 (결제가 진행 중이면 함수 실행을 막음)
+                        if (isBooking) return;
+
                         if (!firstName || !lastName || !guestEmail || !guestPhone) {
                             return setAlertMessage(t.fillRequired);
                         }
+
                         setIsBooking(true);
+
                         try {
                             const dividedGrandTotal = finalTotal / safeRoomCount;
                             let bookingPayloads = [];
@@ -1289,7 +1294,7 @@ export default function HotelWebsite({ domain }) {
                                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
                                     payment_method: "Credit Card",
                                     channel: "Hotel Web",
-                                    status: 'PENDING_PAYMENT' // 💡 [추가] 결제 전 가예약 상태 명시!
+                                    status: 'PENDING_PAYMENT' // 💡 결제 전 가예약 상태 명시!
                                 });
                             }
 
@@ -1301,7 +1306,7 @@ export default function HotelWebsite({ domain }) {
 
                             const data = await res.json();
 
-                            // 💡 [핵심 수정] 성급하게 성공 메시지를 띄우지 않고, 즉시 결제창으로 넘깁니다!!
+                            // 💡 성공 시 즉시 결제창으로 넘기기 (setIsBooking(false) 없음!)
                             if (data.success && data.paymentUrl) {
                                 window.location.href = data.paymentUrl;
                             } else {
@@ -1311,10 +1316,10 @@ export default function HotelWebsite({ domain }) {
                         } catch (error) {
                             console.error("Booking Error:", error);
                             setAlertMessage(t.serverError);
-                            setIsBooking(false);
+                            setIsBooking(false); // 에러 시에만 버튼 잠금 해제
                         }
                     };
-
+                     
                     return (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>

@@ -590,9 +590,13 @@ export default function MainPortal() {
   };
 
   const handleSubscribeClick = async () => {
-    setIsSubscribing(true);
+    // 💡 1. 중복 클릭 완벽 차단!
+    if (isSubscribing) return;
+    setIsSubscribing(true); // 버튼 비활성화 & 스피너 표시
+
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
+
       const res = await fetch('/api/portal/billing/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -601,14 +605,17 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success && data.paymentUrl) {
-        window.location.href = data.paymentUrl; // 💡 결제창(PaynPlus)으로 텔레포트!
+        // 💡 2. 성공 시: setIsSubscribing(false)를 절대 호출하지 않음!
+        // 버튼이 로딩 상태를 유지한 채로 즉시 PG 결제창으로 이동합니다.
+        window.location.href = data.paymentUrl;
       } else {
+        // 실패 시에만 로딩을 풉니다.
         setAlertMessage("Failed to connect to PG: " + (data.message || ""));
         setIsSubscribing(false);
       }
     } catch (err) {
       setAlertMessage("Network error while connecting to Payment Gateway.");
-      setIsSubscribing(false);
+      setIsSubscribing(false); // 네트워크 에러 시에만 로딩 품
     }
   };
 
