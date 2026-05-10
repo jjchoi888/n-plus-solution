@@ -289,22 +289,16 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 [핵심] 리액트보다 빠른 브라우저 전역 객체(window)를 사용하여, 
-    // 0.0001초 만에 물리적 자물쇠를 채워 미세한 더블클릭을 원천 차단합니다!
-    if (window.isSubmittingLock) return;
-    window.isSubmittingLock = true; // 첫 클릭 즉시 영구 잠금
-
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      window.isSubmittingLock = false;
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      window.isSubmittingLock = false;
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    setIsBooking(true); // 버튼 디자인을 Processing으로 변경
+    // 💡 여기서 상태를 true로 변경하여 버튼을 'Processing...'으로 바꿉니다.
+    setIsBooking(true);
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -347,17 +341,16 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 성공 시 절대 자물쇠(window.isSubmittingLock = false)를 풀지 않고, 
-        // 굳건하게 잠긴 상태 그대로 결제창으로 이동합니다!
+        // 💡 성공 시 setIsBooking(false)를 절대 호출하지 않고 화면을 즉시 덮어씌웁니다.
         window.location.replace(data.paymentUrl);
       } else {
-        window.isSubmittingLock = false; // 에러 시에만 자물쇠 해제
+        // 에러 시에만 버튼을 원래대로 복구합니다.
         setIsBooking(false);
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
       }
     } catch (error) {
       console.error("Booking Error:", error);
-      window.isSubmittingLock = false; // 에러 시에만 자물쇠 해제
+      // 네트워크 에러 시에만 버튼을 원래대로 복구합니다.
       setIsBooking(false);
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
     }
@@ -710,7 +703,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                   </div>
                 </div>
 
-                <button type="submit" disabled={isBooking} className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
+                <button
+                  type="submit"
+                  disabled={isBooking}
+                  className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1 active:scale-95'}`}
+                >
                   {isBooking ? t.processing : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
                 </button>
               </div>
