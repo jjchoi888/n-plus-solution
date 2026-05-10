@@ -1309,7 +1309,8 @@ export default function HotelWebsite({ domain }) {
                             if (data.success && data.paymentUrl) {
                                 // 💡 [핵심 패치] 페이지 이동 명령 후 즉시 return 하여 함수를 죽입니다!
                                 window.location.href = data.paymentUrl;
-                                return; // 🚀 여기서 코드 실행이 완벽히 멈추므로 버튼이 깜빡이지 않습니다.
+                                await new Promise(() => { });
+                                
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
                                 setIsBooking(false); // 에러 시에만 버튼 잠금 해제
