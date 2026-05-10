@@ -1264,15 +1264,26 @@ export default function HotelWebsite({ domain }) {
                     const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
 
                     // 💡 결제 확정 및 서버 전송 함수
-                    const handleConfirmBooking = async () => {
-                        if (isBooking) return; // 중복 클릭 차단
+                    const handleConfirmBooking = async (e) => {
+                        // 💡 [핵심 차단막] React 상태 업데이트보다 빠르게, 클릭 즉시 버튼을 물리적으로 마비시킵니다.
+                        if (e && e.currentTarget) {
+                            if (e.currentTarget.disabled) return; // 이미 잠긴 버튼이면 즉시 튕겨냄
+                            e.currentTarget.disabled = true;
+                            e.currentTarget.innerText = t.processing || 'Processing...';
+                        }
+
+                        if (isBooking) return;
 
                         // 필수 정보 검증
                         if (!firstName || !lastName || !guestEmail || !guestPhone) {
+                            if (e && e.currentTarget) {
+                                e.currentTarget.disabled = false;
+                                e.currentTarget.innerText = t.confirmBook || 'Proceed to Payment ➔';
+                            }
                             return setAlertMessage(t.fillRequired);
                         }
 
-                        setIsBooking(true); // 여기서부터 버튼 비활성화 & 로딩 시작
+                        setIsBooking(true);
 
                         try {
                             const dividedGrandTotal = finalTotal / safeRoomCount;
@@ -1307,16 +1318,26 @@ export default function HotelWebsite({ domain }) {
                             const data = await res.json();
 
                             if (data.success && data.paymentUrl) {
-                                // 지연 코드 삭제 및 즉시 덮어쓰기 방식으로 화면 전환
+                                // 💡 성공 시 버튼 잠금을 절대 풀지 않고 즉시 결제창으로 덮어씌웁니다.
                                 window.location.replace(data.paymentUrl);
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
-                                setIsBooking(false); // 에러 시에만 버튼 잠금 해제
+                                setIsBooking(false);
+                                // 에러 시에만 버튼 원상 복구
+                                if (e && e.currentTarget) {
+                                    e.currentTarget.disabled = false;
+                                    e.currentTarget.innerText = t.confirmBook || 'Proceed to Payment ➔';
+                                }
                             }
                         } catch (error) {
                             console.error("Booking Error:", error);
                             setAlertMessage(t.serverError);
-                            setIsBooking(false); // 에러 시에만 버튼 잠금 해제
+                            setIsBooking(false);
+                            // 에러 시에만 버튼 원상 복구
+                            if (e && e.currentTarget) {
+                                e.currentTarget.disabled = false;
+                                e.currentTarget.innerText = t.confirmBook || 'Proceed to Payment ➔';
+                            }
                         }
                     };
                      
