@@ -288,43 +288,17 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
   const submitBooking = async (e) => {
     e.preventDefault();
-
-    // 💡 1. 리액트를 거치지 않고 클릭 즉시 버튼을 물리적으로 굳혀버립니다.
-    // (BookingBar는 form 태그에서 onSubmit이 발생하므로 버튼을 찾아옵니다)
-    const btn = e.currentTarget.querySelector('button[type="submit"]');
-
-    if (btn) {
-      if (btn.disabled) return;
-      btn.disabled = true;
-      btn.innerText = t.processing || "Processing... ⏳";
-      btn.style.opacity = "0.7";
-      btn.style.cursor = "wait";
-    }
-
-    if (isBooking) return;
-
-    // 💡 에러 시 버튼을 원래 상태로 복구하는 함수
-    const resetBtn = () => {
-      setIsBooking(false);
-      if (btn) {
-        btn.disabled = false;
-        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
-        btn.style.opacity = "1";
-        btn.style.cursor = "pointer";
-      }
-    };
+    if (isBooking) return; // 중복 클릭 차단
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      resetBtn();
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      resetBtn();
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    setIsBooking(true);
+    setIsBooking(true); // 버튼 상태를 Processing으로 변경
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -367,16 +341,29 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 2. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
+        // 💡 화면 이동 명령 (가장 빠른 replace 사용)
         window.location.replace(data.paymentUrl);
+
+        // 🚨 [절대 무적 코드] 브라우저가 화면을 넘기는 1~2초 대기 시간 동안, 
+        // 리액트가 억지로 버튼을 초기화하지 못하도록 0.01초마다 강제로 'Processing...'을 덮어씌웁니다!
+        setInterval(() => {
+          const btn = document.getElementById('checkout-submit-btn');
+          if (btn) {
+            btn.innerText = t.processing || 'Processing... ⏳';
+            btn.disabled = true;
+            btn.style.backgroundColor = '#9ca3af'; // 회색 비활성화 색상
+            btn.style.cursor = 'not-allowed';
+          }
+        }, 10);
+
       } else {
+        setIsBooking(false);
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        resetBtn(); // 에러 시에만 버튼 복구
       }
     } catch (error) {
       console.error("Booking Error:", error);
+      setIsBooking(false);
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      resetBtn(); // 에러 시에만 버튼 복구
     }
   };
 
@@ -446,8 +433,13 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
           </div>
 
           <div className="w-full md:w-auto pr-2">
-            <button type="submit" className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl">
-              {lang === 'ko' ? '' : t.pay} ₱{grandTotal.toLocaleString()} {t.andBook}
+            <button
+              id="checkout-submit-btn"
+              type="submit"
+              disabled={isBooking}
+              className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-1 active:scale-95'}`}
+            >
+              {isBooking ? (t.processing || 'Processing...') : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
             </button>
           </div>
 
