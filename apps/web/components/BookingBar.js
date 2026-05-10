@@ -289,27 +289,22 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 1. 폼 자체에 보이지 않는 잠금을 걸어 미세한 더블 클릭 완벽 차단
-    if (e.currentTarget.dataset.submitting === "true") return;
-    e.currentTarget.dataset.submitting = "true";
-
-    // 💡 2. 에러 시 폼 잠금을 안전하게 풀어주는 헬퍼 함수
-    const unlockForm = () => {
-      e.currentTarget.dataset.submitting = "false";
-      setIsBooking(false);
-    };
+    // 💡 [핵심] 리액트보다 빠른 브라우저 전역 객체(window)를 사용하여, 
+    // 0.0001초 만에 물리적 자물쇠를 채워 미세한 더블클릭을 원천 차단합니다!
+    if (window.isSubmittingLock) return;
+    window.isSubmittingLock = true; // 첫 클릭 즉시 영구 잠금
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
-      return unlockForm();
+      window.isSubmittingLock = false;
+      return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
-      return unlockForm();
+      window.isSubmittingLock = false;
+      return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    setIsBooking(true); // 💡 오직 리액트 상태만으로 'Processing...' 텍스트 유지
+    setIsBooking(true); // 버튼 디자인을 Processing으로 변경
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -352,20 +347,22 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 3. 성공 시 절대 잠금을 풀지 않고, 가장 빠른 replace 방식으로 화면 즉시 전환!
+        // 💡 성공 시 절대 자물쇠(window.isSubmittingLock = false)를 풀지 않고, 
+        // 굳건하게 잠긴 상태 그대로 결제창으로 이동합니다!
         window.location.replace(data.paymentUrl);
       } else {
+        window.isSubmittingLock = false; // 에러 시에만 자물쇠 해제
+        setIsBooking(false);
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        unlockForm(); // 에러 시에만 버튼 잠금 해제
       }
     } catch (error) {
       console.error("Booking Error:", error);
+      window.isSubmittingLock = false; // 에러 시에만 자물쇠 해제
+      setIsBooking(false);
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      unlockForm(); // 에러 시에만 버튼 잠금 해제
     }
-    // 🚨 finally 블록은 절대 사용 금지!
   };
-  
+
   return (
     <>
       <div className="mt-4 w-full max-w-6xl bg-white rounded-full shadow-lg p-3 border border-gray-100 relative z-40 animate-fade-in-up mx-auto">
