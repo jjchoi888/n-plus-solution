@@ -288,59 +288,93 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
   const submitBooking = async (e) => {
     e.preventDefault();
-    if (isBooking) return; // 중복 클릭 차단
 
-    // 필수 정보 검증
+    // 💡 1. HotelWebsite와 100% 동일하게 클릭 즉시 물리적으로 굳혀버립니다.
+    // (BookingBar는 form 태그를 사용하므로 내부의 버튼을 찾아옵니다)
+    const btn = e.currentTarget.querySelector('button[type="submit"]');
+    if (btn) {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.innerText = "Processing... ⏳";
+      btn.style.opacity = "0.7";
+      btn.style.cursor = "wait";
+    }
+
+    if (isBooking) return;
+
+    // 💡 2. 에러 시 버튼을 원래 상태로 복구하는 함수
+    const resetBtn = () => {
+      setIsBooking(false);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+      }
+    };
+
     if (!effectiveCheckIn || !effectiveCheckOut) {
+      resetBtn();
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
+
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
+      resetBtn();
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    // 💡 1. 리액트에게 로딩 시작을 알립니다. (JSX가 이 상태를 보고 글자를 바꿉니다)
     setIsBooking(true);
 
     try {
-      // ... (데이터 준비 로직 생략 없이 그대로 유지) ...
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
       let bookingPayloads = [];
       const payerName = `${formData.firstName} ${formData.lastName}`.trim();
+
       for (const room of fetchedRooms) {
         const count = cart[room.id] || 0;
         if (count === 0) continue;
         for (let i = 0; i < count; i++) {
           const targetHotelCode = room.hotelCode || effectiveHotelCode;
           bookingPayloads.push({
-            room_type: room.name, check_in_date: effectiveCheckIn, check_out_date: effectiveCheckOut,
+            room_type: room.name,
+            check_in_date: effectiveCheckIn,
+            check_out_date: effectiveCheckOut,
             guest_name: totalRoomsInCart > 1 ? `${payerName} (${t.roomInfo} ${bookingPayloads.length + 1})` : payerName,
-            nationality: formData.nationality, email: formData.email, phone: formData.phone,
-            total_price: dividedGrandTotal, payment_method: "Credit Card", hotel_code: targetHotelCode,
-            channel: source, checkin_type: checkinType, guest_first_name: formData.guestFirstName,
-            guest_last_name: formData.guestLastName, guest_email: formData.guestEmail, guest_phone: formData.guestPhone,
+            nationality: formData.nationality,
+            email: formData.email,
+            phone: formData.phone,
+            total_price: dividedGrandTotal,
+            payment_method: "Credit Card",
+            hotel_code: targetHotelCode,
+            channel: source,
+            checkin_type: checkinType,
+            guest_first_name: formData.guestFirstName,
+            guest_last_name: formData.guestLastName,
+            guest_email: formData.guestEmail,
+            guest_phone: formData.guestPhone,
             status: 'PENDING_PAYMENT'
           });
         }
       }
 
       const response = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookings: bookingPayloads })
       });
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 2. 성공 시 결제창으로 이동. 
-        // 여기서 setIsBooking(false)를 절대 부르지 않으므로, 화면이 넘어갈 때까지 글자가 고정됩니다.
+        // 💡 3. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
         window.location.replace(data.paymentUrl);
       } else {
-        setIsBooking(false); // 실패 시에만 버튼 잠금 해제
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
+        resetBtn(); // 에러 시에만 버튼 복구
       }
     } catch (error) {
       console.error("Booking Error:", error);
-      setIsBooking(false); // 에러 시에만 버튼 잠금 해제
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
+      resetBtn(); // 에러 시에만 버튼 복구
     }
   };
 
@@ -698,10 +732,9 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                     <button
                       type="submit"
                       disabled={isBooking}
-                      className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1 active:scale-95'}`}
+                      className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform text-lg ${isBooking ? 'bg-gray-400 cursor-wait' : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-1 active:scale-95'}`}
                     >
-                      {/* 💡 3. 리액트가 다시 그려져도 이 조건문 덕분에 "Processing..."이 계속 유지됩니다! */}
-                      {isBooking ? (t.processing || 'Processing...') : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
+                      {isBooking ? "Processing... ⏳" : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
                     </button>
                 </div>
 
