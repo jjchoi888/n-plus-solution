@@ -287,18 +287,23 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   };
 
   const submitBooking = async (e) => {
-    if (e) e.preventDefault();
-    if (isBooking) return; // 중복 클릭 차단
+    e.preventDefault();
+
+    // 💡 [핵심] 리액트 상태 지연을 노린 '더블 클릭'을 즉시 물리적으로 차단합니다!
+    if (e.target.dataset.locked === "true") return; // 이미 잠겼으면 두 번째 클릭은 무시
+    e.target.dataset.locked = "true"; // 첫 클릭 즉시 자물쇠 채움
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
+      e.target.dataset.locked = "false";
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
+      e.target.dataset.locked = "false";
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    setIsBooking(true); // 💡 리액트 상태 변경으로 즉시 버튼 잠금 & 로딩 텍스트 노출
+    setIsBooking(true);
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -340,16 +345,18 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 성공 시 절대 setIsBooking(false)를 부르지 않고 화면을 덮어씌웁니다! (깜빡임 완벽 차단)
+        // 💡 성공 시 절대 자물쇠(locked)를 풀지 않고 즉시 결제창으로 이동!
         window.location.replace(data.paymentUrl);
       } else {
+        e.target.dataset.locked = "false";
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        setIsBooking(false); // 에러 시에만 원상 복구
+        setIsBooking(false);
       }
     } catch (error) {
       console.error("Booking Error:", error);
+      e.target.dataset.locked = "false";
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      setIsBooking(false); // 에러 시에만 원상 복구
+      setIsBooking(false);
     }
   };
 
