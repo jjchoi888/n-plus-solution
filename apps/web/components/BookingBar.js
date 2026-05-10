@@ -288,51 +288,62 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
   const submitBooking = async (e) => {
     e.preventDefault();
-    if (!effectiveCheckIn || !effectiveCheckOut) return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
+
+    // 💡 1. 리액트 상태 업데이트보다 빠르게, 물리적으로 버튼을 잠그고 텍스트를 고정합니다.
+    const btn = e.currentTarget.querySelector('button[type="submit"]') || e.currentTarget;
+    if (btn && btn.disabled) return; // 중복 클릭 완벽 방지
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = t.processing || "Redirecting to Secure Payment... ⏳";
+      btn.style.opacity = "0.7";
+      btn.style.cursor = "wait";
+    }
+
+    if (!effectiveCheckIn || !effectiveCheckOut) {
+      if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
+      return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
+    }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
+      if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
     setIsBooking(true);
-    const dividedGrandTotal = grandTotal / totalRoomsInCart;
-    let bookingPayloads = [];
-
-    // 예약자(돈 내는 사람) 본인 이름
-    const payerName = `${formData.firstName} ${formData.lastName}`.trim();
-
-    for (const room of fetchedRooms) {
-      const count = cart[room.id] || 0;
-      if (count === 0) continue;
-
-      for (let i = 0; i < count; i++) {
-        const targetHotelCode = room.hotelCode || effectiveHotelCode;
-
-        // 💡 [핵심] 결제 페이로드 구성 (우리가 백엔드에 추가했던 파라미터 싹 다 넘김!)
-        bookingPayloads.push({
-          room_type: room.name,
-          check_in_date: effectiveCheckIn,
-          check_out_date: effectiveCheckOut,
-          guest_name: totalRoomsInCart > 1 ? `${payerName} (${t.roomInfo} ${bookingPayloads.length + 1})` : payerName,
-          nationality: formData.nationality,
-          email: formData.email,
-          phone: formData.phone,
-          total_price: dividedGrandTotal,
-          payment_method: "Credit Card",
-          hotel_code: targetHotelCode,
-          channel: source,
-          // 💡 [대리 예약] 백엔드로 추가 데이터 전송
-          checkin_type: checkinType,
-          guest_first_name: formData.guestFirstName,
-          guest_last_name: formData.guestLastName,
-          guest_email: formData.guestEmail,
-          guest_phone: formData.guestPhone
-        });
-      }
-    }
 
     try {
-      // 먼저 예약을 생성하고, 생성된 예약 ID들을 받습니다.
+      const dividedGrandTotal = grandTotal / totalRoomsInCart;
+      let bookingPayloads = [];
+      const payerName = `${formData.firstName} ${formData.lastName}`.trim();
+
+      for (const room of fetchedRooms) {
+        const count = cart[room.id] || 0;
+        if (count === 0) continue;
+        for (let i = 0; i < count; i++) {
+          const targetHotelCode = room.hotelCode || effectiveHotelCode;
+          bookingPayloads.push({
+            room_type: room.name,
+            check_in_date: effectiveCheckIn,
+            check_out_date: effectiveCheckOut,
+            guest_name: totalRoomsInCart > 1 ? `${payerName} (${t.roomInfo} ${bookingPayloads.length + 1})` : payerName,
+            nationality: formData.nationality,
+            email: formData.email,
+            phone: formData.phone,
+            total_price: dividedGrandTotal,
+            payment_method: "Credit Card",
+            hotel_code: targetHotelCode,
+            channel: source,
+            checkin_type: checkinType,
+            guest_first_name: formData.guestFirstName,
+            guest_last_name: formData.guestLastName,
+            guest_email: formData.guestEmail,
+            guest_phone: formData.guestPhone,
+            status: 'PENDING_PAYMENT'
+          });
+        }
+      }
+
       const response = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -340,38 +351,31 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       });
       const data = await response.json();
 
-      if (data.success) {
-        // 💡 [핵심] 예약 생성 성공 후, 결제 프로세스(이메일 발송 포함)로 바로 꽂아 넣습니다!
-        // Guest App의 로직을 여기에 그대로 이식했습니다.
-        const processPayload = {
-          res_ids: data.res_ids,
-          hotel_code: effectiveHotelCode === 'ALL' ? (fetchedRooms[0]?.hotelCode || 'HQ') : effectiveHotelCode,
-          amount: grandTotal,
-          points_used: 0, // 기본 웹 예약에서는 포인트 미사용
-          method: 'card',
-          email: formData.email, // 예약자 메일
-          checkin_type: checkinType,
-          guest_first_name: formData.guestFirstName,
-          guest_last_name: formData.guestLastName,
-          guest_email: formData.guestEmail,
-          guest_phone: formData.guestPhone
-        };
+      if (data.success && data.paymentUrl) {
+        // 💡 2. [핵심] 화면이 넘어가는 1~2초의 공백을 메우기 위해, 화면 전체를 덮는 하얀 로딩창을 강제로 띄웁니다!
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(5px);';
+        overlay.innerHTML = `
+            <div style="width:60px;height:60px;border:6px solid #f3f4f6;border-top-color:#10b981;border-radius:50%;animation:spin 1s linear infinite;"></div>
+            <h2 style="margin-top:24px;font-size:20px;font-weight:900;color:#1e293b;font-family:sans-serif;">${t.processing || 'Processing Payment...'}</h2>
+            <p style="margin-top:8px;font-size:14px;font-weight:bold;color:#64748b;font-family:sans-serif;">Please wait while we redirect you to the secure payment gateway.</p>
+            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+        `;
+        document.body.appendChild(overlay);
 
-        await fetch(`${BASE_URL}/api/public/payment/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(processPayload)
-        });
+        // 💡 3. 성공 시 절대 버튼 상태를 풀지 않고, 즉시 화면을 덮어씌웁니다.
+        window.location.replace(data.paymentUrl);
 
-        setModal({ show: true, type: 'success', title: t.success, message: t.successMsg, highlight: data.res_ids.join('\n') });
-        setIsCheckoutOpen(false); setCart({}); setExtraBeds(0); setAppliedPromo(null); setPromoInput("");
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
+        setIsBooking(false);
+        if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
       }
     } catch (error) {
+      console.error("Booking Error:", error);
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-    } finally {
       setIsBooking(false);
+      if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
     }
   };
 
