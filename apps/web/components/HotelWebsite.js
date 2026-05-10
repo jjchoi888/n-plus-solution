@@ -1272,7 +1272,7 @@ export default function HotelWebsite({ domain }) {
                             return setAlertMessage(t.fillRequired);
                         }
 
-                        setIsBooking(true); // 💡 여기서부터 버튼 비활성화 & 로딩 시작
+                        setIsBooking(true); // 여기서부터 버튼 비활성화 & 로딩 시작
 
                         try {
                             const dividedGrandTotal = finalTotal / safeRoomCount;
@@ -1307,10 +1307,8 @@ export default function HotelWebsite({ domain }) {
                             const data = await res.json();
 
                             if (data.success && data.paymentUrl) {
-                                // 💡 [핵심 패치] 페이지 이동 명령 후 즉시 return 하여 함수를 죽입니다!
-                                window.location.href = data.paymentUrl;
-                                await new Promise(() => { });
-                                
+                                // 지연 코드 삭제 및 즉시 덮어쓰기 방식으로 화면 전환
+                                window.location.replace(data.paymentUrl);
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
                                 setIsBooking(false); // 에러 시에만 버튼 잠금 해제
@@ -1320,9 +1318,6 @@ export default function HotelWebsite({ domain }) {
                             setAlertMessage(t.serverError);
                             setIsBooking(false); // 에러 시에만 버튼 잠금 해제
                         }
-
-                        // 🚨 [매우 중요] 만약 이 아래에 finally { setIsBooking(false); } 같은 
-                        // 코드가 찌꺼기로 남아있다면 반드시 통째로 지워주셔야 합니다!!!
                     };
                      
                     return (
