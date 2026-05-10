@@ -289,13 +289,12 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 1. HotelWebsite와 100% 동일하게 클릭 즉시 물리적으로 굳혀버립니다.
-    // (BookingBar는 form 태그를 사용하므로 내부의 버튼을 찾아옵니다)
-    const btn = e.currentTarget.querySelector('button[type="submit"]');
+    // 💡 1. HotelWebsite.js의 성공 방식 완벽 이식: ID를 통해 폼 안의 버튼을 정확히 찾아 즉시 굳혀버립니다.
+    const btn = document.getElementById("bookingbar-pay-btn");
     if (btn) {
       if (btn.disabled) return;
       btn.disabled = true;
-      btn.innerText = "Processing... ⏳";
+      btn.innerText = t.processing || "Processing... ⏳";
       btn.style.opacity = "0.7";
       btn.style.cursor = "wait";
     }
@@ -307,7 +306,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       setIsBooking(false);
       if (btn) {
         btn.disabled = false;
-        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
+        btn.innerText = t.confirmBook || "Proceed to Payment ➔";
         btn.style.opacity = "1";
         btn.style.cursor = "pointer";
       }
@@ -362,10 +361,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookings: bookingPayloads })
       });
+
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 3. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
+        // 💡 3. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다. (원래 텍스트로 돌아올 틈이 없습니다)
         window.location.replace(data.paymentUrl);
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -730,11 +730,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                     </div>
                   </div>
                     <button
+                      id="bookingbar-pay-btn"
                       type="submit"
-                      disabled={isBooking}
-                      className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform text-lg ${isBooking ? 'bg-gray-400 cursor-wait' : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-1 active:scale-95'}`}
+                      className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
                     >
-                      {isBooking ? "Processing... ⏳" : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
+                      {t.confirmBook || 'Proceed to Payment ➔'}
                     </button>
                 </div>
 
