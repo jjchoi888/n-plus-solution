@@ -111,7 +111,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "",
     cardNumber: "", expiry: "", cvv: "",
-    // 💡 [대리 예약 기능] 지인(투숙객) 정보 필드 추가
     guestFirstName: "", guestLastName: "", guestEmail: "", guestPhone: ""
   });
 
@@ -153,7 +152,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
     fetchFees();
   }, []);
 
-  // 검색 시 무조건 통신 (rooms prop 제거 및 자체 처리)
   useEffect(() => {
     if (effectiveCheckIn && effectiveCheckOut && isFetching) {
       fetch(`${BASE_URL}/api/public/rooms/available?hotel=${effectiveHotelCode}&lang=${lang}`, {
@@ -223,7 +221,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       setModal({ show: true, title: t.error, message: t.selectDates, type: 'error' });
       return;
     }
-    // API 강제 재호출 트리거
     setIsFetching(true);
     setRefreshKey(prev => prev + 1);
     if (onSearchResults) {
@@ -286,11 +283,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
     finally { setIsApplyingPromo(false); }
   };
 
+  // 💡 버튼 onClick을 통해 직접 실행되는 결제 처리 함수 (HotelWebsite.js와 100% 동일한 구조)
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 1. HotelWebsite.js의 성공 방식 완벽 이식: ID를 통해 폼 안의 버튼을 정확히 찾아 즉시 굳혀버립니다.
-    const btn = document.getElementById("bookingbar-pay-btn");
+    const btn = e.currentTarget;
     if (btn) {
       if (btn.disabled) return;
       btn.disabled = true;
@@ -301,12 +298,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
     if (isBooking) return;
 
-    // 💡 2. 에러 시 버튼을 원래 상태로 복구하는 함수
     const resetBtn = () => {
       setIsBooking(false);
       if (btn) {
         btn.disabled = false;
-        btn.innerText = t.confirmBook || "Proceed to Payment ➔";
+        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
         btn.style.opacity = "1";
         btn.style.cursor = "pointer";
       }
@@ -361,20 +357,18 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookings: bookingPayloads })
       });
-
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 3. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다. (원래 텍스트로 돌아올 틈이 없습니다)
         window.location.replace(data.paymentUrl);
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        resetBtn(); // 에러 시에만 버튼 복구
+        resetBtn();
       }
     } catch (error) {
       console.error("Booking Error:", error);
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      resetBtn(); // 에러 시에만 버튼 복구
+      resetBtn();
     }
   };
 
@@ -446,10 +440,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
           <div className="w-full md:w-auto pr-2">
             <button
               type="submit"
-              className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
+              disabled={isFetching}
+              className={`w-full md:w-auto px-10 py-3.5 rounded-full font-black shadow-md transition-all whitespace-nowrap text-white ${isFetching ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-lg active:scale-95'}`}
             >
-              {t.confirmBook || 'Search'}
-            </button> 
+              {isFetching ? t.searching : t.search}
+            </button>
           </div>
 
         </form>
@@ -557,7 +552,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
           <div className="flex justify-between items-end border-b pb-2 mb-6">
             <div className="flex items-center gap-3">
               <h3 className="text-2xl font-bold text-gray-800">
-                {t.searchResults} <span className="text-emerald">({fetchedRooms.length})</span>
+                {t.searchResults} <span className="text-emerald-600">({fetchedRooms.length})</span>
               </h3>
             </div>
           </div>
@@ -569,7 +564,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
               const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
               return (
-                <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'border-emerald shadow-emerald/20' : 'border-gray-100 hover:shadow-2xl'}`}>
+                <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'border-emerald-500 shadow-emerald-500/20' : 'border-gray-100 hover:shadow-2xl'}`}>
                   <div className="h-48 bg-gray-100 w-full relative overflow-hidden">
                     <RoomImageCarousel images={room.images} name={room.name} />
 
@@ -579,7 +574,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                       </div>
                     )}
 
-                    {currentCount > 0 && (<div className="absolute top-3 right-3 bg-emerald text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
+                    {currentCount > 0 && (<div className="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
                   </div>
                   <div className="p-6 flex flex-col flex-grow text-left">
                     <h4 className="text-xl font-black text-gray-900 mb-3">{room.name}</h4>
@@ -595,14 +590,14 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                     </p>
 
                     <div className="mb-4"><span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-md text-xs font-black tracking-wider shadow-sm inline-block">🔥 {room.availableCount} {t.roomsLeft}</span></div>
-                    <p className="text-emerald font-black text-2xl mt-auto pt-4 border-t border-gray-100">₱{room.price ? room.price.toLocaleString() : "0"} <span className="text-sm font-normal text-gray-500">{t.night}</span></p>
+                    <p className="text-emerald-600 font-black text-2xl mt-auto pt-4 border-t border-gray-100">₱{room.price ? room.price.toLocaleString() : "0"} <span className="text-sm font-normal text-gray-500">{t.night}</span></p>
 
                     <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                       <span className="text-sm font-bold text-gray-600">{t.selectRooms}:</span>
                       <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 border border-gray-200">
-                        <button onClick={() => updateCart(room.id, -1, room.availableCount)} disabled={currentCount === 0} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount > 0 ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:text-emerald hover:border-emerald' : 'text-gray-300'}`}>-</button>
-                        <span className="w-4 text-center font-black text-emerald text-lg">{currentCount}</span>
-                        <button onClick={() => updateCart(room.id, 1, room.availableCount)} disabled={currentCount >= room.availableCount} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount < room.availableCount ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:text-emerald hover:border-emerald' : 'text-gray-300'}`}>+</button>
+                        <button onClick={() => updateCart(room.id, -1, room.availableCount)} disabled={currentCount === 0} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount > 0 ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:text-emerald-600 hover:border-emerald-600' : 'text-gray-300'}`}>-</button>
+                        <span className="w-4 text-center font-black text-emerald-600 text-lg">{currentCount}</span>
+                        <button onClick={() => updateCart(room.id, 1, room.availableCount)} disabled={currentCount >= room.availableCount} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount < room.availableCount ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:text-emerald-600 hover:border-emerald-600' : 'text-gray-300'}`}>+</button>
                       </div>
                     </div>
                   </div>
@@ -616,9 +611,9 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
               <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex flex-col text-left">
                   <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
-                  <span className="text-2xl font-black text-emerald">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
+                  <span className="text-2xl font-black text-emerald-600">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
                 </div>
-                <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald hover:bg-emerald-dark text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
+                <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
                   {t.proceedCheckout} →
                 </button>
               </div>
@@ -630,176 +625,171 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       {/* 결제 모달창 */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
-          {isBooking ? (
-            /* 💡 결제 버튼을 누르는 순간 폼은 사라지고 이 예쁜 로딩 화면만 표시됩니다 */
-            <div className="bg-white rounded-3xl p-10 flex flex-col items-center shadow-2xl transform transition-all scale-100 w-full max-w-md text-center">
-              <div className="w-16 h-16 border-8 border-gray-100 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
-              <h2 className="text-2xl font-black text-gray-800 mb-2">Secure Connection...</h2>
-              <p className="text-gray-500 font-bold text-sm">Please wait while we redirect you to the payment gateway. Do not close this window.</p>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
+            <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white sticky top-0 z-10">
+              <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
+              <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
             </div>
-          ) : (
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
-              <div className="bg-emerald px-6 py-4 flex justify-between items-center text-white sticky top-0 z-10">
-                <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
-                <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
-              </div>
-              <form onSubmit={submitBooking} className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div className="lg:col-span-8 space-y-6 text-left order-1">
-                  {/* 1. 체크인 주체 선택 */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">Who is checking in?</h3>
-                    <div className="flex gap-4">
-                      <label className={`flex-1 border-2 p-4 rounded-xl cursor-pointer transition-colors flex items-center gap-3 ${checkinType === 'self' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                        <input type="radio" name="checkin_type" value="self" checked={checkinType === 'self'} onChange={() => setCheckinType('self')} className="w-5 h-5 accent-emerald-600" />
-                        <div>
-                          <span className="font-bold text-gray-800 block">I am checking in</span>
-                          <span className="text-xs text-gray-500">Book for myself</span>
-                        </div>
-                      </label>
-                      <label className={`flex-1 border-2 p-4 rounded-xl cursor-pointer transition-colors flex items-center gap-3 ${checkinType === 'guest' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                        <input type="radio" name="checkin_type" value="guest" checked={checkinType === 'guest'} onChange={() => setCheckinType('guest')} className="w-5 h-5 accent-emerald-600" />
-                        <div>
-                          <span className="font-bold text-gray-800 block">Booking for someone else</span>
-                          <span className="text-xs text-gray-500">I am paying for a guest</span>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
 
-                  {/* 2. 예약자 정보 */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{checkinType === 'guest' ? 'Your Details (Payer)' : t.guestDetails}</h3>
-                    <div className="grid grid-cols-2 gap-4 text-left">
-                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Alice" /></div>
-                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name</label><input type="text" required value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Smith" /></div>
-                    </div>
-                    <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
-                    <div className="grid grid-cols-2 gap-4 text-left">
-                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label><input type="tel" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+            {/* 💡 form에서 onSubmit을 제거하여 순수 레이아웃 역할만 하도록 수정했습니다. */}
+            <form className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-8 space-y-6 text-left order-1">
+                {/* 1. 체크인 주체 선택 */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">Who is checking in?</h3>
+                  <div className="flex gap-4">
+                    <label className={`flex-1 border-2 p-4 rounded-xl cursor-pointer transition-colors flex items-center gap-3 ${checkinType === 'self' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      <input type="radio" name="checkin_type" value="self" checked={checkinType === 'self'} onChange={() => setCheckinType('self')} className="w-5 h-5 accent-emerald-600" />
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nationality</label>
-                        <select required value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
-                          <option value="">Select Country...</option>
-                          {TOP_COUNTRIES.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
-                          <option disabled>──────────</option>
-                          {ALL_COUNTRIES.filter(c => !TOP_COUNTRIES.includes(c)).map(c => <option key={`all_${c}`} value={c}>{c}</option>)}
-                        </select>
+                        <span className="font-bold text-gray-800 block">I am checking in</span>
+                        <span className="text-xs text-gray-500">Book for myself</span>
                       </div>
-                    </div>
+                    </label>
+                    <label className={`flex-1 border-2 p-4 rounded-xl cursor-pointer transition-colors flex items-center gap-3 ${checkinType === 'guest' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      <input type="radio" name="checkin_type" value="guest" checked={checkinType === 'guest'} onChange={() => setCheckinType('guest')} className="w-5 h-5 accent-emerald-600" />
+                      <div>
+                        <span className="font-bold text-gray-800 block">Booking for someone else</span>
+                        <span className="text-xs text-gray-500">I am paying for a guest</span>
+                      </div>
+                    </label>
                   </div>
-
-                  {/* 3. 투숙객 정보 (대리 예약 시) */}
-                  {checkinType === 'guest' && (
-                    <div className="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200 animate-fade-in">
-                      <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">Guest Details (Checking-in)</h3>
-                      <p className="text-xs text-gray-500">The booking confirmation will also be sent to this email.</p>
-                      <div className="grid grid-cols-2 gap-4 text-left mt-3">
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name <span className="text-red-500">*</span></label><input type="text" required value={formData.guestFirstName} onChange={e => setFormData({ ...formData, guestFirstName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Guest First Name" /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name <span className="text-red-500">*</span></label><input type="text" required value={formData.guestLastName} onChange={e => setFormData({ ...formData, guestLastName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Guest Last Name" /></div>
-                      </div>
-                      <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Guest Email (Optional)</label><input type="email" value={formData.guestEmail} onChange={e => setFormData({ ...formData, guestEmail: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Will send CC receipt here" /></div>
-                      <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Guest Phone (Optional)</label><input type="tel" value={formData.guestPhone} onChange={e => setFormData({ ...formData, guestPhone: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Guest Contact No." /></div>
-                    </div>
-                  )}
-
-                  {/* 4. 추가 옵션 */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.extraOptions}</h3>
-                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <div className="text-left">
-                        <p className="text-sm font-bold text-gray-800">{t.extraBed}</p>
-                        <p className="text-xs text-gray-500">₱{fees.extraBed.toLocaleString()} {t.night}</p>
-                      </div>
-                      <div className="flex items-center gap-3 bg-white rounded-full border border-gray-300 px-1 py-1 shadow-sm">
-                        <button type="button" onClick={() => setExtraBeds(Math.max(0, extraBeds - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600">-</button>
-                        <span className="w-4 text-center font-bold text-emerald-600">{extraBeds}</span>
-                        <button type="button" onClick={() => setExtraBeds(extraBeds + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600">+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 5. 카드 정보 */}
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
-                      <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" required placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={e => setFormData({ ...formData, cardNumber: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none font-mono" /></div>
-                      <div className="grid grid-cols-2 gap-4 text-left">
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" required placeholder="MM/YY" value={formData.expiry} onChange={e => setFormData({ ...formData, expiry: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-center" /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({ ...formData, cvv: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-center tracking-widest" /></div>
-                      </div>
-                    </div>
-                  </div>
-                    <button
-                      id="bookingbar-pay-btn"
-                      type="submit"
-                      className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
-                    >
-                      {t.confirmBook || 'Proceed to Payment ➔'}
-                    </button>
                 </div>
 
-                <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
-                  <h3 className="text-lg font-bold text-emerald-900 mb-4 border-b border-emerald-200 pb-2 text-left">{t.summary}</h3>
-                  <div className="space-y-4 text-sm text-emerald-800 flex-grow">
-                    <div className="flex justify-between bg-white p-3 rounded-lg shadow-sm border border-emerald-100">
-                      <p className="flex flex-col text-left"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-in</span> <span className="font-bold">{effectiveCheckIn || "-"}</span></p>
-                      <p className="flex flex-col text-right"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-out</span> <span className="font-bold">{effectiveCheckOut || "-"}</span></p>
+                {/* 2. 예약자 정보 */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{checkinType === 'guest' ? 'Your Details (Payer)' : t.guestDetails}</h3>
+                  <div className="grid grid-cols-2 gap-4 text-left">
+                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Alice" /></div>
+                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name</label><input type="text" required value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Smith" /></div>
+                  </div>
+                  <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                  <div className="grid grid-cols-2 gap-4 text-left">
+                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label><input type="tel" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" /></div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nationality</label>
+                      <select required value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                        <option value="">Select Country...</option>
+                        {TOP_COUNTRIES.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
+                        <option disabled>──────────</option>
+                        {ALL_COUNTRIES.filter(c => !TOP_COUNTRIES.includes(c)).map(c => <option key={`all_${c}`} value={c}>{c}</option>)}
+                      </select>
                     </div>
-                    <div className="space-y-3 pt-2">
-                      {fetchedRooms.filter(r => cart[r.id] > 0).map(r => (
-                        <div key={r.id} className="flex justify-between items-start pb-1">
-                          <div className="flex flex-col text-left">
-                            <span className="font-bold text-emerald-900">{r.name}</span>
-                            <span className="text-xs text-emerald-600">₱{r.price.toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
-                          </div>
-                          <span className="font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
+                  </div>
+                </div>
+
+                {/* 3. 투숙객 정보 (대리 예약 시) */}
+                {checkinType === 'guest' && (
+                  <div className="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200 animate-fade-in">
+                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">Guest Details (Checking-in)</h3>
+                    <p className="text-xs text-gray-500">The booking confirmation will also be sent to this email.</p>
+                    <div className="grid grid-cols-2 gap-4 text-left mt-3">
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name <span className="text-red-500">*</span></label><input type="text" required value={formData.guestFirstName} onChange={e => setFormData({ ...formData, guestFirstName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Guest First Name" /></div>
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name <span className="text-red-500">*</span></label><input type="text" required value={formData.guestLastName} onChange={e => setFormData({ ...formData, guestLastName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Guest Last Name" /></div>
+                    </div>
+                    <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Guest Email (Optional)</label><input type="email" value={formData.guestEmail} onChange={e => setFormData({ ...formData, guestEmail: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Will send CC receipt here" /></div>
+                    <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Guest Phone (Optional)</label><input type="tel" value={formData.guestPhone} onChange={e => setFormData({ ...formData, guestPhone: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Guest Contact No." /></div>
+                  </div>
+                )}
+
+                {/* 4. 추가 옵션 */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.extraOptions}</h3>
+                  <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-gray-800">{t.extraBed}</p>
+                      <p className="text-xs text-gray-500">₱{fees.extraBed.toLocaleString()} {t.night}</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white rounded-full border border-gray-300 px-1 py-1 shadow-sm">
+                      <button type="button" onClick={() => setExtraBeds(Math.max(0, extraBeds - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600">-</button>
+                      <span className="w-4 text-center font-bold text-emerald-600">{extraBeds}</span>
+                      <button type="button" onClick={() => setExtraBeds(extraBeds + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. 카드 정보 */}
+                <div className="space-y-4 pt-4 border-t border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                    <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" required placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={e => setFormData({ ...formData, cardNumber: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none font-mono" /></div>
+                    <div className="grid grid-cols-2 gap-4 text-left">
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" required placeholder="MM/YY" value={formData.expiry} onChange={e => setFormData({ ...formData, expiry: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-center" /></div>
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({ ...formData, cvv: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-center tracking-widest" /></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 💡 button 태그를 type="button"으로 변경하고 onClick 이벤트를 직접 연결했습니다. */}
+                <button
+                  type="button"
+                  onClick={submitBooking}
+                  className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
+                >
+                  {lang === 'ko' ? '' : t.pay} ₱{grandTotal.toLocaleString()} {t.andBook}
+                </button>
+              </div>
+
+              <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
+                <h3 className="text-lg font-bold text-emerald-900 mb-4 border-b border-emerald-200 pb-2 text-left">{t.summary}</h3>
+                <div className="space-y-4 text-sm text-emerald-800 flex-grow">
+                  <div className="flex justify-between bg-white p-3 rounded-lg shadow-sm border border-emerald-100">
+                    <p className="flex flex-col text-left"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-in</span> <span className="font-bold">{effectiveCheckIn || "-"}</span></p>
+                    <p className="flex flex-col text-right"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-out</span> <span className="font-bold">{effectiveCheckOut || "-"}</span></p>
+                  </div>
+                  <div className="space-y-3 pt-2">
+                    {fetchedRooms.filter(r => cart[r.id] > 0).map(r => (
+                      <div key={r.id} className="flex justify-between items-start pb-1">
+                        <div className="flex flex-col text-left">
+                          <span className="font-bold text-emerald-900">{r.name}</span>
+                          <span className="text-xs text-emerald-600">₱{r.price.toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
                         </div>
-                      ))}
-                    </div>
-                    {(counts.child > 0 || extraBeds > 0) && (
-                      <div className="border-t border-emerald-200 pt-3 space-y-2">
-                        {counts.child > 0 && (
-                          <div className="flex justify-between text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">
-                            <span>{t.childFee} (x{counts.child})</span>
-                            <span>+ ₱{totalChildFee.toLocaleString()}</span>
-                          </div>
-                        )}
-                        {extraBeds > 0 && (
-                          <div className="flex justify-between text-xs font-bold text-blue-700 bg-blue-50 p-2 rounded">
-                            <span>{t.extraBed} (x{extraBeds})</span>
-                            <span>+ ₱{totalExtraBedFee.toLocaleString()}</span>
-                          </div>
-                        )}
+                        <span className="font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
                       </div>
-                    )}
-                    <div className="border-t border-emerald-200 pt-4 text-left">
-                      <label className="block text-xs font-bold text-emerald-700 uppercase mb-2 text-left">{t.promoCode}</label>
-                      <div className="flex gap-2">
-                        <input type="text" value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())} placeholder="e.g. WELCOME10" className="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 uppercase" disabled={appliedPromo} />
-                        {!appliedPromo ? (
-                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition">{t.apply}</button>
-                        ) : (
-                          <button type="button" onClick={() => { setAppliedPromo(null); setPromoInput(""); }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition">X</button>
-                        )}
-                      </div>
-                      {appliedPromo && (
-                        <div className="mt-3 flex justify-between items-center text-xs font-black text-red-500 bg-red-50 p-2 rounded-lg border border-red-100">
-                          <span>🎉 {appliedPromo.desc}</span>
-                          <span>- ₱{discountAmount.toLocaleString()}</span>
+                    ))}
+                  </div>
+                  {(counts.child > 0 || extraBeds > 0) && (
+                    <div className="border-t border-emerald-200 pt-3 space-y-2">
+                      {counts.child > 0 && (
+                        <div className="flex justify-between text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">
+                          <span>{t.childFee} (x{counts.child})</span>
+                          <span>+ ₱{totalChildFee.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {extraBeds > 0 && (
+                        <div className="flex justify-between text-xs font-bold text-blue-700 bg-blue-50 p-2 rounded">
+                          <span>{t.extraBed} (x{extraBeds})</span>
+                          <span>+ ₱{totalExtraBedFee.toLocaleString()}</span>
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="mt-6 border-t-4 border-emerald-200 pt-4">
-                    <p className="flex justify-between items-center text-xl font-black text-emerald-900">
-                      <span>Total</span>
-                      <span>₱{grandTotal.toLocaleString()}</span>
-                    </p>
+                  )}
+                  <div className="border-t border-emerald-200 pt-4 text-left">
+                    <label className="block text-xs font-bold text-emerald-700 uppercase mb-2 text-left">{t.promoCode}</label>
+                    <div className="flex gap-2">
+                      <input type="text" value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())} placeholder="e.g. WELCOME10" className="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 uppercase" disabled={appliedPromo} />
+                      {!appliedPromo ? (
+                        <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition">{t.apply}</button>
+                      ) : (
+                        <button type="button" onClick={() => { setAppliedPromo(null); setPromoInput(""); }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition">X</button>
+                      )}
+                    </div>
+                    {appliedPromo && (
+                      <div className="mt-3 flex justify-between items-center text-xs font-black text-red-500 bg-red-50 p-2 rounded-lg border border-red-100">
+                        <span>🎉 {appliedPromo.desc}</span>
+                        <span>- ₱{discountAmount.toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </form>
-            </div>
-          )}
+                <div className="mt-6 border-t-4 border-emerald-200 pt-4">
+                  <p className="flex justify-between items-center text-xl font-black text-emerald-900">
+                    <span>Total</span>
+                    <span>₱{grandTotal.toLocaleString()}</span>
+                  </p>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
