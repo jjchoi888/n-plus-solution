@@ -1265,21 +1265,26 @@ export default function HotelWebsite({ domain }) {
 
                     // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async (e) => {
-                        // 💡 1. 클릭된 버튼을 물리적으로 잠그고 텍스트를 강제 변경합니다 (리액트 개입 차단)
-                        const btn = e.currentTarget;
-                        if (btn.disabled) return; // 중복 클릭 차단
+                        // 💡 1. 리액트를 거치지 않고 클릭 즉시 0.001초 만에 버튼을 물리적으로 굳혀버립니다 (더블클릭 원천 차단)
+                        if (e && e.currentTarget) {
+                            if (e.currentTarget.disabled) return;
+                            e.currentTarget.disabled = true;
+                            e.currentTarget.innerText = "Processing... ⏳";
+                            e.currentTarget.style.opacity = "0.7";
+                            e.currentTarget.style.cursor = "wait";
+                        }
 
-                        btn.disabled = true;
-                        btn.innerText = "Connecting to Secure Payment... ⏳";
-                        btn.style.opacity = "0.7";
-                        btn.style.cursor = "wait";
+                        if (isBooking) return;
 
-                        // 💡 에러 발생 시 버튼을 원래대로 복구하는 함수
+                        // 에러 시 버튼을 원래 상태로 복구하는 함수
                         const resetBtn = () => {
-                            btn.disabled = false;
-                            btn.innerText = "Proceed to Payment ➔";
-                            btn.style.opacity = "1";
-                            btn.style.cursor = "pointer";
+                            setIsBooking(false);
+                            if (e && e.currentTarget) {
+                                e.currentTarget.disabled = false;
+                                e.currentTarget.innerText = t.confirmBook || "Proceed to Payment ➔";
+                                e.currentTarget.style.opacity = "1";
+                                e.currentTarget.style.cursor = "pointer";
+                            }
                         };
 
                         // 필수 정보 검증
@@ -1287,6 +1292,8 @@ export default function HotelWebsite({ domain }) {
                             resetBtn();
                             return setAlertMessage(t.fillRequired);
                         }
+
+                        setIsBooking(true);
 
                         try {
                             const dividedGrandTotal = finalTotal / safeRoomCount;
@@ -1321,16 +1328,16 @@ export default function HotelWebsite({ domain }) {
                             const data = await res.json();
 
                             if (data.success && data.paymentUrl) {
-                                // 💡 2. 결제창 호출 성공 시, 버튼을 절대 복구하지 않고 즉시 덮어씌웁니다!
+                                // 💡 2. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
                                 window.location.replace(data.paymentUrl);
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
-                                resetBtn(); // 에러 시에만 버튼 복구
+                                resetBtn(); // 에러 시에만 버튼 잠금 해제
                             }
                         } catch (error) {
                             console.error("Booking Error:", error);
                             setAlertMessage(t.serverError);
-                            resetBtn(); // 에러 시에만 버튼 복구
+                            resetBtn(); // 에러 시에만 버튼 잠금 해제
                         }
                     };
                      
@@ -1458,7 +1465,7 @@ export default function HotelWebsite({ domain }) {
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                             </div>
                                             <button onClick={handleConfirmBooking} className="w-full theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg theme-hover">
-                                                Proceed to Payment ➔
+                                                {t.confirmBook || 'Proceed to Payment ➔'}
                                             </button>
                                         </div>
                                     </div>
