@@ -457,7 +457,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
               type="submit"
               className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
             >
-              {t.confirmBook || 'Proceed to Payment ➔'}
+              {t.confirmBook || 'Search'}
             </button> 
           </div>
 
@@ -739,9 +739,12 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                     </div>
                   </div>
 
-                  <button type="submit" className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-1 active:scale-95">
-                    {lang === 'ko' ? '' : t.pay} ₱{grandTotal.toLocaleString()} {t.andBook}
-                  </button>
+                    <button
+                      type="submit"
+                      className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
+                    >
+                      {t.confirmBook || 'Proceed to Payment ➔'}
+                    </button>
                 </div>
 
                 <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
