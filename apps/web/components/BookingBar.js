@@ -287,30 +287,18 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   };
 
   const submitBooking = async (e) => {
-    e.preventDefault();
-
-    // 💡 1. 리액트 상태 업데이트보다 빠르게, 물리적으로 버튼을 잠그고 텍스트를 고정합니다.
-    const btn = e.currentTarget.querySelector('button[type="submit"]') || e.currentTarget;
-    if (btn && btn.disabled) return; // 중복 클릭 완벽 방지
-
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = t.processing || "Redirecting to Secure Payment... ⏳";
-      btn.style.opacity = "0.7";
-      btn.style.cursor = "wait";
-    }
+    if (e) e.preventDefault();
+    if (isBooking) return; // 중복 클릭 차단
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    setIsBooking(true);
+    setIsBooking(true); // 💡 리액트 상태 변경으로 즉시 버튼 잠금 & 로딩 텍스트 노출
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -352,30 +340,16 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 2. [핵심] 화면이 넘어가는 1~2초의 공백을 메우기 위해, 화면 전체를 덮는 하얀 로딩창을 강제로 띄웁니다!
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(5px);';
-        overlay.innerHTML = `
-            <div style="width:60px;height:60px;border:6px solid #f3f4f6;border-top-color:#10b981;border-radius:50%;animation:spin 1s linear infinite;"></div>
-            <h2 style="margin-top:24px;font-size:20px;font-weight:900;color:#1e293b;font-family:sans-serif;">${t.processing || 'Processing Payment...'}</h2>
-            <p style="margin-top:8px;font-size:14px;font-weight:bold;color:#64748b;font-family:sans-serif;">Please wait while we redirect you to the secure payment gateway.</p>
-            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
-        `;
-        document.body.appendChild(overlay);
-
-        // 💡 3. 성공 시 절대 버튼 상태를 풀지 않고, 즉시 화면을 덮어씌웁니다.
+        // 💡 성공 시 절대 setIsBooking(false)를 부르지 않고 화면을 덮어씌웁니다! (깜빡임 완벽 차단)
         window.location.replace(data.paymentUrl);
-
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        setIsBooking(false);
-        if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
+        setIsBooking(false); // 에러 시에만 원상 복구
       }
     } catch (error) {
       console.error("Booking Error:", error);
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      setIsBooking(false);
-      if (btn) { btn.disabled = false; btn.innerText = t.confirmBook || "Proceed to Payment ➔"; btn.style.opacity = "1"; }
+      setIsBooking(false); // 에러 시에만 원상 복구
     }
   };
 
@@ -445,8 +419,12 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
           </div>
 
           <div className="w-full md:w-auto pr-2">
-            <button type="submit" disabled={isFetching} className={`w-full md:w-auto px-10 py-3.5 rounded-full font-black shadow-md transition-all whitespace-nowrap text-white ${isFetching ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-lg active:scale-95'}`}>
-              {isFetching ? t.searching : t.search}
+            <button
+              type="submit"
+              disabled={isBooking}
+              className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}
+            >
+              {isBooking ? 'Connecting to Secure Payment... ⏳' : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
             </button>
           </div>
 
