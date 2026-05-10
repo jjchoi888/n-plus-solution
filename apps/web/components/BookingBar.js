@@ -289,21 +289,27 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 [핵심] 리액트 상태 지연을 노린 '더블 클릭'을 즉시 물리적으로 차단합니다!
-    if (e.target.dataset.locked === "true") return; // 이미 잠겼으면 두 번째 클릭은 무시
-    e.target.dataset.locked = "true"; // 첫 클릭 즉시 자물쇠 채움
+    // 💡 1. 폼 자체에 보이지 않는 잠금을 걸어 미세한 더블 클릭 완벽 차단
+    if (e.currentTarget.dataset.submitting === "true") return;
+    e.currentTarget.dataset.submitting = "true";
+
+    // 💡 2. 에러 시 폼 잠금을 안전하게 풀어주는 헬퍼 함수
+    const unlockForm = () => {
+      e.currentTarget.dataset.submitting = "false";
+      setIsBooking(false);
+    };
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      e.target.dataset.locked = "false";
-      return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
+      setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
+      return unlockForm();
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      e.target.dataset.locked = "false";
-      return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
+      setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
+      return unlockForm();
     }
 
-    setIsBooking(true);
+    setIsBooking(true); // 💡 오직 리액트 상태만으로 'Processing...' 텍스트 유지
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -342,24 +348,24 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookings: bookingPayloads })
       });
+
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 성공 시 절대 자물쇠(locked)를 풀지 않고 즉시 결제창으로 이동!
+        // 💡 3. 성공 시 절대 잠금을 풀지 않고, 가장 빠른 replace 방식으로 화면 즉시 전환!
         window.location.replace(data.paymentUrl);
       } else {
-        e.target.dataset.locked = "false";
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        setIsBooking(false);
+        unlockForm(); // 에러 시에만 버튼 잠금 해제
       }
     } catch (error) {
       console.error("Booking Error:", error);
-      e.target.dataset.locked = "false";
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      setIsBooking(false);
+      unlockForm(); // 에러 시에만 버튼 잠금 해제
     }
+    // 🚨 finally 블록은 절대 사용 금지!
   };
-
+  
   return (
     <>
       <div className="mt-4 w-full max-w-6xl bg-white rounded-full shadow-lg p-3 border border-gray-100 relative z-40 animate-fade-in-up mx-auto">
