@@ -1457,8 +1457,8 @@ export default function HotelWebsite({ domain }) {
                                                 <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                             </div>
-                                            <button onClick={handleConfirmBooking} disabled={isBooking} className="...">
-                                                {isBooking ? 'Redirecting to Secure Payment... ⏳' : 'Proceed to Payment ➔'}
+                                            <button onClick={handleConfirmBooking} className="w-full theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg theme-hover">
+                                                Proceed to Payment ➔
                                             </button>
                                         </div>
                                     </div>
