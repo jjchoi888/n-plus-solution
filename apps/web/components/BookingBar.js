@@ -289,38 +289,49 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 1. 폼 안의 제출 버튼을 찾아 즉시 물리적으로 잠급니다.
-    const btn = e.currentTarget.querySelector('button[type="submit"]');
-    if (btn) {
-      if (btn.disabled) return; // 중복 클릭 차단
-      btn.disabled = true;
-      btn.innerText = t.processing || "Processing... ⏳";
-      btn.style.opacity = "0.7";
-      btn.style.cursor = "wait";
-    }
+    // 💡 1. 폼 안의 진짜 제출 버튼을 찾습니다.
+    const form = e.currentTarget;
+    const realBtn = form.querySelector('button[type="submit"]');
 
-    // 💡 2. 에러 시 버튼을 원래 텍스트와 상태로 복구하는 함수
-    const resetBtn = () => {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
-        btn.style.opacity = "1";
-        btn.style.cursor = "pointer";
-      }
-    };
+    // 중복 클릭 완벽 차단
+    if (realBtn && realBtn.dataset.locked === "true") return;
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      resetBtn();
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      resetBtn();
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
-    // 🚨 [핵심] setIsBooking(true)를 여기서 완전히 삭제했습니다! 
-    // 리액트가 화면을 새로고침하지 않으므로 버튼 텍스트가 절대 원래대로 돌아가지 않습니다.
+    // 🚨 [절대 무적 기법] 리액트를 건드리지 않고, 진짜 버튼을 숨긴 뒤 '가짜 로딩 버튼'을 삽입합니다.
+    let fakeBtn = null;
+    if (realBtn) {
+      realBtn.dataset.locked = "true";
+      realBtn.style.display = "none"; // 진짜 버튼 투명화
+
+      fakeBtn = document.createElement("div");
+      fakeBtn.className = realBtn.className; // 진짜 버튼의 디자인(CSS) 완벽 복사
+      fakeBtn.style.display = "flex";
+      fakeBtn.style.justifyContent = "center";
+      fakeBtn.style.alignItems = "center";
+      fakeBtn.style.opacity = "0.7";
+      fakeBtn.style.cursor = "wait";
+      fakeBtn.innerText = t.processing || "Processing... ⏳";
+
+      realBtn.parentNode.insertBefore(fakeBtn, realBtn); // 화면에 가짜 버튼 띄우기
+    }
+
+    // 에러 발생 시 가짜 버튼을 지우고 진짜 버튼을 다시 살리는 함수
+    const restoreBtn = () => {
+      if (realBtn) {
+        realBtn.dataset.locked = "false";
+        realBtn.style.display = "block";
+      }
+      if (fakeBtn && fakeBtn.parentNode) {
+        fakeBtn.parentNode.removeChild(fakeBtn);
+      }
+    };
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -359,19 +370,20 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookings: bookingPayloads })
       });
+
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 성공 시 버튼을 복구하지 않고 즉시 화면을 결제창으로 덮어씌웁니다!
+        // 💡 성공 시 가짜 버튼(Processing...)을 그대로 둔 채 결제창으로 이동합니다! (깜빡임 원천 봉쇄)
         window.location.replace(data.paymentUrl);
       } else {
+        restoreBtn();
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
-        resetBtn(); // 에러 시에만 버튼 복구
       }
     } catch (error) {
       console.error("Booking Error:", error);
+      restoreBtn();
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
-      resetBtn(); // 에러 시에만 버튼 복구
     }
   };
 
@@ -441,9 +453,12 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
           </div>
 
           <div className="w-full md:w-auto pr-2">
-            <button type="submit" className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700">
-              {lang === 'ko' ? '' : t.pay} ₱{grandTotal.toLocaleString()} {t.andBook}
-            </button>
+            <button
+              type="submit"
+              className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
+            >
+              {t.confirmBook || 'Proceed to Payment ➔'}
+            </button> 
           </div>
 
         </form>
