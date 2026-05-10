@@ -1265,25 +1265,28 @@ export default function HotelWebsite({ domain }) {
 
                     // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async (e) => {
-                        // 💡 [핵심 차단막] React 상태 업데이트보다 빠르게, 클릭 즉시 버튼을 물리적으로 마비시킵니다.
-                        if (e && e.currentTarget) {
-                            if (e.currentTarget.disabled) return; // 이미 잠긴 버튼이면 즉시 튕겨냄
-                            e.currentTarget.disabled = true;
-                            e.currentTarget.innerText = t.processing || 'Processing...';
-                        }
+                        // 💡 1. 클릭된 버튼을 물리적으로 잠그고 텍스트를 강제 변경합니다 (리액트 개입 차단)
+                        const btn = e.currentTarget;
+                        if (btn.disabled) return; // 중복 클릭 차단
 
-                        if (isBooking) return;
+                        btn.disabled = true;
+                        btn.innerText = "Connecting to Secure Payment... ⏳";
+                        btn.style.opacity = "0.7";
+                        btn.style.cursor = "wait";
+
+                        // 💡 에러 발생 시 버튼을 원래대로 복구하는 함수
+                        const resetBtn = () => {
+                            btn.disabled = false;
+                            btn.innerText = "Proceed to Payment ➔";
+                            btn.style.opacity = "1";
+                            btn.style.cursor = "pointer";
+                        };
 
                         // 필수 정보 검증
                         if (!firstName || !lastName || !guestEmail || !guestPhone) {
-                            if (e && e.currentTarget) {
-                                e.currentTarget.disabled = false;
-                                e.currentTarget.innerText = t.confirmBook || 'Proceed to Payment ➔';
-                            }
+                            resetBtn();
                             return setAlertMessage(t.fillRequired);
                         }
-
-                        setIsBooking(true);
 
                         try {
                             const dividedGrandTotal = finalTotal / safeRoomCount;
@@ -1318,26 +1321,16 @@ export default function HotelWebsite({ domain }) {
                             const data = await res.json();
 
                             if (data.success && data.paymentUrl) {
-                                // 💡 성공 시 버튼 잠금을 절대 풀지 않고 즉시 결제창으로 덮어씌웁니다.
+                                // 💡 2. 결제창 호출 성공 시, 버튼을 절대 복구하지 않고 즉시 덮어씌웁니다!
                                 window.location.replace(data.paymentUrl);
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
-                                setIsBooking(false);
-                                // 에러 시에만 버튼 원상 복구
-                                if (e && e.currentTarget) {
-                                    e.currentTarget.disabled = false;
-                                    e.currentTarget.innerText = t.confirmBook || 'Proceed to Payment ➔';
-                                }
+                                resetBtn(); // 에러 시에만 버튼 복구
                             }
                         } catch (error) {
                             console.error("Booking Error:", error);
                             setAlertMessage(t.serverError);
-                            setIsBooking(false);
-                            // 에러 시에만 버튼 원상 복구
-                            if (e && e.currentTarget) {
-                                e.currentTarget.disabled = false;
-                                e.currentTarget.innerText = t.confirmBook || 'Proceed to Payment ➔';
-                            }
+                            resetBtn(); // 에러 시에만 버튼 복구
                         }
                     };
                      
