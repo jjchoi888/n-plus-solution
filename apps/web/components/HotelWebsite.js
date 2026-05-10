@@ -1265,14 +1265,14 @@ export default function HotelWebsite({ domain }) {
 
                     // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async () => {
-                        // 💡 [추가] 중복 클릭 완벽 차단 (결제가 진행 중이면 함수 실행을 막음)
-                        if (isBooking) return;
+                        if (isBooking) return; // 중복 클릭 차단
 
+                        // 필수 정보 검증
                         if (!firstName || !lastName || !guestEmail || !guestPhone) {
                             return setAlertMessage(t.fillRequired);
                         }
 
-                        setIsBooking(true);
+                        setIsBooking(true); // 💡 여기서부터 버튼 비활성화 & 로딩 시작
 
                         try {
                             const dividedGrandTotal = finalTotal / safeRoomCount;
@@ -1294,7 +1294,7 @@ export default function HotelWebsite({ domain }) {
                                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
                                     payment_method: "Credit Card",
                                     channel: "Hotel Web",
-                                    status: 'PENDING_PAYMENT' // 💡 결제 전 가예약 상태 명시!
+                                    status: 'PENDING_PAYMENT'
                                 });
                             }
 
@@ -1306,9 +1306,10 @@ export default function HotelWebsite({ domain }) {
 
                             const data = await res.json();
 
-                            // 💡 성공 시 즉시 결제창으로 넘기기 (setIsBooking(false) 없음!)
                             if (data.success && data.paymentUrl) {
+                                // 💡 [핵심 패치] 페이지 이동 명령 후 즉시 return 하여 함수를 죽입니다!
                                 window.location.href = data.paymentUrl;
+                                return; // 🚀 여기서 코드 실행이 완벽히 멈추므로 버튼이 깜빡이지 않습니다.
                             } else {
                                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
                                 setIsBooking(false); // 에러 시에만 버튼 잠금 해제
@@ -1318,6 +1319,9 @@ export default function HotelWebsite({ domain }) {
                             setAlertMessage(t.serverError);
                             setIsBooking(false); // 에러 시에만 버튼 잠금 해제
                         }
+
+                        // 🚨 [매우 중요] 만약 이 아래에 finally { setIsBooking(false); } 같은 
+                        // 코드가 찌꺼기로 남아있다면 반드시 통째로 지워주셔야 합니다!!!
                     };
                      
                     return (
@@ -1443,8 +1447,8 @@ export default function HotelWebsite({ domain }) {
                                                 <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                             </div>
-                                            <button onClick={handleConfirmBooking} disabled={isBooking} className="w-full theme-bg theme-hover text-white py-4 rounded-2xl font-black transition-transform active:scale-95 shadow-xl disabled:opacity-50 flex justify-center items-center gap-2 text-lg">
-                                                {isBooking ? <span className="animate-pulse">{t.processing}</span> : <span>{t.confirmBook}</span>}
+                                            <button onClick={handleConfirmBooking} disabled={isBooking} className="...">
+                                                {isBooking ? 'Redirecting to Secure Payment... ⏳' : 'Proceed to Payment ➔'}
                                             </button>
                                         </div>
                                     </div>
