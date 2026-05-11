@@ -618,6 +618,7 @@ export default function MainPortal() {
     }
   };
 
+  // 💡 [수정됨] 카드 등록과 최초 결제를 분리한 정기결제 로직
   const handleSubscribeClick = async () => {
     if (isSubscribing) return;
     setIsSubscribing(true);
@@ -625,21 +626,41 @@ export default function MainPortal() {
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
 
-      const res = await fetch('/api/portal/billing/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hotel_code: codeToSave })
-      });
-      const data = await res.json();
+      // 1. 카드가 등록되어 있지 않은 경우 -> PaynPlus 카드 등록창으로 이동 (결제 X)
+      if (!partnerCard) {
+        const res = await fetch('/api/portal/billing/register-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hotel_code: codeToSave })
+        });
+        const data = await res.json();
 
-      if (data.success && data.paymentUrl) {
-        window.location.href = data.paymentUrl;
-      } else {
-        setAlertMessage("Failed to connect to PG: " + (data.message || ""));
+        if (data.success && data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+        } else {
+          setAlertMessage("Failed to open Card Registration: " + (data.message || ""));
+          setIsSubscribing(false);
+        }
+      }
+      // 2. 카드가 이미 등록되어 있는 경우 -> 최초 결제 진행 및 정기결제 활성화
+      else {
+        const res = await fetch('/api/portal/billing/start-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hotel_code: codeToSave })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          setAlertMessage(lang === 'ko' ? "결제가 완료되었으며 자동 결제가 활성화되었습니다." : "Payment successful. Auto-billing activated.");
+          setIsSubModalOpen(false);
+        } else {
+          setAlertMessage("Subscription failed: " + (data.message || ""));
+        }
         setIsSubscribing(false);
       }
     } catch (err) {
-      setAlertMessage("Network error while connecting to Payment Gateway.");
+      setAlertMessage("Network error while processing subscription.");
       setIsSubscribing(false);
     }
   };
@@ -1375,13 +1396,16 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 💡 [개선됨] SaaS 구독 신청 및 카드 등록 안내 모달창 (스크린샷 2 완벽 반영) */}
+      {/* 💡 [수정됨] SaaS 구독 신청 및 카드 등록 모달창 (2-Step 로직 적용) */}
       {isSubModalOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isSubscribing && setIsSubModalOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
             <div className="bg-[#0f172a] p-5 flex justify-between items-center border-b border-slate-700">
               <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                <span className="text-blue-400">💳</span> {partnerCard ? t.subTitleChange : t.subTitleReg}
+                <span className="text-blue-400">💳</span>
+                {partnerCard
+                  ? (lang === 'ko' ? '정기 구독 활성화' : 'Activate SaaS Subscription')
+                  : (lang === 'ko' ? '자동 결제 카드 등록' : 'Register Auto-Payment Card')}
               </h3>
               {!isSubscribing && (
                 <button onClick={() => setIsSubModalOpen(false)} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">&times;</button>
@@ -1389,7 +1413,15 @@ export default function MainPortal() {
             </div>
 
             <div className="p-6 md:p-8 space-y-6">
-              <p className="text-sm text-slate-600 font-medium leading-relaxed">{t.subDesc}</p>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                {!partnerCard
+                  ? (lang === 'ko'
+                    ? "매월 정기 결제를 위한 결제 수단을 안전하게 등록합니다. 결제사(PaynPlus)의 보안 페이지로 이동하며, 지금 당장 결제되지 않습니다."
+                    : "Securely register your card for the monthly SaaS subscription. You will be redirected to PaynPlus. No charges will be made yet.")
+                  : (lang === 'ko'
+                    ? `등록된 카드(${partnerCard})로 이번 달 이용 요금을 결제하고 정기 구독을 활성화합니다. 다음 달부터는 동일한 날짜에 자동 청구됩니다.`
+                    : `Pay the first month's fee with your registered card (${partnerCard}) to activate. Auto-billing will occur on this date next month.`)}
+              </p>
 
               <div className="bg-[#e8fbf0] p-5 rounded-xl border border-[#cceee0] space-y-3">
                 <div className="flex justify-between items-center">
@@ -1402,9 +1434,11 @@ export default function MainPortal() {
                 </div>
               </div>
 
-              <div className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                * By proceeding, you will be securely redirected to PaynPlus. Your card details will be tokenized safely and will not be stored on our servers.
-              </div>
+              {!partnerCard && (
+                <div className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                  * Your card details will be tokenized safely by PaynPlus and will not be stored on our servers.
+                </div>
+              )}
 
               <div className="pt-2 flex gap-3">
                 <button type="button" disabled={isSubscribing} onClick={() => setIsSubModalOpen(false)} className="flex-1 py-3.5 bg-slate-50 text-slate-600 font-bold rounded-xl hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-50">
@@ -1413,7 +1447,11 @@ export default function MainPortal() {
                 <button onClick={handleSubscribeClick} disabled={isSubscribing} className="flex-[2] py-3.5 bg-[#00994d] text-white font-bold rounded-xl hover:bg-[#008040] shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubscribing ? (
                     <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Processing...</>
-                  ) : t.proceedToPg}
+                  ) : (
+                    partnerCard
+                      ? (lang === 'ko' ? "최초 결제 및 활성화" : "Pay Now & Activate")
+                      : (lang === 'ko' ? "PaynPlus에서 카드 등록 ➔" : "Register at PaynPlus ➔")
+                  )}
                 </button>
               </div>
             </div>
