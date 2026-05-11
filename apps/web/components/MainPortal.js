@@ -626,42 +626,40 @@ export default function MainPortal() {
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
 
-      // 1. 카드가 등록되어 있지 않은 경우 -> PaynPlus 카드 등록창으로 이동 (결제 X)
-      if (!partnerCard) {
-        const res = await fetch('/api/portal/billing/register-card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hotel_code: codeToSave })
-        });
-        const data = await res.json();
+      // 💡 [수정됨] 없는 주소(404)를 호출하지 않고, 기존에 작동하던 주소를 그대로 사용합니다.
+      // 대신 백엔드가 구분할 수 있도록 type 변수('등록'인지 '결제'인지)를 추가해서 보냅니다.
+      const requestType = partnerCard ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
 
-        if (data.success && data.paymentUrl) {
+      const res = await fetch('/api/portal/billing/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hotel_code: codeToSave,
+          type: requestType // 백엔드에서 이 값을 보고 분기 처리하도록 유도
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        if (!partnerCard && data.paymentUrl) {
+          // 1. 카드가 없어서 등록하러 가는 경우 -> PaynPlus 창으로 이동
           window.location.href = data.paymentUrl;
         } else {
-          setAlertMessage("Failed to open Card Registration: " + (data.message || ""));
-          setIsSubscribing(false);
-        }
-      }
-      // 2. 카드가 이미 등록되어 있는 경우 -> 최초 결제 진행 및 정기결제 활성화
-      else {
-        const res = await fetch('/api/portal/billing/start-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hotel_code: codeToSave })
-        });
-        const data = await res.json();
-
-        if (data.success) {
+          // 2. 카드가 있어서 최초 결제 및 구독 활성화가 된 경우 -> 화면 이동 없이 알림창만 띄움
           setAlertMessage(lang === 'ko' ? "결제가 완료되었으며 자동 결제가 활성화되었습니다." : "Payment successful. Auto-billing activated.");
           setIsSubModalOpen(false);
-        } else {
-          setAlertMessage("Subscription failed: " + (data.message || ""));
         }
-        setIsSubscribing(false);
+      } else {
+        setAlertMessage("Request failed: " + (data.message || ""));
       }
     } catch (err) {
       setAlertMessage("Network error while processing subscription.");
-      setIsSubscribing(false);
+    } finally {
+      // 에러가 나거나, 화면 이동이 없는 '활성화'의 경우에만 스피너(로딩)를 풀어줍니다.
+      if (partnerCard) {
+        setIsSubscribing(false);
+      }
     }
   };
 
