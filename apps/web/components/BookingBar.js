@@ -289,22 +289,39 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 0초 만에 물리적 자물쇠를 채워 미세한 더블 클릭(네트워크 2번 호출)을 원천 차단합니다.
-    if (submitLock.current) return;
-    submitLock.current = true;
+    // 💡 1. 폼(Form) 대신 버튼 자체를 가리키도록 설정합니다.
+    const btn = e.currentTarget;
+    if (btn && btn.disabled) return;
+
+    // 💡 2. 리액트 개입 없이 즉시 물리적으로 버튼을 굳힙니다. (HotelWebsite와 동일)
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = t.processing || "Processing... ⏳";
+      btn.style.opacity = "0.7";
+      btn.style.cursor = "wait";
+    }
+
+    // 🚨 절대 setIsBooking(true)를 쓰지 마세요! 리액트가 텍스트를 강제로 되돌려버립니다.
+
+    // 💡 3. 에러 발생 시에만 버튼을 원래대로 복구하는 함수
+    const resetBtn = () => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+      }
+    };
 
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      submitLock.current = false;
+      resetBtn();
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
     if (checkinType === 'guest' && (!formData.guestFirstName || !formData.guestLastName)) {
-      submitLock.current = false;
+      resetBtn();
       return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
-
-    // JSX 버튼 텍스트를 "Processing... ⏳"으로 바꾸기 위해 상태를 변경합니다.
-    setIsBooking(true);
 
     try {
       const dividedGrandTotal = grandTotal / totalRoomsInCart;
@@ -343,23 +360,19 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookings: bookingPayloads })
       });
-
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 성공 시 절대 submitLock이나 isBooking 상태를 풀지 않고 즉시 결제창으로 이동합니다.
-        // 리액트가 렌더링되더라도 버튼 상태는 영원히 "Processing... ⏳"로 고정됩니다.
+        // 💡 4. 성공 시 버튼 텍스트를 절대 복구하지 않고 즉시 결제창으로 이동합니다.
         window.location.replace(data.paymentUrl);
       } else {
-        submitLock.current = false;
-        setIsBooking(false); // 에러 시에만 버튼 복구
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
+        resetBtn();
       }
     } catch (error) {
       console.error("Booking Error:", error);
-      submitLock.current = false;
-      setIsBooking(false); // 에러 시에만 버튼 복구
       setModal({ show: true, title: t.error, message: t.networkError, type: 'error', highlight: '' });
+      resetBtn();
     }
   };
 
@@ -614,6 +627,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       )}
 
       {/* 결제 모달창 */}
+      {/* 결제 모달창 */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
@@ -622,7 +636,8 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
               <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
             </div>
 
-            <form onSubmit={submitBooking} className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* 💡 1. form에서 onSubmit을 제거했습니다. */}
+            <form className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-8 space-y-6 text-left order-1">
                 {/* 1. 체크인 주체 선택 */}
                 <div className="space-y-4">
@@ -709,13 +724,14 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                   </div>
                 </div>
 
-                {/* 💡 [결제 버튼] 리액트가 렌더링해도 안전하게 텍스트를 유지합니다. */}
+                {/* 💡 2. button에 onClick 이벤트를 직접 연결하고, id를 부여했습니다. */}
                 <button
-                  type="submit"
-                  disabled={isBooking}
-                  className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl active:scale-95'}`}
+                  id="bookingbar-pay-btn"
+                  type="button"
+                  onClick={submitBooking}
+                  className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
                 >
-                  {isBooking ? (t.processing || "Processing... ⏳") : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
+                  {lang === 'ko' ? '' : t.pay} ₱{grandTotal.toLocaleString()} {t.andBook}
                 </button>
               </div>
 
