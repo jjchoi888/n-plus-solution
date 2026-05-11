@@ -289,8 +289,8 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 1. 폼 내부의 결제 버튼을 수동으로 찾아 물리적 잠금을 겁니다.
-    const btn = e.currentTarget.querySelector('button[type="submit"]');
+    // 💡 1. HotelWebsite.js와 완벽히 동일하게 버튼을 수동으로 찾아 즉시 잠급니다.
+    const btn = document.getElementById("bookingbar-pay-btn");
 
     if (btn) {
       if (btn.disabled) return;
@@ -302,7 +302,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
     if (isBooking) return;
 
-    // 2. 에러 시에만 버튼 텍스트를 원래 금액으로 복구합니다.
+    // 💡 2. 에러 시에만 버튼 텍스트를 원래 금액으로 복구합니다.
     const resetBtn = () => {
       setIsBooking(false);
       if (btn) {
@@ -366,7 +366,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 성공 시 절대 resetBtn()을 호출하지 않고 결제창으로 이동합니다.
+        // 💡 3. 성공 시 절대 resetBtn()을 호출하지 않고 결제창으로 이동합니다.
         window.location.replace(data.paymentUrl);
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -726,8 +726,9 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                   </div>
                 </div>
 
-                {/* 💡 [결제 버튼] 모든 리액트 상태 조건문을 제거한 순수 텍스트 구조입니다. */}
+                {/* 💡 [핵심 결제 버튼] 리액트 변수(isBooking)를 버튼 속성에서 완전히 지웠습니다! */}
                 <button
+                  id="bookingbar-pay-btn"
                   type="submit"
                   className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
                 >
