@@ -41,6 +41,7 @@ const translations = {
     dashTitle: "Partner Dashboard", dashSub: "Manage your hotel's integrations and billing.",
     subTitleReg: "SaaS Subscription Registration", subTitleChange: "Update Payment Method", subDesc: "Securely register your card for the monthly SaaS subscription. You will be safely redirected to PaynPlus.", registerCard: "Register", changeCard: "Change", proceedToPg: "Proceed to PaynPlus ➔",
     dbBilling: "Billing & Payments", dbCardReg: "Auto-Payment Card", dbCardRegBtn: "Update Card", dbInvoices: "Payment History", dbReceipt: "Receipt",
+    dbViewHistory: "View Payment History", dbHistoryModalTitle: "Payment History", dbNoHistory: "No payment history found.", // 💡 결제 내역 모달 번역 추가
     dbDomain: "Domain Settings", dbDomainDesc: "Link your custom domain for direct bookings.", dbDomainStatus: "Status", dbLinked: "Linked", dbDomainBtn: "Save Domain",
     dbCode: "Hotel Code Settings", dbCodeDesc: "6-character alphanumeric code for PMS sync.", dbCodeBtn: "Update Code",
     dbPgSettings: "Payment Gateway Settings", dbPgDesc: "Enter your PaynPlus API keys to enable direct guest payments to your hotel's account.", dbPgSecret: "Secret Key (sk_live_...)", dbPgWebhook: "Webhook Secret (whsec_...)", dbPgBtn: "Save PG Settings",
@@ -74,6 +75,7 @@ const translations = {
     dashTitle: "파트너 대시보드", dashSub: "호텔의 연동 정보 및 결제 내역을 관리하세요.",
     subTitleReg: "SaaS 정기 구독 신청", subTitleChange: "결제 정보 변경", subDesc: "매월 자동 결제를 위한 결제 수단을 안전하게 등록합니다. 결제사(PaynPlus)의 보안 페이지로 이동합니다.", registerCard: "등록", changeCard: "변경", proceedToPg: "PaynPlus로 이동 ➔",
     dbBilling: "자동 결제 및 영수증", dbCardReg: "자동 결제 카드", dbCardRegBtn: "카드 변경", dbInvoices: "결제 내역", dbReceipt: "영수증",
+    dbViewHistory: "결제 내역 보기", dbHistoryModalTitle: "정기 결제 내역", dbNoHistory: "결제 내역이 없습니다.", // 💡 결제 내역 모달 번역 추가
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
     dbCode: "호텔 코드 설정", dbCodeDesc: "시스템 연동을 위한 6자리 영어/숫자 조합 코드", dbCodeBtn: "코드 변경",
     dbPgSettings: "결제 시스템(PG) 연동 설정", dbPgDesc: "고객의 결제 대금이 호텔 계좌로 직접 입금되도록 발급받은 PaynPlus API 키를 입력하세요.", dbPgSecret: "시크릿 키 (sk_live_...)", dbPgWebhook: "웹훅 시크릿 (whsec_...)", dbPgBtn: "결제 연동 저장",
@@ -107,6 +109,7 @@ const translations = {
     dashTitle: "合作伙伴仪表板", dashSub: "管理您酒店的集成和账单。",
     subTitleReg: "SaaS 订阅注册", subTitleChange: "更新付款方式", subDesc: "安全地注册您的信用卡以用于每月的 SaaS 订阅。您将被安全地重定向至 PaynPlus。", registerCard: "注册", changeCard: "更改", proceedToPg: "前往 PaynPlus ➔",
     dbBilling: "账单与支付", dbCardReg: "自动支付卡", dbCardRegBtn: "更新银行卡", dbInvoices: "支付历史", dbReceipt: "收据",
+    dbViewHistory: "查看付款记录", dbHistoryModalTitle: "付款记录", dbNoHistory: "没有找到付款记录。", // 💡
     dbDomain: "域名设置", dbDomainDesc: "链接您的自定义域名以进行直接预订。", dbDomainStatus: "状态", dbLinked: "已链接", dbDomainBtn: "保存域名",
     dbCode: "酒店代码设置", dbCodeDesc: "用于 PMS 同步的 6 位字母数字代码。", dbCodeBtn: "更新代码",
     dbPgSettings: "支付网关(PG)设置", dbPgDesc: "输入您的 PaynPlus API 密钥，让客人的付款直接汇入您酒店的账户。", dbPgSecret: "密钥 (sk_live_...)", dbPgWebhook: "Webhook 密钥 (whsec_...)", dbPgBtn: "保存支付设置",
@@ -140,6 +143,7 @@ const translations = {
     dashTitle: "パートナーダッシュボード", dashSub: "ホテルの統合と請求を管理します。",
     subTitleReg: "SaaS 定期購読の申し込み", subTitleChange: "お支払い方法の変更", subDesc: "毎月のSaaS定期購読用のクレジットカードを安全に登録します。安全なPaynPlusのページにリダイレクトされます。", registerCard: "登録", changeCard: "変更", proceedToPg: "PaynPlusに進む ➔",
     dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
+    dbViewHistory: "お支払い履歴を見る", dbHistoryModalTitle: "支払い履歴", dbNoHistory: "お支払い履歴はありません。", // 💡
     dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
     dbCode: "ホテルコード設定", dbCodeDesc: "PMS同期用の6文字の英数字コード。", dbCodeBtn: "コードの更新",
     dbPgSettings: "決済システム(PG)連携設定", dbPgDesc: "ゲストの支払いがホテルの口座に直接入金されるよう、PaynPlus APIキーを入力してください。", dbPgSecret: "シークレットキー (sk_live_...)", dbPgWebhook: "Webhookシークレット (whsec_...)", dbPgBtn: "決済設定を保存",
@@ -171,16 +175,13 @@ export default function MainPortal() {
   const [partnerCode, setPartnerCode] = useState("");
   const [partnerCard, setPartnerCard] = useState("");
 
-  // 💡 SaaS 구독 모달 전용 상태 변수
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
-  // 💡 [추가됨] 하드코딩되었던 결제 내역을 State 배열로 관리
-  const [paymentHistory, setPaymentHistory] = useState([
-    { id: 'INV-2026-09', date: 'Sep 2026', amount: 15000, status: 'PAID' },
-    { id: 'INV-2026-08', date: 'Aug 2026', amount: 15000, status: 'PAID' },
-    { id: 'INV-2026-07', date: 'Jul 2026', amount: 15000, status: 'PAID' }
-  ]);
+  // 💡 [추가] 결제 내역 모달창 상태 변수
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState([]);
 
   const [profileImg, setProfileImg] = useState("");
   const [profileDesc, setProfileDesc] = useState("Powered by n+ Smart PMS");
@@ -218,11 +219,39 @@ export default function MainPortal() {
   const [pgSecretKey, setPgSecretKey] = useState("");
   const [pgWebhookSecret, setPgWebhookSecret] = useState("");
 
-  // 💡 [추가됨] 영수증 보기 핸들러
-  const handleViewReceipt = (invoiceId) => {
-    // 실제 환경에서는 PDF나 영수증 URL을 새 창으로 띄웁니다.
-    // window.open(`/api/portal/receipts/${invoiceId}`, '_blank');
-    setAlertMessage(`Receipt opened for invoice: ${invoiceId}`);
+  // 💡 [추가] 결제 내역 불러오기 (버튼 클릭 시 실행)
+  const fetchPaymentHistory = async () => {
+    setIsHistoryModalOpen(true);
+    setIsFetchingHistory(true);
+    try {
+      const codeToFetch = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
+
+      // 실제 API 엔드포인트 연동
+      const res = await fetch(`/api/portal/billing/history?hotel_code=${codeToFetch}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setPaymentHistory(data.history || []);
+      } else {
+        // API 연동 실패 또는 내역이 없을 경우, 임시로 빈 배열 세팅
+        setPaymentHistory([]);
+      }
+    } catch (e) {
+      console.error("Error fetching payment history:", e);
+      setPaymentHistory([]);
+    } finally {
+      setIsFetchingHistory(false);
+    }
+  };
+
+  // 💡 [수정] 실제 영수증 열기 로직
+  const handleViewReceipt = (receiptUrl, invoiceId) => {
+    if (receiptUrl) {
+      window.open(receiptUrl, '_blank');
+    } else {
+      // url이 없을 경우 백업 API 또는 알림
+      setAlertMessage(`Receipt document is not yet available for ${invoiceId}.`);
+    }
   };
 
   const handleUpdatePGSettings = async () => {
@@ -589,7 +618,6 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [개선] 구독 진행 및 PaynPlus 결제창(스크린샷 3)으로 부드럽게 넘어가도록 UI 처리 강화
   const handleSubscribeClick = async () => {
     if (isSubscribing) return;
     setIsSubscribing(true);
@@ -605,7 +633,7 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success && data.paymentUrl) {
-        window.location.href = data.paymentUrl; // PaynPlus 결제화면으로 즉시 전환됩니다.
+        window.location.href = data.paymentUrl;
       } else {
         setAlertMessage("Failed to connect to PG: " + (data.message || ""));
         setIsSubscribing(false);
@@ -669,6 +697,8 @@ export default function MainPortal() {
       setAlertMessage("Unable to connect to the server. Please check your network connection.");
     }
   };
+
+  const t = translations[lang] || translations.en;
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
@@ -802,7 +832,6 @@ export default function MainPortal() {
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbBilling}</h3>
 
-                    {/* 💡 [수정됨] 스크린샷 1 반영: 오토 페이먼트 카드 (Register / Change 버튼) */}
                     <div className="mb-6">
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
                       <div className="flex gap-2">
@@ -813,22 +842,15 @@ export default function MainPortal() {
                       </div>
                     </div>
 
-                    {/* 💡 [수정됨] 스크린샷 1 반영: 동적 결제 리스트 매핑 (하드코딩 제거) */}
+                    {/* 💡 [수정] 결제 내역을 모달로 연결하는 버튼 추가 */}
                     <div>
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbInvoices}</label>
-                      <div className="space-y-3">
-                        {paymentHistory.map((invoice) => (
-                          <div key={invoice.id} className="flex justify-between items-center bg-slate-50 p-3.5 rounded-xl border border-slate-100 hover:border-emerald-100 transition-colors">
-                            <div>
-                              <p className="text-sm font-bold text-slate-800">{invoice.date}</p>
-                              <p className="text-[10px] text-slate-500 font-medium">₱{invoice.amount.toLocaleString()}</p>
-                            </div>
-                            <button onClick={() => handleViewReceipt(invoice.id)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-100 transition-colors flex items-center gap-1.5">
-                              📄 {t.dbReceipt}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                      <button
+                        onClick={fetchPaymentHistory}
+                        className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-sm flex items-center justify-center gap-2"
+                      >
+                        <span className="text-lg">🧾</span> {t.dbViewHistory}
+                      </button>
                     </div>
                   </div>
 
@@ -1396,6 +1418,60 @@ export default function MainPortal() {
                   ) : t.proceedToPg}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💡 [신규 추가됨] 결제 내역(Payment History) 모달창 */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setIsHistoryModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-800 p-5 flex justify-between items-center border-b border-slate-700 shrink-0">
+              <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                <span className="text-emerald-400">🧾</span> {t.dbHistoryModalTitle}
+              </h3>
+              <button onClick={() => setIsHistoryModalOpen(false)} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">&times;</button>
+            </div>
+
+            <div className="p-6 md:p-8 overflow-y-auto flex-grow bg-slate-50">
+              {isFetchingHistory ? (
+                <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                  <div className="w-8 h-8 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                  <p className="text-sm font-bold text-slate-500">Loading history...</p>
+                </div>
+              ) : paymentHistory.length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="text-4xl mb-3 text-slate-300">📭</div>
+                  <p className="text-slate-500 font-bold">{t.dbNoHistory}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paymentHistory.map((invoice, idx) => (
+                    <div key={invoice.id || idx} className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-200 transition-colors">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{invoice.date}</p>
+                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">INV: {invoice.id}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <p className="text-sm font-black text-emerald-600">₱{Number(invoice.amount).toLocaleString()}</p>
+                        <button
+                          onClick={() => handleViewReceipt(invoice.receipt_url, invoice.id)}
+                          className="text-xs font-bold text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 px-3 py-1.5 rounded-md transition-colors border border-emerald-100 flex items-center gap-1"
+                        >
+                          📄 {t.dbReceipt}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-white border-t border-slate-100 shrink-0">
+              <button onClick={() => setIsHistoryModalOpen(false)} className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                {t.close}
+              </button>
             </div>
           </div>
         </div>
