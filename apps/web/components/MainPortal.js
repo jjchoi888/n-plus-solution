@@ -624,9 +624,6 @@ export default function MainPortal() {
 
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
-
-      // 💡 [수정됨] 없는 주소(404)를 호출하지 않고, 기존에 작동하던 주소를 그대로 사용합니다.
-      // 대신 백엔드가 구분할 수 있도록 type 변수('등록'인지 '결제'인지)를 추가해서 보냅니다.
       const requestType = partnerCard ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
 
       const res = await fetch('/api/portal/billing/subscribe', {
@@ -634,7 +631,7 @@ export default function MainPortal() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hotel_code: codeToSave,
-          type: requestType // 백엔드에서 이 값을 보고 분기 처리하도록 유도
+          type: requestType
         })
       });
 
@@ -642,23 +639,22 @@ export default function MainPortal() {
 
       if (data.success) {
         if (!partnerCard && data.paymentUrl) {
-          // 1. 카드가 없어서 등록하러 가는 경우 -> PaynPlus 창으로 이동
+          // 💡 성공해서 결제창으로 이동할 때만 로딩을 풀지 않고 유지합니다.
           window.location.href = data.paymentUrl;
         } else {
-          // 2. 카드가 있어서 최초 결제 및 구독 활성화가 된 경우 -> 화면 이동 없이 알림창만 띄움
           setAlertMessage(lang === 'ko' ? "결제가 완료되었으며 자동 결제가 활성화되었습니다." : "Payment successful. Auto-billing activated.");
           setIsSubModalOpen(false);
+          setIsSubscribing(false); // 완료 시 로딩 해제
         }
       } else {
+        // 💡 에러 발생 시 즉시 로딩 해제
         setAlertMessage("Request failed: " + (data.message || ""));
-      }
-    } catch (err) {
-      setAlertMessage("Network error while processing subscription.");
-    } finally {
-      // 에러가 나거나, 화면 이동이 없는 '활성화'의 경우에만 스피너(로딩)를 풀어줍니다.
-      if (partnerCard) {
         setIsSubscribing(false);
       }
+    } catch (err) {
+      // 💡 서버 통신 에러 시 즉시 로딩 해제
+      setAlertMessage("Network error while processing subscription.");
+      setIsSubscribing(false);
     }
   };
 
