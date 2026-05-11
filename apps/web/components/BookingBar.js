@@ -286,30 +286,31 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   };
 
   // 💡 [핵심] useRef와 React State의 결합을 통한 완벽한 이중 잠금
+  // 💡 1. 텍스트를 여러 조각으로 쪼개지 않고, '단일 텍스트'로 미리 합쳐둡니다. (HotelWebsite와 동일한 원리)
+  const btnText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`.trim();
+
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 1. HotelWebsite.js와 완벽히 동일하게 버튼을 수동으로 찾아 즉시 잠급니다.
-    const btn = document.getElementById("bookingbar-pay-btn");
-
-    if (btn) {
-      if (btn.disabled) return;
-      btn.disabled = true;
-      btn.innerText = t.processing || "Processing... ⏳";
-      btn.style.opacity = "0.7";
-      btn.style.cursor = "wait";
+    // 💡 2. e.currentTarget이 폼이 아닌 '버튼'을 정확히 가리킵니다.
+    if (e && e.currentTarget) {
+      if (e.currentTarget.disabled) return;
+      e.currentTarget.disabled = true;
+      e.currentTarget.innerText = t.processing || "Processing... ⏳";
+      e.currentTarget.style.opacity = "0.7";
+      e.currentTarget.style.cursor = "wait";
     }
 
     if (isBooking) return;
 
-    // 💡 2. 에러 시에만 버튼 텍스트를 원래 금액으로 복구합니다.
+    // 에러 시 버튼을 원래 상태로 복구하는 함수
     const resetBtn = () => {
       setIsBooking(false);
-      if (btn) {
-        btn.disabled = false;
-        btn.innerText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`;
-        btn.style.opacity = "1";
-        btn.style.cursor = "pointer";
+      if (e && e.currentTarget) {
+        e.currentTarget.disabled = false;
+        e.currentTarget.innerText = btnText; // 💡 단일 텍스트 변수 적용
+        e.currentTarget.style.opacity = "1";
+        e.currentTarget.style.cursor = "pointer";
       }
     };
 
@@ -366,7 +367,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 3. 성공 시 절대 resetBtn()을 호출하지 않고 결제창으로 이동합니다.
+        // 💡 3. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
         window.location.replace(data.paymentUrl);
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -630,7 +631,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       )}
 
       {/* 결제 모달창 */}
-      {/* 결제 모달창 */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
@@ -639,7 +639,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
               <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
             </div>
 
-            <form onSubmit={submitBooking} className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <form className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-8 space-y-6 text-left order-1">
                 {/* 1. 체크인 주체 선택 */}
                 <div className="space-y-4">
@@ -728,11 +728,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
                 {/* 💡 [핵심 결제 버튼] 리액트 변수(isBooking)를 버튼 속성에서 완전히 지웠습니다! */}
                 <button
-                  id="bookingbar-pay-btn"
-                  type="submit"
+                  type="button"
+                  onClick={submitBooking}
                   className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
                 >
-                  {lang === 'ko' ? '' : t.pay} ₱{grandTotal.toLocaleString()} {t.andBook}
+                  {btnText}
                 </button>
               </div>
 
