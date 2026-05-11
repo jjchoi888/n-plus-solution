@@ -698,8 +698,6 @@ export default function MainPortal() {
     }
   };
 
-  const t = translations[lang] || translations.en;
-
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-start overflow-x-hidden font-sans">
 
