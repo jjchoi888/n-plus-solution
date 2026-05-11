@@ -50,7 +50,6 @@ const translations = {
     dbSupport: "Support & Helpdesk", dbInquiry: "1:1 Inquiry", dbApiGuide: "API Integration Guide", dbNotices: "System Notices",
     contactSalesTitle: "Contact Sales", sendEmail: "Send an Email", whatsapp: "WhatsApp", emailLabel: "Your Email", msgLabel: "Message", sendBtn: "Send Message", backBtn: "Back", successMsg: "Your message has been sent successfully!",
     specialOffers: "Special Offers & Packages", promoCode: "Promo Code", validUntil: "Valid until", bookNow: "Book Now",
-    // Auth & Onboarding
     firstName: 'First Name', lastName: 'Last Name', phoneStr: 'Phone Number', nationalityStr: 'Nationality',
     loginTo: "Log In to ", continueGoogle: "Continue with Google", or: "OR", forgotPw: "Forgot Password?", createAccount: "Create Account", signUpBtn: "Sign Up", resetPw: "Reset Password", resetDesc: "Enter your registered email address to receive a reset link.", regEmail: "Registered Email", sendReset: "Send Reset Link", backLogin: "Back to Login", noAccount: "Don't have an account? ", signUpLink: "Sign up", hasAccount: "Already a member? ", loginLink: "Log in", resetSent: "A password reset link has been sent if the email exists.", welcomeBack: "Welcome back!", welcomeNew: "Welcome to n+ Rewards!", authFailed: "Authentication failed.", googleFailed: "Google Login failed.", serverError: "Server connection error.", joinSuccess: "Your application for n+ Rewards membership has been successfully submitted.\n\nYou will be notified within 24 hours once the HQ review is complete and your account is activated.", fillRequired: "Please fill in all required details."
   },
@@ -73,8 +72,8 @@ const translations = {
     pmsSection1Title: "지능형 프론트 데스크", pmsSection1Desc: "체크인 속도를 높이고, 정산을 매끄럽게 처리하며, 모든 객실 상태를 실시간으로 한눈에 파악하세요. 직원의 업무 효율성을 극대화하도록 설계되었습니다.", pmsSection2Title: "양방향 채널 매니저", pmsSection2Desc: "Agoda, Booking.com, Expedia 등 주요 OTA와 즉시 연결됩니다. 요금과 가용 객실이 자동으로 동기화되어 오버부킹과 수기 입력의 번거로움을 없앱니다.", pmsSection3Title: "초저수수료 다이렉트 예약 엔진", pmsSection3Desc: "웹사이트 방문자를 다이렉트 고객으로 전환하세요. 호텔의 자체 도메인에서 단 1.5%의 수수료로 모바일에 최적화된 최신 예약 경험을 제공합니다.",
     loginTitle: "파트너 로그인", hotelCodeStr: "호텔 코드", emailStr: "이메일 주소", pwStr: "비밀번호", loginBtn: "로그인", loginErr: "로그인 정보가 올바르지 않습니다.",
     dashTitle: "파트너 대시보드", dashSub: "호텔의 연동 정보 및 결제 내역을 관리하세요.",
-    subTitleReg: "SaaS 정기 구독 신청", subTitleChange: "결제 정보 변경", subDesc: "매월 자동 결제를 위한 결제 수단을 안전하게 등록합니다. 결제사(PaynPlus)의 보안 페이지로 이동합니다.", registerCard: "등록 신청", changeCard: "변경", proceedToPg: "결제사에서 카드 등록하기 ➔",
-    dbBilling: "자동 결제 및 영수증", dbCardReg: "결제 카드 등록", dbCardRegBtn: "카드 변경", dbInvoices: "결제 및 영수증 내역", dbReceipt: "영수증 발급",
+    subTitleReg: "SaaS 정기 구독 신청", subTitleChange: "결제 정보 변경", subDesc: "매월 자동 결제를 위한 결제 수단을 안전하게 등록합니다. 결제사(PaynPlus)의 보안 페이지로 이동합니다.", registerCard: "등록", changeCard: "변경", proceedToPg: "PaynPlus로 이동 ➔",
+    dbBilling: "자동 결제 및 영수증", dbCardReg: "자동 결제 카드", dbCardRegBtn: "카드 변경", dbInvoices: "결제 내역", dbReceipt: "영수증",
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
     dbCode: "호텔 코드 설정", dbCodeDesc: "시스템 연동을 위한 6자리 영어/숫자 조합 코드", dbCodeBtn: "코드 변경",
     dbPgSettings: "결제 시스템(PG) 연동 설정", dbPgDesc: "고객의 결제 대금이 호텔 계좌로 직접 입금되도록 발급받은 PaynPlus API 키를 입력하세요.", dbPgSecret: "시크릿 키 (sk_live_...)", dbPgWebhook: "웹훅 시크릿 (whsec_...)", dbPgBtn: "결제 연동 저장",
@@ -106,7 +105,7 @@ const translations = {
     pmsSection1Title: "智能前台", pmsSection1Desc: "加快入住办理速度，无缝管理账单，并实时鸟瞰所有客房状态。", pmsSection2Title: "双向渠道管理器", pmsSection2Desc: "立即连接到主要 OTA。价格和空房情况自动同步，消除超售。", pmsSection3Title: "超低佣金预订引擎", pmsSection3Desc: "将网站访问者转化为直接宾客。在您自己的域名上提供安全、现代的预订体验，交易费仅为 1.5%。",
     loginTitle: "合作伙伴登录", hotelCodeStr: "酒店代码", emailStr: "电子邮件", pwStr: "密码", loginBtn: "登录", loginErr: "凭据无效。",
     dashTitle: "合作伙伴仪表板", dashSub: "管理您酒店的集成和账单。",
-    subTitleReg: "SaaS 订阅注册", subTitleChange: "更新付款方式", subDesc: "安全地注册您的信用卡以用于每月的 SaaS 订阅。您将被安全地重定向至 PaynPlus。", registerCard: "注册", changeCard: "更改", proceedToPg: "前往 PaynPlus 注册信用卡 ➔",
+    subTitleReg: "SaaS 订阅注册", subTitleChange: "更新付款方式", subDesc: "安全地注册您的信用卡以用于每月的 SaaS 订阅。您将被安全地重定向至 PaynPlus。", registerCard: "注册", changeCard: "更改", proceedToPg: "前往 PaynPlus ➔",
     dbBilling: "账单与支付", dbCardReg: "自动支付卡", dbCardRegBtn: "更新银行卡", dbInvoices: "支付历史", dbReceipt: "收据",
     dbDomain: "域名设置", dbDomainDesc: "链接您的自定义域名以进行直接预订。", dbDomainStatus: "状态", dbLinked: "已链接", dbDomainBtn: "保存域名",
     dbCode: "酒店代码设置", dbCodeDesc: "用于 PMS 同步的 6 位字母数字代码。", dbCodeBtn: "更新代码",
@@ -139,7 +138,7 @@ const translations = {
     pmsSection1Title: "インテリジェントなフロントデスク", pmsSection1Desc: "チェックインを迅速化し、会計をシームレスに管理し、すべての客室状況をリアルタイムで把握します。", pmsSection2Title: "双方向チャネルマネージャー", pmsSection2Desc: "主要なOTAと即座に接続します。料金と空室状況は自動的に同期され、オーバーブッキングを防ぎます。", pmsSection3Title: "低手数料（1.5%）の予約エンジン", pmsSection3Desc: "ウェブサイト訪問者を直接のゲストに変換します。わずか1.5%の取引手数料で、安全でモバイルフレンドリーな予約体験を提供します。",
     loginTitle: "パートナーログイン", hotelCodeStr: "ホテルコード", emailStr: "メールアドレス", pwStr: "パスワード", loginBtn: "ログイン", loginErr: "無効な資格情報です。",
     dashTitle: "パートナーダッシュボード", dashSub: "ホテルの統合と請求を管理します。",
-    subTitleReg: "SaaS 定期購読の申し込み", subTitleChange: "お支払い方法の変更", subDesc: "毎月のSaaS定期購読用のクレジットカードを安全に登録します。安全なPaynPlusのページにリダイレクトされます。", registerCard: "登録申請", changeCard: "変更", proceedToPg: "決済システムでカードを登録する ➔",
+    subTitleReg: "SaaS 定期購読の申し込み", subTitleChange: "お支払い方法の変更", subDesc: "毎月のSaaS定期購読用のクレジットカードを安全に登録します。安全なPaynPlusのページにリダイレクトされます。", registerCard: "登録", changeCard: "変更", proceedToPg: "PaynPlusに進む ➔",
     dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
     dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
     dbCode: "ホテルコード設定", dbCodeDesc: "PMS同期用の6文字の英数字コード。", dbCodeBtn: "コードの更新",
@@ -176,6 +175,13 @@ export default function MainPortal() {
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
+  // 💡 [추가됨] 하드코딩되었던 결제 내역을 State 배열로 관리
+  const [paymentHistory, setPaymentHistory] = useState([
+    { id: 'INV-2026-09', date: 'Sep 2026', amount: 15000, status: 'PAID' },
+    { id: 'INV-2026-08', date: 'Aug 2026', amount: 15000, status: 'PAID' },
+    { id: 'INV-2026-07', date: 'Jul 2026', amount: 15000, status: 'PAID' }
+  ]);
+
   const [profileImg, setProfileImg] = useState("");
   const [profileDesc, setProfileDesc] = useState("Powered by n+ Smart PMS");
 
@@ -209,11 +215,16 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // 💡 [추가] PG 연동 키 상태 변수
   const [pgSecretKey, setPgSecretKey] = useState("");
   const [pgWebhookSecret, setPgWebhookSecret] = useState("");
 
-  // 💡 [추가] PG 키 저장 함수
+  // 💡 [추가됨] 영수증 보기 핸들러
+  const handleViewReceipt = (invoiceId) => {
+    // 실제 환경에서는 PDF나 영수증 URL을 새 창으로 띄웁니다.
+    // window.open(`/api/portal/receipts/${invoiceId}`, '_blank');
+    setAlertMessage(`Receipt opened for invoice: ${invoiceId}`);
+  };
+
   const handleUpdatePGSettings = async () => {
     if (!pgSecretKey || !pgWebhookSecret) {
       setAlertMessage("Please enter both Secret Key and Webhook Secret.");
@@ -221,7 +232,6 @@ export default function MainPortal() {
     }
 
     try {
-      // loginHotelCode는 세션이나 현재 state에서 가져옵니다.
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
 
       const res = await fetch('/api/portal/settings/pg', {
@@ -253,7 +263,6 @@ export default function MainPortal() {
         setUser(parsedUser);
         setIsMembershipActive(parsedUser.is_membership_active || false);
 
-        // 💡 [핵심 수정] 절대 경로(https://api...)를 상대 경로(/api/...)로 원복!
         axios.get(`/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
           headers: { 'Cache-Control': 'no-cache' }
         })
@@ -294,7 +303,6 @@ export default function MainPortal() {
     setUser(null);
     setIsMembershipActive(false);
 
-    // 💡 [추가된 코드] 로그아웃 시 즉시 메인 홈 화면으로 강제 이동
     setActiveView("HOME");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -312,7 +320,6 @@ export default function MainPortal() {
         membership_status: 'pending'
       };
 
-      // 💡 [핵심 수정] 프론트엔드 프록시를 타도록 상대 경로(/api/...)로 원복!
       const response = await axios.post('/api/members/auth', payload);
 
       if (response.data && response.data.success) {
@@ -333,7 +340,6 @@ export default function MainPortal() {
         setIsMembershipActive(false);
         setShowGuestAuthModal(false);
 
-        // 💡 [추가!!] 이메일 로그인/가입 성공 시에도 바로 마이페이지로 이동
         setActiveView("MYPAGE");
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -380,7 +386,6 @@ export default function MainPortal() {
           setIsMembershipActive(freshUser.is_membership_active === 1 || freshUser.is_membership_active === true);
           setShowGuestAuthModal(false);
 
-          // 💡 [핵심] 로그인 성공 시 마이페이지로 화면 즉시 전환
           setActiveView("MYPAGE");
           window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -391,7 +396,6 @@ export default function MainPortal() {
           }
         }
       } catch (apiError) {
-        // 💡 [409 에러 해결] 이미 가입된 유저라면 프로필 정보를 긁어와서 강제 로그인 처리
         if (apiError.response && apiError.response.status === 409) {
           const profileRes = await axios.get(`/api/members/profile?email=${gUser.email}`);
           if (profileRes.data && profileRes.data.success && profileRes.data.member) {
@@ -400,7 +404,6 @@ export default function MainPortal() {
             setUser(existingUser);
             setShowGuestAuthModal(false);
 
-            // 💡 [핵심] 마이페이지로 이동
             setActiveView("MYPAGE");
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setAlertMessage('Welcome back!');
@@ -450,7 +453,7 @@ export default function MainPortal() {
         payment_method: paymentMethod || '',
         payment_acc_name: accName || cardName || '',
         payment_acc_num: accNum || cardNum || '',
-        pin: pin, // 💡 [추가!!] 사용자가 4단계에서 입력한 PIN 번호를 드디어 백엔드로 보냅니다!
+        pin: pin,
         membership_status: 'pending'
       };
 
@@ -562,15 +565,12 @@ export default function MainPortal() {
   }, []);
 
   const handleSearchResults = (data) => {
-    // 💡 [수정] 검색을 누를 때 브라우저 뒤로 가기 기록을 하나 만듭니다.
     window.history.pushState({ page: 'search' }, '');
     setSearchData(data);
   };
 
   const handleMenuClick = (action) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // 💡 [수정] 메뉴를 클릭할 때 브라우저에 가상의 히스토리를 하나 쌓습니다.
     window.history.pushState({ page: action }, '');
 
     if (action === 'HOME') {
@@ -589,10 +589,10 @@ export default function MainPortal() {
     }
   };
 
+  // 💡 [개선] 구독 진행 및 PaynPlus 결제창(스크린샷 3)으로 부드럽게 넘어가도록 UI 처리 강화
   const handleSubscribeClick = async () => {
-    // 💡 1. 중복 클릭 완벽 차단!
     if (isSubscribing) return;
-    setIsSubscribing(true); // 버튼 비활성화 & 스피너 표시
+    setIsSubscribing(true);
 
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
@@ -605,17 +605,14 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 2. 성공 시: setIsSubscribing(false)를 절대 호출하지 않음!
-        // 버튼이 로딩 상태를 유지한 채로 즉시 PG 결제창으로 이동합니다.
-        window.location.href = data.paymentUrl;
+        window.location.href = data.paymentUrl; // PaynPlus 결제화면으로 즉시 전환됩니다.
       } else {
-        // 실패 시에만 로딩을 풉니다.
         setAlertMessage("Failed to connect to PG: " + (data.message || ""));
         setIsSubscribing(false);
       }
     } catch (err) {
       setAlertMessage("Network error while connecting to Payment Gateway.");
-      setIsSubscribing(false); // 네트워크 에러 시에만 로딩 품
+      setIsSubscribing(false);
     }
   };
 
@@ -645,9 +642,7 @@ export default function MainPortal() {
     e.preventDefault();
 
     try {
-      const BASE_URL = '';
-
-      const res = await fetch(`${BASE_URL}/api/portal-login`, {
+      const res = await fetch(`/api/portal-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -806,32 +801,33 @@ export default function MainPortal() {
 
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbBilling}</h3>
-                        <div className="mb-6">
-                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
-                          <div className="flex gap-2">
-                            <input type="text" value={partnerCard || 'No card registered'} readOnly className={`w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 ${partnerCard ? 'text-slate-600' : 'text-slate-400 italic'}`} />
-                            <button onClick={() => setIsSubModalOpen(true)} className="bg-slate-800 text-white px-4 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-700 transition-colors shadow-sm">
-                              {partnerCard ? t.changeCard : t.registerCard}
-                            </button>
-                          </div>
-                        </div>
+
+                    {/* 💡 [수정됨] 스크린샷 1 반영: 오토 페이먼트 카드 (Register / Change 버튼) */}
+                    <div className="mb-6">
+                      <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
+                      <div className="flex gap-2">
+                        <input type="text" value={partnerCard || 'No card registered'} readOnly className={`w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 ${partnerCard ? 'text-slate-600' : 'text-slate-400 italic'}`} />
+                        <button onClick={() => setIsSubModalOpen(true)} className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide">
+                          {partnerCard ? t.changeCard : t.registerCard}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 💡 [수정됨] 스크린샷 1 반영: 동적 결제 리스트 매핑 (하드코딩 제거) */}
                     <div>
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbInvoices}</label>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">Sep 2026</p>
-                            <p className="text-[10px] text-slate-500">₱15,000</p>
+                      <div className="space-y-3">
+                        {paymentHistory.map((invoice) => (
+                          <div key={invoice.id} className="flex justify-between items-center bg-slate-50 p-3.5 rounded-xl border border-slate-100 hover:border-emerald-100 transition-colors">
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{invoice.date}</p>
+                              <p className="text-[10px] text-slate-500 font-medium">₱{invoice.amount.toLocaleString()}</p>
+                            </div>
+                            <button onClick={() => handleViewReceipt(invoice.id)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-100 transition-colors flex items-center gap-1.5">
+                              📄 {t.dbReceipt}
+                            </button>
                           </div>
-                          <button onClick={() => setAlertMessage("Downloading receipt...")} className="text-xs font-bold text-emerald-600 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-100">📄 {t.dbReceipt}</button>
-                        </div>
-                        <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">Aug 2026</p>
-                            <p className="text-[10px] text-slate-500">₱15,000</p>
-                          </div>
-                          <button onClick={() => setAlertMessage("Downloading receipt...")} className="text-xs font-bold text-emerald-600 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-100">📄 {t.dbReceipt}</button>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -897,7 +893,6 @@ export default function MainPortal() {
                     <p className="text-[10px] text-slate-400 mt-2">* Changing this code will automatically re-sync your PMS with the portal.</p>
                   </div>
 
-                  {/* 💡 [신규 추가] 멀티테넌트 PG 연동 섹션 (여기부터) */}
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-emerald-100 relative overflow-hidden">
                     <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">Crucial</div>
                     <h3 className="text-lg font-black text-slate-800 mb-1 flex items-center gap-2">💳 {t.dbPgSettings}</h3>
@@ -921,7 +916,6 @@ export default function MainPortal() {
                       </div>
                     </div>
                   </div>
-                  {/* 💡 멀티테넌트 PG 연동 섹션 (여기까지) */}
 
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbDomain}</h3>
@@ -1003,7 +997,6 @@ export default function MainPortal() {
 
       ) : activeView === "MYPAGE" ? (
         <div className="w-full flex-grow bg-slate-50 mt-[72px]">
-          {/* 💡 새로 만든 고객용 마이페이지 대시보드로 교체 */}
           <MemberDashboard hotelCode={null} />
         </div>
       ) : (
@@ -1122,15 +1115,11 @@ export default function MainPortal() {
                           <button
                             onClick={() => {
                               const matchedHotel = partnerHotels.find(h => h.code === promo.hotel_code);
-
-                              // 💡 [핵심 혁신 1] 개별웹으로 넘길 때 딥링크(URL)에 &autoApply=true 파라미터를 추가해서 보냅니다!
                               const baseUrl = matchedHotel?.domain
                                 ? `https://${matchedHotel.domain}`
                                 : `/?hotel=${promo.hotel_code}`;
 
                               const separator = baseUrl.includes('?') ? '&' : '?';
-
-                              // 이 링크를 타고 가면 개별웹이 프로모션을 자동 장착하게 됩니다.
                               const deepLink = `${baseUrl}${separator}promo=${promo.code}&roomType=${encodeURIComponent(promo.target_room_type)}&autoApply=true`;
 
                               window.open(deepLink, '_blank');
@@ -1366,38 +1355,42 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 💡 [신규] SaaS 구독 신청 및 카드 등록 안내 모달창 */}
+      {/* 💡 [개선됨] SaaS 구독 신청 및 카드 등록 안내 모달창 (스크린샷 2 완벽 반영) */}
       {isSubModalOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isSubscribing && setIsSubModalOpen(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 transform transition-all" onClick={e => e.stopPropagation()}>
-            <div className="bg-slate-900 p-5 flex justify-between items-center">
-              <h3 className="font-black text-white text-lg flex items-center gap-2">💳 {partnerCard ? t.subTitleChange : t.subTitleReg}</h3>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isSubscribing && setIsSubModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0f172a] p-5 flex justify-between items-center border-b border-slate-700">
+              <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                <span className="text-blue-400">💳</span> {partnerCard ? t.subTitleChange : t.subTitleReg}
+              </h3>
               {!isSubscribing && (
                 <button onClick={() => setIsSubModalOpen(false)} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">&times;</button>
               )}
             </div>
 
-            <div className="p-6 md:p-8 space-y-5">
-              <p className="text-sm text-slate-500 font-bold">{t.subDesc}</p>
+            <div className="p-6 md:p-8 space-y-6">
+              <p className="text-sm text-slate-600 font-medium leading-relaxed">{t.subDesc}</p>
 
-              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">Plan</span>
-                  <span className="text-sm font-black text-emerald-900">{t.dbPlanName}</span>
+              <div className="bg-[#e8fbf0] p-5 rounded-xl border border-[#cceee0] space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-[#006633] tracking-widest">PLAN</span>
+                  <span className="text-sm font-bold text-[#0f4d2a]">{t.dbPlanName}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">Amount</span>
-                  <span className="text-lg font-black text-emerald-600">₱15,000 <span className="text-xs font-bold">/ mo</span></span>
+                  <span className="text-xs font-bold text-[#006633] tracking-widest">AMOUNT</span>
+                  <span className="text-xl font-black text-[#00994d]">₱15,000 <span className="text-sm font-bold">/ mo</span></span>
                 </div>
               </div>
 
-              <div className="text-xs text-slate-400 font-medium">
+              <div className="text-[11px] text-slate-400 leading-relaxed font-medium">
                 * By proceeding, you will be securely redirected to PaynPlus. Your card details will be tokenized safely and will not be stored on our servers.
               </div>
 
-              <div className="pt-4 flex gap-3">
-                <button type="button" disabled={isSubscribing} onClick={() => setIsSubModalOpen(false)} className="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50">Cancel</button>
-                <button onClick={handleSubscribeClick} disabled={isSubscribing} className="flex-[2] px-4 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+              <div className="pt-2 flex gap-3">
+                <button type="button" disabled={isSubscribing} onClick={() => setIsSubModalOpen(false)} className="flex-1 py-3.5 bg-slate-50 text-slate-600 font-bold rounded-xl hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-50">
+                  Cancel
+                </button>
+                <button onClick={handleSubscribeClick} disabled={isSubscribing} className="flex-[2] py-3.5 bg-[#00994d] text-white font-bold rounded-xl hover:bg-[#008040] shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubscribing ? (
                     <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Processing...</>
                   ) : t.proceedToPg}
