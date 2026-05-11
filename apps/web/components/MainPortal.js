@@ -582,7 +582,6 @@ export default function MainPortal() {
   useEffect(() => {
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
-      setActiveView("LOGIN");
     }
   }, []);
 
