@@ -593,25 +593,31 @@ export default function MainPortal() {
     }
   }, []);
 
-  // 💡 [추가] 결제/등록 완료 후 돌아왔을 때 대시보드를 자동으로 열어주는 로직
+  // 💡 [수정됨] 결제/등록 완료 후 돌아왔을 때 대시보드를 자동으로 열어주는 로직
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const action = urlParams.get('action');
 
     if (paymentStatus === 'success') {
-      // 1. 대표님 코드 구조에 맞춰 대시보드 화면으로 강제 이동시킵니다.
+      // 1. 대시보드 화면으로 강제 이동
       setActiveView("LOGIN");
       setIsPartnerLoggedIn(true);
 
-      // 2. 상황에 맞는 알림창을 띄웁니다.
+      // 2. 상황에 맞는 알림창 띄우기 및 임시 카드 정보 저장
       if (action === 'register') {
         setAlertMessage("Card registration successful! You can now activate your subscription.");
+
+        // 💡 [핵심 추가] 아직 웹훅이 없으므로, 돌아왔을 때 UI 변경을 위해 임시 카드 토큰을 저장합니다.
+        const mockToken = "tok_live_mock_5678";
+        setPartnerCard(mockToken);
+        localStorage.setItem("mock_partner_card", mockToken);
+
       } else {
         setAlertMessage("Payment successful! Auto-billing is now active.");
       }
 
-      // 3. 주소창의 지저분한 파라미터(?payment=success...)를 깔끔하게 지워줍니다.
+      // 3. 주소창 파라미터 깔끔하게 지우기
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
