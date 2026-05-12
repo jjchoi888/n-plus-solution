@@ -617,14 +617,20 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [수정됨] 카드 등록과 최초 결제를 분리한 정기결제 로직
+  // 💡 [수정됨] 카드 등록과 최초 결제를 분리한 정기결제 로직 (+ 콘솔 추적 로그 추가)
   const handleSubscribeClick = async () => {
     if (isSubscribing) return;
     setIsSubscribing(true);
 
+    console.log("\n▶️ [프론트엔드] 정기결제(Register/Pay) 버튼이 클릭되었습니다!");
+
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
       const requestType = partnerCard ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
+
+      console.log(`📤 [프론트엔드 -> 백엔드] 전송 준비 완료`);
+      console.log(`   - 호텔코드: ${codeToSave}`);
+      console.log(`   - 요청타입: ${requestType}`);
 
       const res = await fetch('/api/portal/billing/subscribe', {
         method: 'POST',
@@ -635,24 +641,32 @@ export default function MainPortal() {
         })
       });
 
+      console.log(`📥 [백엔드 -> 프론트엔드] 응답 상태 코드 (HTTP Status): ${res.status}`);
+
       const data = await res.json();
+      console.log(`📦 [백엔드 -> 프론트엔드] 수신된 데이터:`, data);
 
       if (data.success) {
         if (!partnerCard && data.paymentUrl) {
           // 💡 성공해서 결제창으로 이동할 때만 로딩을 풀지 않고 유지합니다.
+          console.log(`🔗 [프론트엔드] PG사 결제창 URL로 리다이렉트 합니다: ${data.paymentUrl}`);
           window.location.href = data.paymentUrl;
         } else {
+          console.log(`✅ [프론트엔드] 결제 및 활성화 처리가 완료되었습니다.`);
           setAlertMessage(lang === 'ko' ? "결제가 완료되었으며 자동 결제가 활성화되었습니다." : "Payment successful. Auto-billing activated.");
           setIsSubModalOpen(false);
           setIsSubscribing(false); // 완료 시 로딩 해제
         }
       } else {
         // 💡 에러 발생 시 즉시 로딩 해제
+        console.warn(`⚠️ [프론트엔드] 백엔드에서 실패 응답을 보냈습니다. 사유: ${data.message}`);
         setAlertMessage("Request failed: " + (data.message || ""));
         setIsSubscribing(false);
       }
     } catch (err) {
       // 💡 서버 통신 에러 시 즉시 로딩 해제
+      console.error(`🚨 [프론트엔드 치명적 에러] 백엔드 통신 중 네트워크 오류 발생!`);
+      console.error(err);
       setAlertMessage("Network error while processing subscription.");
       setIsSubscribing(false);
     }
