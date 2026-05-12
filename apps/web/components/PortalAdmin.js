@@ -11,7 +11,6 @@ const TAB_TITLES = {
     AGENTS: "Sales Representatives (Commissions)",
     SETTLEMENT: "Commission Settlement",
     BILLING: "Billing & Commission Management",
-    DOMAINS: "Custom Domain Assignments",
     MEMBERS: "Members Management",
     USERS: "n+ Rewards Club"
 };
@@ -23,8 +22,7 @@ const SIDEBAR_MENUS = [
     { id: "USERS", label: "n+ Rewards Club", icon: "🎁", roles: ["SUPER_ADMIN"] },
     { id: "AGENTS", label: "Sales Agents", icon: "🤝", roles: ["SUPER_ADMIN", "AGENT"] },
     { id: "SETTLEMENT", label: "Commissions", icon: "💰", roles: ["SUPER_ADMIN", "AGENT"] },
-    { id: "BILLING", label: "Billing & Plans", icon: "💳", roles: ["SUPER_ADMIN", "AGENT"] },
-    { id: "DOMAINS", label: "Domain Settings", icon: "🌐", roles: ["SUPER_ADMIN"] }
+    { id: "BILLING", label: "Billing & Plans", icon: "💳", roles: ["SUPER_ADMIN", "AGENT"] }
 ];
 
 const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
@@ -1100,144 +1098,6 @@ export default function PortalAdmin() {
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ========================================================= */}
-                    {/* 💡 DOMAINS */}
-                    {/* ========================================================= */}
-                    {activeTab === "DOMAINS" && adminRole === "SUPER_ADMIN" && (
-                        <div className="animate-fade-in max-w-5xl mx-auto">
-                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                    <h2 className="text-lg font-black text-slate-800">Domain Assignments</h2>
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-200">
-                                                <th className="p-4 font-black w-1/4">Property Code</th>
-                                                <th className="p-4 font-black w-2/4">Custom Domain (www.example.com)</th>
-                                                <th className="p-4 font-black w-1/4 text-right">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-sm font-bold text-slate-800">
-                                            {filteredPartners.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="3" className="p-8 text-center text-slate-400 font-bold">No partners found.</td>
-                                                </tr>
-                                            ) : (
-                                                filteredPartners.map(p => (
-                                                    <tr key={`dom_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                                        <td className="p-4">
-                                                            <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
-                                                            <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <div className="relative flex items-center">
-                                                                <span className="absolute left-3 text-slate-400">🌐</span>
-                                                                <input
-                                                                    type="text"
-                                                                    value={p.domain === "Pending" ? "" : p.domain}
-                                                                    onChange={(e) => handleLocalChange(p.code, 'domain', e.target.value)}
-                                                                    placeholder="e.g. www.hotelname.com"
-                                                                    className="bg-white border border-slate-300 text-blue-600 font-mono tracking-tight rounded-lg pl-9 pr-3 py-2.5 w-full text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
-                                                                />
-                                                            </div>
-                                                            {p.domain && p.domain !== "Pending" && (
-                                                                <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
-                                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Linked and Active
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-4 text-right">
-                                                            <button
-                                                                onClick={() => handleSaveDomain(p)}
-                                                                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
-                                                            >
-                                                                Link Domain
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 💡 파트너 등록/수정 모달창 */}
-                    {isPartnerModalOpen && (
-                        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4">
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-8 border border-slate-200 flex flex-col max-h-full">
-                                <div className="flex justify-between items-center mb-6 shrink-0">
-                                    <h3 className="text-xl font-black text-slate-800">
-                                        {isEditingPartner ? "⚙️ Edit Partner & Master Account" : "🏨 Register New Partner"}
-                                    </h3>
-                                    <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
-                                </div>
-
-                                <form onSubmit={handlePartnerSubmit} className="space-y-6 overflow-y-auto pr-2">
-                                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
-                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">1. Hotel Information</h4>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Code (PMS ID)</label>
-                                                <input type="text" required disabled={isEditingPartner} value={partnerForm.code} onChange={e => setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 disabled:bg-slate-200 disabled:text-slate-500 font-mono tracking-wider uppercase" placeholder="e.g. SKY001" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Agent</label>
-                                                <select value={partnerForm.agent_id} onChange={e => setPartnerForm({ ...partnerForm, agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 bg-white text-sm">
-                                                    <option value="HQ Direct">HQ Direct (No Commission)</option>
-                                                    {agents.map(ag => (
-                                                        <option key={`mod_opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Account Status</label>
-                                                <select value={partnerForm.status} onChange={e => setPartnerForm({ ...partnerForm, status: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 bg-white text-sm font-bold">
-                                                    <option value="Active">Active</option>
-                                                    <option value="Onboarding">Onboarding</option>
-                                                    <option value="Overdue">Overdue (Lock System)</option>
-                                                </select>
-                                            </div>
-                                            {!isEditingPartner && (
-                                                <div>
-                                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel Name</label>
-                                                    <input type="text" required value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 font-bold" placeholder="e.g. Sky Grand Hotel" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-4">
-                                        <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest border-b border-blue-100 pb-2">2. Master Account Details</h4>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Master User ID</label>
-                                                <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono" placeholder="e.g. Sky_Admin" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{isEditingPartner ? "New Password (Optional)" : "Password"}</label>
-                                                <input type="text" required={!isEditingPartner} value={partnerForm.master_pw} onChange={e => setPartnerForm({ ...partnerForm, master_pw: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-mono tracking-widest" placeholder="••••••••" />
-                                            </div>
-                                        </div>
-                                        {isEditingPartner && <p className="text-[10px] text-red-500 font-bold mt-1">* Note: Entering a password will overwrite current credentials.</p>}
-                                    </div>
-
-                                    <div className="pt-4 flex gap-3 shrink-0">
-                                        <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
-                                        <button type="submit" className="flex-1 px-4 py-3.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 shadow-md transition-colors">
-                                            {isEditingPartner ? "Save Changes" : "Create Partner & Account"}
-                                        </button>
-                                    </div>
-                                </form>
                             </div>
                         </div>
                     )}

@@ -175,6 +175,7 @@ export default function MainPortal() {
   const [partnerCode, setPartnerCode] = useState("");
   const [partnerCard, setPartnerCard] = useState("");
   const [nextBillingDate, setNextBillingDate] = useState("Oct 1, 2026");
+  const [partnerMrr, setPartnerMrr] = useState(15000);
 
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
@@ -218,9 +219,6 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  const [pgSecretKey, setPgSecretKey] = useState("");
-  const [pgWebhookSecret, setPgWebhookSecret] = useState("");
-
   // 💡 [추가] 결제 내역 불러오기 (버튼 클릭 시 실행)
   const fetchPaymentHistory = async () => {
     setIsHistoryModalOpen(true);
@@ -253,36 +251,6 @@ export default function MainPortal() {
     } else {
       // url이 없을 경우 백업 API 또는 알림
       setAlertMessage(`Receipt document is not yet available for ${invoiceId}.`);
-    }
-  };
-
-  const handleUpdatePGSettings = async () => {
-    if (!pgSecretKey || !pgWebhookSecret) {
-      setAlertMessage("Please enter both Secret Key and Webhook Secret.");
-      return;
-    }
-
-    try {
-      const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
-
-      const res = await fetch('/api/portal/settings/pg', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hotel_code: codeToSave,
-          secret_key: pgSecretKey,
-          webhook_secret: pgWebhookSecret
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setAlertMessage(`Payment gateway successfully linked for [${codeToSave.toUpperCase()}].`);
-      } else {
-        setAlertMessage(`Failed to save PG settings: ${data.message}`);
-      }
-    } catch (e) {
-      setAlertMessage("Error connecting to server while saving PG settings.");
     }
   };
 
@@ -584,6 +552,7 @@ export default function MainPortal() {
   useEffect(() => {
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
+      setPartnerMrr(sessionStorage.getItem("partner_mrr") || 15000);
     }
   }, []);
 
@@ -728,24 +697,26 @@ export default function MainPortal() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const res = await fetch(`/api/portal-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hotel_code: loginHotelCode.trim(),
-          user_id: loginEmail.trim(),
-          password: loginPw.trim()
-        })
+        body: JSON.stringify({ hotel_code: loginHotelCode.trim(), user_id: loginEmail.trim(), password: loginPw.trim() })
       });
-
       const data = await res.json();
 
       if (data.success) {
+        // 💡 [신규] 본사에서 계정을 잠갔는지(Overdue/Cancelled) 확인하여 튕겨냅니다.
+        if (data.status === 'Overdue' || data.status === 'Cancelled') {
+          setAlertMessage(`Access Denied: Account is ${data.status}. Please contact HQ.`);
+          return;
+        }
+
         sessionStorage.setItem("partner_logged_in", "true");
         sessionStorage.setItem("partner_hotel_code", data.hotel_code);
+        sessionStorage.setItem("partner_mrr", data.mrr || 15000); // 💡 MRR 저장
 
+        setPartnerMrr(data.mrr || 15000); // 💡 상태 업데이트
         setIsPartnerLoggedIn(true);
         setActiveView("LOGIN");
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -753,8 +724,7 @@ export default function MainPortal() {
         setAlertMessage(`Login Failed: ${data.message}`);
       }
     } catch (error) {
-      console.error("Login request error:", error);
-      setAlertMessage("Unable to connect to the server. Please check your network connection.");
+      setAlertMessage("Unable to connect to the server.");
     }
   };
 
@@ -1478,7 +1448,7 @@ export default function MainPortal() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-[#006633] tracking-widest">AMOUNT</span>
-                  <span className="text-xl font-black text-[#00994d]">₱15,000 <span className="text-sm font-bold">/ mo</span></span>
+                  <span className="text-xl font-black text-[#00994d]">₱{Number(partnerMrr).toLocaleString()} <span className="text-sm font-bold">/ mo</span></span>
                 </div>
               </div>
 
