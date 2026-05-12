@@ -648,20 +648,22 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [수정됨] 카드 등록과 최초 결제를 분리한 정기결제 로직 (+ 콘솔 추적 로그 추가)
+  // 💡 [Modified] Subscription logic separating card registration and initial payment (+ Fixed Change Card bug)
   const handleSubscribeClick = async () => {
     if (isSubscribing) return;
     setIsSubscribing(true);
 
-    console.log("\n▶️ [프론트엔드] 정기결제(Register/Pay) 버튼이 클릭되었습니다!");
+    console.log("\n▶️ [Frontend] Subscription (Register/Pay/Change) button clicked!");
 
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
+
+      // 💡 Even if a card exists, if it's 'Change' mode, send a REGISTER_CARD request.
       const requestType = (partnerCard && !isChangingCard) ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
 
-      console.log(`📤 [프론트엔드 -> 백엔드] 전송 준비 완료`);
-      console.log(`   - 호텔코드: ${codeToSave}`);
-      console.log(`   - 요청타입: ${requestType}`);
+      console.log(`📤 [Frontend -> Backend] Ready to send`);
+      console.log(`   - Hotel Code: ${codeToSave}`);
+      console.log(`   - Request Type: ${requestType}`);
 
       const res = await fetch('/api/portal/billing/subscribe', {
         method: 'POST',
@@ -672,33 +674,32 @@ export default function MainPortal() {
         })
       });
 
-      console.log(`📥 [백엔드 -> 프론트엔드] 응답 상태 코드 (HTTP Status): ${res.status}`);
+      console.log(`📥 [Backend -> Frontend] Response HTTP Status: ${res.status}`);
 
       const data = await res.json();
-      console.log(`📦 [백엔드 -> 프론트엔드] 수신된 데이터:`, data);
+      console.log(`📦 [Backend -> Frontend] Received Data:`, data);
 
       if (data.success) {
-        if (!partnerCard && data.paymentUrl) {
-          // 💡 성공해서 결제창으로 이동할 때만 로딩을 풀지 않고 유지합니다.
-          console.log(`🔗 [프론트엔드] PG사 결제창 URL로 리다이렉트 합니다: ${data.paymentUrl}`);
+        // 💡 [Bug Fix] Removed the strict (!partnerCard) condition.
+        // Now, if the backend provides a paymentUrl, it will always redirect to the PG page!
+        if (data.paymentUrl) {
+          console.log(`🔗 [Frontend] Redirecting to PG checkout URL: ${data.paymentUrl}`);
           window.location.href = data.paymentUrl;
         } else {
-          console.log(`✅ [프론트엔드] 결제 및 활성화 처리가 완료되었습니다.`);
-          setAlertMessage(lang === 'ko' ? "결제가 완료되었으며 자동 결제가 활성화되었습니다." : "Payment successful. Auto-billing activated.");
+          console.log(`✅ [Frontend] Payment and activation successfully completed.`);
+          setAlertMessage("Payment successful. Auto-billing activated.");
           setIsSubModalOpen(false);
-          setIsSubscribing(false); // 완료 시 로딩 해제
+          setIsSubscribing(false); // Release loading state upon completion
         }
       } else {
-        // 💡 에러 발생 시 즉시 로딩 해제
-        console.warn(`⚠️ [프론트엔드] 백엔드에서 실패 응답을 보냈습니다. 사유: ${data.message}`);
-        setAlertMessage("Request failed: " + (data.message || ""));
+        console.warn(`⚠️ [Frontend] Backend returned a failure response. Reason: ${data.message}`);
+        setAlertMessage("Request failed: " + (data.message || "Unknown error"));
         setIsSubscribing(false);
       }
     } catch (err) {
-      // 💡 서버 통신 에러 시 즉시 로딩 해제
-      console.error(`🚨 [프론트엔드 치명적 에러] 백엔드 통신 중 네트워크 오류 발생!`);
+      console.error(`🚨 [Frontend Fatal Error] Network error during backend communication!`);
       console.error(err);
-      setAlertMessage("Network error while processing subscription.");
+      setAlertMessage("Network error while processing subscription. Please check your connection.");
       setIsSubscribing(false);
     }
   };
