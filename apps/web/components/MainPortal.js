@@ -174,6 +174,7 @@ export default function MainPortal() {
   const [partnerDomain, setPartnerDomain] = useState("");
   const [partnerCode, setPartnerCode] = useState("");
   const [partnerCard, setPartnerCard] = useState("");
+  const [nextBillingDate, setNextBillingDate] = useState("Oct 1, 2026");
 
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
@@ -592,6 +593,29 @@ export default function MainPortal() {
     }
   }, []);
 
+  // 💡 [추가] 결제/등록 완료 후 돌아왔을 때 대시보드를 자동으로 열어주는 로직
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const action = urlParams.get('action');
+
+    if (paymentStatus === 'success') {
+      // 1. 대표님 코드 구조에 맞춰 대시보드 화면으로 강제 이동시킵니다.
+      setActiveView("LOGIN");
+      setIsPartnerLoggedIn(true);
+
+      // 2. 상황에 맞는 알림창을 띄웁니다.
+      if (action === 'register') {
+        setAlertMessage("Card registration successful! You can now activate your subscription.");
+      } else {
+        setAlertMessage("Payment successful! Auto-billing is now active.");
+      }
+
+      // 3. 주소창의 지저분한 파라미터(?payment=success...)를 깔끔하게 지워줍니다.
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   const handleSearchResults = (data) => {
     window.history.pushState({ page: 'search' }, '');
     setSearchData(data);
@@ -855,30 +879,56 @@ export default function MainPortal() {
                     <p className="text-xs text-slate-500"><strong>{t.dbPlanNext}:</strong> Oct 1, 2026</p>
                   </div>
 
-                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbBilling}</h3>
+                      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbBilling}</h3>
 
-                    <div className="mb-6">
-                      <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
-                      <div className="flex gap-2">
-                        <input type="text" value={partnerCard || 'No card registered'} readOnly className={`w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 ${partnerCard ? 'text-slate-600' : 'text-slate-400 italic'}`} />
-                        <button onClick={() => setIsSubModalOpen(true)} className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide">
-                          {partnerCard ? t.changeCard : t.registerCard}
-                        </button>
+                        <div className="mb-6">
+                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            {partnerCard ? (
+                              // ✅ 카드가 등록되어 있을 때 보여줄 UI
+                              <>
+                                <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 flex items-center gap-3">
+                                  <span className="text-xl">💳</span>
+                                  <span className="font-bold tracking-widest">**** **** **** {partnerCard.slice(-4) || '1234'}</span>
+                                </div>
+                                <button
+                                  onClick={() => setIsSubModalOpen(true)}
+                                  className="bg-[#0f172a] text-white px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
+                                >
+                                  {t.changeCard}
+                                </button>
+                              </>
+                            ) : (
+                              // ❌ 카드가 없을 때 보여줄 기존 UI
+                              <div className="flex gap-2 w-full">
+                                <input type="text" value="No card registered" readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 text-slate-400 italic outline-none" />
+                                <button onClick={() => setIsSubModalOpen(true)} className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide">
+                                  {t.registerCard}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 등록된 카드가 있을 때만 하단에 다음 결제일 표시 */}
+                          {partnerCard && (
+                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-100">
+                              <span className="text-sm">📅</span> {t.dbPlanNext}: {nextBillingDate}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 결제 내역(Invoice) 모달로 연결하는 버튼 */}
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbInvoices}</label>
+                          <button
+                            onClick={fetchPaymentHistory}
+                            className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-sm flex items-center justify-center gap-2"
+                          >
+                            <span className="text-lg">🧾</span> {t.dbViewHistory}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* 💡 [수정] 결제 내역을 모달로 연결하는 버튼 추가 */}
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbInvoices}</label>
-                      <button
-                        onClick={fetchPaymentHistory}
-                        className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-sm flex items-center justify-center gap-2"
-                      >
-                        <span className="text-lg">🧾</span> {t.dbViewHistory}
-                      </button>
-                    </div>
-                  </div>
 
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbSupport}</h3>

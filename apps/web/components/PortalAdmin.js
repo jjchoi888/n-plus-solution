@@ -1023,8 +1023,21 @@ export default function PortalAdmin() {
                                                     return (
                                                         <tr key={`bill_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                                                             <td className="p-4">
-                                                                <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
-                                                                <div className="text-[10px] text-slate-400 mt-1">{p.name}</div>
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
+
+                                                                    {/* 💡 [신규 추가] 본사에서 해당 호텔의 카드 등록 여부를 한눈에 파악하는 배지 */}
+                                                                    {p.card_token ? (
+                                                                        <span title="Auto-payment card registered" className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black border border-emerald-200 flex items-center gap-1">
+                                                                            💳 LINKED
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span title="No card registered" className="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">
+                                                                            No Card
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-[10px] text-slate-400">{p.name}</div>
                                                             </td>
                                                             <td className="p-4">
                                                                 <div className="flex flex-col gap-2">
