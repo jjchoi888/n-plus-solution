@@ -178,6 +178,7 @@ export default function MainPortal() {
 
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [isChangingCard, setIsChangingCard] = useState(false);
 
   // 💡 [추가] 결제 내역 모달창 상태 변수
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -656,7 +657,7 @@ export default function MainPortal() {
 
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
-      const requestType = partnerCard ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
+      const requestType = (partnerCard && !isChangingCard) ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
 
       console.log(`📤 [프론트엔드 -> 백엔드] 전송 준비 완료`);
       console.log(`   - 호텔코드: ${codeToSave}`);
@@ -899,7 +900,10 @@ export default function MainPortal() {
                                   <span className="font-bold tracking-widest">**** **** **** {partnerCard.slice(-4) || '1234'}</span>
                                 </div>
                                 <button
-                                  onClick={() => setIsSubModalOpen(true)}
+                                  onClick={() => {
+                                    setIsChangingCard(true);
+                                    setIsSubModalOpen(true);
+                                  }}
                                   className="bg-[#0f172a] text-white px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
                                 >
                                   {t.changeCard}
@@ -909,7 +913,13 @@ export default function MainPortal() {
                               // ❌ 카드가 없을 때 보여줄 기존 UI
                               <div className="flex gap-2 w-full">
                                 <input type="text" value="No card registered" readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 text-slate-400 italic outline-none" />
-                                <button onClick={() => setIsSubModalOpen(true)} className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide">
+                                <button
+                                  onClick={() => {
+                                    setIsChangingCard(false);
+                                    setIsSubModalOpen(true);
+                                  }}
+                                  className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
+                                >
                                   {t.registerCard}
                                 </button>
                               </div>
@@ -1459,16 +1469,16 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 💡 [수정됨] SaaS 구독 신청 및 카드 등록 모달창 (2-Step 로직 적용) */}
+      {/* 💡 [수정됨] SaaS 구독 신청 / 카드 등록 / 카드 변경 모달창 */}
       {isSubModalOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isSubscribing && setIsSubModalOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
             <div className="bg-[#0f172a] p-5 flex justify-between items-center border-b border-slate-700">
               <h3 className="font-bold text-white text-lg flex items-center gap-2">
                 <span className="text-blue-400">💳</span>
-                {partnerCard
-                  ? (lang === 'ko' ? '정기 구독 활성화' : 'Activate SaaS Subscription')
-                  : (lang === 'ko' ? '자동 결제 카드 등록' : 'Register Auto-Payment Card')}
+                {isChangingCard
+                  ? 'Change Auto-Payment Card'
+                  : (partnerCard ? 'Activate SaaS Subscription' : 'Register Auto-Payment Card')}
               </h3>
               {!isSubscribing && (
                 <button onClick={() => setIsSubModalOpen(false)} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">&times;</button>
@@ -1477,19 +1487,17 @@ export default function MainPortal() {
 
             <div className="p-6 md:p-8 space-y-6">
               <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                {!partnerCard
-                  ? (lang === 'ko'
-                    ? "매월 정기 결제를 위한 결제 수단을 안전하게 등록합니다. 결제사(PaynPlus)의 보안 페이지로 이동하며, 지금 당장 결제되지 않습니다."
-                    : "Securely register your card for the monthly SaaS subscription. You will be redirected to PaynPlus. No charges will be made yet.")
-                  : (lang === 'ko'
-                    ? `등록된 카드(${partnerCard})로 이번 달 이용 요금을 결제하고 정기 구독을 활성화합니다. 다음 달부터는 동일한 날짜에 자동 청구됩니다.`
-                    : `Pay the first month's fee with your registered card (${partnerCard}) to activate. Auto-billing will occur on this date next month.`)}
+                {isChangingCard
+                  ? "Securely update your card for the monthly SaaS subscription. You will be redirected to PaynPlus. No charges will be made yet."
+                  : (!partnerCard
+                    ? "Securely register your card for the monthly SaaS subscription. You will be redirected to PaynPlus. No charges will be made yet."
+                    : `Pay the first month's fee with your registered card (${partnerCard.slice(-4) || '****'}) to activate. Auto-billing will occur on this date next month.`)}
               </p>
 
               <div className="bg-[#e8fbf0] p-5 rounded-xl border border-[#cceee0] space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-[#006633] tracking-widest">PLAN</span>
-                  <span className="text-sm font-bold text-[#0f4d2a]">{t.dbPlanName}</span>
+                  <span className="text-sm font-bold text-[#0f4d2a]">n+ Enterprise Suite</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-[#006633] tracking-widest">AMOUNT</span>
@@ -1497,7 +1505,7 @@ export default function MainPortal() {
                 </div>
               </div>
 
-              {!partnerCard && (
+              {(!partnerCard || isChangingCard) && (
                 <div className="text-[11px] text-slate-400 leading-relaxed font-medium">
                   * Your card details will be tokenized safely by PaynPlus and will not be stored on our servers.
                 </div>
@@ -1511,9 +1519,9 @@ export default function MainPortal() {
                   {isSubscribing ? (
                     <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Processing...</>
                   ) : (
-                    partnerCard
-                      ? (lang === 'ko' ? "최초 결제 및 활성화" : "Pay Now & Activate")
-                      : (lang === 'ko' ? "PaynPlus에서 카드 등록 ➔" : "Register at PaynPlus ➔")
+                    isChangingCard || !partnerCard
+                      ? "Proceed to PaynPlus ➔"
+                      : "Pay Now & Activate"
                   )}
                 </button>
               </div>
