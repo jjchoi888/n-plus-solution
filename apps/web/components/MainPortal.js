@@ -1008,30 +1008,6 @@ export default function MainPortal() {
                     <p className="text-[10px] text-slate-400 mt-2">* Changing this code will automatically re-sync your PMS with the portal.</p>
                   </div>
 
-                  <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-emerald-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">Crucial</div>
-                    <h3 className="text-lg font-black text-slate-800 mb-1 flex items-center gap-2">💳 {t.dbPgSettings}</h3>
-                    <p className="text-sm text-slate-500 mb-6">{t.dbPgDesc}</p>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.dbPgSecret}</label>
-                        <input type="password" value={pgSecretKey} onChange={e => setPgSecretKey(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500 font-mono tracking-widest bg-slate-50" placeholder="sk_live_..." />
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="flex-1">
-                          <label className="text-xs font-bold text-slate-500 block mb-1">{t.dbPgWebhook}</label>
-                          <input type="password" value={pgWebhookSecret} onChange={e => setPgWebhookSecret(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500 font-mono tracking-widest bg-slate-50" placeholder="whsec_..." />
-                        </div>
-                        <div className="flex items-end shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                          <button onClick={handleUpdatePGSettings} className="bg-emerald-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-emerald-700 shadow-md transition-colors whitespace-nowrap w-full sm:w-auto active:scale-95">
-                            {t.dbPgBtn}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-black text-slate-800 mb-1">{t.dbDomain}</h3>
                     <p className="text-sm text-slate-500 mb-6">{t.dbDomainDesc}</p>
