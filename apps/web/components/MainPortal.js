@@ -706,17 +706,16 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success) {
-        // 💡 [신규] 본사에서 계정을 잠갔는지(Overdue/Cancelled) 확인하여 튕겨냅니다.
-        if (data.status === 'Overdue' || data.status === 'Cancelled') {
-          setAlertMessage(`Access Denied: Account is ${data.status}. Please contact HQ.`);
-          return;
-        }
+        // 💡 [Crucial Fix] Removed the account locking logic here!
+        // Owners MUST be able to log in to the Portal even if 'Overdue' so they can update their payment methods.
 
         sessionStorage.setItem("partner_logged_in", "true");
         sessionStorage.setItem("partner_hotel_code", data.hotel_code);
-        sessionStorage.setItem("partner_mrr", data.mrr || 15000); // 💡 MRR 저장
 
-        setPartnerMrr(data.mrr || 15000); // 💡 상태 업데이트
+        // 💡 [Update] Save the actual MRR from backend (fallback to 15000 if null)
+        sessionStorage.setItem("partner_mrr", data.mrr || 15000);
+        setPartnerMrr(data.mrr || 15000);
+
         setIsPartnerLoggedIn(true);
         setActiveView("LOGIN");
         window.scrollTo({ top: 0, behavior: 'smooth' });
