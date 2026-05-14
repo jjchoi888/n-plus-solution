@@ -722,6 +722,16 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success) {
+        // 💡 [핵심 추가] 로그인은 성공했지만, 직급(Role)이 오너인지 먼저 철저하게 검사합니다.
+        const userRole = (data.role || '').trim().toUpperCase();
+        const isOwner = userRole === 'OWNER' || data.is_sub_admin === 1;
+
+        if (!isOwner) {
+          // 직원이면 세션을 발급하지 않고 경고창을 띄운 뒤 즉시 차단합니다.
+          setAlertMessage("Access Denied: Only Hotel Owners can access the Partner Portal.");
+          return;
+        }
+
         // 💡 [Crucial Fix] Removed the account locking logic here!
         // Owners MUST be able to log in to the Portal even if 'Overdue' so they can update their payment methods.
 
