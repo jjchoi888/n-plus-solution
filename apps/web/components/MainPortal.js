@@ -550,61 +550,48 @@ export default function MainPortal() {
     return () => clearInterval(timer);
   }, []);
 
+  // 💡 [수정 1] 중복된 useEffect 통합 및 로그인한 호텔 전용 카드 정보만 불러오도록 수정
   useEffect(() => {
-    if (sessionStorage.getItem("partner_logged_in") === "true") {
-      setIsPartnerLoggedIn(true);
-
-      // 💡 [핵심 추가] 새로고침 하더라도 로그인할 때 받아온 실제 MRR(8888)을 유지합니다.
-      const savedMrr = sessionStorage.getItem("partner_mrr");
-      if (savedMrr) setPartnerMrr(savedMrr);
-    }
-  }, []);
-
-  useEffect(() => {
-    const savedCard = localStorage.getItem("mock_partner_card");
-    if (savedCard) {
-      setPartnerCard(savedCard);
-    }
-  }, []);
-
-  // 💡 [수정됨] 결제/등록 완료 후 돌아왔을 때 대시보드를 자동으로 열어주는 로직
-  useEffect(() => {
+    // 1. 결제/등록 완료 후 돌아왔을 때의 처리 (URL 파라미터)
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const action = urlParams.get('action');
 
     if (paymentStatus === 'success') {
-      // 1. 대시보드 화면으로 강제 이동
       setActiveView("LOGIN");
       setIsPartnerLoggedIn(true);
 
-      // 2. 상황에 맞는 알림창 띄우기 및 임시 카드 정보 저장
+      const currentCode = sessionStorage.getItem("partner_hotel_code") || "";
+
       if (action === 'register') {
         setAlertMessage("Card registration successful! You can now activate your subscription.");
-
-        // 💡 [핵심 추가] 아직 웹훅이 없으므로, 돌아왔을 때 UI 변경을 위해 임시 카드 토큰을 저장합니다.
         const mockToken = "tok_live_mock_5678";
         setPartnerCard(mockToken);
-        localStorage.setItem("mock_partner_card", mockToken);
-
+        if (currentCode) {
+          localStorage.setItem(`mock_partner_card_${currentCode}`, mockToken); // 💡 다른 호텔과 섞이지 않게 분리 저장
+        }
       } else {
         setAlertMessage("Payment successful! Auto-billing is now active.");
       }
-
-      // 3. 주소창 파라미터 깔끔하게 지우기
       window.history.replaceState(null, '', window.location.pathname);
     }
-  }, []);
 
-  useEffect(() => {
+    // 2. 새로고침 방어: 세션 복구 및 제로베이스(0) 세팅
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
+
+      const code = sessionStorage.getItem("partner_hotel_code") || "";
+      setPartnerCode(code);
+
       const savedMrr = sessionStorage.getItem("partner_mrr");
       if (savedMrr) setPartnerMrr(savedMrr);
 
-      // 💡 [추가할 부분] 새로고침 시 세션에서 status를 다시 불러옵니다.
       const savedStatus = sessionStorage.getItem("partner_status");
       if (savedStatus) setPartnerStatus(savedStatus);
+
+      // 해당 호텔 코드 전용 카드 정보만 불러옴 (없으면 빈칸)
+      const savedCard = localStorage.getItem(`mock_partner_card_${code}`);
+      setPartnerCard(savedCard || "");
     }
   }, []);
 
@@ -713,6 +700,8 @@ export default function MainPortal() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setAlertMessage(""); // 💡 [수정 2] 로그인 시도 시 화면 상단의 기존 에러창 즉시 초기화
+
     try {
       const res = await fetch(`/api/portal-login`, {
         method: 'POST',
@@ -722,28 +711,27 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success) {
-        // 💡 [핵심 추가] 로그인은 성공했지만, 직급(Role)이 오너인지 먼저 철저하게 검사합니다.
+        // 직급(Role) 검사: 오너인지 확인
         const userRole = (data.role || '').trim().toUpperCase();
         const isOwner = userRole === 'OWNER' || data.is_sub_admin === 1;
 
         if (!isOwner) {
-          // 직원이면 세션을 발급하지 않고 경고창을 띄운 뒤 즉시 차단합니다.
           setAlertMessage("Access Denied: Only Hotel Owners can access the Partner Portal.");
           return;
         }
 
-        // 💡 [Crucial Fix] Removed the account locking logic here!
-        // Owners MUST be able to log in to the Portal even if 'Overdue' so they can update their payment methods.
+        // 💡 신규 호텔 접속 시 다른 호텔의 정보가 보이지 않도록 클린 세팅
+        setPartnerCode(data.hotel_code);
+        setPartnerDomain("");
+        const savedCard = localStorage.getItem(`mock_partner_card_${data.hotel_code}`);
+        setPartnerCard(savedCard || "");
 
         sessionStorage.setItem("partner_logged_in", "true");
         sessionStorage.setItem("partner_hotel_code", data.hotel_code);
-
-        // 💡 [Update] Save the actual MRR from backend (fallback to 15000 if null)
         sessionStorage.setItem("partner_mrr", data.mrr || 15000);
-
         sessionStorage.setItem("partner_status", data.status || 'Active');
-        setPartnerStatus(data.status || 'Active');
 
+        setPartnerStatus(data.status || 'Active');
         setPartnerMrr(data.mrr || 15000);
 
         setIsPartnerLoggedIn(true);
@@ -851,29 +839,32 @@ export default function MainPortal() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbBookings}</p>
-                    <h3 className="text-3xl font-black text-slate-800">42</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbBookings}</p>
+                        {/* 💡 42 -> 0 으로 변경 */}
+                        <h3 className="text-3xl font-black text-slate-800">0</h3>
+                      </div>
+                      <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl shrink-0">📅</div>
+                    </div>
+                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbSaved}</p>
+                        {/* 💡 150,000 -> 0 으로 변경 */}
+                        <h3 className="text-2xl md:text-3xl font-black text-emerald-600">₱0</h3>
+                      </div>
+                      <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">💰</div>
+                    </div>
+                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbOcc}</p>
+                        {/* 💡 85% -> 0% 으로 변경 */}
+                        <h3 className="text-3xl font-black text-slate-800">0%</h3>
+                      </div>
+                      <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl shrink-0">🛏️</div>
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl shrink-0">📅</div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbSaved}</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-emerald-600">₱150,000</h3>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">💰</div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbOcc}</p>
-                    <h3 className="text-3xl font-black text-slate-800">85%</h3>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl shrink-0">🛏️</div>
-                </div>
-              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
 
