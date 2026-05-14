@@ -552,7 +552,10 @@ export default function MainPortal() {
   useEffect(() => {
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
-      setPartnerMrr(sessionStorage.getItem("partner_mrr") || 15000);
+
+      // 💡 [핵심 추가] 새로고침 하더라도 로그인할 때 받아온 실제 MRR(8888)을 유지합니다.
+      const savedMrr = sessionStorage.getItem("partner_mrr");
+      if (savedMrr) setPartnerMrr(savedMrr);
     }
   }, []);
 
