@@ -41,7 +41,7 @@ const translations = {
     dashTitle: "Partner Dashboard", dashSub: "Manage your hotel's integrations and billing.",
     subTitleReg: "SaaS Subscription Registration", subTitleChange: "Update Payment Method", subDesc: "Securely register your card for the monthly SaaS subscription. You will be safely redirected to PaynPlus.", registerCard: "Register", changeCard: "Change", proceedToPg: "Proceed to PaynPlus ➔",
     dbBilling: "Billing & Payments", dbCardReg: "Auto-Payment Card", dbCardRegBtn: "Update Card", dbInvoices: "Payment History", dbReceipt: "Receipt",
-    dbViewHistory: "View Payment History", dbHistoryModalTitle: "Payment History", dbNoHistory: "No payment history found.", // 💡 결제 내역 모달 번역 추가
+    dbViewHistory: "View Payment History", dbHistoryModalTitle: "Payment History", dbNoHistory: "No payment history found.",
     dbDomain: "Domain Settings", dbDomainDesc: "Link your custom domain for direct bookings.", dbDomainStatus: "Status", dbLinked: "Linked", dbDomainBtn: "Save Domain",
     dbCode: "Hotel Code Settings", dbCodeDesc: "6-character alphanumeric code for PMS sync.", dbCodeBtn: "Update Code",
     dbPgSettings: "Payment Gateway Settings", dbPgDesc: "Enter your PaynPlus API keys to enable direct guest payments to your hotel's account.", dbPgSecret: "Secret Key (sk_live_...)", dbPgWebhook: "Webhook Secret (whsec_...)", dbPgBtn: "Save PG Settings",
@@ -75,7 +75,7 @@ const translations = {
     dashTitle: "파트너 대시보드", dashSub: "호텔의 연동 정보 및 결제 내역을 관리하세요.",
     subTitleReg: "SaaS 정기 구독 신청", subTitleChange: "결제 정보 변경", subDesc: "매월 자동 결제를 위한 결제 수단을 안전하게 등록합니다. 결제사(PaynPlus)의 보안 페이지로 이동합니다.", registerCard: "등록", changeCard: "변경", proceedToPg: "PaynPlus로 이동 ➔",
     dbBilling: "자동 결제 및 영수증", dbCardReg: "자동 결제 카드", dbCardRegBtn: "카드 변경", dbInvoices: "결제 내역", dbReceipt: "영수증",
-    dbViewHistory: "결제 내역 보기", dbHistoryModalTitle: "정기 결제 내역", dbNoHistory: "결제 내역이 없습니다.", // 💡 결제 내역 모달 번역 추가
+    dbViewHistory: "결제 내역 보기", dbHistoryModalTitle: "정기 결제 내역", dbNoHistory: "결제 내역이 없습니다.",
     dbDomain: "연동 도메인 설정", dbDomainDesc: "다이렉트 예약을 위한 자체 도메인을 연결하세요.", dbDomainStatus: "상태", dbLinked: "연동 완료", dbDomainBtn: "도메인 저장",
     dbCode: "호텔 코드 설정", dbCodeDesc: "시스템 연동을 위한 6자리 영어/숫자 조합 코드", dbCodeBtn: "코드 변경",
     dbPgSettings: "결제 시스템(PG) 연동 설정", dbPgDesc: "고객의 결제 대금이 호텔 계좌로 직접 입금되도록 발급받은 PaynPlus API 키를 입력하세요.", dbPgSecret: "시크릿 키 (sk_live_...)", dbPgWebhook: "웹훅 시크릿 (whsec_...)", dbPgBtn: "결제 연동 저장",
@@ -109,7 +109,7 @@ const translations = {
     dashTitle: "合作伙伴仪表板", dashSub: "管理您酒店的集成和账单。",
     subTitleReg: "SaaS 订阅注册", subTitleChange: "更新付款方式", subDesc: "安全地注册您的信用卡以用于每月的 SaaS 订阅。您将被安全地重定向至 PaynPlus。", registerCard: "注册", changeCard: "更改", proceedToPg: "前往 PaynPlus ➔",
     dbBilling: "账单与支付", dbCardReg: "自动支付卡", dbCardRegBtn: "更新银行卡", dbInvoices: "支付历史", dbReceipt: "收据",
-    dbViewHistory: "查看付款记录", dbHistoryModalTitle: "付款记录", dbNoHistory: "没有找到付款记录。", // 💡
+    dbViewHistory: "查看付款记录", dbHistoryModalTitle: "付款记录", dbNoHistory: "没有找到付款记录。",
     dbDomain: "域名设置", dbDomainDesc: "链接您的自定义域名以进行直接预订。", dbDomainStatus: "状态", dbLinked: "已链接", dbDomainBtn: "保存域名",
     dbCode: "酒店代码设置", dbCodeDesc: "用于 PMS 同步的 6 位字母数字代码。", dbCodeBtn: "更新代码",
     dbPgSettings: "支付网关(PG)设置", dbPgDesc: "输入您的 PaynPlus API 密钥，让客人的付款直接汇入您酒店的账户。", dbPgSecret: "密钥 (sk_live_...)", dbPgWebhook: "Webhook 密钥 (whsec_...)", dbPgBtn: "保存支付设置",
@@ -143,7 +143,7 @@ const translations = {
     dashTitle: "パートナーダッシュボード", dashSub: "ホテルの統合と請求を管理します。",
     subTitleReg: "SaaS 定期購読の申し込み", subTitleChange: "お支払い方法の変更", subDesc: "毎月のSaaS定期購読用のクレジットカードを安全に登録します。安全なPaynPlusのページにリダイレクトされます。", registerCard: "登録", changeCard: "変更", proceedToPg: "PaynPlusに進む ➔",
     dbBilling: "請求と支払い", dbCardReg: "自動支払いカード", dbCardRegBtn: "カードの更新", dbInvoices: "支払い履歴", dbReceipt: "領収書",
-    dbViewHistory: "お支払い履歴を見る", dbHistoryModalTitle: "支払い履歴", dbNoHistory: "お支払い履歴はありません。", // 💡
+    dbViewHistory: "お支払い履歴を見る", dbHistoryModalTitle: "支払い履歴", dbNoHistory: "お支払い履歴はありません。",
     dbDomain: "ドメイン設定", dbDomainDesc: "直接予約用のカスタムドメインをリンクします。", dbDomainStatus: "ステータス", dbLinked: "リンク済み", dbDomainBtn: "ドメインの保存",
     dbCode: "ホテルコード設定", dbCodeDesc: "PMS同期用の6文字の英数字コード。", dbCodeBtn: "コードの更新",
     dbPgSettings: "決済システム(PG)連携設定", dbPgDesc: "ゲストの支払いがホテルの口座に直接入金されるよう、PaynPlus APIキーを入力してください。", dbPgSecret: "シークレットキー (sk_live_...)", dbPgWebhook: "Webhookシークレット (whsec_...)", dbPgBtn: "決済設定を保存",
@@ -175,14 +175,13 @@ export default function MainPortal() {
   const [partnerCode, setPartnerCode] = useState("");
   const [partnerCard, setPartnerCard] = useState("");
   const [nextBillingDate, setNextBillingDate] = useState("Oct 1, 2026");
-  const [partnerMrr, setPartnerMrr] = useState(15000);
+  const [partnerMrr, setPartnerMrr] = useState(0);
   const [partnerStatus, setPartnerStatus] = useState("Active");
 
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [isChangingCard, setIsChangingCard] = useState(false);
 
-  // 💡 [추가] 결제 내역 모달창 상태 변수
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
@@ -220,21 +219,16 @@ export default function MainPortal() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  // 💡 [추가] 결제 내역 불러오기 (버튼 클릭 시 실행)
   const fetchPaymentHistory = async () => {
     setIsHistoryModalOpen(true);
     setIsFetchingHistory(true);
     try {
       const codeToFetch = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
-
-      // 실제 API 엔드포인트 연동
       const res = await fetch(`/api/portal/billing/history?hotel_code=${codeToFetch}`);
       const data = await res.json();
-
       if (data.success) {
         setPaymentHistory(data.history || []);
       } else {
-        // API 연동 실패 또는 내역이 없을 경우, 임시로 빈 배열 세팅
         setPaymentHistory([]);
       }
     } catch (e) {
@@ -245,12 +239,10 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [수정] 실제 영수증 열기 로직
   const handleViewReceipt = (receiptUrl, invoiceId) => {
     if (receiptUrl) {
       window.open(receiptUrl, '_blank');
     } else {
-      // url이 없을 경우 백업 API 또는 알림
       setAlertMessage(`Receipt document is not yet available for ${invoiceId}.`);
     }
   };
@@ -295,6 +287,49 @@ export default function MainPortal() {
 
   useEffect(() => {
     syncWithServer();
+  }, []);
+
+  // 💡 [통합 및 수정됨] 불필요한 useEffect 모두 지우고 세션/결제 체크를 하나로 통합했습니다.
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const action = urlParams.get('action');
+
+    if (paymentStatus === 'success') {
+      setActiveView("LOGIN");
+      setIsPartnerLoggedIn(true);
+
+      const currentCode = sessionStorage.getItem("partner_hotel_code") || "";
+
+      if (action === 'register') {
+        setAlertMessage("Card registration successful! You can now activate your subscription.");
+        const mockToken = "tok_live_mock_5678";
+        setPartnerCard(mockToken);
+        if (currentCode) {
+          localStorage.setItem(`mock_partner_card_${currentCode}`, mockToken);
+        }
+      } else {
+        setAlertMessage("Payment successful! Auto-billing is now active.");
+      }
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (sessionStorage.getItem("partner_logged_in") === "true") {
+      setIsPartnerLoggedIn(true);
+
+      const code = sessionStorage.getItem("partner_hotel_code") || "";
+      setPartnerCode(code);
+
+      const savedMrr = sessionStorage.getItem("partner_mrr");
+      if (savedMrr) setPartnerMrr(savedMrr);
+
+      const savedStatus = sessionStorage.getItem("partner_status");
+      if (savedStatus) setPartnerStatus(savedStatus);
+
+      // 현재 호텔 코드로 등록된 카드만 불러옵니다 (공유 방지)
+      const savedCard = localStorage.getItem(`mock_partner_card_${code}`);
+      setPartnerCard(savedCard || "");
+    }
   }, []);
 
   const handleGuestLogout = () => {
@@ -550,51 +585,6 @@ export default function MainPortal() {
     return () => clearInterval(timer);
   }, []);
 
-  // 💡 [수정 1] 중복된 useEffect 통합 및 로그인한 호텔 전용 카드 정보만 불러오도록 수정
-  useEffect(() => {
-    // 1. 결제/등록 완료 후 돌아왔을 때의 처리 (URL 파라미터)
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get('payment');
-    const action = urlParams.get('action');
-
-    if (paymentStatus === 'success') {
-      setActiveView("LOGIN");
-      setIsPartnerLoggedIn(true);
-
-      const currentCode = sessionStorage.getItem("partner_hotel_code") || "";
-
-      if (action === 'register') {
-        setAlertMessage("Card registration successful! You can now activate your subscription.");
-        const mockToken = "tok_live_mock_5678";
-        setPartnerCard(mockToken);
-        if (currentCode) {
-          localStorage.setItem(`mock_partner_card_${currentCode}`, mockToken); // 💡 다른 호텔과 섞이지 않게 분리 저장
-        }
-      } else {
-        setAlertMessage("Payment successful! Auto-billing is now active.");
-      }
-      window.history.replaceState(null, '', window.location.pathname);
-    }
-
-    // 2. 새로고침 방어: 세션 복구 및 제로베이스(0) 세팅
-    if (sessionStorage.getItem("partner_logged_in") === "true") {
-      setIsPartnerLoggedIn(true);
-
-      const code = sessionStorage.getItem("partner_hotel_code") || "";
-      setPartnerCode(code);
-
-      const savedMrr = sessionStorage.getItem("partner_mrr");
-      if (savedMrr) setPartnerMrr(savedMrr);
-
-      const savedStatus = sessionStorage.getItem("partner_status");
-      if (savedStatus) setPartnerStatus(savedStatus);
-
-      // 해당 호텔 코드 전용 카드 정보만 불러옴 (없으면 빈칸)
-      const savedCard = localStorage.getItem(`mock_partner_card_${code}`);
-      setPartnerCard(savedCard || "");
-    }
-  }, []);
-
   const handleSearchResults = (data) => {
     window.history.pushState({ page: 'search' }, '');
     setSearchData(data);
@@ -620,22 +610,13 @@ export default function MainPortal() {
     }
   };
 
-  // 💡 [Modified] Subscription logic separating card registration and initial payment (+ Fixed Change Card bug)
   const handleSubscribeClick = async () => {
     if (isSubscribing) return;
     setIsSubscribing(true);
 
-    console.log("\n▶️ [Frontend] Subscription (Register/Pay/Change) button clicked!");
-
     try {
       const codeToSave = loginHotelCode || sessionStorage.getItem("partner_hotel_code");
-
-      // 💡 Even if a card exists, if it's 'Change' mode, send a REGISTER_CARD request.
       const requestType = (partnerCard && !isChangingCard) ? 'PAY_AND_ACTIVATE' : 'REGISTER_CARD';
-
-      console.log(`📤 [Frontend -> Backend] Ready to send`);
-      console.log(`   - Hotel Code: ${codeToSave}`);
-      console.log(`   - Request Type: ${requestType}`);
 
       const res = await fetch('/api/portal/billing/subscribe', {
         method: 'POST',
@@ -646,31 +627,21 @@ export default function MainPortal() {
         })
       });
 
-      console.log(`📥 [Backend -> Frontend] Response HTTP Status: ${res.status}`);
-
       const data = await res.json();
-      console.log(`📦 [Backend -> Frontend] Received Data:`, data);
 
       if (data.success) {
-        // 💡 [Bug Fix] Removed the strict (!partnerCard) condition.
-        // Now, if the backend provides a paymentUrl, it will always redirect to the PG page!
         if (data.paymentUrl) {
-          console.log(`🔗 [Frontend] Redirecting to PG checkout URL: ${data.paymentUrl}`);
           window.location.href = data.paymentUrl;
         } else {
-          console.log(`✅ [Frontend] Payment and activation successfully completed.`);
           setAlertMessage("Payment successful. Auto-billing activated.");
           setIsSubModalOpen(false);
-          setIsSubscribing(false); // Release loading state upon completion
+          setIsSubscribing(false);
         }
       } else {
-        console.warn(`⚠️ [Frontend] Backend returned a failure response. Reason: ${data.message}`);
         setAlertMessage("Request failed: " + (data.message || "Unknown error"));
         setIsSubscribing(false);
       }
     } catch (err) {
-      console.error(`🚨 [Frontend Fatal Error] Network error during backend communication!`);
-      console.error(err);
       setAlertMessage("Network error while processing subscription. Please check your connection.");
       setIsSubscribing(false);
     }
@@ -698,9 +669,10 @@ export default function MainPortal() {
     setAlertMessage(`Profile saved successfully and updated on the portal.`);
   };
 
+  // 💡 [수정 2] 오류 메시지 초기화 및 오너 권한 체크가 적용된 handleLogin
   const handleLogin = async (e) => {
     e.preventDefault();
-    setAlertMessage(""); // 💡 [수정 2] 로그인 시도 시 화면 상단의 기존 에러창 즉시 초기화
+    setAlertMessage(""); // 로그인 시도 시 경고창 지우기
 
     try {
       const res = await fetch(`/api/portal-login`, {
@@ -711,7 +683,6 @@ export default function MainPortal() {
       const data = await res.json();
 
       if (data.success) {
-        // 직급(Role) 검사: 오너인지 확인
         const userRole = (data.role || '').trim().toUpperCase();
         const isOwner = userRole === 'OWNER' || data.is_sub_admin === 1;
 
@@ -720,7 +691,7 @@ export default function MainPortal() {
           return;
         }
 
-        // 💡 신규 호텔 접속 시 다른 호텔의 정보가 보이지 않도록 클린 세팅
+        // 제로베이스 세팅 및 현재 호텔 코드 세팅
         setPartnerCode(data.hotel_code);
         setPartnerDomain("");
         const savedCard = localStorage.getItem(`mock_partner_card_${data.hotel_code}`);
@@ -728,11 +699,11 @@ export default function MainPortal() {
 
         sessionStorage.setItem("partner_logged_in", "true");
         sessionStorage.setItem("partner_hotel_code", data.hotel_code);
-        sessionStorage.setItem("partner_mrr", data.mrr || 15000);
+        sessionStorage.setItem("partner_mrr", data.mrr || 0); // 💡 기본값을 0으로 세팅
         sessionStorage.setItem("partner_status", data.status || 'Active');
 
         setPartnerStatus(data.status || 'Active');
-        setPartnerMrr(data.mrr || 15000);
+        setPartnerMrr(data.mrr || 0);
 
         setIsPartnerLoggedIn(true);
         setActiveView("LOGIN");
@@ -839,32 +810,32 @@ export default function MainPortal() {
                 </button>
               </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbBookings}</p>
-                        {/* 💡 42 -> 0 으로 변경 */}
-                        <h3 className="text-3xl font-black text-slate-800">0</h3>
-                      </div>
-                      <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl shrink-0">📅</div>
-                    </div>
-                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbSaved}</p>
-                        {/* 💡 150,000 -> 0 으로 변경 */}
-                        <h3 className="text-2xl md:text-3xl font-black text-emerald-600">₱0</h3>
-                      </div>
-                      <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">💰</div>
-                    </div>
-                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbOcc}</p>
-                        {/* 💡 85% -> 0% 으로 변경 */}
-                        <h3 className="text-3xl font-black text-slate-800">0%</h3>
-                      </div>
-                      <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl shrink-0">🛏️</div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbBookings}</p>
+                    {/* 💡 [수정 3] 하드코딩된 숫자(42)를 0으로 초기화 */}
+                    <h3 className="text-3xl font-black text-slate-800">0</h3>
                   </div>
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl shrink-0">📅</div>
+                </div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbSaved}</p>
+                    {/* 💡 [수정 3] 하드코딩된 숫자(150,000)를 0으로 초기화 */}
+                    <h3 className="text-2xl md:text-3xl font-black text-emerald-600">₱0</h3>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">💰</div>
+                </div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbOcc}</p>
+                    {/* 💡 [수정 3] 하드코딩된 비율(85%)을 0%로 초기화 */}
+                    <h3 className="text-3xl font-black text-slate-800">0%</h3>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl shrink-0">🛏️</div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
 
@@ -876,81 +847,70 @@ export default function MainPortal() {
                     <div className="text-sm font-bold text-emerald-600 bg-emerald-50 w-fit px-3 py-1 rounded-full mb-4">Active</div>
                     <p className="text-xs text-slate-500"><strong>{t.dbPlanNext}:</strong> Oct 1, 2026</p>
                   </div>
-                      {/* 💡 [Modified] Blinking red alert effect for Overdue status (animate-pulse) */}
-                      <div className={`p-6 rounded-3xl shadow-sm border relative overflow-hidden transition-colors duration-500
-  ${partnerStatus === 'Overdue'
-                          ? 'bg-red-50 border-red-300 animate-pulse'
-                          : 'bg-white border-slate-200'}
-`}>
-                        {partnerStatus === 'Overdue' && (
-                          <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm">
-                            OVERDUE
+                  <div className={`p-6 rounded-3xl shadow-sm border relative overflow-hidden transition-colors duration-500 ${partnerStatus === 'Overdue' ? 'bg-red-50 border-red-300 animate-pulse' : 'bg-white border-slate-200'}`}>
+                    {partnerStatus === 'Overdue' && (
+                      <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm">
+                        OVERDUE
+                      </div>
+                    )}
+                    <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 ${partnerStatus === 'Overdue' ? 'text-red-500' : 'text-slate-400'}`}>
+                      {t.dbBilling}
+                      {partnerStatus === 'Overdue' && <span className="text-red-500 text-sm">⚠️</span>}
+                    </h3>
+
+                    <div className="mb-6">
+                      {/* 💡 [수정 4] 중복되었던 <label> 한 줄 제거됨 */}
+                      <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {partnerCard ? (
+                          <>
+                            <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 flex items-center gap-3">
+                              <span className="text-xl">💳</span>
+                              <span className="font-bold tracking-widest">**** **** **** {partnerCard.slice(-4) || '1234'}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setIsChangingCard(true);
+                                setIsSubModalOpen(true);
+                              }}
+                              className="bg-[#0f172a] text-white px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
+                            >
+                              {t.changeCard}
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex gap-2 w-full">
+                            <input type="text" value="No card registered" readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 text-slate-400 italic outline-none" />
+                            <button
+                              onClick={() => {
+                                setIsChangingCard(false);
+                                setIsSubModalOpen(true);
+                              }}
+                              className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
+                            >
+                              {t.registerCard}
+                            </button>
                           </div>
                         )}
-                        <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 ${partnerStatus === 'Overdue' ? 'text-red-500' : 'text-slate-400'}`}>
-                          {t.dbBilling}
-                          {partnerStatus === 'Overdue' && <span className="text-red-500 text-sm">⚠️</span>}
-                        </h3>
-
-                        {/* ⬇️ 여기서부터는 원래 있던 코드가 그대로 이어집니다 ⬇️ */}
-                        <div className="mb-6">
-                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
-                      
-                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            {partnerCard ? (
-                              // ✅ 카드가 등록되어 있을 때 보여줄 UI
-                              <>
-                                <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 flex items-center gap-3">
-                                  <span className="text-xl">💳</span>
-                                  <span className="font-bold tracking-widest">**** **** **** {partnerCard.slice(-4) || '1234'}</span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setIsChangingCard(true);
-                                    setIsSubModalOpen(true);
-                                  }}
-                                  className="bg-[#0f172a] text-white px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
-                                >
-                                  {t.changeCard}
-                                </button>
-                              </>
-                            ) : (
-                              // ❌ 카드가 없을 때 보여줄 기존 UI
-                              <div className="flex gap-2 w-full">
-                                <input type="text" value="No card registered" readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 text-slate-400 italic outline-none" />
-                                <button
-                                  onClick={() => {
-                                    setIsChangingCard(false);
-                                    setIsSubModalOpen(true);
-                                  }}
-                                  className="bg-[#0f172a] text-white px-5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
-                                >
-                                  {t.registerCard}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* 등록된 카드가 있을 때만 하단에 다음 결제일 표시 */}
-                          {partnerCard && (
-                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-100">
-                              <span className="text-sm">📅</span> {t.dbPlanNext}: {nextBillingDate}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 결제 내역(Invoice) 모달로 연결하는 버튼 */}
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbInvoices}</label>
-                          <button
-                            onClick={fetchPaymentHistory}
-                            className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-sm flex items-center justify-center gap-2"
-                          >
-                            <span className="text-lg">🧾</span> {t.dbViewHistory}
-                          </button>
-                        </div>
                       </div>
+
+                      {partnerCard && (
+                        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-100">
+                          <span className="text-sm">📅</span> {t.dbPlanNext}: {nextBillingDate}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbInvoices}</label>
+                      <button
+                        onClick={fetchPaymentHistory}
+                        className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-sm flex items-center justify-center gap-2"
+                      >
+                        <span className="text-lg">🧾</span> {t.dbViewHistory}
+                      </button>
+                    </div>
+                  </div>
 
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbSupport}</h3>
@@ -1504,7 +1464,7 @@ export default function MainPortal() {
                     isChangingCard || !partnerCard
                       ? "Proceed to PaynPlus ➔"
                       : "Pay Now & Activate"
-                  )}0111114
+                  )}
                 </button>
               </div>
             </div>
