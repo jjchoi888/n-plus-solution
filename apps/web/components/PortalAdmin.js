@@ -257,6 +257,20 @@ export default function PortalAdmin() {
         }
     };
 
+    // 💡 [신규 추가] 파트너(호텔) Edit 모달창 열기 함수
+    const openPartnerEditModal = (partner) => {
+        setIsEditingPartner(true);
+        setPartnerForm({
+            code: partner.code,
+            name: partner.name,
+            master_id: partner.master_id || "",
+            master_pw: "", // 보안상 비밀번호는 빈칸으로 둠 (변경 시에만 입력)
+            agent_id: partner.agent_id || "HQ Direct",
+            status: partner.status || "Active"
+        });
+        setIsPartnerModalOpen(true);
+    };
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
@@ -722,7 +736,7 @@ export default function PortalAdmin() {
                                                                         code: p.code, name: p.name, master_id: p.master_id || "", master_pw: "", status: p.status, agent_id: p.agent_id || "HQ Direct"
                                                                     });
                                                                     setIsEditingPartner(true);
-                                                                    setIsPartnerModalOpen(true);
+                                                                    setIsPartnerModalOpen(true); // 👈 여기서 모달창을 띄우라고 명령하고 있습니다.
                                                                 }} className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
                                                                     Edit ⚙️
                                                                 </button>
