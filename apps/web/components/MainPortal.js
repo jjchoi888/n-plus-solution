@@ -858,11 +858,26 @@ export default function MainPortal() {
                     <div className="text-sm font-bold text-emerald-600 bg-emerald-50 w-fit px-3 py-1 rounded-full mb-4">Active</div>
                     <p className="text-xs text-slate-500"><strong>{t.dbPlanNext}:</strong> Oct 1, 2026</p>
                   </div>
+                      {/* 💡 [Modified] Blinking red alert effect for Overdue status (animate-pulse) */}
+                      <div className={`p-6 rounded-3xl shadow-sm border relative overflow-hidden transition-colors duration-500
+  ${partnerStatus === 'Overdue'
+                          ? 'bg-red-50 border-red-300 animate-pulse'
+                          : 'bg-white border-slate-200'}
+`}>
+                        {partnerStatus === 'Overdue' && (
+                          <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm">
+                            OVERDUE
+                          </div>
+                        )}
+                        <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 ${partnerStatus === 'Overdue' ? 'text-red-500' : 'text-slate-400'}`}>
+                          {t.dbBilling}
+                          {partnerStatus === 'Overdue' && <span className="text-red-500 text-sm">⚠️</span>}
+                        </h3>
 
-                      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{t.dbBilling}</h3>
-
+                        {/* ⬇️ 여기서부터는 원래 있던 코드가 그대로 이어집니다 ⬇️ */}
                         <div className="mb-6">
+                          <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
+                      
                           <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
                           <div className="flex flex-col sm:flex-row gap-2">
                             {partnerCard ? (
@@ -1471,7 +1486,7 @@ export default function MainPortal() {
                     isChangingCard || !partnerCard
                       ? "Proceed to PaynPlus ➔"
                       : "Pay Now & Activate"
-                  )}
+                  )}0111114
                 </button>
               </div>
             </div>
