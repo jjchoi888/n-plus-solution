@@ -176,6 +176,7 @@ export default function MainPortal() {
   const [partnerCard, setPartnerCard] = useState("");
   const [nextBillingDate, setNextBillingDate] = useState("Oct 1, 2026");
   const [partnerMrr, setPartnerMrr] = useState(15000);
+  const [partnerStatus, setPartnerStatus] = useState("Active");
 
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
@@ -595,6 +596,18 @@ export default function MainPortal() {
     }
   }, []);
 
+  useEffect(() => {
+    if (sessionStorage.getItem("partner_logged_in") === "true") {
+      setIsPartnerLoggedIn(true);
+      const savedMrr = sessionStorage.getItem("partner_mrr");
+      if (savedMrr) setPartnerMrr(savedMrr);
+
+      // 💡 [추가할 부분] 새로고침 시 세션에서 status를 다시 불러옵니다.
+      const savedStatus = sessionStorage.getItem("partner_status");
+      if (savedStatus) setPartnerStatus(savedStatus);
+    }
+  }, []);
+
   const handleSearchResults = (data) => {
     window.history.pushState({ page: 'search' }, '');
     setSearchData(data);
@@ -717,6 +730,10 @@ export default function MainPortal() {
 
         // 💡 [Update] Save the actual MRR from backend (fallback to 15000 if null)
         sessionStorage.setItem("partner_mrr", data.mrr || 15000);
+
+        sessionStorage.setItem("partner_status", data.status || 'Active');
+        setPartnerStatus(data.status || 'Active');
+
         setPartnerMrr(data.mrr || 15000);
 
         setIsPartnerLoggedIn(true);
