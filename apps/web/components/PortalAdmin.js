@@ -1112,60 +1112,63 @@ export default function PortalAdmin() {
                                         </tbody>
                                     </table>
 
-                                    {/* 💡 [신규 추가] 파트너 등록/수정 모달창 UI */}
-                                    {isPartnerModalOpen && (
-                                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                                                <div className="bg-slate-800 p-5 flex justify-between items-center text-white">
-                                                    <h3 className="font-bold text-lg">
-                                                        {isEditingPartner ? 'Edit Partner Hotel' : 'Register New Partner'}
-                                                    </h3>
-                                                    <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
-                                                </div>
-
-                                                <form onSubmit={handlePartnerSubmit} className="p-6 space-y-4">
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Code (6 Chars)</label>
-                                                        <input type="text" maxLength="6" required disabled={isEditingPartner} value={partnerForm.code} onChange={e => setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() })} className="w-full p-2.5 border rounded-lg uppercase bg-slate-50" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Name</label>
-                                                        <input type="text" required value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Master Admin ID</label>
-                                                        <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Master Password {isEditingPartner && "(Leave blank to keep)"}</label>
-                                                        <input type="password" required={!isEditingPartner} value={partnerForm.master_pw} onChange={e => setPartnerForm({ ...partnerForm, master_pw: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Assign Agent</label>
-                                                        <select value={partnerForm.agent_id} onChange={e => setPartnerForm({ ...partnerForm, agent_id: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 cursor-pointer">
-                                                            <option value="HQ Direct">HQ Direct (No Commission)</option>
-                                                            {agents && agents.map(ag => (
-                                                                <option key={`modal_agt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="pt-4 flex gap-3">
-                                                        <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 py-3 border border-slate-200 font-bold text-slate-600 rounded-xl hover:bg-slate-50">Cancel</button>
-                                                        <button type="submit" className="flex-1 py-3 bg-emerald-600 font-bold text-white rounded-xl hover:bg-emerald-700 shadow-md">
-                                                            {isEditingPartner ? 'Save Changes' : 'Register'}
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    )}
+                                    
                                 </div>
                             </div>
                         </div>
                     )}
 
                 </div>
+
+                {/* 💡 [수정됨] 파트너 등록/수정 모달창 (모든 화면 요소 중 가장 위에 덮이도록 파일 최하단으로 이동) */}
+                {isPartnerModalOpen && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                            <div className="bg-slate-800 p-5 flex justify-between items-center text-white">
+                                <h3 className="font-bold text-lg">
+                                    {isEditingPartner ? 'Edit Partner Hotel' : 'Register New Partner'}
+                                </h3>
+                                <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+                            </div>
+
+                            <form onSubmit={handlePartnerSubmit} className="p-6 space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Code (6 Chars)</label>
+                                    <input type="text" maxLength="6" required disabled={isEditingPartner} value={partnerForm.code} onChange={e => setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() })} className="w-full p-2.5 border rounded-lg uppercase bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Name</label>
+                                    <input type="text" required value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Master Admin ID</label>
+                                    <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Master Password {isEditingPartner && "(Leave blank to keep)"}</label>
+                                    <input type="password" required={!isEditingPartner} value={partnerForm.master_pw} onChange={e => setPartnerForm({ ...partnerForm, master_pw: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Assign Agent</label>
+                                    <select value={partnerForm.agent_id} onChange={e => setPartnerForm({ ...partnerForm, agent_id: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 cursor-pointer outline-none focus:border-emerald-500">
+                                        <option value="HQ Direct">HQ Direct (No Commission)</option>
+                                        {agents && agents.map(ag => (
+                                            <option key={`modal_agt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 py-3 border border-slate-200 font-bold text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+                                    <button type="submit" className="flex-1 py-3 bg-emerald-600 font-bold text-white rounded-xl hover:bg-emerald-700 shadow-md transition-colors">
+                                        {isEditingPartner ? 'Save Changes' : 'Register'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
             </main>
         </div>
     );
