@@ -121,9 +121,33 @@ export default function PortalAdmin() {
 
     const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
     const [isEditingPartner, setIsEditingPartner] = useState(false);
+    const [isHotelCodeAvailable, setIsHotelCodeAvailable] = useState(null); // 💡 [추가] 호텔 코드 중복 확인 상태
     const [partnerForm, setPartnerForm] = useState({
         code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
     });
+
+    const handleCheckHotelCode = async () => {
+        if (!partnerForm.code || partnerForm.code.trim().length !== 6) {
+            return showToast("Please enter exactly 6 characters for the Hotel Code.");
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/partners/check-code`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: partnerForm.code })
+            });
+            const data = await res.json();
+            if (data.success && data.available) {
+                setIsHotelCodeAvailable(true);
+                showToast("✅ Hotel Code is available!");
+            } else {
+                setIsHotelCodeAvailable(false);
+                showToast("❌ Hotel Code already exists.");
+            }
+        } catch (error) {
+            showToast("❌ Network error during code check.");
+        }
+    };
 
     const handlePartnerSubmit = async (e) => {
         e.preventDefault();
@@ -685,6 +709,7 @@ export default function PortalAdmin() {
                                         code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
                                     });
                                     setIsEditingPartner(false);
+                                    setIsHotelCodeAvailable(null);
                                     setIsPartnerModalOpen(true);
                                 }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
                                     <span>+</span> Register New Partner
@@ -1134,7 +1159,33 @@ export default function PortalAdmin() {
                             <form onSubmit={handlePartnerSubmit} className="p-6 space-y-4">
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Code (6 Chars)</label>
-                                    <input type="text" maxLength="6" required disabled={isEditingPartner} value={partnerForm.code} onChange={e => setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() })} className="w-full p-2.5 border rounded-lg uppercase bg-slate-50 outline-none focus:border-emerald-500" />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            maxLength="6"
+                                            required
+                                            disabled={isEditingPartner}
+                                            value={partnerForm.code}
+                                            onChange={e => {
+                                                setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() });
+                                                setIsHotelCodeAvailable(null); // 💡 글자가 바뀌면 다시 체크하도록 상태 초기화
+                                            }}
+                                            className={`w-full p-2.5 border rounded-lg uppercase outline-none focus:ring-1 transition-colors ${isHotelCodeAvailable === true ? "border-emerald-500 focus:ring-emerald-500 bg-emerald-50" :
+                                                    isHotelCodeAvailable === false ? "border-red-500 focus:ring-red-500 bg-red-50" : "bg-slate-50 focus:border-emerald-500"
+                                                }`}
+                                        />
+                                        {!isEditingPartner && (
+                                            <button
+                                                type="button"
+                                                onClick={handleCheckHotelCode}
+                                                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
+                                            >
+                                                Check Code
+                                            </button>
+                                        )}
+                                    </div>
+                                    {!isEditingPartner && isHotelCodeAvailable === true && <p className="text-[10px] text-emerald-600 mt-1 font-bold">✅ Available Code</p>}
+                                    {!isEditingPartner && isHotelCodeAvailable === false && <p className="text-[10px] text-red-600 mt-1 font-bold">❌ Already in use</p>}
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Name</label>
@@ -1160,7 +1211,11 @@ export default function PortalAdmin() {
 
                                 <div className="pt-4 flex gap-3">
                                     <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 py-3 border border-slate-200 font-bold text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
-                                    <button type="submit" className="flex-1 py-3 bg-emerald-600 font-bold text-white rounded-xl hover:bg-emerald-700 shadow-md transition-colors">
+                                    <button
+                                        type="submit"
+                                        disabled={!isEditingPartner && isHotelCodeAvailable !== true}
+                                        className="flex-1 py-3 bg-emerald-600 font-bold text-white rounded-xl hover:bg-emerald-700 shadow-md transition-colors disabled:opacity-50"
+                                    >
                                         {isEditingPartner ? 'Save Changes' : 'Register'}
                                     </button>
                                 </div>
