@@ -320,8 +320,8 @@ export default function MainPortal() {
       // 2️⃣ 일반 투숙객의 객실 예약 결제인 경우
       else {
         setActiveView("HOME");
-        // 💡 [핵심 수정] 기존의 엉뚱한 t.successMsg를 지우고, HotelWebsite와 동일하게 예약 번호가 포함된 영문 알림을 직접 꽂아줍니다!
-        setAlertMessage(`✅ Booking Confirmed! Your stay is secured.\nReservation ID: ${resIds}`);
+        setModalResId(resIds); // 💡 예약 번호 저장
+        setShowBookingSuccessModal(true); // 💡 모달창 활성화
       }
 
       // 알림을 띄운 후 주소창 파라미터는 깔끔하게 지워줍니다.
@@ -345,6 +345,9 @@ export default function MainPortal() {
       setPartnerCard(savedCard || "");
     }
   }, []);
+
+  const [showBookingSuccessModal, setShowBookingSuccessModal] = useState(false);
+  const [modalResId, setModalResId] = useState('');
 
   const handleGuestLogout = () => {
     localStorage.removeItem('nplus_guest_user');
@@ -1791,6 +1794,36 @@ export default function MainPortal() {
               )}
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💡 예약 완료 모달창 (화면 중앙 고정) */}
+      {showBookingSuccessModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-[40px] p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
+            {/* 체크 아이콘 */}
+            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
+            <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
+            <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
+
+            <div className="border-t border-slate-100 pt-8 mb-10">
+              <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Reservation ID</p>
+              <p className="text-5xl font-black text-slate-900 tracking-tight">{modalResId}</p>
+            </div>
+
+            <button
+              onClick={() => setShowBookingSuccessModal(false)}
+              className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 text-lg"
+            >
+              Return to Home
+            </button>
           </div>
         </div>
       )}
