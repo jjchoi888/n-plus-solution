@@ -289,31 +289,43 @@ export default function MainPortal() {
     syncWithServer();
   }, []);
 
-  // 💡 [통합 및 수정됨] 불필요한 useEffect 모두 지우고 세션/결제 체크를 하나로 통합했습니다.
+  // 💡 [수정] 정기구독 결제와 일반 객실 예약을 완벽하게 분리하는 로직
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const action = urlParams.get('action');
+    const type = urlParams.get('type'); // 💡 [추가] 결제 종류를 식별하는 꼬리표를 읽어옵니다.
 
     if (paymentStatus === 'success') {
-      setActiveView("LOGIN");
-      setIsPartnerLoggedIn(true);
+      // 1️⃣ 파트너 SaaS 구독/카드등록 결제인 경우
+      if (type === 'saas' || action === 'register') {
+        setActiveView("LOGIN");
+        setIsPartnerLoggedIn(true);
 
-      const currentCode = sessionStorage.getItem("partner_hotel_code") || "";
+        const currentCode = sessionStorage.getItem("partner_hotel_code") || "";
 
-      if (action === 'register') {
-        setAlertMessage("Card registration successful! You can now activate your subscription.");
-        const mockToken = "tok_live_mock_5678";
-        setPartnerCard(mockToken);
-        if (currentCode) {
-          localStorage.setItem(`mock_partner_card_${currentCode}`, mockToken);
+        if (action === 'register') {
+          setAlertMessage("Card registration successful! You can now activate your subscription.");
+          const mockToken = "tok_live_mock_5678";
+          setPartnerCard(mockToken);
+          if (currentCode) {
+            localStorage.setItem(`mock_partner_card_${currentCode}`, mockToken);
+          }
+        } else {
+          setAlertMessage("Payment successful! Auto-billing is now active.");
         }
-      } else {
-        setAlertMessage("Payment successful! Auto-billing is now active.");
       }
+      // 2️⃣ 일반 투숙객의 객실 예약 결제인 경우
+      else {
+        setActiveView("HOME"); // 💡 파트너 페이지로 넘어가지 않고 홈(예약) 화면을 유지합니다.
+        setAlertMessage(t.successMsg || "Payment Successful & Booking Confirmed! ✅");
+      }
+
+      // 알림을 띄운 후 주소창 파라미터는 깔끔하게 지워줍니다.
       window.history.replaceState(null, '', window.location.pathname);
     }
 
+    // 기존 세션 복구 로직 (유지)
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
 
@@ -326,7 +338,6 @@ export default function MainPortal() {
       const savedStatus = sessionStorage.getItem("partner_status");
       if (savedStatus) setPartnerStatus(savedStatus);
 
-      // 현재 호텔 코드로 등록된 카드만 불러옵니다 (공유 방지)
       const savedCard = localStorage.getItem(`mock_partner_card_${code}`);
       setPartnerCard(savedCard || "");
     }
