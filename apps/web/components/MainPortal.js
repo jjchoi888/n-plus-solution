@@ -290,11 +290,13 @@ export default function MainPortal() {
   }, []);
 
   // 💡 [수정] 정기구독 결제와 일반 객실 예약을 완벽하게 분리하는 로직
+  // 💡 [수정] 정기구독 결제와 일반 객실 예약을 완벽하게 분리하고 올바른 알림 문구를 띄우는 로직
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const action = urlParams.get('action');
-    const type = urlParams.get('type'); // 💡 [추가] 결제 종류를 식별하는 꼬리표를 읽어옵니다.
+    const type = urlParams.get('type');
+    const resIds = urlParams.get('res_ids') || ''; // 💡 [추가] 객실 예약 번호를 가져옵니다.
 
     if (paymentStatus === 'success') {
       // 1️⃣ 파트너 SaaS 구독/카드등록 결제인 경우
@@ -317,8 +319,9 @@ export default function MainPortal() {
       }
       // 2️⃣ 일반 투숙객의 객실 예약 결제인 경우
       else {
-        setActiveView("HOME"); // 💡 파트너 페이지로 넘어가지 않고 홈(예약) 화면을 유지합니다.
-        setAlertMessage(t.successMsg || "Payment Successful & Booking Confirmed! ✅");
+        setActiveView("HOME");
+        // 💡 [핵심 수정] 기존의 엉뚱한 t.successMsg를 지우고, HotelWebsite와 동일하게 예약 번호가 포함된 영문 알림을 직접 꽂아줍니다!
+        setAlertMessage(`✅ Booking Confirmed! Your stay is secured.\nReservation ID: ${resIds}`);
       }
 
       // 알림을 띄운 후 주소창 파라미터는 깔끔하게 지워줍니다.
