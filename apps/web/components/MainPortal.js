@@ -289,17 +289,17 @@ export default function MainPortal() {
     syncWithServer();
   }, []);
 
-  // 💡 [수정] 정기구독 결제와 일반 객실 예약을 완벽하게 분리하는 로직
-  // 💡 [수정] 정기구독 결제와 일반 객실 예약을 완벽하게 분리하고 올바른 알림 문구를 띄우는 로직
+  const [showBookingSuccessModal, setShowBookingSuccessModal] = useState(false);
+  const [modalResId, setModalResId] = useState('');
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const action = urlParams.get('action');
     const type = urlParams.get('type');
-    const resIds = urlParams.get('res_ids') || ''; // 💡 [추가] 객실 예약 번호를 가져옵니다.
+    const resIds = urlParams.get('res_ids') || '';
 
     if (paymentStatus === 'success') {
-      // 1️⃣ 파트너 SaaS 구독/카드등록 결제인 경우
       if (type === 'saas' || action === 'register') {
         setActiveView("LOGIN");
         setIsPartnerLoggedIn(true);
@@ -317,18 +317,15 @@ export default function MainPortal() {
           setAlertMessage("Payment successful! Auto-billing is now active.");
         }
       }
-      // 2️⃣ 일반 투숙객의 객실 예약 결제인 경우
       else {
         setActiveView("HOME");
-        setModalResId(resIds); // 💡 예약 번호 저장
-        setShowBookingSuccessModal(true); // 💡 모달창 활성화
+        setModalResId(resIds);
+        setShowBookingSuccessModal(true);
       }
 
-      // 알림을 띄운 후 주소창 파라미터는 깔끔하게 지워줍니다.
       window.history.replaceState(null, '', window.location.pathname);
     }
 
-    // 기존 세션 복구 로직 (유지)
     if (sessionStorage.getItem("partner_logged_in") === "true") {
       setIsPartnerLoggedIn(true);
 
@@ -345,9 +342,6 @@ export default function MainPortal() {
       setPartnerCard(savedCard || "");
     }
   }, []);
-
-  const [showBookingSuccessModal, setShowBookingSuccessModal] = useState(false);
-  const [modalResId, setModalResId] = useState('');
 
   const handleGuestLogout = () => {
     localStorage.removeItem('nplus_guest_user');
@@ -686,10 +680,9 @@ export default function MainPortal() {
     setAlertMessage(`Profile saved successfully and updated on the portal.`);
   };
 
-  // 💡 [수정 2] 오류 메시지 초기화 및 오너 권한 체크가 적용된 handleLogin
   const handleLogin = async (e) => {
     e.preventDefault();
-    setAlertMessage(""); // 로그인 시도 시 경고창 지우기
+    setAlertMessage("");
 
     try {
       const res = await fetch(`/api/portal-login`, {
@@ -708,7 +701,6 @@ export default function MainPortal() {
           return;
         }
 
-        // 제로베이스 세팅 및 현재 호텔 코드 세팅
         setPartnerCode(data.hotel_code);
         setPartnerDomain("");
         const savedCard = localStorage.getItem(`mock_partner_card_${data.hotel_code}`);
@@ -716,7 +708,7 @@ export default function MainPortal() {
 
         sessionStorage.setItem("partner_logged_in", "true");
         sessionStorage.setItem("partner_hotel_code", data.hotel_code);
-        sessionStorage.setItem("partner_mrr", data.mrr || 0); // 💡 기본값을 0으로 세팅
+        sessionStorage.setItem("partner_mrr", data.mrr || 0);
         sessionStorage.setItem("partner_status", data.status || 'Active');
 
         setPartnerStatus(data.status || 'Active');
@@ -831,7 +823,6 @@ export default function MainPortal() {
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbBookings}</p>
-                    {/* 💡 [수정 3] 하드코딩된 숫자(42)를 0으로 초기화 */}
                     <h3 className="text-3xl font-black text-slate-800">0</h3>
                   </div>
                   <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl shrink-0">📅</div>
@@ -839,7 +830,6 @@ export default function MainPortal() {
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbSaved}</p>
-                    {/* 💡 [수정 3] 하드코딩된 숫자(150,000)를 0으로 초기화 */}
                     <h3 className="text-2xl md:text-3xl font-black text-emerald-600">₱0</h3>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">💰</div>
@@ -847,7 +837,6 @@ export default function MainPortal() {
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dbOcc}</p>
-                    {/* 💡 [수정 3] 하드코딩된 비율(85%)을 0%로 초기화 */}
                     <h3 className="text-3xl font-black text-slate-800">0%</h3>
                   </div>
                   <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl shrink-0">🛏️</div>
@@ -876,7 +865,6 @@ export default function MainPortal() {
                     </h3>
 
                     <div className="mb-6">
-                      {/* 💡 [수정 4] 중복되었던 <label> 한 줄 제거됨 */}
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
                       <div className="flex flex-col sm:flex-row gap-2">
                         {partnerCard ? (
@@ -1428,7 +1416,6 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 💡 [수정됨] SaaS 구독 신청 / 카드 등록 / 카드 변경 모달창 */}
       {isSubModalOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => !isSubscribing && setIsSubModalOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all" onClick={e => e.stopPropagation()}>
@@ -1489,7 +1476,6 @@ export default function MainPortal() {
         </div>
       )}
 
-      {/* 💡 [신규 추가됨] 결제 내역(Payment History) 모달창 */}
       {isHistoryModalOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setIsHistoryModalOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
@@ -1679,28 +1665,28 @@ export default function MainPortal() {
                   <form onSubmit={handleGuestAuthSubmit} className="space-y-4">
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.emailStr}</label>
-                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
+                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm" placeholder="name@email.com" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
-                        <input type="text" required value={guestFirstName} onChange={(e) => setGuestFirstName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="John" />
+                        <input type="text" required value={guestFirstName} onChange={(e) => setGuestFirstName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm" placeholder="John" />
                       </div>
                       <div>
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
-                        <input type="text" required value={guestLastName} onChange={(e) => setGuestLastName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="Doe" />
+                        <input type="text" required value={guestLastName} onChange={(e) => setGuestLastName(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm" placeholder="Doe" />
                       </div>
                     </div>
 
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phoneStr}</label>
-                      <input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="09" />
+                      <input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm" placeholder="09" />
                     </div>
 
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.pwStr}</label>
-                      <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
+                      <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
                     </div>
 
                     <div className="pt-2">
@@ -1731,15 +1717,15 @@ export default function MainPortal() {
                   <form onSubmit={handleGuestAuthSubmit} className="space-y-4">
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.emailStr}</label>
-                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
+                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm" placeholder="name@email.com" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.pwStr}</label>
-                      <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
+                      <input type="password" required value={guestPw} onChange={(e) => setGuestPw(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest" placeholder="••••••••" />
                     </div>
 
                     <div className="flex justify-end mt-1 mb-2">
-                      <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold text-blue-600 hover:underline">
+                      <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold text-emerald-600 hover:underline">
                         {t.forgotPw}
                       </button>
                     </div>
@@ -1763,10 +1749,10 @@ export default function MainPortal() {
                   }} className="space-y-4">
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.regEmail}</label>
-                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-blue-500 outline-none text-sm" placeholder="name@email.com" />
+                      <input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm" placeholder="name@email.com" />
                     </div>
                     <div className="pt-2">
-                      <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3.5 hover:bg-blue-700 transition-colors shadow-md text-sm">
+                      <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3.5 hover:bg-emerald-700 transition-colors shadow-md text-sm">
                         {t.sendReset}
                       </button>
                     </div>
@@ -1783,11 +1769,11 @@ export default function MainPortal() {
                 <div className="text-center pt-8 mt-8 border-t border-slate-100 space-y-3">
                   {guestAuthMode === 'REGISTER' ? (
                     <div className="text-sm font-bold text-slate-500">
-                      {t.hasAccount} <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-blue-600 hover:underline">{t.loginLink}</button>
+                      {t.hasAccount} <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-emerald-600 hover:underline">{t.loginLink}</button>
                     </div>
                   ) : (
                     <div className="text-sm font-bold text-slate-500">
-                      {t.noAccount} <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="text-blue-600 hover:underline">{t.signUpLink}</button>
+                      {t.noAccount} <button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="text-emerald-600 hover:underline">{t.signUpLink}</button>
                     </div>
                   )}
                 </div>
