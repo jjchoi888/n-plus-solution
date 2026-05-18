@@ -327,6 +327,9 @@ export default function HotelWebsite({ domain }) {
     const [selectedPromo, setSelectedPromo] = useState(null);
     const [appliedPromo, setAppliedPromo] = useState(null);
 
+    const [showBookingSuccessModal, setShowBookingSuccessModal] = useState(false);
+    const [modalResId, setModalResId] = useState('');
+
     const [user, setUser] = useState(null);
     const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
     const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // LOGIN, REGISTER, FORGOT_PASSWORD
@@ -529,7 +532,7 @@ export default function HotelWebsite({ domain }) {
 
     }, [hotelCode]);
 
-    // 💡 [수정] 결제 완료 후 돌아왔을 때 알림 문구를 영어로 고정
+    // 💡 [수정] 결제 완료 후 돌아왔을 때 알림 문구 대신 모달창 띄우기
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
@@ -537,11 +540,11 @@ export default function HotelWebsite({ domain }) {
             const resIds = params.get('res_ids');
 
             if (paymentStatus === 'success') {
-                // 1. 성공 알림 (영어)
-                const successMsg = `✅ Booking Confirmed! Your stay is secured.\nReservation ID: ${resIds}`;
-                setAlertMessage(successMsg);
+                // 1. 성공 모달창 활성화 및 예약 번호 저장
+                setModalResId(resIds || '');
+                setShowBookingSuccessModal(true);
 
-                // 2. 모달 및 상태 초기화
+                // 2. 기존 결제창 모달 및 상태 초기화
                 setShowBookingModal(false);
                 setIsBooking(false);
 
@@ -1698,6 +1701,42 @@ export default function HotelWebsite({ domain }) {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 💡 예약 완료 모달창 (화면 중앙 고정 및 얇은 회색 테두리 추가) */}
+                {showBookingSuccessModal && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+                        <div className="bg-white rounded-[40px] p-8 md:p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
+                            {/* 체크 아이콘 */}
+                            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
+                                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+
+                            {/* 💡 요청하신 Payment Success! 문구 추가 */}
+                            <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
+                            <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
+                            <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
+
+                            <div className="border-t border-slate-100 pt-8 mb-10">
+                                <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-4">Reservation ID</p>
+                                {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
+                                <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
+                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2">
+                                        {modalResId}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowBookingSuccessModal(false)}
+                                className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 text-lg"
+                            >
+                                Return to Home
+                            </button>
                         </div>
                     </div>
                 )}
