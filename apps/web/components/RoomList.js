@@ -178,6 +178,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
+    if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim() || !formData.phone?.trim()) {
+      resetBtn();
+      return setModal({ show: true, title: t.error, message: t.guestNameMissing || "Please fill in all guest details.", type: 'warning', highlight: '' });
+    }
+
     setIsBooking(true);
 
     try {

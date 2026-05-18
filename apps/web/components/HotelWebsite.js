@@ -845,7 +845,7 @@ export default function HotelWebsite({ domain }) {
                             <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
                         </div>
 
-                        <div className="relative z-[100] w-full max-w-5xl flex flex-col items-center mt-4">
+                        <div className="relative z-40 w-full max-w-5xl flex flex-col items-center mt-4">
                             <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
 
                                 <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
@@ -1345,7 +1345,7 @@ export default function HotelWebsite({ domain }) {
                     };
                      
                     return (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                                 <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
                                     <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
