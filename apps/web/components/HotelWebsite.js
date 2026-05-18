@@ -1563,14 +1563,16 @@ export default function HotelWebsite({ domain }) {
                 {alertMessage && (
                     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-                            <div className="bg-blue-600 p-4 text-white flex justify-center items-center">
+                            {/* 💡 헤더 색상을 브랜드 컬러로 변경 */}
+                            <div className="theme-bg p-4 text-white flex justify-center items-center">
                                 <h3 className="font-black text-lg">Notification</h3>
                             </div>
                             <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
                                 {alertMessage}
                             </div>
                             <div className="p-4 bg-slate-50 border-t border-slate-100">
-                                <button onClick={() => setAlertMessage('')} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+                                {/* 💡 확인 버튼 색상을 브랜드 컬러로 변경 */}
+                                <button onClick={() => setAlertMessage('')} className="w-full theme-bg theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
                                     OK
                                 </button>
                             </div>

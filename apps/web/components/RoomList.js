@@ -463,25 +463,20 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       </div>
 
       {modal.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[250] p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-center transform transition-all scale-100">
-            <div className={`p-8 ${modal.type === 'success' ? 'bg-emerald-500' : modal.type === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`}>
-              <span className="text-6xl drop-shadow-lg">{modal.type === 'success' ? '✅' : modal.type === 'warning' ? '⚠️' : '❌'}</span>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setModal({ ...modal, show: false })}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
+            {/* 💡 상단 헤더: 통합웹은 emerald, 개별웹은 브랜드컬러 */}
+            <div className="bg-emerald-600 theme-bg p-4 text-white flex justify-center items-center">
+              <span className="text-2xl mr-2">{modal.type === 'error' ? '⚠️' : modal.type === 'success' ? '🎉' : '🔔'}</span>
+              <h3 className="font-black text-lg">{modal.title}</h3>
             </div>
-            <div className="p-8 text-center">
-              <h3 className="text-xl font-black text-gray-800 mb-3">{modal.title}</h3>
-              <p className="text-gray-500 text-sm mb-6 leading-relaxed whitespace-pre-wrap">{modal.message}</p>
-
-              {modal.highlight && (
-                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-8 shadow-inner">
-                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">Your Reservation ID</p>
-                  {modal.highlight.split('\n').map(id => (
-                    <p key={id} className="text-3xl font-mono font-black text-emerald-900 tracking-widest">{id}</p>
-                  ))}
-                </div>
-              )}
-
-              <button onClick={() => setModal({ show: false, title: '', message: '', highlight: '', type: 'warning' })} className={`w-full text-white font-bold py-3.5 rounded-xl shadow-md transition-colors text-lg ${modal.type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700' : modal.type === 'warning' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-600 hover:bg-red-700'}`}>
+            <div className="p-8 text-slate-700 font-medium text-sm whitespace-pre-wrap leading-relaxed">
+              {modal.message}
+              {modal.highlight && <div className="mt-4 font-black text-emerald-600 theme-text text-lg p-3 bg-slate-50 rounded-xl border border-slate-100">{modal.highlight}</div>}
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100">
+              {/* 💡 버튼: 통합웹은 emerald, 개별웹은 브랜드컬러 */}
+              <button onClick={() => setModal({ ...modal, show: false })} className="w-full bg-emerald-600 theme-bg hover:bg-emerald-700 theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
                 {t.ok}
               </button>
             </div>
