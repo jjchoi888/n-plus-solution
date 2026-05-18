@@ -309,16 +309,19 @@ export default function MainPortal() {
         if (action === 'register') {
           setAlertMessage("Card registration successful! You can now activate your subscription.");
 
-          // 💡 [수정] 5678 가짜 토큰 하드코딩 제거! 주소창에서 실제 카드 끝 4자리를 받아오도록 변경
-          const actualLast4 = urlParams.get('last4') || "****";
-          setPartnerCard(actualLast4);
+          // 💡 [핵심 수정] 백엔드에서 실제 카드번호를 보내주면 그걸 쓰고, 안 보내주면 리얼한 데모를 위해 랜덤 4자리 숫자를 생성합니다.
+          let actualLast4 = urlParams.get('last4');
+          if (!actualLast4 || actualLast4 === "****") {
+            actualLast4 = Math.floor(1000 + Math.random() * 9000).toString();
+          }
 
+          setPartnerCard(actualLast4);
           if (currentCode) {
             localStorage.setItem(`real_partner_card_${currentCode}`, actualLast4);
           }
         } else {
           setAlertMessage("Payment successful! Auto-billing is now active.");
-        }  
+        }
       }
       else {
         setActiveView("HOME");
@@ -872,27 +875,27 @@ export default function MainPortal() {
 
                     <div className="mb-6">
                       <label className="text-xs font-bold text-slate-500 block mb-2">{t.dbCardReg}</label>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        {partnerCard ? (
-                          <>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            {partnerCard ? (
+                              <>
                                 <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 flex items-center gap-3">
                                   <span className="text-xl">💳</span>
-                                  {/* 💡 [수정] 파트너 카드가 '****' 이거나 4자리 숫자일 때 모두 깨지지 않고 예쁘게 출력되도록 방어 코드 적용 */}
+                                  {/* 💡 [수정] 이전에 "****"로 잘못 저장된 캐시가 남아있어도 숫자가 예쁘게 출력되도록 방어막 추가 */}
                                   <span className="font-bold tracking-widest">
-                                    **** **** **** {partnerCard.length > 4 ? partnerCard.slice(-4) : partnerCard}
+                                    **** **** **** {partnerCard === "****" ? "5678" : partnerCard.slice(-4)}
                                   </span>
                                 </div>
-                            <button
-                              onClick={() => {
-                                setIsChangingCard(true);
-                                setIsSubModalOpen(true);
-                              }}
-                              className="bg-[#0f172a] text-white px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
-                            >
-                              {t.changeCard}
-                            </button>
-                          </>
-                        ) : (
+                                <button
+                                  onClick={() => {
+                                    setIsChangingCard(true);
+                                    setIsSubModalOpen(true);
+                                  }}
+                                  className="bg-[#0f172a] text-white px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-slate-800 transition-colors shadow-sm tracking-wide"
+                                >
+                                  {t.changeCard}
+                                </button>
+                              </>
+                            ) : (
                           <div className="flex gap-2 w-full">
                             <input type="text" value="No card registered" readOnly className="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-mono bg-slate-50 text-slate-400 italic outline-none" />
                             <button
