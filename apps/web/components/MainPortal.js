@@ -308,14 +308,17 @@ export default function MainPortal() {
 
         if (action === 'register') {
           setAlertMessage("Card registration successful! You can now activate your subscription.");
-          const mockToken = "tok_live_mock_5678";
-          setPartnerCard(mockToken);
+
+          // 💡 [수정] 5678 가짜 토큰 하드코딩 제거! 주소창에서 실제 카드 끝 4자리를 받아오도록 변경
+          const actualLast4 = urlParams.get('last4') || "****";
+          setPartnerCard(actualLast4);
+
           if (currentCode) {
-            localStorage.setItem(`mock_partner_card_${currentCode}`, mockToken);
+            localStorage.setItem(`real_partner_card_${currentCode}`, actualLast4);
           }
         } else {
           setAlertMessage("Payment successful! Auto-billing is now active.");
-        }
+        }  
       }
       else {
         setActiveView("HOME");
@@ -701,9 +704,12 @@ export default function MainPortal() {
           return;
         }
 
+        // 제로베이스 세팅 및 현재 호텔 코드 세팅
         setPartnerCode(data.hotel_code);
         setPartnerDomain("");
-        const savedCard = localStorage.getItem(`mock_partner_card_${data.hotel_code}`);
+
+        // 💡 [수정] Mock 데이터 대신 서버에서 받아온 실제 카드 뒷자리(data.card_last4)를 최우선으로 사용합니다.
+        const savedCard = data.card_last4 || localStorage.getItem(`real_partner_card_${data.hotel_code}`);
         setPartnerCard(savedCard || "");
 
         sessionStorage.setItem("partner_logged_in", "true");
@@ -869,10 +875,13 @@ export default function MainPortal() {
                       <div className="flex flex-col sm:flex-row gap-2">
                         {partnerCard ? (
                           <>
-                            <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 flex items-center gap-3">
-                              <span className="text-xl">💳</span>
-                              <span className="font-bold tracking-widest">**** **** **** {partnerCard.slice(-4) || '1234'}</span>
-                            </div>
+                                <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 flex items-center gap-3">
+                                  <span className="text-xl">💳</span>
+                                  {/* 💡 [수정] 파트너 카드가 '****' 이거나 4자리 숫자일 때 모두 깨지지 않고 예쁘게 출력되도록 방어 코드 적용 */}
+                                  <span className="font-bold tracking-widest">
+                                    **** **** **** {partnerCard.length > 4 ? partnerCard.slice(-4) : partnerCard}
+                                  </span>
+                                </div>
                             <button
                               onClick={() => {
                                 setIsChangingCard(true);
