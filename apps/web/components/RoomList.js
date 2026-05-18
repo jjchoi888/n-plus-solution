@@ -280,7 +280,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   )}
 
-                  {currentCount > 0 && (<div className="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
+                  {currentCount > 0 && (<div className="absolute top-3 right-3 theme-bg text-white text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
                 </div>
                 <div className="p-6 flex flex-col flex-grow text-left">
                   <h4 className="text-xl font-black text-gray-900 mb-3">{room.name}</h4>
@@ -319,7 +319,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
                 <span className="text-2xl font-black text-emerald-600">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
               </div>
-              <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
+              <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 theme-bg text-white hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
                 {t.proceedCheckout} →
               </button>
             </div>
@@ -330,7 +330,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         {isCheckoutOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
-              <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white sticky top-0 z-10">
+              <div className="theme-bg text-white px-6 py-4 flex justify-between items-center text-white sticky top-0 z-10">
                 <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
                 <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
               </div>
@@ -383,7 +383,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                   <button
                     type="button"
                     onClick={submitBooking}
-                    className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
+                    className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg theme-bg text-white hover:bg-emerald-700 hover:shadow-xl"
                   >
                     {btnText}
                   </button>
@@ -434,7 +434,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       <div className="flex gap-2">
                         <input type="text" value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())} placeholder="e.g. WELCOME10" className="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 uppercase" disabled={appliedPromo} />
                         {!appliedPromo ? (
-                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition">{t.apply}</button>
+                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="theme-bg text-white text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition">{t.apply}</button>
                         ) : (
                           <button type="button" onClick={() => { setAppliedPromo(null); setPromoInput(""); }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition">X</button>
                         )}
@@ -462,11 +462,12 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         )}
       </div>
 
+      {/* 💡 [수정] 에러 모달창 브랜드 컬러 동기화 및 Z-index 상향 */}
       {modal.show && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setModal({ ...modal, show: false })}>
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setModal({ ...modal, show: false })}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-            {/* 💡 상단 헤더: 통합웹은 emerald, 개별웹은 브랜드컬러 */}
-            <div className="bg-emerald-600 theme-bg p-4 text-white flex justify-center items-center">
+            {/* 💡 헤더에 theme-bg 적용 */}
+            <div className="theme-bg text-white theme-bg p-4 text-white flex justify-center items-center">
               <span className="text-2xl mr-2">{modal.type === 'error' ? '⚠️' : modal.type === 'success' ? '🎉' : '🔔'}</span>
               <h3 className="font-black text-lg">{modal.title}</h3>
             </div>
@@ -475,8 +476,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
               {modal.highlight && <div className="mt-4 font-black text-emerald-600 theme-text text-lg p-3 bg-slate-50 rounded-xl border border-slate-100">{modal.highlight}</div>}
             </div>
             <div className="p-4 bg-slate-50 border-t border-slate-100">
-              {/* 💡 버튼: 통합웹은 emerald, 개별웹은 브랜드컬러 */}
-              <button onClick={() => setModal({ ...modal, show: false })} className="w-full bg-emerald-600 theme-bg hover:bg-emerald-700 theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+              {/* 💡 확인 버튼에 theme-bg 적용 */}
+              <button onClick={() => setModal({ ...modal, show: false })} className="w-full theme-bg text-white theme-bg hover:bg-emerald-700 theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
                 {t.ok}
               </button>
             </div>

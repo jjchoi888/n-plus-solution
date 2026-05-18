@@ -845,67 +845,71 @@ export default function HotelWebsite({ domain }) {
                             <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
                         </div>
 
-                        <div className="relative z-40 w-full max-w-5xl flex flex-col items-center mt-4">
-                            <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border border-white/50 backdrop-blur-xl bg-white/90">
+                        {/* 💡 [핵심 해결 1] 결제창(showBookingModal)이 안 열려있거나, 아직 검색(hasSearched) 전일 때만 날짜 검색창을 보여줍니다! */}
+                        {!showBookingModal && !hasSearched && (
+                            <div className="relative z-40 w-full max-w-5xl flex flex-col items-center mt-4">
+                                {/* 💡 [핵심 해결 2] 검색창 겉 테두리에 브랜드 컬러(theme-border)를 적용합니다. */}
+                                <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border-2 theme-border backdrop-blur-xl bg-white/90">
 
-                                <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
-                                    <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
-                                    <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e => {
-                                        const newIn = e.target.value;
-                                        setCheckIn(newIn);
-                                        setHasSearched(false);
-                                        if (!checkOut || newIn >= checkOut) {
-                                            const d = new Date(newIn); d.setDate(d.getDate() + 1);
-                                            setCheckOut(d.toISOString().split('T')[0]);
-                                        }
-                                    }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
-                                </div>
-
-                                <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
-                                    <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
-                                    <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e => { setCheckOut(e.target.value); setHasSearched(false); }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
-                                </div>
-
-                                <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
-                                    <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.guestsRooms}</label>
-                                    <div className="font-bold text-slate-700 md:text-slate-600 text-base md:text-lg truncate flex justify-between items-center">
-                                        <span>{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''} · {roomCount} {t.room}</span>
-                                        <span className="text-slate-600 md:hidden text-xs">▼</span>
+                                    <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
+                                        <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
+                                        <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e => {
+                                            const newIn = e.target.value;
+                                            setCheckIn(newIn);
+                                            setHasSearched(false);
+                                            if (!checkOut || newIn >= checkOut) {
+                                                const d = new Date(newIn); d.setDate(d.getDate() + 1);
+                                                setCheckOut(d.toISOString().split('T')[0]);
+                                            }
+                                        }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
                                     </div>
 
-                                    {showGuestPicker && (
-                                        <div className="absolute top-full left-0 md:left-auto md:right-0 w-[300px] mt-4 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-[200] animate-fade-in space-y-5 text-slate-800 cursor-default" onClick={e => e.stopPropagation()}>
-                                            <div className="flex justify-between items-center">
-                                                <div><p className="font-bold text-sm">{t.adults}</p><p className="text-[10px] text-slate-500">{t.age13}</p></div>
-                                                <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setAdults(Math.max(1, adults - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{adults}</span><button type="button" onClick={(e) => { e.stopPropagation(); setAdults(adults + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <div><p className="font-bold text-sm">{t.children}</p><p className="text-[10px] text-slate-500">{t.age2_12}</p></div>
-                                                <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setKids(Math.max(0, kids - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e) => { e.stopPropagation(); setKids(kids + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
-                                            </div>
+                                    <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
+                                        <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
+                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e => { setCheckOut(e.target.value); setHasSearched(false); }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
+                                    </div>
 
-                                            <div className="flex justify-between items-center bg-emerald-50/50 p-2 -mx-2 rounded-lg border border-emerald-100/50">
-                                                <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] text-emerald-600/80">{t.under2}</p></div>
-                                                <div className="font-black text-emerald-600 bg-white px-3 py-1 rounded-full text-xs border border-emerald-100 shadow-sm uppercase tracking-widest">Free</div>
-                                            </div>
-
-                                            <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
-                                                <div><p className="font-bold text-sm">{t.rooms}</p></div>
-                                                <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setRoomCount(Math.max(1, roomCount - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={(e) => { e.stopPropagation(); setRoomCount(roomCount + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
-                                            </div>
-                                            <button type="button" onClick={(e) => { e.stopPropagation(); setShowGuestPicker(false); }} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl mt-2 hover:bg-slate-800 transition-colors">{t.done}</button>
+                                    <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
+                                        <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.guestsRooms}</label>
+                                        <div className="font-bold text-slate-700 md:text-slate-600 text-base md:text-lg truncate flex justify-between items-center">
+                                            <span>{adults} {t.adults}{kids > 0 ? `, ${kids} ${t.children}` : ''} · {roomCount} {t.room}</span>
+                                            <span className="text-slate-600 md:hidden text-xs">▼</span>
                                         </div>
-                                    )}
-                                </div>
 
-                                <button onClick={() => {
-                                    if (!checkIn || !checkOut) return setAlertMessage(t.selectValidDates);
-                                    setHasSearched(true);
-                                }} className="w-full md:w-auto theme-bg theme-hover text-white px-10 py-4 md:py-5 rounded-2xl md:rounded-full font-black text-lg transition-transform active:scale-95 shadow-md m-1">
-                                    Search
-                                </button>
+                                        {showGuestPicker && (
+                                            <div className="absolute top-full left-0 md:left-auto md:right-0 w-[300px] mt-4 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-[200] animate-fade-in space-y-5 text-slate-800 cursor-default" onClick={e => e.stopPropagation()}>
+                                                <div className="flex justify-between items-center">
+                                                    <div><p className="font-bold text-sm">{t.adults}</p><p className="text-[10px] text-slate-500">{t.age13}</p></div>
+                                                    <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setAdults(Math.max(1, adults - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{adults}</span><button type="button" onClick={(e) => { e.stopPropagation(); setAdults(adults + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <div><p className="font-bold text-sm">{t.children}</p><p className="text-[10px] text-slate-500">{t.age2_12}</p></div>
+                                                    <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setKids(Math.max(0, kids - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e) => { e.stopPropagation(); setKids(kids + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                                </div>
+
+                                                <div className="flex justify-between items-center bg-emerald-50/50 p-2 -mx-2 rounded-lg border border-emerald-100/50">
+                                                    <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] text-emerald-600/80">{t.under2}</p></div>
+                                                    <div className="font-black text-emerald-600 bg-white px-3 py-1 rounded-full text-xs border border-emerald-100 shadow-sm uppercase tracking-widest">Free</div>
+                                                </div>
+
+                                                <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
+                                                    <div><p className="font-bold text-sm">{t.rooms}</p></div>
+                                                    <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setRoomCount(Math.max(1, roomCount - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={(e) => { e.stopPropagation(); setRoomCount(roomCount + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                                </div>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setShowGuestPicker(false); }} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl mt-2 hover:bg-slate-800 transition-colors">{t.done}</button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <button onClick={() => {
+                                        if (!checkIn || !checkOut) return setAlertMessage(t.selectValidDates);
+                                        setHasSearched(true);
+                                    }} className="w-full md:w-auto theme-bg theme-hover text-white px-10 py-4 md:py-5 rounded-2xl md:rounded-full font-black text-lg transition-transform active:scale-95 shadow-md m-1">
+                                        Search
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {hasSearched && (
                             <div className="w-full max-w-5xl relative z-10 mt-8">
