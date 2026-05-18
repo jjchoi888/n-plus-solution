@@ -8,12 +8,11 @@ const ALL_COUNTRIES = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
-// 💡 [수정됨] 결제 버튼 텍스트를 "Proceed to Payment" 톤으로 일괄 변경
 const translations = {
-  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", extraOptions: "2. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Proceed to Payment ➔", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
-  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", extraOptions: "2. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제창으로 이동 중...", pay: "결제 진행하기 ➔", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
-  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", extraOptions: "2. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "前往支付 ➔", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
-  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", extraOptions: "2. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払いへ進む ➔", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
+  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", extraOptions: "2. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Proceed to Payment ➔", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:", guestNameMissing: "Please fill in all guest details." },
+  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", extraOptions: "2. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제창으로 이동 중...", pay: "결제 진행하기 ➔", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:", guestNameMissing: "투숙객 정보를 모두 입력해 주세요." },
+  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", extraOptions: "2. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "前往支付 ➔", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:", guestNameMissing: "请填写所有客人信息。" },
+  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", extraOptions: "2. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払いへ進む ➔", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:", guestNameMissing: "すべての宿泊者情報を入力してください。" }
 };
 
 const getHotelName = (code) => {
@@ -52,7 +51,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   const [modal, setModal] = useState({ show: false, title: '', message: '', highlight: '', type: 'warning' });
 
-  // 💡 [수정됨] 카드 정보 관련 필드 삭제
   const [formData, setFormData] = useState({ firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "" });
 
   const [extraBeds, setExtraBeds] = useState(0);
@@ -148,8 +146,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   const submitBooking = async (e) => {
     e.preventDefault();
-
-    // 💡 1. 폼(Form) 대신 버튼 자체를 가리킵니다. (HotelWebsite 방식)
     const btn = e.currentTarget;
 
     if (btn) {
@@ -162,12 +158,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
     if (isBooking) return;
 
-    // 💡 2. 에러 시에만 버튼 텍스트를 원래 상태로 복구하는 함수
     const resetBtn = () => {
       setIsBooking(false);
       if (btn) {
         btn.disabled = false;
-        btn.innerText = t.pay || "Proceed to Payment ➔";
+        btn.innerText = btnText;
         btn.style.opacity = "1";
         btn.style.cursor = "pointer";
       }
@@ -178,9 +173,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       return setModal({ show: true, title: t.error, message: t.dateMissing, type: 'error', highlight: '' });
     }
 
+    // 💡 [핵심] 예약자 정보 빈칸 검증
     if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim() || !formData.phone?.trim()) {
       resetBtn();
-      return setModal({ show: true, title: t.error, message: t.guestNameMissing || "Please fill in all guest details.", type: 'warning', highlight: '' });
+      return setModal({ show: true, title: t.error, message: t.guestNameMissing, type: 'warning', highlight: '' });
     }
 
     setIsBooking(true);
@@ -223,8 +219,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 3. 성공 시 절대 resetBtn()을 호출하지 않고, finally 블록도 없앴습니다.
-        // 버튼은 영원히 'Processing...' 상태로 굳어 있습니다.
         window.location.replace(data.paymentUrl);
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -239,7 +233,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   if (isFetching) return <div className="p-20 text-center theme-text font-bold text-xl animate-pulse">Searching available rooms...</div>;
 
-  // 💡 리액트의 강제 덮어쓰기를 방지하기 위해 버튼 텍스트를 미리 하나의 변수로 합쳐둡니다.
   const btnText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook || ''}`.trim();
 
   return (
@@ -270,7 +263,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
             return (
-              <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'theme-border shadow-emerald-500/20' : 'border-gray-100 hover:shadow-2xl'}`}>
+              <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'theme-border shadow-md' : 'border-gray-100 hover:shadow-2xl'}`}>
                 <div className="h-48 bg-gray-100 w-full relative overflow-hidden">
                   <RoomImageCarousel images={room.images} name={room.name} />
 
@@ -280,7 +273,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   )}
 
-                  {currentCount > 0 && (<div className="absolute top-3 right-3 theme-bg text-white text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
+                  {currentCount > 0 && (<div className="absolute top-3 right-3 theme-bg text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg z-10 animate-fade-in">{currentCount} Selected</div>)}
                 </div>
                 <div className="p-6 flex flex-col flex-grow text-left">
                   <h4 className="text-xl font-black text-gray-900 mb-3">{room.name}</h4>
@@ -295,15 +288,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     {room.roomConfig?.description || room.description || ''}
                   </p>
 
-                  <div className="mb-4"><span className="theme-bg-light border theme-border text-emerald-800 px-3 py-1.5 rounded-md text-xs font-black tracking-wider shadow-sm inline-block">🔥 {room.availableCount} {t.roomsLeft}</span></div>
+                  <div className="mb-4"><span className="theme-bg-light border theme-border theme-text px-3 py-1.5 rounded-md text-xs font-black tracking-wider shadow-sm inline-block">🔥 {room.availableCount} {t.roomsLeft}</span></div>
                   <p className="theme-text font-black text-2xl mt-auto pt-4 border-t border-gray-100">₱{room.price ? room.price.toLocaleString() : "0"} <span className="text-sm font-normal text-gray-500">{t.night}</span></p>
 
                   <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-bold text-gray-600">{t.selectRooms}:</span>
                     <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 border border-gray-200">
-                      <button onClick={() => updateCart(room.id, -1, room.availableCount)} disabled={currentCount === 0} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount > 0 ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:theme-text hover:border-emerald-600' : 'text-gray-300'}`}>-</button>
+                      <button onClick={() => updateCart(room.id, -1, room.availableCount)} disabled={currentCount === 0} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount > 0 ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:theme-text hover:theme-border' : 'text-gray-300'}`}>-</button>
                       <span className="w-4 text-center font-black theme-text text-lg">{currentCount}</span>
-                      <button onClick={() => updateCart(room.id, 1, room.availableCount)} disabled={currentCount >= room.availableCount} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount < room.availableCount ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:theme-text hover:border-emerald-600' : 'text-gray-300'}`}>+</button>
+                      <button onClick={() => updateCart(room.id, 1, room.availableCount)} disabled={currentCount >= room.availableCount} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount < room.availableCount ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:theme-text hover:theme-border' : 'text-gray-300'}`}>+</button>
                     </div>
                   </div>
                 </div>
@@ -319,7 +312,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
                 <span className="text-2xl font-black theme-text">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
               </div>
-              <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 theme-bg text-white hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
+              <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 theme-bg text-white font-black rounded-full shadow-lg hover:shadow-xl transition-transform hover:-translate-y-1 theme-hover text-lg">
                 {t.proceedCheckout} →
               </button>
             </div>
@@ -330,18 +323,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         {isCheckoutOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
-              {/* 💡 [수정] 모달 헤더 브랜드 컬러 적용 (theme-bg) */}
+              {/* 💡 [수정] 모달 헤더에 브랜드 컬러(theme-bg) 적용 */}
               <div className="theme-bg text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
                 <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
                 <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
               </div>
 
-              {/* 💡 form에 있던 onSubmit을 지워서 버튼 클릭으로만 제출되게 만듭니다. */}
               <form className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
                 {/* [Mobile Priority 1] Guest Details & Extra Options */}
                 <div className="lg:col-span-8 space-y-6 text-left order-1">
-
                   {/* Guest Details */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{t.guestDetails}</h3>
@@ -373,7 +363,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                         <p className="text-xs text-gray-500">₱{fees.extraBed.toLocaleString()} {t.night}</p>
                       </div>
                       <div className="flex items-center gap-3 bg-white rounded-full border border-gray-300 px-1 py-1 shadow-sm">
-                        {/* 💡 [수정] 수량 조절 버튼 호버 시 브랜드 컬러 연동 (theme-text) */}
                         <button type="button" onClick={() => setExtraBeds(Math.max(0, extraBeds - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:theme-text">-</button>
                         <span className="w-4 text-center font-bold theme-text">{extraBeds}</span>
                         <button type="button" onClick={() => setExtraBeds(extraBeds + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:theme-text">+</button>
@@ -381,7 +370,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  {/* 💡 [수정 핵심] 결제 버튼과 BACK 버튼을 나란히 배치 */}
+                  {/* 💡 [수정] 통합웹 하단 결제 버튼: 호버 시 브랜드 컬러 연동 (theme-hover) */}
                   <div className="flex items-center gap-3 w-full mt-8">
                     <button
                       type="button"
@@ -465,7 +454,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                   <div className="mt-6 border-t-4 theme-border pt-4">
                     <p className="flex justify-between items-center text-xl font-black text-gray-900">
                       <span>Total</span>
-                      {/* 💡 [수정] 최종 금액 브랜드 컬러 적용 */}
                       <span className="theme-text">₱{grandTotal.toLocaleString()}</span>
                     </p>
                   </div>
@@ -477,22 +465,20 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         )}
       </div>
 
-      {/* 💡 [수정] 에러 모달창 브랜드 컬러 동기화 및 Z-index 상향 */}
+      {/* 💡 [수정] 에러 모달창 브랜드 컬러 동기화 및 Z-index 최상위 설정 */}
       {modal.show && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setModal({ ...modal, show: false })}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-            {/* 💡 헤더에 theme-bg 적용 */}
-            <div className="theme-bg text-white theme-bg p-4 text-white flex justify-center items-center">
+            <div className="theme-bg p-4 text-white flex justify-center items-center">
               <span className="text-2xl mr-2">{modal.type === 'error' ? '⚠️' : modal.type === 'success' ? '🎉' : '🔔'}</span>
               <h3 className="font-black text-lg">{modal.title}</h3>
             </div>
             <div className="p-8 text-slate-700 font-medium text-sm whitespace-pre-wrap leading-relaxed">
               {modal.message}
-              {modal.highlight && <div className="mt-4 font-black theme-text theme-text text-lg p-3 bg-slate-50 rounded-xl border border-slate-100">{modal.highlight}</div>}
+              {modal.highlight && <div className="mt-4 font-black theme-text text-lg p-3 bg-slate-50 rounded-xl border border-slate-100">{modal.highlight}</div>}
             </div>
             <div className="p-4 bg-slate-50 border-t border-slate-100">
-              {/* 💡 확인 버튼에 theme-bg 적용 */}
-              <button onClick={() => setModal({ ...modal, show: false })} className="w-full theme-bg text-white theme-bg hover:bg-emerald-700 theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+              <button onClick={() => setModal({ ...modal, show: false })} className="w-full theme-bg theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
                 {t.ok}
               </button>
             </div>
