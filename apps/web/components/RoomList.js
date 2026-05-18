@@ -237,7 +237,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     }
   };
 
-  if (isFetching) return <div className="p-20 text-center text-emerald-600 font-bold text-xl animate-pulse">Searching available rooms...</div>;
+  if (isFetching) return <div className="p-20 text-center theme-text font-bold text-xl animate-pulse">Searching available rooms...</div>;
 
   // 💡 리액트의 강제 덮어쓰기를 방지하기 위해 버튼 텍스트를 미리 하나의 변수로 합쳐둡니다.
   const btnText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook || ''}`.trim();
@@ -248,11 +248,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         <div className="flex justify-between items-end border-b pb-2 mb-6 text-left">
           <div className="flex items-center gap-3">
             <h3 className="text-2xl font-bold text-gray-800">
-              {t.searchResults} <span className="text-emerald-600">({actualRooms.length})</span>
+              {t.searchResults} <span className="theme-text">({actualRooms.length})</span>
             </h3>
             <button
               onClick={() => setRefreshKey(prev => prev + 1)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-emerald-600 rounded-full transition-all active:scale-90 shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:theme-text rounded-full transition-all active:scale-90 shadow-sm"
               title="Search Again"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -270,7 +270,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
             return (
-              <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'border-emerald-500 shadow-emerald-500/20' : 'border-gray-100 hover:shadow-2xl'}`}>
+              <div key={room.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all flex flex-col hover:-translate-y-1 relative ${currentCount > 0 ? 'theme-border shadow-emerald-500/20' : 'border-gray-100 hover:shadow-2xl'}`}>
                 <div className="h-48 bg-gray-100 w-full relative overflow-hidden">
                   <RoomImageCarousel images={room.images} name={room.name} />
 
@@ -295,15 +295,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     {room.roomConfig?.description || room.description || ''}
                   </p>
 
-                  <div className="mb-4"><span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-md text-xs font-black tracking-wider shadow-sm inline-block">🔥 {room.availableCount} {t.roomsLeft}</span></div>
-                  <p className="text-emerald-600 font-black text-2xl mt-auto pt-4 border-t border-gray-100">₱{room.price ? room.price.toLocaleString() : "0"} <span className="text-sm font-normal text-gray-500">{t.night}</span></p>
+                  <div className="mb-4"><span className="theme-bg-light border theme-border text-emerald-800 px-3 py-1.5 rounded-md text-xs font-black tracking-wider shadow-sm inline-block">🔥 {room.availableCount} {t.roomsLeft}</span></div>
+                  <p className="theme-text font-black text-2xl mt-auto pt-4 border-t border-gray-100">₱{room.price ? room.price.toLocaleString() : "0"} <span className="text-sm font-normal text-gray-500">{t.night}</span></p>
 
                   <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-bold text-gray-600">{t.selectRooms}:</span>
                     <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 border border-gray-200">
-                      <button onClick={() => updateCart(room.id, -1, room.availableCount)} disabled={currentCount === 0} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount > 0 ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:text-emerald-600 hover:border-emerald-600' : 'text-gray-300'}`}>-</button>
-                      <span className="w-4 text-center font-black text-emerald-600 text-lg">{currentCount}</span>
-                      <button onClick={() => updateCart(room.id, 1, room.availableCount)} disabled={currentCount >= room.availableCount} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount < room.availableCount ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:text-emerald-600 hover:border-emerald-600' : 'text-gray-300'}`}>+</button>
+                      <button onClick={() => updateCart(room.id, -1, room.availableCount)} disabled={currentCount === 0} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount > 0 ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:theme-text hover:border-emerald-600' : 'text-gray-300'}`}>-</button>
+                      <span className="w-4 text-center font-black theme-text text-lg">{currentCount}</span>
+                      <button onClick={() => updateCart(room.id, 1, room.availableCount)} disabled={currentCount >= room.availableCount} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${currentCount < room.availableCount ? 'bg-white text-gray-600 shadow-sm border border-gray-300 hover:theme-text hover:border-emerald-600' : 'text-gray-300'}`}>+</button>
                     </div>
                   </div>
                 </div>
@@ -317,7 +317,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex flex-col text-left">
                 <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
-                <span className="text-2xl font-black text-emerald-600">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
+                <span className="text-2xl font-black theme-text">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
               </div>
               <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 theme-bg text-white hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
                 {t.proceedCheckout} →
@@ -330,7 +330,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         {isCheckoutOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
-              <div className="theme-bg text-white px-6 py-4 flex justify-between items-center text-white sticky top-0 z-10">
+              {/* 💡 [수정] 모달 헤더 브랜드 컬러 적용 (theme-bg) */}
+              <div className="theme-bg text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
                 <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
                 <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
               </div>
@@ -345,15 +346,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{t.guestDetails}</h3>
                     <div className="grid grid-cols-2 gap-4 text-left">
-                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="e.g. Alice" /></div>
-                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name</label><input type="text" required value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="e.g. Smith" /></div>
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 theme-focus outline-none" placeholder="e.g. Alice" /></div>
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Last Name</label><input type="text" required value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 theme-focus outline-none" placeholder="e.g. Smith" /></div>
                     </div>
-                    <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-600 outline-none" /></div>
+                    <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 theme-focus outline-none" /></div>
                     <div className="grid grid-cols-2 gap-4 text-left">
-                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label><input type="tel" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-600 outline-none" /></div>
+                      <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label><input type="tel" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 theme-focus outline-none" /></div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nationality</label>
-                        <select required value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-600 outline-none bg-white">
+                        <select required value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2 theme-focus outline-none bg-white">
                           <option value="">Select Country...</option>
                           {TOP_COUNTRIES.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
                           <option disabled>──────────</option>
@@ -372,48 +373,61 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                         <p className="text-xs text-gray-500">₱{fees.extraBed.toLocaleString()} {t.night}</p>
                       </div>
                       <div className="flex items-center gap-3 bg-white rounded-full border border-gray-300 px-1 py-1 shadow-sm">
-                        <button type="button" onClick={() => setExtraBeds(Math.max(0, extraBeds - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600">-</button>
-                        <span className="w-4 text-center font-bold text-emerald-600">{extraBeds}</span>
-                        <button type="button" onClick={() => setExtraBeds(extraBeds + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600">+</button>
+                        {/* 💡 [수정] 수량 조절 버튼 호버 시 브랜드 컬러 연동 (theme-text) */}
+                        <button type="button" onClick={() => setExtraBeds(Math.max(0, extraBeds - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:theme-text">-</button>
+                        <span className="w-4 text-center font-bold theme-text">{extraBeds}</span>
+                        <button type="button" onClick={() => setExtraBeds(extraBeds + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:theme-text">+</button>
                       </div>
                     </div>
                   </div>
 
-                  {/* 💡 결제 버튼에 onClick 이벤트를 직접 할당하고, 변수를 뺀 btnText를 넣습니다. */}
-                  <button
-                    type="button"
-                    onClick={submitBooking}
-                    className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg theme-bg text-white hover:bg-emerald-700 hover:shadow-xl"
-                  >
-                    {btnText}
-                  </button>
+                  {/* 💡 [수정 핵심] 결제 버튼과 BACK 버튼을 나란히 배치 */}
+                  <div className="flex items-center gap-3 w-full mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setIsCheckoutOpen(false)}
+                      className="w-1/3 py-4 md:py-4 rounded-xl md:rounded-2xl font-black text-sm md:text-lg border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      ← BACK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={submitBooking}
+                      disabled={isBooking}
+                      className="w-2/3 theme-bg text-white py-4 md:py-4 rounded-xl md:rounded-2xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg theme-hover disabled:opacity-50"
+                    >
+                      {btnText}
+                    </button>
+                  </div>
 
                 </div>
 
                 {/* [Mobile Priority 2] Booking Summary */}
-                <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
-                  <h3 className="text-lg font-bold text-emerald-900 mb-4 border-b border-emerald-200 pb-2 text-left">{t.summary}</h3>
+                {/* 💡 [수정] 우측 요약 박스 테두리 및 배경에 브랜드 컬러 적용 (theme-bg-light, theme-border) */}
+                <div className="lg:col-span-4 lg:row-span-2 w-full theme-bg-light rounded-2xl p-6 border theme-border flex flex-col h-fit sticky top-6 text-left order-2">
+                  <h3 className="text-lg font-bold theme-text mb-4 border-b theme-border pb-2 text-left">{t.summary}</h3>
 
-                  <div className="space-y-4 text-sm text-emerald-800 flex-grow">
-                    <div className="flex justify-between bg-white p-3 rounded-lg shadow-sm border border-emerald-100">
-                      <p className="flex flex-col text-left"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-in</span> <span className="font-bold">{effectiveCheckIn || "-"}</span></p>
-                      <p className="flex flex-col text-right"><span className="text-[10px] uppercase text-emerald-600 font-bold">Check-out</span> <span className="font-bold">{effectiveCheckOut || "-"}</span></p>
+                  <div className="space-y-4 text-sm theme-text flex-grow">
+                    <div className="flex justify-between bg-white p-3 rounded-lg shadow-sm border theme-border">
+                      <p className="flex flex-col text-left"><span className="text-[10px] uppercase theme-text font-bold">Check-in</span> <span className="font-bold">{effectiveCheckIn || "-"}</span></p>
+                      <p className="flex flex-col text-right"><span className="text-[10px] uppercase theme-text font-bold">Check-out</span> <span className="font-bold">{effectiveCheckOut || "-"}</span></p>
                     </div>
 
                     <div className="space-y-3 pt-2">
                       {actualRooms.filter(r => cart[r.id] > 0).map(r => (
                         <div key={r.id} className="flex justify-between items-start pb-1">
                           <div className="flex flex-col text-left">
-                            <span className="font-bold text-emerald-900">{r.name}</span>
-                            <span className="text-xs text-emerald-600">₱{r.price.toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
+                            <span className="font-bold text-gray-900">{r.name}</span>
+                            <span className="text-xs theme-text">₱{r.price.toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
                           </div>
-                          <span className="font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
+                          {/* 💡 [수정] 선택 수량 뱃지 브랜드 컬러 적용 */}
+                          <span className="font-black theme-bg-light theme-text border theme-border px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
                         </div>
                       ))}
                     </div>
 
                     {(effectiveKids > 0 || extraBeds > 0) && (
-                      <div className="border-t border-emerald-200 pt-3 space-y-2">
+                      <div className="border-t theme-border pt-3 space-y-2">
                         {effectiveKids > 0 && (
                           <div className="flex justify-between text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">
                             <span>{t.childFee} (x{effectiveKids})</span>
@@ -421,7 +435,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                           </div>
                         )}
                         {extraBeds > 0 && (
-                          <div className="flex justify-between text-xs font-bold text-blue-700 bg-blue-50 p-2 rounded">
+                          <div className="flex justify-between text-xs font-bold theme-text theme-bg-light p-2 rounded">
                             <span>{t.extraBed} (x{extraBeds})</span>
                             <span>+ ₱{totalExtraBedFee.toLocaleString()}</span>
                           </div>
@@ -429,12 +443,12 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       </div>
                     )}
 
-                    <div className="border-t border-emerald-200 pt-4 text-left">
-                      <label className="block text-xs font-bold text-emerald-700 uppercase mb-2 text-left">{t.promoCode}</label>
+                    <div className="border-t theme-border pt-4 text-left">
+                      <label className="block text-xs font-bold theme-text uppercase mb-2 text-left">{t.promoCode}</label>
                       <div className="flex gap-2">
-                        <input type="text" value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())} placeholder="e.g. WELCOME10" className="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 uppercase" disabled={appliedPromo} />
+                        <input type="text" value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())} placeholder="e.g. WELCOME10" className="flex-1 border theme-border rounded-lg px-3 py-2 text-sm theme-focus uppercase bg-white" disabled={appliedPromo} />
                         {!appliedPromo ? (
-                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="theme-bg text-white text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition">{t.apply}</button>
+                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="theme-bg text-white px-4 py-2 rounded-lg text-sm font-bold theme-hover transition">{t.apply}</button>
                         ) : (
                           <button type="button" onClick={() => { setAppliedPromo(null); setPromoInput(""); }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition">X</button>
                         )}
@@ -448,10 +462,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  <div className="mt-6 border-t-4 border-emerald-200 pt-4">
-                    <p className="flex justify-between items-center text-xl font-black text-emerald-900">
+                  <div className="mt-6 border-t-4 theme-border pt-4">
+                    <p className="flex justify-between items-center text-xl font-black text-gray-900">
                       <span>Total</span>
-                      <span>₱{grandTotal.toLocaleString()}</span>
+                      {/* 💡 [수정] 최종 금액 브랜드 컬러 적용 */}
+                      <span className="theme-text">₱{grandTotal.toLocaleString()}</span>
                     </p>
                   </div>
                 </div>
@@ -473,7 +488,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             </div>
             <div className="p-8 text-slate-700 font-medium text-sm whitespace-pre-wrap leading-relaxed">
               {modal.message}
-              {modal.highlight && <div className="mt-4 font-black text-emerald-600 theme-text text-lg p-3 bg-slate-50 rounded-xl border border-slate-100">{modal.highlight}</div>}
+              {modal.highlight && <div className="mt-4 font-black theme-text theme-text text-lg p-3 bg-slate-50 rounded-xl border border-slate-100">{modal.highlight}</div>}
             </div>
             <div className="p-4 bg-slate-50 border-t border-slate-100">
               {/* 💡 확인 버튼에 theme-bg 적용 */}

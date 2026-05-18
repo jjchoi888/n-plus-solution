@@ -887,9 +887,9 @@ export default function HotelWebsite({ domain }) {
                                                     <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setKids(Math.max(0, kids - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e) => { e.stopPropagation(); setKids(kids + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                                 </div>
 
-                                                <div className="flex justify-between items-center bg-emerald-50/50 p-2 -mx-2 rounded-lg border border-emerald-100/50">
-                                                    <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] text-emerald-600/80">{t.under2}</p></div>
-                                                    <div className="font-black text-emerald-600 bg-white px-3 py-1 rounded-full text-xs border border-emerald-100 shadow-sm uppercase tracking-widest">Free</div>
+                                                <div className="flex justify-between items-center theme-bg-light/50 p-2 -mx-2 rounded-lg border theme-border/50">
+                                                    <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] theme-text/80">{t.under2}</p></div>
+                                                    <div className="font-black theme-text bg-white px-3 py-1 rounded-full text-xs border theme-border shadow-sm uppercase tracking-widest">Free</div>
                                                 </div>
 
                                                 <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
@@ -930,10 +930,10 @@ export default function HotelWebsite({ domain }) {
 
                                 {/* 💡 [안내 배너] 고객에게 현재 프로모션 모드임을 명확히 알려줍니다 */}
                                 {appliedPromo && !appliedPromo.target_room_type.includes('All Rooms') && (
-                                    <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm shadow-sm animate-fade-in">
+                                    <div className="mb-4 theme-bg-light border theme-border text-emerald-800 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm shadow-sm animate-fade-in">
                                         <span className="text-lg">🎁</span>
                                         <span>Only rooms eligible for <b>{appliedPromo.code}</b> ({appliedPromo.discount_pct}% OFF) are shown below.</span>
-                                        <button onClick={() => { setAppliedPromo(null); setPromoCode(''); }} className="ml-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1 rounded-md text-[10px] md:text-xs transition-colors shadow-sm border border-emerald-200">
+                                        <button onClick={() => { setAppliedPromo(null); setPromoCode(''); }} className="ml-2 theme-bg-light hover:bg-emerald-200 text-emerald-800 px-3 py-1 rounded-md text-[10px] md:text-xs transition-colors shadow-sm border theme-border">
                                             Show All Rooms
                                         </button>
                                     </div>
@@ -1445,7 +1445,7 @@ export default function HotelWebsite({ domain }) {
                                                         </p>
                                                     )}
                                                     {appliedPromo && (
-                                                        <p className="flex justify-between text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-md mt-1 border border-emerald-100">
+                                                        <p className="flex justify-between theme-text text-xs font-bold theme-bg-light px-2 py-1 rounded-md mt-1 border theme-border">
                                                             <span>- Discount ({appliedPromo.discount_pct}%)</span>
                                                             <span>- ₱{discountAmount.toLocaleString()}</span>
                                                         </p>
@@ -1471,9 +1471,20 @@ export default function HotelWebsite({ domain }) {
                                                 <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                             </div>
-                                            <button onClick={handleConfirmBooking} className="w-full theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg theme-hover">
-                                                {t.confirmBook || 'Proceed to Payment ➔'}
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowBookingModal(false)}
+                                                    className="w-1/3 py-4 rounded-xl font-black text-sm md:text-lg border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    ← BACK
+                                                </button>
+                                                <button
+                                                    onClick={handleConfirmBooking}
+                                                    disabled={isBooking}
+                                                    className="w-2/3 theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg theme-hover disabled:opacity-50"
+                                                >
+                                                    {t.confirmBook || 'Proceed to Payment ➔'}
+                                                </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1486,7 +1497,7 @@ export default function HotelWebsite({ domain }) {
                 {activePromos.length > 0 && (
                     <div className="fixed top-24 right-6 z-40 flex flex-col md:flex-row gap-4 items-end md:items-center">
                         {activePromos.map((promo, idx) => {
-                            const colors = ['bg-red-600', 'bg-blue-600', 'bg-emerald-600', 'bg-purple-600'];
+                            const colors = ['bg-red-600', 'bg-blue-600', 'theme-bg text-white', 'bg-purple-600'];
                             const colorClass = colors[idx % colors.length];
 
                             return (
@@ -1510,7 +1521,7 @@ export default function HotelWebsite({ domain }) {
                         <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative flex flex-col">
                             <div className="h-48 w-full relative">
                                 <img src={selectedPromo.image_url} alt="Promo" className="w-full h-full object-cover" />
-                                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-lg font-black text-emerald-600 shadow-sm">{selectedPromo.discount_pct}% OFF</div>
+                                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-lg font-black theme-text shadow-sm">{selectedPromo.discount_pct}% OFF</div>
                                 <button onClick={() => setShowPromoModal(false)} className="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-md hover:bg-red-600 flex items-center justify-center">✕</button>
                             </div>
                             <div className="p-6 text-left">
@@ -1520,14 +1531,14 @@ export default function HotelWebsite({ domain }) {
                                     )) : <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ All Rooms</span>}
                                 </div>
 
-                                <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border border-emerald-100 mb-6">
+                                <div className="flex justify-between items-center theme-bg-light p-4 rounded-xl border theme-border mb-6">
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Code</span>
-                                    <span className="font-mono font-black text-emerald-700 tracking-wider text-lg bg-white px-3 py-1 rounded shadow-sm">{selectedPromo.code}</span>
+                                    <span className="font-mono font-black theme-text tracking-wider text-lg bg-white px-3 py-1 rounded shadow-sm">{selectedPromo.code}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="text-[10px] font-bold text-red-500">Ends: {selectedPromo.end_date}</span>
-                                    <span className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-1">✅ Active</span>
+                                    <span className="text-[10px] font-black theme-text uppercase flex items-center gap-1">✅ Active</span>
                                 </div>
 
                                 <button onClick={() => {
@@ -1631,11 +1642,11 @@ export default function HotelWebsite({ domain }) {
                                         <form onSubmit={handleAuthSubmit} className="space-y-4">
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
-                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label> {/* Using paymentMethod "Password" translation would be better but let's stick to simple text if missing, wait I'll use hardcoded or add to dictionary */}
-                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
                                             </div>
                                             <div className="flex justify-end mt-1 mb-2">
                                                 <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">{t.forgotPw}</button>
@@ -1651,25 +1662,25 @@ export default function HotelWebsite({ domain }) {
                                         <form onSubmit={handleAuthSubmit} className="space-y-4">
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
-                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
-                                                    <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="John" />
+                                                    <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="John" />
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
-                                                    <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="Doe" />
+                                                    <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Doe" />
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
-                                                <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="09..." />
+                                                <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="09..." />
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
-                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
                                             </div>
                                             <div className="pt-2">
                                                 <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.signUpBtn}</button>
@@ -1683,7 +1694,7 @@ export default function HotelWebsite({ domain }) {
                                         <form onSubmit={(e) => { e.preventDefault(); setAlertMessage(t.resetSent); setGuestAuthMode('LOGIN'); }} className="space-y-4">
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.regEmail}</label>
-                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:border-emerald-500 outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div className="pt-2">
                                                 <button type="submit" className="w-full bg-slate-800 text-white font-black py-3.5 rounded-xl hover:bg-slate-700 transition-colors shadow-md text-sm">{t.sendReset}</button>
@@ -1716,14 +1727,14 @@ export default function HotelWebsite({ domain }) {
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
                         <div className="bg-white rounded-[40px] p-8 md:p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
                             {/* 체크 아이콘 */}
-                            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
+                            <div className="w-20 h-20 theme-bg text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-md">
                                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
 
                             {/* 💡 요청하신 Payment Success! 문구 추가 */}
-                            <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
+                            <p className="theme-text font-black text-lg mb-1">Payment Success!</p>
                             <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
                             <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
 
