@@ -612,55 +612,48 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
           </div>
 
           {/* 💡 [핵심 추가] 장바구니 하단 바 및 View & Edit 모달 */}
-          {totalRoomsInCart > 0 && (
-            <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-[160] animate-fade-in-up rounded-t-3xl">
-
-              {/* 💡 장바구니 보기 및 수정 모달 (팝업창) */}
-              {isCartOpen && (
-                <div className="absolute bottom-[100%] left-0 md:left-auto md:right-10 w-full md:w-[400px] bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl md:rounded-3xl border border-gray-200 mb-0 md:mb-4 overflow-hidden animate-fade-in z-[170]">
-                  <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
-                    <h4 className="font-black text-gray-800 text-lg">Selected Rooms</h4>
-                    <button onClick={() => setIsCartOpen(false)} className="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
+          {isCartOpen && (
+            <div className="absolute bottom-[100%] left-0 md:left-auto md:right-10 w-full md:w-[400px] bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl md:rounded-3xl border border-gray-200 mb-0 md:mb-4 overflow-hidden animate-fade-in z-[170]">
+              <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                <h4 className="font-black text-gray-800 text-lg">Selected Rooms</h4>
+                <button onClick={() => setIsCartOpen(false)} className="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">×</button>
+              </div>
+              <div className="p-2 max-h-[50vh] overflow-y-auto">
+                {fetchedRooms.filter(r => cart[r.id] > 0).map(r => (
+                  <div key={`cart_${r.id}`} className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors rounded-xl">
+                    <div className="flex flex-col text-left pr-2">
+                      <span className="font-bold text-sm text-gray-800 leading-tight mb-1">{r.name}</span>
+                      <span className="text-xs text-emerald-600 font-bold">₱{r.price.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200 p-1 shadow-sm shrink-0">
+                      <button onClick={() => updateCart(r.id, -1, r.availableCount)} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">-</button>
+                      <span className="w-4 text-center font-black text-sm text-gray-800">{cart[r.id]}</span>
+                      <button onClick={() => updateCart(r.id, 1, r.availableCount)} disabled={cart[r.id] >= r.availableCount} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors disabled:opacity-50">+</button>
+                      <button onClick={() => updateCart(r.id, -cart[r.id], r.availableCount)} className="w-7 h-7 ml-1 bg-red-50 border border-red-200 rounded-full flex items-center justify-center font-bold text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-2 max-h-[50vh] overflow-y-auto">
-                    {fetchedRooms.filter(r => cart[r.id] > 0).map(r => (
-                      <div key={`cart_${r.id}`} className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors rounded-xl">
-                        <div className="flex flex-col text-left pr-2">
-                          <span className="font-bold text-sm text-gray-800 leading-tight mb-1">{r.name}</span>
-                          <span className="text-xs text-emerald-600 font-bold">₱{r.price.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200 p-1 shadow-sm shrink-0">
-                          <button onClick={() => updateCart(r.id, -1, r.availableCount)} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">-</button>
-                          <span className="w-4 text-center font-black text-sm text-gray-800">{cart[r.id]}</span>
-                          <button onClick={() => updateCart(r.id, 1, r.availableCount)} disabled={cart[r.id] >= r.availableCount} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors disabled:opacity-50">+</button>
-                          <button onClick={() => updateCart(r.id, -cart[r.id], r.availableCount)} className="w-7 h-7 ml-1 bg-red-50 border border-red-200 rounded-full flex items-center justify-center font-bold text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex flex-col text-left w-full md:w-auto">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
-                    {/* 💡 [핵심] View & Edit 버튼 */}
-                    <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm active:scale-95">
-                      <span>{t.viewEdit || "View & Edit"}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 transition-transform ${isCartOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
-                    </button>
-                  </div>
-                  <span className="text-2xl font-black text-emerald-600">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
-                </div>
-                <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
-                  {t.proceedCheckout} →
-                </button>
+                ))}
               </div>
             </div>
           )}
+
+          <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col text-left w-full md:w-auto">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
+                <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm active:scale-95">
+                  <span>{t.viewEdit || "View & Edit"}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 transition-transform ${isCartOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+                </button>
+              </div>
+              <span className="text-2xl font-black text-emerald-600">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
+            </div>
+            <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
+              {t.proceedCheckout} →
+            </button>
+          </div>
         </div>
       )}
 
