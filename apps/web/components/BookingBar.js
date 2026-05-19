@@ -2,10 +2,10 @@
 import { useState, useRef, useEffect } from "react";
 
 const translations = {
-  en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Region & Hotel", allHotels: "All Philippines", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel", searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:", guestNameMissing: "Please enter the guest's First and Last Name." },
-  ko: { destination: "목적지", whereTo: "어디로 떠나시나요?", mapTitle: "지역 및 호텔 선택", allHotels: "필리핀 전체", checkIn: "체크인", checkOut: "체크아웃", guestsRooms: "인원 및 객실", guests: "명", room: "객실", adult: "성인", child: "어린이", infant: "유아", free: "무료", search: "검색하기", searching: "검색 중...", error: "알림", selectDates: "체크인과 체크아웃 날짜를 모두 선택해 주세요.", fetchError: "객실 정보를 불러오지 못했습니다. 다시 시도해 주세요.", fullyBooked: "예약 마감!", noRooms: "선택하신 날짜에 예약 가능한 객실이 없습니다.\n일정을 변경해 주세요.", ok: "확인", okChange: "일정 변경하기", proceed: "남은 방으로 진행", viewOnMap: "지도에서 보기", selectHotel: "이 호텔 선택하기", searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:", guestNameMissing: "투숙객의 영문 이름과 성을 모두 입력해 주세요." },
-  zh: { destination: "目的地", whereTo: "去哪里？", mapTitle: "选择地区与酒店", allHotels: "全菲律宾", checkIn: "入住", checkOut: "退房", guestsRooms: "人数与客房", guests: "人", room: "客房", adult: "成人", child: "儿童", infant: "婴儿", free: "免费", search: "搜索", searching: "搜索中...", error: "提示", selectDates: "请选择入住和退房日期。", fetchError: "获取客房信息失败，请重试。", fullyBooked: "已满房！", noRooms: "所选日期没有可用客房。\n请尝试更改日期。", ok: "确定", okChange: "更改日期", proceed: "继续", viewOnMap: "在地图上查看", selectHotel: "选择此酒店", searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:", guestNameMissing: "请输入入住客人的姓氏和名字。" },
-  ja: { destination: "目的地", whereTo: "どこへ行きますか？", mapTitle: "地域とホテルの選択", allHotels: "フィリピン全土", checkIn: "チェックイン", checkOut: "チェックアウト", guestsRooms: "人数と客室", guests: "名", room: "客室", adult: "大人", child: "子供", infant: "幼児", free: "無料", search: "検索する", searching: "検索中...", error: "通知", selectDates: "チェックインとチェックアウトの日付を選択してください。", fetchError: "客室情報の取得に失敗しました。もう一度お試しください。", fullyBooked: "満室！", noRooms: "選択した日付に利用可能な客室がありません。\n日付を変更してみてください。", ok: "確認", okChange: "日付を変更", proceed: "続行する", viewOnMap: "地図で見る", selectHotel: "このホテルを選択", searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:", guestNameMissing: "宿泊者の名と姓を入力してください。" }
+  en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Region & Hotel", allHotels: "All Philippines", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel", searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:", guestNameMissing: "Please enter the guest's First and Last Name.", viewEdit: "View & Edit" },
+  ko: { destination: "목적지", whereTo: "어디로 떠나시나요?", mapTitle: "지역 및 호텔 선택", allHotels: "필리핀 전체", checkIn: "체크인", checkOut: "체크아웃", guestsRooms: "인원 및 객실", guests: "명", room: "객실", adult: "성인", child: "어린이", infant: "유아", free: "무료", search: "검색하기", searching: "검색 중...", error: "알림", selectDates: "체크인과 체크아웃 날짜를 모두 선택해 주세요.", fetchError: "객실 정보를 불러오지 못했습니다. 다시 시도해 주세요.", fullyBooked: "예약 마감!", noRooms: "선택하신 날짜에 예약 가능한 객실이 없습니다.\n일정을 변경해 주세요.", ok: "확인", okChange: "일정 변경하기", proceed: "남은 방으로 진행", viewOnMap: "지도에서 보기", selectHotel: "이 호텔 선택하기", searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:", guestNameMissing: "투숙객의 영문 이름과 성을 모두 입력해 주세요.", viewEdit: "내역 확인/수정" },
+  zh: { destination: "目的地", whereTo: "去哪里？", mapTitle: "选择地区与酒店", allHotels: "全菲律宾", checkIn: "入住", checkOut: "退房", guestsRooms: "人数与客房", guests: "人", room: "客房", adult: "成人", child: "儿童", infant: "婴儿", free: "免费", search: "搜索", searching: "搜索中...", error: "提示", selectDates: "请选择入住和退房日期。", fetchError: "获取客房信息失败，请重试。", fullyBooked: "已满房！", noRooms: "所选日期没有可用客房。\n请尝试更改日期。", ok: "确定", okChange: "更改日期", proceed: "继续", viewOnMap: "在地图上查看", selectHotel: "选择此酒店", searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:", guestNameMissing: "请输入入住客人的姓氏和名字。", viewEdit: "查看与编辑" },
+  ja: { destination: "目的地", whereTo: "どこへ行きますか？", mapTitle: "地域とホテルの選択", allHotels: "フィリピン全土", checkIn: "チェックイン", checkOut: "チェックアウト", guestsRooms: "人数と客室", guests: "名", room: "客室", adult: "大人", child: "子供", infant: "幼児", free: "無料", search: "検索する", searching: "検索中...", error: "通知", selectDates: "チェックインとチェックアウトの日付を選択してください。", fetchError: "客室情報の取得に失敗しました。もう一度お試しください。", fullyBooked: "満室！", noRooms: "選択した日付に利用可能な客室がありません。\n日付を変更してみてください。", ok: "確認", okChange: "日付を変更", proceed: "続行する", viewOnMap: "地図で見る", selectHotel: "このホテルを選択", searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:", guestNameMissing: "宿泊者の名と姓を入力してください。", viewEdit: "確認・編集" }
 };
 
 const BASE_URL = '';
@@ -101,6 +101,8 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
   const [cart, setCart] = useState({});
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  // 💡 장바구니 보기 모달창 상태 추가
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // 💡 리액트 상태 및 중복 클릭 방지를 위한 락(Lock)
   const [isBooking, setIsBooking] = useState(false);
@@ -285,14 +287,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
     finally { setIsApplyingPromo(false); }
   };
 
-  // 💡 [핵심] useRef와 React State의 결합을 통한 완벽한 이중 잠금
-  // 💡 1. 텍스트를 여러 조각으로 쪼개지 않고, '단일 텍스트'로 미리 합쳐둡니다. (HotelWebsite와 동일한 원리)
   const btnText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`.trim();
 
   const submitBooking = async (e) => {
     e.preventDefault();
 
-    // 💡 2. e.currentTarget이 폼이 아닌 '버튼'을 정확히 가리킵니다.
     if (e && e.currentTarget) {
       if (e.currentTarget.disabled) return;
       e.currentTarget.disabled = true;
@@ -303,12 +302,11 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
 
     if (isBooking) return;
 
-    // 에러 시 버튼을 원래 상태로 복구하는 함수
     const resetBtn = () => {
       setIsBooking(false);
       if (e && e.currentTarget) {
         e.currentTarget.disabled = false;
-        e.currentTarget.innerText = btnText; // 💡 단일 텍스트 변수 적용
+        e.currentTarget.innerText = btnText;
         e.currentTarget.style.opacity = "1";
         e.currentTarget.style.cursor = "pointer";
       }
@@ -367,7 +365,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // 💡 3. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
         window.location.replace(data.paymentUrl);
       } else {
         setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
@@ -614,11 +611,48 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
             })}
           </div>
 
+          {/* 💡 [핵심 추가] 장바구니 하단 바 및 View & Edit 모달 */}
           {totalRoomsInCart > 0 && (
             <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-[160] animate-fade-in-up rounded-t-3xl">
+
+              {/* 💡 장바구니 보기 및 수정 모달 (팝업창) */}
+              {isCartOpen && (
+                <div className="absolute bottom-[100%] left-0 md:left-auto md:right-10 w-full md:w-[400px] bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl md:rounded-3xl border border-gray-200 mb-0 md:mb-4 overflow-hidden animate-fade-in z-[170]">
+                  <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                    <h4 className="font-black text-gray-800 text-lg">Selected Rooms</h4>
+                    <button onClick={() => setIsCartOpen(false)} className="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
+                  </div>
+                  <div className="p-2 max-h-[50vh] overflow-y-auto">
+                    {fetchedRooms.filter(r => cart[r.id] > 0).map(r => (
+                      <div key={`cart_${r.id}`} className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors rounded-xl">
+                        <div className="flex flex-col text-left pr-2">
+                          <span className="font-bold text-sm text-gray-800 leading-tight mb-1">{r.name}</span>
+                          <span className="text-xs text-emerald-600 font-bold">₱{r.price.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200 p-1 shadow-sm shrink-0">
+                          <button onClick={() => updateCart(r.id, -1, r.availableCount)} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">-</button>
+                          <span className="w-4 text-center font-black text-sm text-gray-800">{cart[r.id]}</span>
+                          <button onClick={() => updateCart(r.id, 1, r.availableCount)} disabled={cart[r.id] >= r.availableCount} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors disabled:opacity-50">+</button>
+                          <button onClick={() => updateCart(r.id, -cart[r.id], r.availableCount)} className="w-7 h-7 ml-1 bg-red-50 border border-red-200 rounded-full flex items-center justify-center font-bold text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
+                <div className="flex flex-col text-left w-full md:w-auto">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
+                    {/* 💡 [핵심] View & Edit 버튼 */}
+                    <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm active:scale-95">
+                      <span>{t.viewEdit || "View & Edit"}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 transition-transform ${isCartOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+                    </button>
+                  </div>
                   <span className="text-2xl font-black text-emerald-600">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
                 </div>
                 <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
@@ -726,7 +760,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                   </div>
                 </div>
 
-                {/* 💡 [핵심 결제 버튼] 리액트 변수(isBooking)를 버튼 속성에서 완전히 지웠습니다! */}
+                {/* 💡 [핵심 결제 버튼] */}
                 <button
                   type="button"
                   onClick={submitBooking}
