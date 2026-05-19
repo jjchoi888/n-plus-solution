@@ -342,9 +342,9 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 <div className="flex items-center gap-3 mb-1">
                   <span className="text-sm font-bold text-gray-500">{lang === 'en' ? `${totalRoomsInCart} ${t.cartTotal}` : `${totalRoomsInCart}${t.cartTotal}`}</span>
                   {/* 💡 View & Edit 버튼 */}
-                  <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm active:scale-95">
+                  <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center gap-1.5 ml-2 text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-4 py-2 rounded-full border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-md active:scale-95">
                     <span>{t.viewEdit || "View & Edit"}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 transition-transform ${isCartOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isCartOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
                   </button>
                 </div>
                 <span className="text-2xl font-black text-emerald-600 theme-text">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
