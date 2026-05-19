@@ -317,7 +317,7 @@ export default function HotelWebsite({ domain }) {
     const [guestPhone, setGuestPhone] = useState('');
     const [nationality, setNationality] = useState('Philippines');
     const [extraBed, setExtraBed] = useState(0);
-   
+
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
 
@@ -608,7 +608,7 @@ export default function HotelWebsite({ domain }) {
             }
         }
     }, [activePromos, rooms, hotelCode, lang]);
-    
+
     const safeConfig = config || {};
     let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch (e) { }
     let sns = {}; try { if (safeConfig.sns_json) { sns = typeof safeConfig.sns_json === 'string' ? JSON.parse(safeConfig.sns_json) : safeConfig.sns_json; if (typeof sns === 'string') sns = JSON.parse(sns); } } catch (e) { }
@@ -1031,14 +1031,14 @@ export default function HotelWebsite({ domain }) {
                                                 </div>
 
                                                 {showGuestPicker && (
-                                                    <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-fade-in space-y-4 text-slate-800">
+                                                    <div className="absolute top-full left-0 md:left-auto md:right-0 w-[300px] mt-4 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-[200] animate-fade-in space-y-5 text-slate-800 cursor-default" onClick={e => e.stopPropagation()}>
                                                         <div className="flex justify-between items-center">
                                                             <div><p className="font-bold text-sm">{t.adults}</p><p className="text-[10px] text-slate-500">{t.age13}</p></div>
-                                                            <div className="flex items-center gap-3"><button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{adults}</span><button type="button" onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                                            <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setAdults(Math.max(1, adults - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{adults}</span><button type="button" onClick={(e) => { e.stopPropagation(); setAdults(adults + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                                         </div>
                                                         <div className="flex justify-between items-center">
                                                             <div><p className="font-bold text-sm">{t.children}</p><p className="text-[10px] text-slate-500">{t.age2_12}</p></div>
-                                                            <div className="flex items-center gap-3"><button type="button" onClick={() => setKids(Math.max(0, kids - 1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={() => setKids(kids + 1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
+                                                            <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setKids(Math.max(0, kids - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e) => { e.stopPropagation(); setKids(kids + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                                         </div>
                                                         <div className="flex justify-between items-center">
                                                             <div><p className="font-bold text-sm">{t.infants}</p><p className="text-[10px] text-slate-500">{t.under2}</p></div>
@@ -1347,7 +1347,7 @@ export default function HotelWebsite({ domain }) {
                             resetBtn(); // 에러 시에만 버튼 잠금 해제
                         }
                     };
-                     
+
                     return (
                         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -1466,25 +1466,32 @@ export default function HotelWebsite({ domain }) {
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto pt-6 border-t border-slate-300">
+                                        {/* 💡 [수정] BACK 버튼과 결제 버튼 배열 최적화 */}
+                                        <div className="mt-auto pt-6 border-t border-slate-300 w-full">
                                             <div className="flex justify-between items-end mb-6">
                                                 <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                             </div>
+
+                                            <div className="flex items-center gap-3 w-full">
+                                                {/* BACK 버튼 */}
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowBookingModal(false)}
-                                                    className="w-1/3 py-4 rounded-xl font-black text-sm md:text-lg border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                                                    className="w-[30%] py-4 rounded-xl font-black text-sm md:text-lg border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
                                                 >
                                                     ← BACK
                                                 </button>
+                                                {/* 결제 버튼 */}
                                                 <button
+                                                    type="button"
                                                     onClick={handleConfirmBooking}
                                                     disabled={isBooking}
-                                                    className="w-2/3 theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg theme-hover disabled:opacity-50"
+                                                    className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg theme-hover disabled:opacity-50"
                                                 >
                                                     {t.confirmBook || 'Proceed to Payment ➔'}
                                                 </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1760,5 +1767,5 @@ export default function HotelWebsite({ domain }) {
 
             </div>
         </>
-    );
-}
+
+    )};
