@@ -788,7 +788,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                           <span className="font-bold text-emerald-900">{r.name}</span>
                           <span className="text-xs text-emerald-600">₱{r.price.toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
                         </div>
-                        <span className="font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
+                        <span className="slashed-zero font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
                       </div>
                     ))}
                   </div>
@@ -852,7 +852,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                 <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-8 shadow-inner">
                   <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">Your Reservation ID</p>
                   {modal.highlight.split('\n').map(id => (
-                    <p key={id} className="text-3xl font-mono font-black text-emerald-900 tracking-widest">{id}</p>
+                    <p key={id} className="slashed-zero text-3xl font-mono font-black text-emerald-900 tracking-widest">{id}</p>
                   ))}
                 </div>
               )}

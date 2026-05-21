@@ -325,7 +325,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       </div>
                       <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200 p-1 shadow-sm shrink-0">
                         <button onClick={() => updateCart(r.id, -1, r.availableCount)} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">-</button>
-                        <span className="w-4 text-center font-black text-sm text-gray-800">{cart[r.id]}</span>
+                        <span className="slashed-zero w-4 text-center font-black text-sm text-gray-800">{cart[r.id]}</span>
                         <button onClick={() => updateCart(r.id, 1, r.availableCount)} disabled={cart[r.id] >= r.availableCount} className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors disabled:opacity-50">+</button>
                         <button onClick={() => updateCart(r.id, -cart[r.id], r.availableCount)} className="w-7 h-7 ml-1 bg-red-50 border border-red-200 rounded-full flex items-center justify-center font-bold text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -440,7 +440,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                             <span className="font-bold text-gray-900">{r.name}</span>
                             <span className="text-xs text-emerald-600 theme-text">₱{r.price.toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
                           </div>
-                          <span className="font-black bg-emerald-200 theme-bg-light text-emerald-900 theme-text border border-emerald-300 theme-border px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
+                          <span className="slashed-zero font-black bg-emerald-200 theme-bg-light text-emerald-900 theme-text border border-emerald-300 theme-border px-2 py-0.5 rounded text-xs">x {cart[r.id]}</span>
                         </div>
                       ))}
                     </div>
