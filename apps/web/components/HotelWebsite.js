@@ -1746,10 +1746,10 @@ export default function HotelWebsite({ domain }) {
                             <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
 
                             <div className="border-t border-slate-100 pt-8 mb-10">
-                                <p className="slashed-zero text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-4">Reservation ID</p>
+                                <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
                                 {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
                                 <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2">
+                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest slashed-zero-font truncate px-2">
                                         {modalResId}
                                     </p>
                                 </div>
