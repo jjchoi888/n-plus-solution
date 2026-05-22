@@ -1821,8 +1821,8 @@ export default function MainPortal() {
               <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
               {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
               <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2">
-                  {formatSlashedZero(modalResId)}
+                <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2" style={{ fontVariantNumeric: 'slashed-zero' }}>
+                  {String(modalResId).replace(/0/g, '0\u0338')}
                 </p>
               </div>
             </div>
