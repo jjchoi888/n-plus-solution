@@ -1738,15 +1738,15 @@ export default function HotelWebsite({ domain }) {
                 {showBookingSuccessModal && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
                         <div className="bg-white rounded-[40px] p-8 md:p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
-                            {/* 체크 아이콘 */}
-                            <div className="w-20 h-20 theme-bg text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-md">
+                            {/* 체크 아이콘 (색상 고정) */}
+                            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
                                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
 
-                            {/* 💡 요청하신 Payment Success! 문구 추가 */}
-                            <p className="theme-text font-black text-lg mb-1">Payment Success!</p>
+                            {/* Payment Success! 문구 (색상 고정) */}
+                            <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
                             <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
                             <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
 
@@ -1754,8 +1754,13 @@ export default function HotelWebsite({ domain }) {
                                 <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
                                 {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
                                 <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2" style={{ fontVariantNumeric: 'slashed-zero' }}>
-                                        {String(modalResId).replace(/0/g, '0\u0338')}
+                                    {/* 예약 ID 출력 부분 */}
+                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2"
+                                        style={{
+                                            fontVariantNumeric: 'slashed-zero',
+                                            fontFamily: 'Consolas, Monaco, "Courier New", monospace' // 사선 0을 지원하는 폰트 강제
+                                        }}>
+                                        {modalResId}
                                     </p>
                                 </div>
                             </div>
