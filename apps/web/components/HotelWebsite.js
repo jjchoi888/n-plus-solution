@@ -1416,63 +1416,66 @@ export default function HotelWebsite({ domain }) {
                                     </div>
 
                                     {/* 2. 결제 영수증(Summary) 패널 (우측 영역) */}
-                                    <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto lg:h-full lg:overflow-y-auto">
-                                        <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
+                                    <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto lg:h-full">
 
-                                        <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
-                                            <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
-                                                <span>{t.checkIn}</span>
-                                                <span>{t.checkOut}</span>
-                                            </div>
-                                            <div className="flex justify-between font-black text-slate-800 text-sm">
-                                                <span>{checkIn}</span>
-                                                <span>{checkOut}</span>
-                                            </div>
-                                        </div>
+                                        <div className="flex-1 lg:overflow-y-auto mb-6">
+                                            <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
 
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="w-full">
-                                                <div className="flex justify-between w-full">
-                                                    <p className="font-black theme-text text-lg leading-tight">{activeRoom?.name}</p>
-                                                    <div className="bg-white border theme-border theme-text font-black px-3 py-1 rounded-lg text-xs self-start shadow-sm">
-                                                        x {safeRoomCount}
+                                            <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
+                                                <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
+                                                    <span>{t.checkIn}</span>
+                                                    <span>{t.checkOut}</span>
+                                                </div>
+                                                <div className="flex justify-between font-black text-slate-800 text-sm">
+                                                    <span>{checkIn}</span>
+                                                    <span>{checkOut}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="w-full">
+                                                    <div className="flex justify-between w-full">
+                                                        <p className="font-black theme-text text-lg leading-tight">{activeRoom?.name}</p>
+                                                        <div className="bg-white border theme-border theme-text font-black px-3 py-1 rounded-lg text-xs self-start shadow-sm">
+                                                            x {safeRoomCount}
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-3 space-y-1.5 border-t theme-border pt-3">
+                                                        <p className="flex justify-between text-slate-600 text-xs font-bold">
+                                                            <span>Base: ₱{roomPrice.toLocaleString()} x {nights} {t.night.replace('/', '')}</span>
+                                                            <span>₱{basePrice.toLocaleString()}</span>
+                                                        </p>
+                                                        {safeExtraBed > 0 && (
+                                                            <p className="flex justify-between text-slate-600 text-xs font-bold">
+                                                                <span>+ {t.extraBed} (x{safeExtraBed})</span>
+                                                                <span>₱{extraBedPrice.toLocaleString()}</span>
+                                                            </p>
+                                                        )}
+                                                        {appliedPromo && (
+                                                            <p className="flex justify-between theme-text text-xs font-bold theme-bg-light px-2 py-1 rounded-md mt-1 border theme-border">
+                                                                <span>- Discount ({appliedPromo.discount_pct}%)</span>
+                                                                <span>- ₱{discountAmount.toLocaleString()}</span>
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <div className="mt-3 space-y-1.5 border-t theme-border pt-3">
-                                                    <p className="flex justify-between text-slate-600 text-xs font-bold">
-                                                        <span>Base: ₱{roomPrice.toLocaleString()} x {nights} {t.night.replace('/', '')}</span>
-                                                        <span>₱{basePrice.toLocaleString()}</span>
-                                                    </p>
-                                                    {safeExtraBed > 0 && (
-                                                        <p className="flex justify-between text-slate-600 text-xs font-bold">
-                                                            <span>+ {t.extraBed} (x{safeExtraBed})</span>
-                                                            <span>₱{extraBedPrice.toLocaleString()}</span>
-                                                        </p>
-                                                    )}
-                                                    {appliedPromo && (
-                                                        <p className="flex justify-between theme-text text-xs font-bold theme-bg-light px-2 py-1 rounded-md mt-1 border theme-border">
-                                                            <span>- Discount ({appliedPromo.discount_pct}%)</span>
-                                                            <span>- ₱{discountAmount.toLocaleString()}</span>
-                                                        </p>
+                                            </div>
+
+                                            <div className="border-t theme-border pt-4">
+                                                <label className="text-[10px] font-bold theme-text uppercase mb-1 block">{t.promoCode}</label>
+                                                <div className="flex gap-2">
+                                                    <input value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} disabled={isBooking || appliedPromo} className="flex-1 p-2.5 border theme-border rounded-xl text-sm outline-none theme-focus uppercase" placeholder="E.G. WELCOME10" />
+                                                    {!appliedPromo ? (
+                                                        <button type="button" onClick={handleApplyPromo} disabled={isBooking || !promoCode} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm disabled:opacity-50">{t.apply}</button>
+                                                    ) : (
+                                                        <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm border border-red-200">Cancel</button>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="mb-6 border-t theme-border pt-4">
-                                            <label className="text-[10px] font-bold theme-text uppercase mb-1 block">{t.promoCode}</label>
-                                            <div className="flex gap-2">
-                                                <input value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} disabled={isBooking || appliedPromo} className="flex-1 p-2.5 border theme-border rounded-xl text-sm outline-none theme-focus uppercase" placeholder="E.G. WELCOME10" />
-                                                {!appliedPromo ? (
-                                                    <button type="button" onClick={handleApplyPromo} disabled={isBooking || !promoCode} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm disabled:opacity-50">{t.apply}</button>
-                                                ) : (
-                                                    <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm border border-red-200">Cancel</button>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* 💡 [수정] BACK 버튼과 결제 버튼 배열 최적화 */}
-                                        <div className="mt-auto pt-6 border-t border-slate-300 w-full">
+                                        {/* 💡 [수정] BACK 버튼과 결제 버튼 배열 최적화 (위치 수정 완료) */}
+                                        <div className="mt-auto pt-6 border-t border-slate-300 w-full shrink-0">
                                             <div className="flex justify-between items-end mb-6">
                                                 <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                                 <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
