@@ -708,7 +708,7 @@ export default function HotelWebsite({ domain }) {
         .theme-border { border-color: var(--theme-color-border) !important; }
         .theme-hover:hover { opacity: 0.85; transform: translateY(-2px); transition: all 0.2s; }
         .theme-focus:focus { border-color: var(--theme-color) !important; box-shadow: 0 0 0 2px var(--theme-color-light) !important; outline: none; }
-      `}} />
+    `}} />
 
             <div className="min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white" onContextMenu={(e) => e.preventDefault()}>
 
@@ -1351,434 +1351,385 @@ export default function HotelWebsite({ domain }) {
                             setAlertMessage(t.serverError);
                             resetBtn(); // 에러 시에만 버튼 잠금 해제
                         }
-                    };
+                    }
 
-                    return (
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                                <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
-                                    <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
-                                    {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
-                                </div>
-                                <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
 
-                                    {/* 1. 게스트 정보 입력 (왼쪽 영역) */}
-                                    <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
-                                        <section>
-                                            <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.firstName}</label>
-                                                    <input value={firstName} onChange={e => setFirstName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="John" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.lastName}</label>
-                                                    <input value={lastName} onChange={e => setLastName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="Doe" />
-                                                </div>
-                                            </div>
-                                            <div className="mb-4">
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.email}</label>
-                                                <input value={guestEmail} onChange={e => setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 theme-bg-light rounded-xl theme-focus outline-none" placeholder="john@example.com" />
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label>
-                                                    <input value={guestPhone} onChange={e => setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label>
-                                                    <select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer">
-                                                        <optgroup label="Top Options">
-                                                            {topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}
-                                                        </optgroup>
-                                                        <optgroup label="All Countries">
-                                                            {otherCountries.map(c => <option key={`oth_${c}`} value={c}>{c}</option>)}
-                                                        </optgroup>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </section>
-
-                                        <section>
-                                            <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">2. {t.extraOptions}</h3>
-                                            <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                                                <div>
-                                                    <p className="font-bold text-slate-800">{t.extraBed}</p>
-                                                    <p className="text-xs text-slate-500">₱1,000 / night</p>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <button type="button" disabled={isBooking} onClick={() => setExtraBed(Math.max(0, extraBed - 1))} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">-</button>
-                                                    <span className="w-4 text-center font-bold theme-text">{extraBed}</span>
-                                                    <button type="button" disabled={isBooking} onClick={() => setExtraBed(extraBed + 1)} className="w-8 h-8 rounded-full bg-white border border-slate-300 font-bold hover:bg-slate-100 transition-colors">+</button>
-                                                </div>
-                                            </div>
-                                        </section>
+                    {/* 💡 예약 모달창 (Booking Summary가 버튼 위로 고정되도록 수정) */ }
+                    {
+                        showBookingModal && (
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
+                                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                                    <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
+                                        <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
+                                        {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                                     </div>
 
-                                    {/* 2. 결제 영수증(Summary) 패널 (우측 영역) */}
-                                    <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto lg:h-full">
-
-                                        <div className="flex-1 lg:overflow-y-auto mb-6">
-                                            <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
-
-                                            <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
-                                                <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
-                                                    <span>{t.checkIn}</span>
-                                                    <span>{t.checkOut}</span>
+                                    <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
+                                        {/* 1. 게스트 정보 */}
+                                        <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
+                                            <section>
+                                                <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.firstName}</label>
+                                                        <input value={firstName} onChange={e => setFirstName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="John" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.lastName}</label>
+                                                        <input value={lastName} onChange={e => setLastName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="Doe" />
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between font-black text-slate-800 text-sm">
-                                                    <span>{checkIn}</span>
-                                                    <span>{checkOut}</span>
+                                                <div className="mb-4">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.email}</label>
+                                                    <input value={guestEmail} onChange={e => setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 theme-bg-light rounded-xl theme-focus outline-none" placeholder="john@example.com" />
                                                 </div>
-                                            </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label>
+                                                        <input value={guestPhone} onChange={e => setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label>
+                                                        <select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer">
+                                                            <optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup>
+                                                            <optgroup label="All Countries">{otherCountries.map(c => <option key={`oth_${c}`} value={c}>{c}</option>)}</optgroup>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
 
-                                            <div className="flex justify-between items-start mb-6">
-                                                <div className="w-full">
-                                                    <div className="flex justify-between w-full">
+                                        {/* 2. 우측 사이드바 (Summary + Button 합침) */}
+                                        <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto">
+
+                                            {/* [Booking Summary 영역] */}
+                                            <div className="flex-1 mb-6">
+                                                <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
+                                                <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
+                                                    <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
+                                                        <span>{t.checkIn}</span><span>{t.checkOut}</span>
+                                                    </div>
+                                                    <div className="flex justify-between font-black text-slate-800 text-sm">
+                                                        <span>{checkIn}</span><span>{checkOut}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div className="w-full">
                                                         <p className="font-black theme-text text-lg leading-tight">{activeRoom?.name}</p>
-                                                        <div className="bg-white border theme-border theme-text font-black px-3 py-1 rounded-lg text-xs self-start shadow-sm">
-                                                            x {safeRoomCount}
+                                                        <div className="mt-3 space-y-1.5 border-t theme-border pt-3 text-slate-600 text-xs font-bold">
+                                                            <p className="flex justify-between">
+                                                                <span>Base: ₱{Number(activeRoom?.price || activeRoom?.basePrice || 0).toLocaleString()} x {nights} {t.night.replace('/', '')}</span>
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-3 space-y-1.5 border-t theme-border pt-3">
-                                                        <p className="flex justify-between text-slate-600 text-xs font-bold">
-                                                            <span>Base: ₱{roomPrice.toLocaleString()} x {nights} {t.night.replace('/', '')}</span>
-                                                            <span>₱{basePrice.toLocaleString()}</span>
-                                                        </p>
-                                                        {safeExtraBed > 0 && (
-                                                            <p className="flex justify-between text-slate-600 text-xs font-bold">
-                                                                <span>+ {t.extraBed} (x{safeExtraBed})</span>
-                                                                <span>₱{extraBedPrice.toLocaleString()}</span>
-                                                            </p>
-                                                        )}
-                                                        {appliedPromo && (
-                                                            <p className="flex justify-between theme-text text-xs font-bold theme-bg-light px-2 py-1 rounded-md mt-1 border theme-border">
-                                                                <span>- Discount ({appliedPromo.discount_pct}%)</span>
-                                                                <span>- ₱{discountAmount.toLocaleString()}</span>
-                                                            </p>
-                                                        )}
-                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="border-t theme-border pt-4">
-                                                <label className="text-[10px] font-bold theme-text uppercase mb-1 block">{t.promoCode}</label>
-                                                <div className="flex gap-2">
-                                                    <input value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} disabled={isBooking || appliedPromo} className="flex-1 p-2.5 border theme-border rounded-xl text-sm outline-none theme-focus uppercase" placeholder="E.G. WELCOME10" />
-                                                    {!appliedPromo ? (
-                                                        <button type="button" onClick={handleApplyPromo} disabled={isBooking || !promoCode} className="theme-bg text-white px-4 rounded-xl font-bold theme-hover transition-colors text-sm disabled:opacity-50">{t.apply}</button>
-                                                    ) : (
-                                                        <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} disabled={isBooking} className="bg-red-100 text-red-600 px-4 rounded-xl font-bold hover:bg-red-200 transition-colors text-sm border border-red-200">Cancel</button>
-                                                    )}
+                                            {/* [결제 버튼 영역] 무조건 Summary 아래 */}
+                                            <div className="pt-6 border-t border-slate-300 w-full shrink-0">
+                                                <div className="flex justify-between items-end mb-6">
+                                                    <span className="font-black text-slate-800 text-xl">{t.total}</span>
+                                                    <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        {/* 💡 [수정] BACK 버튼과 결제 버튼 배열 최적화 (위치 수정 완료) */}
-                                        <div className="mt-auto pt-6 border-t border-slate-300 w-full shrink-0">
-                                            <div className="flex justify-between items-end mb-6">
-                                                <span className="font-black text-slate-800 text-xl">{t.total}</span>
-                                                <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
-                                            </div>
-
-                                            <div className="flex items-center gap-3 w-full">
-                                                {/* BACK 버튼 */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowBookingModal(false)}
-                                                    className="w-[30%] py-4 rounded-xl font-black text-sm md:text-lg border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    ← BACK
-                                                </button>
-                                                {/* 결제 버튼 */}
-                                                <button
-                                                    type="button"
-                                                    onClick={handleConfirmBooking}
-                                                    disabled={isBooking}
-                                                    className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg theme-hover disabled:opacity-50"
-                                                >
-                                                    {t.confirmBook || 'Proceed to Payment ➔'}
-                                                </button>
+                                                <div className="flex items-center gap-3 w-full">
+                                                    <button type="button" onClick={() => setShowBookingModal(false)} className="w-[30%] py-4 rounded-xl font-black text-sm border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center">
+                                                        ← BACK
+                                                    </button>
+                                                    <button type="button" onClick={handleConfirmBooking} disabled={isBooking} className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm theme-hover disabled:opacity-50">
+                                                        {t.confirmBook || 'Proceed to Payment ➔'}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                })()}
+                        )
+                    }
 
-                {/* 🎈 우측 상단 바운스 대화 풍선 */}
-                {activePromos.length > 0 && (
-                    <div className="fixed top-24 right-6 z-40 flex flex-col md:flex-row gap-4 items-end md:items-center">
-                        {activePromos.map((promo, idx) => {
-                            const colors = ['bg-red-600', 'bg-blue-600', 'theme-bg text-white', 'bg-purple-600'];
-                            const colorClass = colors[idx % colors.length];
 
-                            return (
-                                <button
-                                    key={`balloon_${promo.id}`}
-                                    onClick={() => { setSelectedPromo(promo); setShowPromoModal(true); }}
-                                    className={`relative ${colorClass} text-white font-black text-[10px] sm:text-xs w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl animate-bounce flex flex-col items-center justify-center border-2 border-white transition-transform hover:scale-110 shrink-0`}
-                                >
-                                    <span>{promo.discount_pct}%</span>
-                                    <span>OFF</span>
-                                    <div className={`absolute -bottom-2 right-1/2 translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-current border-r-[6px] border-r-transparent ${colorClass.replace('bg-', 'text-')}`}></div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
+                    {/* 🎈 우측 상단 바운스 대화 풍선 */ }
+                    {
+                        activePromos.length > 0 && (
+                            <div className="fixed top-24 right-6 z-40 flex flex-col md:flex-row gap-4 items-end md:items-center">
+                                {activePromos.map((promo, idx) => {
+                                    const colors = ['bg-red-600', 'bg-blue-600', 'theme-bg text-white', 'bg-purple-600'];
+                                    const colorClass = colors[idx % colors.length];
 
-                {/* 🎁 스페셜 오퍼 팝업 모달창 */}
-                {showPromoModal && selectedPromo && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                        <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative flex flex-col">
-                            <div className="h-48 w-full relative">
-                                <img src={selectedPromo.image_url} alt="Promo" className="w-full h-full object-cover" />
-                                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-lg font-black theme-text shadow-sm">{selectedPromo.discount_pct}% OFF</div>
-                                <button onClick={() => setShowPromoModal(false)} className="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-md hover:bg-red-600 flex items-center justify-center">✕</button>
-                            </div>
-                            <div className="p-6 text-left">
-                                <div className="mb-4 flex flex-wrap gap-1">
-                                    {Array.isArray(selectedPromo.target_room_type) ? selectedPromo.target_room_type.map(r => (
-                                        <span key={`modal_${r}`} className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ {r}</span>
-                                    )) : <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ All Rooms</span>}
-                                </div>
-
-                                <div className="flex justify-between items-center theme-bg-light p-4 rounded-xl border theme-border mb-6">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Code</span>
-                                    <span className="font-mono font-black theme-text tracking-wider text-lg bg-white px-3 py-1 rounded shadow-sm">{selectedPromo.code}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center mb-6">
-                                    <span className="text-[10px] font-bold text-red-500">Ends: {selectedPromo.end_date}</span>
-                                    <span className="text-[10px] font-black theme-text uppercase flex items-center gap-1">✅ Active</span>
-                                </div>
-
-                                <button onClick={() => {
-                                    setShowPromoModal(false);
-                                    setPromoCode(selectedPromo.code);
-
-                                    // 💡 [혁신 3] 사용자가 귀찮게 Apply를 누를 필요 없이 즉시 할인을 장착(Inject)합니다!
-                                    setAppliedPromo(selectedPromo);
-
-                                    // 💡 [혁신 4] 프로모션이 적용되는 첫 번째 방으로 포커스를 강제 이동시킵니다.
-                                    let firstValidId = null;
-                                    if (selectedPromo.target_room_type.includes('All Rooms')) {
-                                        firstValidId = rooms.length > 0 ? rooms[0].id : null;
-                                    } else {
-                                        const validRoom = rooms.find(r => selectedPromo.target_room_type.includes(r.name));
-                                        if (validRoom) firstValidId = validRoom.id;
-                                    }
-                                    if (firstValidId) setSelectedRoomId(firstValidId);
-
-                                    setActiveMenu('ROOMS');
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                                    // 💡 고객에게 자동 적용되었다고 안심시켜주는 멘트로 변경!
-                                    const msg = lang === 'ko'
-                                        ? `🎁 '${selectedPromo.code}' 할인이 자동 적용되었습니다!\n화면에는 해당 프로모션이 가능한 객실만 표시됩니다.`
-                                        : `🎁 Promo '${selectedPromo.code}' is now ACTIVE!\nWe've filtered the eligible rooms. The discount is automatically applied at checkout!`;
-                                    setAlertMessage(msg);
-                                }} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg">
-                                    RESERVE NOW
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 💡 전역 알림(Alert) 모달창 */}
-                {alertMessage && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
-                            {/* 💡 헤더 색상을 브랜드 컬러로 변경 */}
-                            <div className="theme-bg p-4 text-white flex justify-center items-center">
-                                <h3 className="font-black text-lg">Notification</h3>
-                            </div>
-                            <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
-                                {alertMessage}
-                            </div>
-                            <div className="p-4 bg-slate-50 border-t border-slate-100">
-                                {/* 💡 확인 버튼 색상을 브랜드 컬러로 변경 */}
-                                <button onClick={() => setAlertMessage('')} className="w-full theme-bg theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
-                                    OK
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 📱 푸터 */}
-                {!hasSearched && (
-                    <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
-                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="hidden md:block flex-1"></div>
-                            <div className="flex-1 flex justify-center gap-4">
-                                {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16.11 7.99a.01.01 0 0 1 .02 0" /><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18" /></svg></a>}
-                                {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>}
-                            </div>
-                            <div className="flex-1 flex justify-center md:justify-end w-full">
-                                <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
-                                    &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
-                                </p>
-                            </div>
-                        </div>
-                    </footer>
-                )}
-
-                {/* 💡 고객 인증(Auth) 모달창 */}
-                {showGuestAuthModal && (
-                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
-                        <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-3xl" onClick={e => e.stopPropagation()}>
-                            <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
-                                <div className="flex justify-end mb-2">
-                                    <button onClick={() => setShowGuestAuthModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
-                                </div>
-
-                                {guestAuthMode === 'LOGIN' ? (
-                                    <div className="animate-fade-in-up">
-                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">{t.loginTo}{safeConfig.welcome_title || 'Hotel'}</h2>
-                                        <button type="button" onClick={handleGoogleLogin} className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm rounded-xl">
-                                            <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                                            </svg>
-                                            {t.continueGoogle}
+                                    return (
+                                        <button
+                                            key={`balloon_${promo.id}`}
+                                            onClick={() => { setSelectedPromo(promo); setShowPromoModal(true); }}
+                                            className={`relative ${colorClass} text-white font-black text-[10px] sm:text-xs w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl animate-bounce flex flex-col items-center justify-center border-2 border-white transition-transform hover:scale-110 shrink-0`}
+                                        >
+                                            <span>{promo.discount_pct}%</span>
+                                            <span>OFF</span>
+                                            <div className={`absolute -bottom-2 right-1/2 translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-current border-r-[6px] border-r-transparent ${colorClass.replace('bg-', 'text-')}`}></div>
                                         </button>
-                                        <div className="flex items-center mb-6">
-                                            <div className="flex-1 border-t border-slate-200"></div>
-                                            <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.or}</span>
-                                            <div className="flex-1 border-t border-slate-200"></div>
-                                        </div>
-                                        <form onSubmit={handleAuthSubmit} className="space-y-4">
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
-                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label> {/* Using paymentMethod "Password" translation would be better but let's stick to simple text if missing, wait I'll use hardcoded or add to dictionary */}
-                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
-                                            </div>
-                                            <div className="flex justify-end mt-1 mb-2">
-                                                <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">{t.forgotPw}</button>
-                                            </div>
-                                            <div className="pt-2">
-                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.loginBtn}</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                ) : guestAuthMode === 'REGISTER' ? (
-                                    <div className="animate-fade-in-up">
-                                        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">{t.createAccount}</h2>
-                                        <form onSubmit={handleAuthSubmit} className="space-y-4">
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
-                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
-                                                    <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="John" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
-                                                    <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Doe" />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
-                                                <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="09..." />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
-                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
-                                            </div>
-                                            <div className="pt-2">
-                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.signUpBtn}</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                ) : guestAuthMode === 'FORGOT_PASSWORD' ? (
-                                    <div className="animate-fade-in-up">
-                                        <h2 className="text-2xl font-black text-slate-800 mb-2 text-center">{t.resetPw}</h2>
-                                        <p className="text-xs font-bold text-slate-500 mb-6 text-center leading-relaxed">{t.resetDesc}</p>
-                                        <form onSubmit={(e) => { e.preventDefault(); setAlertMessage(t.resetSent); setGuestAuthMode('LOGIN'); }} className="space-y-4">
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.regEmail}</label>
-                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
-                                            </div>
-                                            <div className="pt-2">
-                                                <button type="submit" className="w-full bg-slate-800 text-white font-black py-3.5 rounded-xl hover:bg-slate-700 transition-colors shadow-md text-sm">{t.sendReset}</button>
-                                            </div>
-                                            <div className="text-center pt-4">
-                                                <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-xs font-bold text-slate-500 hover:underline flex items-center justify-center gap-1 mx-auto">
-                                                    <span>←</span> {t.backLogin}
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                ) : null}
+                                    );
+                                })}
+                            </div>
+                        )
+                    }
 
-                                {guestAuthMode !== 'FORGOT_PASSWORD' && (
-                                    <div className="text-center pt-8 mt-8 border-t border-slate-100">
+                    {/* 🎁 스페셜 오퍼 팝업 모달창 */ }
+                    {
+                        showPromoModal && selectedPromo && (
+                            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+                                <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative flex flex-col">
+                                    <div className="h-48 w-full relative">
+                                        <img src={selectedPromo.image_url} alt="Promo" className="w-full h-full object-cover" />
+                                        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-lg font-black theme-text shadow-sm">{selectedPromo.discount_pct}% OFF</div>
+                                        <button onClick={() => setShowPromoModal(false)} className="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-md hover:bg-red-600 flex items-center justify-center">✕</button>
+                                    </div>
+                                    <div className="p-6 text-left">
+                                        <div className="mb-4 flex flex-wrap gap-1">
+                                            {Array.isArray(selectedPromo.target_room_type) ? selectedPromo.target_room_type.map(r => (
+                                                <span key={`modal_${r}`} className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ {r}</span>
+                                            )) : <span className="inline-block bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">🛏️ All Rooms</span>}
+                                        </div>
+
+                                        <div className="flex justify-between items-center theme-bg-light p-4 rounded-xl border theme-border mb-6">
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Code</span>
+                                            <span className="font-mono font-black theme-text tracking-wider text-lg bg-white px-3 py-1 rounded shadow-sm">{selectedPromo.code}</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center mb-6">
+                                            <span className="text-[10px] font-bold text-red-500">Ends: {selectedPromo.end_date}</span>
+                                            <span className="text-[10px] font-black theme-text uppercase flex items-center gap-1">✅ Active</span>
+                                        </div>
+
+                                        <button onClick={() => {
+                                            setShowPromoModal(false);
+                                            setPromoCode(selectedPromo.code);
+
+                                            // 💡 [혁신 3] 사용자가 귀찮게 Apply를 누를 필요 없이 즉시 할인을 장착(Inject)합니다!
+                                            setAppliedPromo(selectedPromo);
+
+                                            // 💡 [혁신 4] 프로모션이 적용되는 첫 번째 방으로 포커스를 강제 이동시킵니다.
+                                            let firstValidId = null;
+                                            if (selectedPromo.target_room_type.includes('All Rooms')) {
+                                                firstValidId = rooms.length > 0 ? rooms[0].id : null;
+                                            } else {
+                                                const validRoom = rooms.find(r => selectedPromo.target_room_type.includes(r.name));
+                                                if (validRoom) firstValidId = validRoom.id;
+                                            }
+                                            if (firstValidId) setSelectedRoomId(firstValidId);
+
+                                            setActiveMenu('ROOMS');
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                                            // 💡 고객에게 자동 적용되었다고 안심시켜주는 멘트로 변경!
+                                            const msg = lang === 'ko'
+                                                ? `🎁 '${selectedPromo.code}' 할인이 자동 적용되었습니다!\n화면에는 해당 프로모션이 가능한 객실만 표시됩니다.`
+                                                : `🎁 Promo '${selectedPromo.code}' is now ACTIVE!\nWe've filtered the eligible rooms. The discount is automatically applied at checkout!`;
+                                            setAlertMessage(msg);
+                                        }} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-lg">
+                                            RESERVE NOW
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    {/* 💡 전역 알림(Alert) 모달창 */ }
+                    {
+                        alertMessage && (
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
+                                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
+                                    {/* 💡 헤더 색상을 브랜드 컬러로 변경 */}
+                                    <div className="theme-bg p-4 text-white flex justify-center items-center">
+                                        <h3 className="font-black text-lg">Notification</h3>
+                                    </div>
+                                    <div className="p-8 text-slate-700 font-bold text-[15px] whitespace-pre-wrap leading-relaxed">
+                                        {alertMessage}
+                                    </div>
+                                    <div className="p-4 bg-slate-50 border-t border-slate-100">
+                                        {/* 💡 확인 버튼 색상을 브랜드 컬러로 변경 */}
+                                        <button onClick={() => setAlertMessage('')} className="w-full theme-bg theme-hover text-white py-3.5 rounded-xl font-black transition-transform active:scale-95 shadow-md">
+                                            OK
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    {/* 📱 푸터 */ }
+                    {
+                        !hasSearched && (
+                            <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
+                                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div className="hidden md:block flex-1"></div>
+                                    <div className="flex-1 flex justify-center gap-4">
+                                        {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16.11 7.99a.01.01 0 0 1 .02 0" /><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18" /></svg></a>}
+                                        {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>}
+                                    </div>
+                                    <div className="flex-1 flex justify-center md:justify-end w-full">
+                                        <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
+                                            &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
+                                        </p>
+                                    </div>
+                                </div>
+                            </footer>
+                        )
+                    }
+
+                    {/* 💡 고객 인증(Auth) 모달창 */ }
+                    {
+                        showGuestAuthModal && (
+                            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
+                                <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-3xl" onClick={e => e.stopPropagation()}>
+                                    <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                        <div className="flex justify-end mb-2">
+                                            <button onClick={() => setShowGuestAuthModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+                                        </div>
+
                                         {guestAuthMode === 'LOGIN' ? (
-                                            <p className="text-sm font-bold text-slate-500">{t.noAccount}<button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="theme-text hover:underline">{t.signUpLink}</button></p>
-                                        ) : (
-                                            <p className="text-sm font-bold text-slate-500">{t.hasAccount}<button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="theme-text hover:underline">{t.loginLink}</button></p>
+                                            <div className="animate-fade-in-up">
+                                                <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">{t.loginTo}{safeConfig.welcome_title || 'Hotel'}</h2>
+                                                <button type="button" onClick={handleGoogleLogin} className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors mb-6 shadow-sm text-sm rounded-xl">
+                                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                                    </svg>
+                                                    {t.continueGoogle}
+                                                </button>
+                                                <div className="flex items-center mb-6">
+                                                    <div className="flex-1 border-t border-slate-200"></div>
+                                                    <span className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.or}</span>
+                                                    <div className="flex-1 border-t border-slate-200"></div>
+                                                </div>
+                                                <form onSubmit={handleAuthSubmit} className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
+                                                        <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label> {/* Using paymentMethod "Password" translation would be better but let's stick to simple text if missing, wait I'll use hardcoded or add to dictionary */}
+                                                        <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                    </div>
+                                                    <div className="flex justify-end mt-1 mb-2">
+                                                        <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">{t.forgotPw}</button>
+                                                    </div>
+                                                    <div className="pt-2">
+                                                        <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.loginBtn}</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        ) : guestAuthMode === 'REGISTER' ? (
+                                            <div className="animate-fade-in-up">
+                                                <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">{t.createAccount}</h2>
+                                                <form onSubmit={handleAuthSubmit} className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
+                                                        <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
+                                                            <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="John" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
+                                                            <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Doe" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
+                                                        <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="09..." />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
+                                                        <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                    </div>
+                                                    <div className="pt-2">
+                                                        <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.signUpBtn}</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        ) : guestAuthMode === 'FORGOT_PASSWORD' ? (
+                                            <div className="animate-fade-in-up">
+                                                <h2 className="text-2xl font-black text-slate-800 mb-2 text-center">{t.resetPw}</h2>
+                                                <p className="text-xs font-bold text-slate-500 mb-6 text-center leading-relaxed">{t.resetDesc}</p>
+                                                <form onSubmit={(e) => { e.preventDefault(); setAlertMessage(t.resetSent); setGuestAuthMode('LOGIN'); }} className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.regEmail}</label>
+                                                        <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
+                                                    </div>
+                                                    <div className="pt-2">
+                                                        <button type="submit" className="w-full bg-slate-800 text-white font-black py-3.5 rounded-xl hover:bg-slate-700 transition-colors shadow-md text-sm">{t.sendReset}</button>
+                                                    </div>
+                                                    <div className="text-center pt-4">
+                                                        <button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="text-xs font-bold text-slate-500 hover:underline flex items-center justify-center gap-1 mx-auto">
+                                                            <span>←</span> {t.backLogin}
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        ) : null}
+
+                                        {guestAuthMode !== 'FORGOT_PASSWORD' && (
+                                            <div className="text-center pt-8 mt-8 border-t border-slate-100">
+                                                {guestAuthMode === 'LOGIN' ? (
+                                                    <p className="text-sm font-bold text-slate-500">{t.noAccount}<button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="theme-text hover:underline">{t.signUpLink}</button></p>
+                                                ) : (
+                                                    <p className="text-sm font-bold text-slate-500">{t.hasAccount}<button type="button" onClick={() => setGuestAuthMode('LOGIN')} className="theme-text hover:underline">{t.loginLink}</button></p>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 💡 예약 완료 모달창 (화면 중앙 고정 및 얇은 회색 테두리 추가) */}
-                {showBookingSuccessModal && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-[40px] p-8 md:p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
-                            {/* 체크 아이콘 (색상 고정) */}
-                            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
-                                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-
-                            {/* Payment Success! 문구 (색상 고정) */}
-                            <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
-                            <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
-                            <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
-
-                            <div className="border-t border-slate-100 pt-8 mb-10">
-                                <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
-                                {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
-                                <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                                    {/* 예약 ID 출력 부분 */}
-                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2"
-                                        style={{
-                                            fontVariantNumeric: 'slashed-zero',
-                                            fontFamily: 'Consolas, Monaco, "Courier New", monospace' // 사선 0을 지원하는 폰트 강제
-                                        }}>
-                                        {modalResId}
-                                    </p>
                                 </div>
                             </div>
+                        )
+                    }
 
-                            <button
-                                onClick={() => setShowBookingSuccessModal(false)}
-                                className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 text-lg"
-                            >
-                                Return to Home
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    {/* 💡 예약 완료 모달창 (화면 중앙 고정 및 얇은 회색 테두리 추가) */ }
+                    {
+                        showBookingSuccessModal && (
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+                                <div className="bg-white rounded-[40px] p-8 md:p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
+                                    {/* 체크 아이콘 (색상 고정) */}
+                                    <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
+                                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
 
+                                    {/* Payment Success! 문구 (색상 고정) */}
+                                    <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
+                                    <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
+                                    <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
+
+                                    <div className="border-t border-slate-100 pt-8 mb-10">
+                                        <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
+                                        {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
+                                        <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
+                                            {/* 예약 ID 출력 부분 */}
+                                            <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2"
+                                                style={{
+                                                    fontVariantNumeric: 'slashed-zero',
+                                                    fontFamily: 'Consolas, Monaco, "Courier New", monospace' // 사선 0을 지원하는 폰트 강제
+                                                }}>
+                                                {modalResId}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setShowBookingSuccessModal(false)}
+                                        className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 text-lg"
+                                    >
+                                        Return to Home
+                                    </button>
+                                </div>
+                            </div>
+                        )
+                    }
             </div>
         </>
-
-    )};
+    )
+}
