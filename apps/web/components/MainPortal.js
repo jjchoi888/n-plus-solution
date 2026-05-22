@@ -574,7 +574,7 @@ export default function MainPortal() {
       hotel_name: promo.hotel_name || matchedHotel.name || "Partner Hotel",
       city: promo.city || matchedHotel.city || "City",
       province: promo.province || matchedHotel.province || "Province",
-    };
+    };  
   });
 
   const availableRegions = ["ALL", ...Array.from(new Set(enrichedPromotions.map(p => p.province).filter(Boolean)))];
@@ -732,6 +732,11 @@ export default function MainPortal() {
     } catch (error) {
       setAlertMessage("Unable to connect to the server.");
     }
+  };
+
+  // 숫자 0을 사선이 있는 0으로 치환하는 함수
+  const formatSlashedZero = (id) => {
+    return String(id).replace(/0/g, '0̸'); // 숫자 0을 사선 있는 0(U+0030 + U+0338)으로 대체
   };
 
   return (
@@ -1816,8 +1821,8 @@ export default function MainPortal() {
               <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
               {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
               <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest slashed-zero-font truncate px-2">
-                  {modalResId}
+                <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2">
+                  {formatSlashedZero(modalResId)}
                 </p>
               </div>
             </div>

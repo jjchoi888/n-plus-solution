@@ -1270,6 +1270,11 @@ export default function HotelWebsite({ domain }) {
                     const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
                     const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
 
+                    // 숫자 0을 사선이 있는 0으로 치환하는 함수
+                    const formatSlashedZero = (id) => {
+                        return String(id).replace(/0/g, '0̸'); // 숫자 0을 사선 있는 0(U+0030 + U+0338)으로 대체
+                    };
+
                     // 💡 결제 확정 및 서버 전송 함수
                     const handleConfirmBooking = async (e) => {
                         // 💡 1. 리액트를 거치지 않고 클릭 즉시 0.001초 만에 버튼을 물리적으로 굳혀버립니다 (더블클릭 원천 차단)
@@ -1749,8 +1754,8 @@ export default function HotelWebsite({ domain }) {
                                 <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
                                 {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
                                 <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest slashed-zero-font truncate px-2">
-                                        {modalResId}
+                                    <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2">
+                                        {formatSlashedZero(modalResId)}
                                     </p>
                                 </div>
                             </div>
