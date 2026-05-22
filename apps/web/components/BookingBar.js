@@ -852,7 +852,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                 <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-8 shadow-inner">
                   <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest slashed-zero-font mb-2">Your Reservation ID</p>
                   {modal.highlight.split('\n').map(id => (
-                    <p key={id} className="text-3xl font-mono font-black text-emerald-900 tracking-widestslashed-zero-font ">{id}</p>
+                    <p key={id} className="text-3xl font-mono font-black text-emerald-900 tracking-widest slashed-zero-font">{id}</p>
                   ))}
                 </div>
               )}
