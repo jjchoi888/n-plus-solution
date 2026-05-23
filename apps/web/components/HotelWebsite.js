@@ -1319,21 +1319,20 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-
-                {/* 💡 예약 모달창 (Booking Summary가 버튼 위로 고정되도록 수정) */}
+                {/* 💡 예약 모달창 (괄호 구조와 레이아웃 순서를 표준화하여 문법 에러를 해결했습니다) */}
                 {showBookingModal && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
-                            {/* 헤더 */}
+                            {/* 모달 헤더 */}
                             <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
                                 <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
                                 {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                             </div>
 
-                            {/* 메인 콘텐츠 영역 */}
+                            {/* 모달 메인 콘텐츠 */}
                             <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
-                                {/* 1. 게스트 정보 입력 (왼쪽 영역) */}
+                                {/* 1. 게스트 정보 입력 (왼쪽) */}
                                 <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                                     <section>
                                         <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
@@ -1344,16 +1343,15 @@ export default function HotelWebsite({ domain }) {
                                         <div className="mb-4"><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.email}</label><input value={guestEmail} onChange={e => setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 theme-bg-light rounded-xl theme-focus outline-none" placeholder="john@example.com" /></div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label><input value={guestPhone} onChange={e => setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" /></div>
-                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup><optgroup label="All Countries">{otherCountries.map(c => <option key={`oth_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
+                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
                                         </div>
                                     </section>
                                 </div>
 
-                                {/* 2. 예약 요약 및 결제 버튼 (우측 영역 - 모바일에서도 Summary가 무조건 위로) */}
-                                <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto">
-
-                                    {/* Booking Summary 영역 */}
-                                    <div className="flex-1 mb-6">
+                                {/* 2. 결제 상세 (우측 사이드바) - Booking Summary가 버튼보다 위에 나오도록 강제 */}
+                                <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col">
+                                    {/* Booking Summary (먼저 나옴) */}
+                                    <div className="mb-6">
                                         <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                                         <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
                                             <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2"><span>{t.checkIn}</span><span>{t.checkOut}</span></div>
@@ -1370,8 +1368,8 @@ export default function HotelWebsite({ domain }) {
                                         </div>
                                     </div>
 
-                                    {/* 결제 버튼 영역 (무조건 Summary 아래에 고정) */}
-                                    <div className="pt-6 border-t border-slate-300 w-full shrink-0">
+                                    {/* 결제 버튼 (Summary 아래에 나옴) */}
+                                    <div className="pt-6 border-t border-slate-300 w-full mt-auto">
                                         <div className="flex justify-between items-end mb-6">
                                             <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                             <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
@@ -1385,7 +1383,7 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-                )}
+                )}                
 
                 {/* 🎈 우측 상단 바운스 대화 풍선 */}
                 {activePromos.length > 0 && (
