@@ -1345,27 +1345,38 @@ export default function HotelWebsite({ domain }) {
                                     </section>
                                 </div>
 
-                                {/* 2. Booking Summary 및 버튼 영역 (순서 보장) */}
+                                {/* 2. 우측 사이드바 (Summary + Button, 레이아웃 순서 고정) */}
                                 <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col">
-                                    {/* Summary 컨텐츠 */}
-                                    <div className="flex-1 mb-6">
+
+                                    {/* Booking Summary 영역 */}
+                                    <div className="mb-6">
                                         <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                                         <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
-                                            <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2"><span>{t.checkIn}</span><span>{t.checkOut}</span></div>
-                                            <div className="flex justify-between font-black text-slate-800 text-sm"><span>{checkIn}</span><span>{checkOut}</span></div>
+                                            <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
+                                                <span>{t.checkIn}</span><span>{t.checkOut}</span>
+                                            </div>
+                                            <div className="flex justify-between font-black text-slate-800 text-sm">
+                                                <span>{checkIn}</span><span>{checkOut}</span>
+                                            </div>
                                         </div>
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="w-full">
                                                 <p className="font-black theme-text text-lg leading-tight">{activeRoom?.name}</p>
                                                 <div className="mt-3 space-y-1.5 border-t theme-border pt-3 text-slate-600 text-xs font-bold">
-                                                    <p className="flex justify-between"><span>Base: ₱{Number(activeRoom?.price || activeRoom?.basePrice || 0).toLocaleString()} x {nights} {t.night.replace('/', '')}</span></p>
-                                                    {appliedPromo && <p className="flex justify-between theme-text theme-bg-light px-2 py-1 rounded-md mt-1 border theme-border"><span>- Discount ({appliedPromo.discount_pct}%)</span><span>- ₱{discountAmount.toLocaleString()}</span></p>}
+                                                    <p className="flex justify-between">
+                                                        <span>Base: ₱{Number(activeRoom?.price || activeRoom?.basePrice || 0).toLocaleString()} x {nights} {t.night.replace('/', '').trim()}</span>
+                                                    </p>
+                                                    {appliedPromo && (
+                                                        <p className="flex justify-between theme-text theme-bg-light px-2 py-1 rounded-md mt-1 border theme-border">
+                                                            <span>- Discount ({appliedPromo.discount_pct}%)</span><span>- ₱{discountAmount.toLocaleString()}</span>
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* 버튼 영역 (mt-auto를 제거하여 Summary 바로 아래로 위치) */}
+                                    {/* 결제 버튼 영역 (Summary 바로 아래에 위치) */}
                                     <div className="pt-6 border-t border-slate-300 w-full shrink-0">
                                         <div className="flex justify-between items-end mb-6">
                                             <span className="font-black text-slate-800 text-xl">{t.total}</span>
