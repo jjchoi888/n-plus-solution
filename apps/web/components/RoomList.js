@@ -403,26 +403,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  {/* 결제 버튼과 BACK 버튼 나란히 배치 */}
-                  <div className="flex items-center gap-3 w-full mt-8">
-                    <button
-                      type="button"
-                      onClick={() => setIsCheckoutOpen(false)}
-                      className="w-1/3 py-4 md:py-4 rounded-xl md:rounded-2xl font-black text-sm md:text-lg border-2 border-emerald-600 theme-border text-emerald-600 theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      ← BACK
-                    </button>
-                    <button
-                      type="button"
-                      onClick={submitBooking}
-                      disabled={isBooking}
-                      className="w-2/3 bg-emerald-600 theme-bg text-white py-4 md:py-4 rounded-xl md:rounded-2xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg hover:bg-emerald-700 theme-hover disabled:opacity-50"
-                    >
-                      {btnText}
-                    </button>
-                  </div>
-                </div>
-
                 {/* Booking Summary */}
                 <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 theme-bg-light rounded-2xl p-6 border border-emerald-100 theme-border flex flex-col h-fit sticky top-6 text-left order-2">
                   <h3 className="text-lg font-bold text-emerald-900 theme-text mb-4 border-b border-emerald-200 theme-border pb-2 text-left">{t.summary}</h3>
@@ -487,6 +467,26 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       <span className="text-emerald-600 theme-text">₱{grandTotal.toLocaleString()}</span>
                     </p>
                   </div>
+
+                  <div className="flex items-center gap-3 w-full mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setIsCheckoutOpen(false)}
+                      className="w-1/3 py-4 md:py-4 rounded-xl md:rounded-2xl font-black text-sm md:text-lg border-2 border-emerald-600 theme-border text-emerald-600 theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      ← BACK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={submitBooking}
+                      disabled={isBooking}
+                      className="w-2/3 bg-emerald-600 theme-bg text-white py-4 md:py-4 rounded-xl md:rounded-2xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg hover:bg-emerald-700 theme-hover disabled:opacity-50"
+                    >
+                      {btnText}
+                    </button>
+                  </div>
+                </div>
+
                 </div>
 
               </form>
