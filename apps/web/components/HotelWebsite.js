@@ -1369,7 +1369,7 @@ export default function HotelWebsite({ domain }) {
                                     </div>
 
                                     {/* 결제 버튼 (Summary 아래에 나옴) */}
-                                    <div className="pt-6 border-t border-slate-300 w-full mt-auto">
+                                    <div className="pt-6 border-t border-slate-300 w-full mt-6">
                                         <div className="flex justify-between items-end mb-6">
                                             <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                             <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
