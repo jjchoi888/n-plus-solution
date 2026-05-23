@@ -1330,6 +1330,7 @@ export default function HotelWebsite({ domain }) {
 
                             <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
                                 {/* 1. 게스트 정보 */}
+                                
                                 <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                                     <section>
                                         <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>

@@ -763,15 +763,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                     </div>
                   </div>
                 </div>
-
-                {/* 💡 [핵심 결제 버튼] 리액트 변수(isBooking)를 버튼 속성에서 완전히 지웠습니다! */}
-                <button
-                  type="button"
-                  onClick={submitBooking}
-                  className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
-                >
-                  {btnText}
-                </button>
               </div>
 
               <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left order-2">
@@ -832,6 +823,13 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                     <span>₱{grandTotal.toLocaleString()}</span>
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={submitBooking}
+                  className="mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 text-lg bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl"
+                >
+                  {btnText}
+                </button>
               </div>
             </form>
           </div>
