@@ -1319,20 +1319,17 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
-                {/* 💡 예약 모달창 (괄호 구조와 레이아웃 순서를 표준화하여 문법 에러를 해결했습니다) */}
                 {showBookingModal && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
-                            {/* 모달 헤더 */}
                             <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
                                 <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
                                 {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                             </div>
 
-                            {/* 모달 메인 콘텐츠 */}
                             <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
-                                {/* 1. 게스트 정보 입력 (왼쪽) */}
+                                {/* 1. 게스트 정보 */}
                                 <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                                     <section>
                                         <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
@@ -1348,10 +1345,10 @@ export default function HotelWebsite({ domain }) {
                                     </section>
                                 </div>
 
-                                {/* 2. 결제 상세 (우측 사이드바) - Booking Summary가 버튼보다 위에 나오도록 강제 */}
+                                {/* 2. Booking Summary 및 버튼 영역 (순서 보장) */}
                                 <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col">
-                                    {/* Booking Summary (먼저 나옴) */}
-                                    <div className="mb-6">
+                                    {/* Summary 컨텐츠 */}
+                                    <div className="flex-1 mb-6">
                                         <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                                         <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
                                             <div className="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2"><span>{t.checkIn}</span><span>{t.checkOut}</span></div>
@@ -1368,8 +1365,8 @@ export default function HotelWebsite({ domain }) {
                                         </div>
                                     </div>
 
-                                    {/* 결제 버튼 (Summary 아래에 나옴) */}
-                                    <div className="pt-6 border-t border-slate-300 w-full mt-6">
+                                    {/* 버튼 영역 (mt-auto를 제거하여 Summary 바로 아래로 위치) */}
+                                    <div className="pt-6 border-t border-slate-300 w-full shrink-0">
                                         <div className="flex justify-between items-end mb-6">
                                             <span className="font-black text-slate-800 text-xl">{t.total}</span>
                                             <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
@@ -1383,7 +1380,7 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-                )}                
+                )}               
 
                 {/* 🎈 우측 상단 바운스 대화 풍선 */}
                 {activePromos.length > 0 && (
