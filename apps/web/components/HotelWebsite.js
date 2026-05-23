@@ -695,28 +695,22 @@ export default function HotelWebsite({ domain }) {
         return `${t.expStart} ${name} ${t.startingFrom} ₱${price.toLocaleString()}${t.night}.`;
     };
 
-    // 1. 날짜 및 숙박 일수 계산
+    // 💡 [수정됨] 복잡한 계산식과 함수들을 return 밖으로 완전히 빼내어 문법 에러 원천 차단
     const start = new Date(checkIn);
     const end = new Date(checkOut);
     const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 
-    // 2. 숫자로 강제 변환 (문자열 이어붙기 버그 원천 차단)
     const roomPrice = Number(activeRoom?.price || activeRoom?.basePrice || 0);
     const safeRoomCount = Number(roomCount || 1);
     const safeExtraBed = Number(extraBed || 0);
 
-    // 3. 기본 금액 계산
     const basePrice = roomPrice * nights * safeRoomCount;
     const extraBedPrice = safeExtraBed * 1000 * nights;
 
-    // 4. 프로모션 할인 금액 계산
     const discountPct = appliedPromo ? Number(appliedPromo.discount_pct || 0) : 0;
     const discountAmount = appliedPromo ? (basePrice * discountPct) / 100 : 0;
-
-    // 5. 💡 최종 결제 금액 도출 (이 금액이 서버 장부에 꽂힙니다!)
     const finalTotal = basePrice + extraBedPrice - discountAmount;
 
-    // 💡 프로모션 적용 함수
     const handleApplyPromo = () => {
         const promo = activePromos.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
         if (!promo) return setAlertMessage(t.invalidPromo);
@@ -732,14 +726,11 @@ export default function HotelWebsite({ domain }) {
     const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
     const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
 
-    // 숫자 0을 사선이 있는 0으로 치환하는 함수
     const formatSlashedZero = (id) => {
-        return String(id).replace(/0/g, '0̸'); // 숫자 0을 사선 있는 0(U+0030 + U+0338)으로 대체
+        return String(id).replace(/0/g, '0̸');
     };
 
-    // 💡 결제 확정 및 서버 전송 함수
     const handleConfirmBooking = async (e) => {
-        // 💡 1. 리액트를 거치지 않고 클릭 즉시 0.001초 만에 버튼을 물리적으로 굳혀버립니다 (더블클릭 원천 차단)
         if (e && e.currentTarget) {
             if (e.currentTarget.disabled) return;
             e.currentTarget.disabled = true;
@@ -750,7 +741,6 @@ export default function HotelWebsite({ domain }) {
 
         if (isBooking) return;
 
-        // 에러 시 버튼을 원래 상태로 복구하는 함수
         const resetBtn = () => {
             setIsBooking(false);
             if (e && e.currentTarget) {
@@ -761,7 +751,6 @@ export default function HotelWebsite({ domain }) {
             }
         };
 
-        // 필수 정보 검증
         if (!firstName || !lastName || !guestEmail || !guestPhone) {
             resetBtn();
             return setAlertMessage(t.fillRequired);
@@ -802,22 +791,21 @@ export default function HotelWebsite({ domain }) {
             const data = await res.json();
 
             if (data.success && data.paymentUrl) {
-                // 💡 2. 성공 시 절대 resetBtn()을 부르지 않고 화면을 즉시 덮어씌웁니다.
                 window.location.replace(data.paymentUrl);
             } else {
                 setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
-                resetBtn(); // 에러 시에만 버튼 잠금 해제
+                resetBtn();
             }
         } catch (error) {
             console.error("Booking Error:", error);
             setAlertMessage(t.serverError);
-            resetBtn(); // 에러 시에만 버튼 잠금 해제
+            resetBtn();
         }
-    }
+    };
 
-
+    // 💡 아래부터 화면을 그리는 return 문 시작입니다. (중첩 및 괄호 오류 완벽 제거)
     return (
-    <>
+        <>
             <style dangerouslySetInnerHTML={{
                 __html: `
         @import url('https://fonts.googleapis.com/css2?family=${themeFont.replace(/ /g, '+')}:wght@300;400;600;900&display=swap');
@@ -849,7 +837,6 @@ export default function HotelWebsite({ domain }) {
                                 <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                             </select>
 
-                            {/* 로그인 / 마이페이지 버튼 */}
                             {!user ? (
                                 <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className="hidden sm:block px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
                                     {t.loginSignUpBtn}
@@ -879,7 +866,6 @@ export default function HotelWebsite({ domain }) {
                 {activeMenu === 'HOME' && (
                     <div className="animate-fade-in-up">
                         <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900 group">
-
                             {safeConfig.slider_style === 'auto_slide' ? (
                                 <div
                                     className="absolute inset-0 flex transition-transform duration-700 ease-in-out z-10"
@@ -895,7 +881,6 @@ export default function HotelWebsite({ domain }) {
                                 ))
                             )}
 
-                            {/* 💡 [수정] 메인 슬라이더: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
                             {!isMainSliderAuto && sliderImages.length > 1 && (
                                 <>
                                     <button onClick={prevMainSlide} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
@@ -905,7 +890,6 @@ export default function HotelWebsite({ domain }) {
                                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                     </button>
 
-                                    {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
                                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
                                         {sliderImages.map((_, idx) => (
                                             <div key={`dot_${idx}`} className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all shadow-sm ${currentSlide === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
@@ -958,7 +942,6 @@ export default function HotelWebsite({ domain }) {
                 {/* 💡 예약 화면 (BOOK) */}
                 {activeMenu === 'BOOK' && (
                     <section className="relative pt-32 pb-20 px-4 md:px-6 w-full flex-grow min-h-[85vh] flex flex-col items-center justify-start animate-fade-in-up">
-
                         <div className="fixed inset-0 z-0 bg-slate-50">
                             {sliderImages.map((img, idx) => (
                                 <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-40 z-10' : 'opacity-0 z-0'}`} alt="slide" />
@@ -966,12 +949,9 @@ export default function HotelWebsite({ domain }) {
                             <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
                         </div>
 
-                        {/* 💡 [핵심 해결 1] 결제창(showBookingModal)이 안 열려있거나, 아직 검색(hasSearched) 전일 때만 날짜 검색창을 보여줍니다! */}
                         {!showBookingModal && !hasSearched && (
                             <div className="relative z-40 w-full max-w-5xl flex flex-col items-center mt-4">
-                                {/* 💡 [핵심 해결 2] 검색창 겉 테두리에 브랜드 컬러(theme-border)를 적용합니다. */}
                                 <div className="bg-white p-2 md:p-3 rounded-3xl md:rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center gap-2 w-full border-2 theme-border backdrop-blur-xl bg-white/90">
-
                                     <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors md:rounded-l-full cursor-pointer">
                                         <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkIn}</label>
                                         <input type="date" value={checkIn} min={getHotelDate(0)} onChange={e => {
@@ -982,12 +962,12 @@ export default function HotelWebsite({ domain }) {
                                                 const d = new Date(newIn); d.setDate(d.getDate() + 1);
                                                 setCheckOut(d.toISOString().split('T')[0]);
                                             }
-                                        }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
+                                        }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" required />
                                     </div>
 
                                     <div className="flex-1 px-6 py-3 border-b md:border-b-0 md:border-r border-slate-200 w-full relative hover:bg-slate-50 transition-colors cursor-pointer">
                                         <label className="text-[10px] font-bold text-slate-600 md:text-slate-400 uppercase tracking-wider block mb-1">{t.checkOut}</label>
-                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e => { setCheckOut(e.target.value); setHasSearched(false); }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" />
+                                        <input type="date" value={checkOut} min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : getHotelDate(0)} onChange={e => { setCheckOut(e.target.value); setHasSearched(false); }} className="w-full bg-transparent font-bold text-slate-700 md:text-slate-600 outline-none text-base md:text-lg cursor-pointer" required />
                                     </div>
 
                                     <div className="flex-1 px-6 py-3 w-full cursor-pointer relative hover:bg-slate-50 transition-colors" onClick={() => setShowGuestPicker(!showGuestPicker)}>
@@ -1007,12 +987,10 @@ export default function HotelWebsite({ domain }) {
                                                     <div><p className="font-bold text-sm">{t.children}</p><p className="text-[10px] text-slate-500">{t.age2_12}</p></div>
                                                     <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setKids(Math.max(0, kids - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{kids}</span><button type="button" onClick={(e) => { e.stopPropagation(); setKids(kids + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                                 </div>
-
                                                 <div className="flex justify-between items-center theme-bg-light/50 p-2 -mx-2 rounded-lg border theme-border/50">
                                                     <div><p className="font-bold text-sm text-emerald-900">{t.infants}</p><p className="text-[10px] theme-text/80">{t.under2}</p></div>
                                                     <div className="font-black theme-text bg-white px-3 py-1 rounded-full text-xs border theme-border shadow-sm uppercase tracking-widest">Free</div>
                                                 </div>
-
                                                 <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
                                                     <div><p className="font-bold text-sm">{t.rooms}</p></div>
                                                     <div className="flex items-center gap-3"><button type="button" onClick={(e) => { e.stopPropagation(); setRoomCount(Math.max(1, roomCount - 1)); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={(e) => { e.stopPropagation(); setRoomCount(roomCount + 1); setHasSearched(false); }} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
@@ -1045,11 +1023,8 @@ export default function HotelWebsite({ domain }) {
                 {/* 🛏️ 개별 ROOMS 탭 */}
                 {activeMenu === 'ROOMS' && (
                     <section className="pt-24 md:pt-32 pb-40 md:pb-56 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow relative z-20">
-                        {/* 💡 rooms 대신 visibleRooms를 사용합니다 */}
                         {visibleRooms.length > 0 && activeRoom ? (
                             <div className="relative z-30">
-
-                                {/* 💡 [안내 배너] 고객에게 현재 프로모션 모드임을 명확히 알려줍니다 */}
                                 {appliedPromo && !appliedPromo.target_room_type.includes('All Rooms') && (
                                     <div className="mb-4 theme-bg-light border theme-border text-emerald-800 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm shadow-sm animate-fade-in">
                                         <span className="text-lg">🎁</span>
@@ -1076,23 +1051,15 @@ export default function HotelWebsite({ domain }) {
                                                     {activeRoom.images.map((img, idx) => (
                                                         <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="room" />
                                                     ))}
-                                                    {/* 💡 [수정] 객실 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
                                                     {activeRoom.images.length > 1 && !isRoomSliderAuto && (
                                                         <>
-                                                            <button
-                                                                onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1); }}
-                                                                className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100"
-                                                            >
+                                                            <button onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev === 0 ? activeRoom.images.length - 1 : prev - 1); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                             </button>
-                                                            <button
-                                                                onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev + 1); }}
-                                                                className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100"
-                                                            >
+                                                            <button onClick={(e) => { e.preventDefault(); setRoomSlideIdx(prev => prev + 1); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                             </button>
 
-                                                            {/* 위치 표시 점(Dots) */}
                                                             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
                                                                 {activeRoom.images.map((_, idx) => (
                                                                     <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(roomSlideIdx % activeRoom.images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
@@ -1294,7 +1261,7 @@ export default function HotelWebsite({ domain }) {
                                         </div>
                                     </div>
                                     <div className="lg:col-span-3 flex flex-col justify-center">
-                                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{attractions[activeAttIdx]?.title}</h3>
+                                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{attractions[activeAttIdx]?.title}</h3>
                                         <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: attractions[activeAttIdx]?.description || '' }} />
                                     </div>
                                 </div>
@@ -1352,21 +1319,24 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
+
+                {/* 💡 예약 모달창 (Booking Summary가 버튼 위로 고정되도록 수정) */}
                 {showBookingModal && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in" onClick={() => !isBooking && setShowBookingModal(false)}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
+                            {/* 헤더 */}
                             <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
                                 <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
                                 {!isBooking && <button onClick={() => setShowBookingModal(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>}
                             </div>
 
+                            {/* 메인 콘텐츠 영역 */}
                             <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
-                                {/* 1. 게스트 정보 */}
+                                {/* 1. 게스트 정보 입력 (왼쪽 영역) */}
                                 <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                                     <section>
                                         <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
-                
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.firstName}</label><input value={firstName} onChange={e => setFirstName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="John" /></div>
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.lastName}</label><input value={lastName} onChange={e => setLastName(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="Doe" /></div>
@@ -1374,13 +1344,15 @@ export default function HotelWebsite({ domain }) {
                                         <div className="mb-4"><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.email}</label><input value={guestEmail} onChange={e => setGuestEmail(e.target.value)} disabled={isBooking} type="email" className="w-full p-3 border border-slate-200 theme-bg-light rounded-xl theme-focus outline-none" placeholder="john@example.com" /></div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label><input value={guestPhone} onChange={e => setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" /></div>
-                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
+                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup><optgroup label="All Countries">{otherCountries.map(c => <option key={`oth_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
                                         </div>
                                     </section>
                                 </div>
 
-                                {/* 2. 예약 요약 및 결제 버튼 (우측 영역) */}
+                                {/* 2. 예약 요약 및 결제 버튼 (우측 영역 - 모바일에서도 Summary가 무조건 위로) */}
                                 <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col h-auto">
+
+                                    {/* Booking Summary 영역 */}
                                     <div className="flex-1 mb-6">
                                         <h3 className="text-xl font-black theme-text mb-6">{t.bookingSummary}</h3>
                                         <div className="bg-white rounded-2xl p-4 shadow-sm border theme-border mb-6">
@@ -1413,12 +1385,10 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-        
-            )}
+                )}
 
-            {/* 🎈 우측 상단 바운스 대화 풍선 */}
-            {
-                activePromos.length > 0 && (
+                {/* 🎈 우측 상단 바운스 대화 풍선 */}
+                {activePromos.length > 0 && (
                     <div className="fixed top-24 right-6 z-40 flex flex-col md:flex-row gap-4 items-end md:items-center">
                         {activePromos.map((promo, idx) => {
                             const colors = ['bg-red-600', 'bg-blue-600', 'theme-bg text-white', 'bg-purple-600'];
@@ -1437,12 +1407,10 @@ export default function HotelWebsite({ domain }) {
                             );
                         })}
                     </div>
-                )
-            }
+                )}
 
-            {/* 🎁 스페셜 오퍼 팝업 모달창 */}
-            {
-                showPromoModal && selectedPromo && (
+                {/* 🎁 스페셜 오퍼 팝업 모달창 */}
+                {showPromoModal && selectedPromo && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
                         <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative flex flex-col">
                             <div className="h-48 w-full relative">
@@ -1498,12 +1466,10 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-                )
-            }
+                )}
 
-            {/* 💡 전역 알림(Alert) 모달창 */}
-            {
-                alertMessage && (
+                {/* 💡 전역 알림(Alert) 모달창 */}
+                {alertMessage && (
                     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
                             {/* 💡 헤더 색상을 브랜드 컬러로 변경 */}
@@ -1521,12 +1487,10 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-                )
-            }
+                )}
 
-            {/* 📱 푸터 */}
-            {
-                !hasSearched && (
+                {/* 📱 푸터 */}
+                {!hasSearched && (
                     <footer className="bg-white/90 backdrop-blur-md border-t border-slate-200 py-8 md:py-10 px-6 mt-auto relative z-10">
                         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                             <div className="hidden md:block flex-1"></div>
@@ -1541,12 +1505,10 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </footer>
-                )
-            }
+                )}
 
-            {/* 💡 고객 인증(Auth) 모달창 */}
-            {
-                showGuestAuthModal && (
+                {/* 💡 고객 인증(Auth) 모달창 */}
+                {showGuestAuthModal && (
                     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
                         <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-3xl" onClick={e => e.stopPropagation()}>
                             <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
@@ -1577,7 +1539,7 @@ export default function HotelWebsite({ domain }) {
                                                 <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="name@email.com" />
                                             </div>
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label> {/* Using paymentMethod "Password" translation would be better but let's stick to simple text if missing, wait I'll use hardcoded or add to dictionary */}
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label>
                                                 <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
                                             </div>
                                             <div className="flex justify-end mt-1 mb-2">
@@ -1652,48 +1614,36 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-                )
-            }
+                )}
 
-            {/* 💡 예약 완료 모달창 (화면 중앙 고정 및 얇은 회색 테두리 추가) */}
-            {
-                showBookingSuccessModal && (
+                {/* 💡 예약 완료 모달창 */}
+                {showBookingSuccessModal && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
                         <div className="bg-white rounded-[40px] p-8 md:p-10 max-w-sm w-full text-center shadow-2xl transform animate-scale-up">
-                            {/* 체크 아이콘 (색상 고정) */}
                             <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
                                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-
-                            {/* Payment Success! 문구 (색상 고정) */}
                             <p className="text-emerald-600 font-black text-lg mb-1">Payment Success!</p>
                             <h2 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
                             <p className="text-slate-500 font-bold text-lg mb-8">Your stay is Secured.</p>
-
                             <div className="border-t border-slate-100 pt-8 mb-10">
                                 <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] slashed-zero-font mb-4">Reservation ID</p>
-                                {/* 💡 두꺼운 검은선 대신 얇은 연회색 선(border-slate-300)으로 교체 */}
                                 <div className="border border-slate-300 rounded-xl py-4 px-2 inline-block bg-slate-50 w-full">
-                                    {/* 예약 ID 출력 부분 */}
                                     <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-widest truncate px-2"
-                                        style={{
-                                            fontVariantNumeric: 'slashed-zero',
-                                            fontFamily: 'Consolas, Monaco, "Courier New", monospace' // 사선 0을 지원하는 폰트 강제
-                                        }}>
+                                        style={{ fontVariantNumeric: 'slashed-zero', fontFamily: 'Consolas, Monaco, "Courier New", monospace' }}>
                                         {modalResId}
                                     </p>
                                 </div>
                             </div>
-
-                            <button
-                                onClick={() => setShowBookingSuccessModal(false)}
-                                className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 text-lg"
-                            >
+                            <button onClick={() => setShowBookingSuccessModal(false)} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 text-lg">
                                 Return to Home
                             </button>
                         </div>
-                    </>   
-                ); 
-            }
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
