@@ -11,6 +11,7 @@ const TAB_TITLES = {
     AGENTS: "Sales Representatives (Commissions)",
     SETTLEMENT: "Commission Settlement",
     BILLING: "Billing & Commission Management",
+    MULTI_PG: "Multi-PG Routing Control",
     MEMBERS: "Members Management",
     USERS: "n+ Rewards Club"
 };
@@ -23,6 +24,7 @@ const SIDEBAR_MENUS = [
     { id: "AGENTS", label: "Sales Agents", icon: "🤝", roles: ["SUPER_ADMIN", "AGENT"] },
     { id: "SETTLEMENT", label: "Commissions", icon: "💰", roles: ["SUPER_ADMIN", "AGENT"] },
     { id: "BILLING", label: "Billing & Plans", icon: "💳", roles: ["SUPER_ADMIN", "AGENT"] }
+    , { id: "MULTI_PG", label: "Multi-PG Settings", icon: "🧭", roles: ["SUPER_ADMIN"] }
 ];
 
 const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
@@ -85,6 +87,23 @@ export default function PortalAdmin() {
     const [toastMessage, setToastMessage] = useState("");
 
     const [pendingMemberCount, setPendingMemberCount] = useState(0);
+    const [multiPgConfig, setMultiPgConfig] = useState({
+        providers: [
+            { key: "stripe", label: "Stripe", enabled: true, priority: 1 },
+            { key: "paypal", label: "PayPal", enabled: true, priority: 2 },
+            { key: "xendit", label: "Xendit", enabled: false, priority: 3 }
+        ],
+        routing: {
+            card: "stripe",
+            wallet: "paypal",
+            international: "stripe"
+        },
+        fallbackEnabled: true,
+        fallbackChain: "stripe>paypal>xendit",
+        timeoutMs: 8000
+    });
+    const [multiPgHealth, setMultiPgHealth] = useState([]);
+    const [isSavingMultiPg, setIsSavingMultiPg] = useState(false);
 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [newAgent, setNewAgent] = useState({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
@@ -340,6 +359,26 @@ export default function PortalAdmin() {
     }, [isLoggedIn, adminRole]);
 
     useEffect(() => {
+        if (!isLoggedIn || activeTab !== "MULTI_PG") return;
+        const fetchMultiPgConfig = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/multi-pg-config`);
+                const data = await res.json();
+                if (data?.success && data?.config) setMultiPgConfig(prev => ({ ...prev, ...data.config }));
+            } catch (e) { }
+        };
+        const fetchMultiPgHealth = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/multi-pg-health`);
+                const data = await res.json();
+                if (data?.success && Array.isArray(data?.rows)) setMultiPgHealth(data.rows);
+            } catch (e) { }
+        };
+        fetchMultiPgConfig();
+        fetchMultiPgHealth();
+    }, [isLoggedIn, activeTab]);
+
+    useEffect(() => {
         const isAuth = sessionStorage.getItem("hq_logged_in");
         const role = sessionStorage.getItem("hq_role") || "SUPER_ADMIN";
         const storedAgentId = sessionStorage.getItem("hq_agent_id") || "";
@@ -419,6 +458,39 @@ export default function PortalAdmin() {
             }
         } catch (error) {
             showToast("❌ Network error during ID check.");
+        }
+    };
+
+    const handleSaveMultiPgConfig = async () => {
+        try {
+            setIsSavingMultiPg(true);
+            const res = await fetch(`${BASE_URL}/api/admin/multi-pg-config`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(multiPgConfig)
+            });
+            const data = await res.json();
+            if (data?.success) showToast("✅ Multi-PG config saved.");
+            else showToast("❌ Failed to save Multi-PG config.");
+        } catch (e) {
+            showToast("❌ Network error while saving Multi-PG config.");
+        } finally {
+            setIsSavingMultiPg(false);
+        }
+    };
+
+    const handleRunMultiPgHealthCheck = async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/multi-pg-health/check`, { method: "POST" });
+            const data = await res.json();
+            if (data?.success && Array.isArray(data?.rows)) {
+                setMultiPgHealth(data.rows);
+                showToast("✅ Multi-PG health check completed.");
+            } else {
+                showToast("⚠️ Health check completed with warnings.");
+            }
+        } catch (e) {
+            showToast("❌ Failed to run Multi-PG health check.");
         }
     };
 
@@ -1020,6 +1092,158 @@ export default function PortalAdmin() {
                                         )
                                     })()}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* 💡 MULTI PG */}
+                    {/* ========================================================= */}
+                    {activeTab === "MULTI_PG" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto space-y-6">
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <div className="flex items-center justify-between mb-5">
+                                    <div>
+                                        <h2 className="text-lg font-black text-slate-800">Multi-PG Routing Control</h2>
+                                        <p className="text-xs font-bold text-slate-500 mt-1">Set provider priorities, payment-method routing, and fallback behavior.</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={handleRunMultiPgHealthCheck} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">Health Check</button>
+                                        <button onClick={handleSaveMultiPgConfig} disabled={isSavingMultiPg} className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-black text-xs shadow disabled:opacity-50">
+                                            {isSavingMultiPg ? "Saving..." : "Save Config"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="rounded-2xl border border-slate-200 p-4">
+                                        <h3 className="text-sm font-black text-slate-700 mb-3">Provider Priority</h3>
+                                        <div className="space-y-2">
+                                            {multiPgConfig.providers.map((pg, idx) => (
+                                                <div key={pg.key} className="grid grid-cols-12 gap-2 items-center">
+                                                    <div className="col-span-5 font-bold text-sm text-slate-700">{pg.label}</div>
+                                                    <div className="col-span-3">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={pg.priority}
+                                                            onChange={(e) => {
+                                                                const next = [...multiPgConfig.providers];
+                                                                next[idx] = { ...next[idx], priority: Number(e.target.value || 1) };
+                                                                setMultiPgConfig(prev => ({ ...prev, providers: next }));
+                                                            }}
+                                                            className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                                                        />
+                                                    </div>
+                                                    <label className="col-span-4 flex items-center justify-end gap-2 text-xs font-bold text-slate-600">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!pg.enabled}
+                                                            onChange={(e) => {
+                                                                const next = [...multiPgConfig.providers];
+                                                                next[idx] = { ...next[idx], enabled: e.target.checked };
+                                                                setMultiPgConfig(prev => ({ ...prev, providers: next }));
+                                                            }}
+                                                        />
+                                                        Enabled
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-slate-200 p-4 space-y-3">
+                                        <h3 className="text-sm font-black text-slate-700">Method Routing</h3>
+                                        {[
+                                            { key: "card", label: "Card Payments" },
+                                            { key: "wallet", label: "Wallet / QR" },
+                                            { key: "international", label: "International Card" }
+                                        ].map(row => (
+                                            <div key={row.key}>
+                                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{row.label}</label>
+                                                <select
+                                                    value={multiPgConfig.routing[row.key]}
+                                                    onChange={(e) => setMultiPgConfig(prev => ({ ...prev, routing: { ...prev.routing, [row.key]: e.target.value } }))}
+                                                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                                                >
+                                                    {multiPgConfig.providers.filter(p => p.enabled).map(p => (
+                                                        <option key={`${row.key}_${p.key}`} value={p.key}>{p.label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 rounded-2xl border border-slate-200 p-4">
+                                    <h3 className="text-sm font-black text-slate-700 mb-3">Fallback Policy</h3>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-end">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!multiPgConfig.fallbackEnabled}
+                                                onChange={(e) => setMultiPgConfig(prev => ({ ...prev, fallbackEnabled: e.target.checked }))}
+                                            />
+                                            Enable Auto Fallback
+                                        </label>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Fallback Chain</label>
+                                            <input
+                                                value={multiPgConfig.fallbackChain}
+                                                onChange={(e) => setMultiPgConfig(prev => ({ ...prev, fallbackChain: e.target.value }))}
+                                                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono"
+                                                placeholder="stripe>paypal>xendit"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Timeout (ms)</label>
+                                            <input
+                                                type="number"
+                                                min="1000"
+                                                step="500"
+                                                value={multiPgConfig.timeoutMs}
+                                                onChange={(e) => setMultiPgConfig(prev => ({ ...prev, timeoutMs: Number(e.target.value || 8000) }))}
+                                                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <h3 className="text-sm font-black text-slate-700 mb-3">Gateway Health & Last Checks</h3>
+                                {multiPgHealth.length === 0 ? (
+                                    <p className="text-sm text-slate-400 font-bold">No health check history yet.</p>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-sm">
+                                            <thead>
+                                                <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase">
+                                                    <th className="py-2 pr-3">Provider</th>
+                                                    <th className="py-2 pr-3">Status</th>
+                                                    <th className="py-2 pr-3">Latency</th>
+                                                    <th className="py-2 pr-3">Last Checked</th>
+                                                    <th className="py-2 pr-3">Message</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {multiPgHealth.map((row, i) => (
+                                                    <tr key={`${row.provider || "pg"}_${i}`} className="border-b border-slate-100">
+                                                        <td className="py-2 pr-3 font-bold">{row.provider || "-"}</td>
+                                                        <td className="py-2 pr-3">
+                                                            <span className={`px-2 py-1 rounded text-xs font-black ${row.status === "UP" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                                                                {row.status || "UNKNOWN"}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-2 pr-3">{row.latency_ms ?? "-"} ms</td>
+                                                        <td className="py-2 pr-3">{row.checked_at || "-"}</td>
+                                                        <td className="py-2 pr-3 text-slate-500">{row.message || "-"}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
