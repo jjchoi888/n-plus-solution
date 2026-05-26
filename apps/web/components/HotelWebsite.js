@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { app } from '../lib/firebase';
 import MemberDashboard from "./MemberDashboard";
 
@@ -15,6 +15,34 @@ const getHotelDate = (offsetDays = 0) => {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+};
+
+const PRIORITY_COUNTRIES = ['Philippines', 'South Korea', 'China', 'United States'];
+const FALLBACK_COUNTRIES = [
+    'Philippines', 'South Korea', 'China', 'United States', 'Japan', 'Singapore', 'Thailand', 'Vietnam',
+    'Malaysia', 'Indonesia', 'India', 'Australia', 'Canada', 'United Kingdom', 'France', 'Germany', 'Spain',
+    'Italy', 'Netherlands', 'United Arab Emirates', 'Saudi Arabia', 'Qatar'
+];
+
+const buildCountryOptions = () => {
+    try {
+        if (typeof Intl !== 'undefined' && typeof Intl.DisplayNames !== 'undefined' && typeof Intl.supportedValuesOf === 'function') {
+            const dn = new Intl.DisplayNames(['en'], { type: 'region' });
+            const names = Intl.supportedValuesOf('region')
+                .map((code) => dn.of(code))
+                .filter((name) => name && !/^\d+$/.test(name));
+            const unique = [...new Set(names)].sort((a, b) => a.localeCompare(b));
+            const pinned = [...PRIORITY_COUNTRIES];
+            const rest = unique.filter((c) => !PRIORITY_COUNTRIES.includes(c));
+            return [...pinned, ...rest];
+        }
+    } catch (e) {
+        // Fallback list below
+    }
+    const unique = [...new Set(FALLBACK_COUNTRIES)].sort((a, b) => a.localeCompare(b));
+    const pinned = [...PRIORITY_COUNTRIES];
+    const rest = unique.filter((c) => !PRIORITY_COUNTRIES.includes(c));
+    return [...pinned, ...rest];
 };
 
 class ErrorBoundary extends React.Component {
@@ -338,6 +366,7 @@ export default function HotelWebsite({ domain }) {
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
     const [googlePendingProfile, setGooglePendingProfile] = useState(null);
+    const [countryOptions] = useState(buildCountryOptions);
 
     const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
 
@@ -346,6 +375,50 @@ export default function HotelWebsite({ domain }) {
         const savedUser = localStorage.getItem('nplus_guest_user');
         if (savedUser) setUser(JSON.parse(savedUser));
     }, []);
+
+    const finalizeGoogleMember = async (gUser) => {
+        if (!gUser?.email) {
+            setAlertMessage("❌ " + t.googleFailed);
+            return;
+        }
+
+        const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(gUser.email || '')}`);
+        const profileData = await profileRes.json().catch(() => ({}));
+        const existingUser = profileData?.member;
+        const hasRequiredProfile = Boolean(
+            existingUser?.first_name &&
+            existingUser?.last_name &&
+            existingUser?.email &&
+            existingUser?.phone &&
+            existingUser?.nationality
+        );
+
+        if (profileData?.success && existingUser && hasRequiredProfile) {
+            localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
+            setUser(existingUser);
+            setShowGuestAuthModal(false);
+            setAlertMessage(t.welcomeBack);
+            setFirstName(existingUser.first_name || '');
+            setLastName(existingUser.last_name || '');
+            setGuestEmail(existingUser.email || '');
+            setGuestPhone(existingUser.phone || '');
+            setNationality(existingUser.nationality || 'Philippines');
+            return;
+        }
+
+        const displayNameParts = (gUser.displayName || '').trim().split(/\s+/).filter(Boolean);
+        setGooglePendingProfile(gUser);
+        setAuthForm({
+            email: gUser.email || '',
+            pw: '',
+            pwConfirm: '',
+            first: existingUser?.first_name || displayNameParts[0] || '',
+            last: existingUser?.last_name || displayNameParts.slice(1).join(' ') || '',
+            phone: existingUser?.phone || gUser.phoneNumber || '',
+            nationality: existingUser?.nationality || ''
+        });
+        setGuestAuthMode('GOOGLE_COMPLETE');
+    };
 
     const handleAuthSubmit = async (e) => {
         e.preventDefault();
@@ -399,48 +472,39 @@ export default function HotelWebsite({ domain }) {
 
         try {
             const result = await signInWithPopup(auth, provider);
-            const gUser = result.user;
-            const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(gUser.email || '')}`);
-            const profileData = await profileRes.json().catch(() => ({}));
-            const existingUser = profileData?.member;
-            const hasRequiredProfile = Boolean(
-                existingUser?.first_name &&
-                existingUser?.last_name &&
-                existingUser?.email &&
-                existingUser?.phone &&
-                existingUser?.nationality
-            );
-
-            if (profileData?.success && existingUser && hasRequiredProfile) {
-                localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
-                setUser(existingUser);
-                setShowGuestAuthModal(false);
-                setAlertMessage(t.welcomeBack);
-                setFirstName(existingUser.first_name || '');
-                setLastName(existingUser.last_name || '');
-                setGuestEmail(existingUser.email || '');
-                setGuestPhone(existingUser.phone || '');
-                setNationality(existingUser.nationality || 'Philippines');
-                return;
-            }
-
-            const displayNameParts = (gUser.displayName || '').trim().split(/\s+/).filter(Boolean);
-            setGooglePendingProfile(gUser);
-            setAuthForm({
-                email: gUser.email || '',
-                pw: '',
-                pwConfirm: '',
-                first: existingUser?.first_name || displayNameParts[0] || '',
-                last: existingUser?.last_name || displayNameParts.slice(1).join(' ') || '',
-                phone: existingUser?.phone || gUser.phoneNumber || '',
-                nationality: existingUser?.nationality || ''
-            });
-            setGuestAuthMode('GOOGLE_COMPLETE');
+            await finalizeGoogleMember(result.user);
         } catch (error) {
             console.error("Google Popup Error:", error);
-            setAlertMessage("❌ " + t.googleFailed);
+            const code = String(error?.code || '');
+            if (code.includes('popup-blocked') || code.includes('popup-closed-by-user')) {
+                try {
+                    await signInWithRedirect(auth, provider);
+                    return;
+                } catch (redirectErr) {
+                    console.error("Google Redirect Error:", redirectErr);
+                }
+            }
+            if (code.includes('unauthorized-domain')) {
+                setAlertMessage("❌ Google auth domain is not authorized. Please register this domain in Firebase Authentication settings.");
+                return;
+            }
+            setAlertMessage("❌ " + (error?.message || t.googleFailed));
         }
     };
+
+    useEffect(() => {
+        const auth = getAuth(app);
+        getRedirectResult(auth)
+            .then(async (result) => {
+                if (result?.user) {
+                    await finalizeGoogleMember(result.user);
+                }
+            })
+            .catch((err) => {
+                console.error("Google Redirect Result Error:", err);
+                if (err?.code) setAlertMessage("❌ " + (err.message || t.googleFailed));
+            });
+    }, []);
 
     const handleGoogleProfileComplete = async (e) => {
         e.preventDefault();
@@ -1656,7 +1720,16 @@ export default function HotelWebsite({ domain }) {
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
-                                                <input type="text" required value={authForm.nationality} onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Philippines" />
+                                                <input
+                                                    type="text"
+                                                    list="nplus-country-list"
+                                                    autoComplete="off"
+                                                    required
+                                                    value={authForm.nationality}
+                                                    onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })}
+                                                    className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl"
+                                                    placeholder="Type to search country"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
@@ -1706,7 +1779,16 @@ export default function HotelWebsite({ domain }) {
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
-                                                <input type="text" required value={authForm.nationality} onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Philippines" />
+                                                <input
+                                                    type="text"
+                                                    list="nplus-country-list"
+                                                    autoComplete="off"
+                                                    required
+                                                    value={authForm.nationality}
+                                                    onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })}
+                                                    className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl"
+                                                    placeholder="Type to search country"
+                                                />
                                             </div>
                                             <div className="pt-2">
                                                 <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">Save & Continue</button>
@@ -1743,6 +1825,11 @@ export default function HotelWebsite({ domain }) {
                                         )}
                                     </div>
                                 )}
+                                <datalist id="nplus-country-list">
+                                    {countryOptions.map((country) => (
+                                        <option key={`country_${country}`} value={country} />
+                                    ))}
+                                </datalist>
                             </div>
                         </div>
                     </div>
