@@ -11,7 +11,15 @@ export default function MemberDashboard({ hotelCode }) {
 
     // 💡 Password change form state
     const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
-    const [profileForm, setProfileForm] = useState({ fullName: '', phone: '', nationality: '' });
+    const [profileForm, setProfileForm] = useState({
+        firstName: '',
+        lastName: '',
+        phone: '',
+        nationality: '',
+        region: '',
+        dob: '',
+        documentUrl: ''
+    });
 
     // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
@@ -29,9 +37,13 @@ export default function MemberDashboard({ hotelCode }) {
                 const parsedUser = JSON.parse(savedUser);
                 setUser(parsedUser);
                 setProfileForm({
-                    fullName: parsedUser.name || `${parsedUser.first_name || ''} ${parsedUser.last_name || ''}`.trim(),
+                    firstName: parsedUser.first_name || '',
+                    lastName: parsedUser.last_name || '',
                     phone: parsedUser.phone || '',
-                    nationality: parsedUser.nationality || ''
+                    nationality: parsedUser.nationality || '',
+                    region: parsedUser.region || '',
+                    dob: parsedUser.dob || '',
+                    documentUrl: parsedUser.document_url || ''
                 });
 
                 // Call backend API to fetch real booking history for this user
@@ -127,21 +139,20 @@ export default function MemberDashboard({ hotelCode }) {
     };
 
     const handleProfileUpdate = async () => {
-        const fullName = String(profileForm.fullName || '').trim();
-        if (!fullName) {
-            alert("Please enter your name.");
+        if (!String(profileForm.firstName || '').trim() || !String(profileForm.lastName || '').trim()) {
+            alert("Please enter both first name and last name.");
             return;
         }
 
-        const nameParts = fullName.split(/\s+/);
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ');
         const payload = {
             email: user.email,
-            first_name: firstName,
-            last_name: lastName,
+            first_name: profileForm.firstName.trim(),
+            last_name: profileForm.lastName.trim(),
             phone: profileForm.phone || '',
             nationality: profileForm.nationality || '',
+            region: profileForm.region || '',
+            dob: profileForm.dob || '',
+            document_url: profileForm.documentUrl || '',
             hotel_code: hotelCode || user.hotel_code || ''
         };
 
@@ -171,7 +182,7 @@ export default function MemberDashboard({ hotelCode }) {
             const mergedUser = {
                 ...user,
                 ...updatedMember,
-                name: `${updatedMember.first_name || firstName} ${updatedMember.last_name || lastName}`.trim()
+                name: `${updatedMember.first_name || profileForm.firstName} ${updatedMember.last_name || profileForm.lastName}`.trim()
             };
             setUser(mergedUser);
             localStorage.setItem('nplus_guest_user', JSON.stringify(mergedUser));
@@ -184,6 +195,16 @@ export default function MemberDashboard({ hotelCode }) {
 
     // 💡 Identify Google Login user (Only email users can change passwords)
     const isGoogleUser = user?.auth_provider === 'google' || user?.password === null || !user?.password;
+
+    const handleDocumentUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            setProfileForm((prev) => ({ ...prev, documentUrl: String(reader.result || '') }));
+        };
+        reader.readAsDataURL(file);
+    };
 
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold bg-slate-50">Loading dashboard...</div>;
@@ -308,15 +329,25 @@ export default function MemberDashboard({ hotelCode }) {
                             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
-                                        <input type="text" value={profileForm.fullName} onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
+                                        <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
+                                        <input type="text" value={profileForm.lastName} onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
                                         <div className="relative">
                                             <input type="email" value={user.email || ''} disabled className="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-slate-400 cursor-not-allowed" />
                                             {isGoogleUser && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl">G</span>}
                                         </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date of Birth</label>
+                                        <input type="date" value={profileForm.dob} onChange={(e) => setProfileForm({ ...profileForm, dob: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -328,6 +359,22 @@ export default function MemberDashboard({ hotelCode }) {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nationality</label>
                                         <input type="text" value={profileForm.nationality} onChange={(e) => setProfileForm({ ...profileForm, nationality: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Region / Province</label>
+                                        <input type="text" value={profileForm.region} onChange={(e) => setProfileForm({ ...profileForm, region: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Upload (for fast check-in)</label>
+                                        <input type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    </div>
+                                </div>
+                                {profileForm.documentUrl && (
+                                    <p className="text-xs text-slate-500 font-bold">ID file attached. It will be used to speed up booking and front desk check-in.</p>
+                                )}
+                                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-bold text-blue-700">
+                                    Additional inputs below help make booking and check-in faster.
                                 </div>
                                 <button onClick={handleProfileUpdate} className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
                             </div>

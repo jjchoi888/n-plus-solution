@@ -344,6 +344,9 @@ export default function HotelWebsite({ domain }) {
     const [guestEmail, setGuestEmail] = useState('');
     const [guestPhone, setGuestPhone] = useState('');
     const [nationality, setNationality] = useState('Philippines');
+    const [guestRegion, setGuestRegion] = useState('');
+    const [guestDob, setGuestDob] = useState('');
+    const [guestDocumentUrl, setGuestDocumentUrl] = useState('');
     const [extraBed, setExtraBed] = useState(0);
 
     const [promoCode, setPromoCode] = useState('');
@@ -373,7 +376,18 @@ export default function HotelWebsite({ domain }) {
     // 로그인/가입/로그아웃 핸들러
     useEffect(() => {
         const savedUser = localStorage.getItem('nplus_guest_user');
-        if (savedUser) setUser(JSON.parse(savedUser));
+        if (savedUser) {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            setFirstName(parsedUser.first_name || '');
+            setLastName(parsedUser.last_name || '');
+            setGuestEmail(parsedUser.email || '');
+            setGuestPhone(parsedUser.phone || '');
+            setNationality(parsedUser.nationality || 'Philippines');
+            setGuestRegion(parsedUser.region || '');
+            setGuestDob(parsedUser.dob || '');
+            setGuestDocumentUrl(parsedUser.document_url || '');
+        }
     }, []);
 
     const finalizeGoogleMember = async (gUser) => {
@@ -403,6 +417,9 @@ export default function HotelWebsite({ domain }) {
             setGuestEmail(existingUser.email || '');
             setGuestPhone(existingUser.phone || '');
             setNationality(existingUser.nationality || 'Philippines');
+            setGuestRegion(existingUser.region || '');
+            setGuestDob(existingUser.dob || '');
+            setGuestDocumentUrl(existingUser.document_url || '');
             return;
         }
 
@@ -457,6 +474,9 @@ export default function HotelWebsite({ domain }) {
                 setGuestEmail(freshUser.email || '');
                 setGuestPhone(freshUser.phone || '');
                 setNationality(freshUser.nationality || 'Philippines');
+                setGuestRegion(freshUser.region || '');
+                setGuestDob(freshUser.dob || '');
+                setGuestDocumentUrl(freshUser.document_url || '');
                 setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
             } else {
                 setAlertMessage("❌ " + (data.message || t.authFailed));
@@ -488,6 +508,11 @@ export default function HotelWebsite({ domain }) {
             }
             if (code.includes('unauthorized-domain')) {
                 setAlertMessage("❌ Google auth domain is not authorized. Please register this domain in Firebase Authentication settings.");
+                return;
+            }
+            const rawMsg = String(error?.message || '');
+            if (rawMsg.toLowerCase().includes('firebase config is missing') || rawMsg.toLowerCase().includes('invalid-api-key')) {
+                setAlertMessage("❌ Google login is temporarily unavailable on this domain. Please use email login for now.");
                 return;
             }
             setAlertMessage("❌ " + (error?.message || t.googleFailed));
@@ -566,6 +591,9 @@ export default function HotelWebsite({ domain }) {
             setGuestEmail(finalUser.email || '');
             setGuestPhone(finalUser.phone || '');
             setNationality(finalUser.nationality || 'Philippines');
+            setGuestRegion(finalUser.region || '');
+            setGuestDob(finalUser.dob || '');
+            setGuestDocumentUrl(finalUser.document_url || '');
             setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
             setGooglePendingProfile(null);
             setGuestAuthMode('LOGIN');
@@ -871,6 +899,14 @@ export default function HotelWebsite({ domain }) {
         return String(id).replace(/0/g, '0̸');
     };
 
+    const handleGuestDocumentUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => setGuestDocumentUrl(String(reader.result || ''));
+        reader.readAsDataURL(file);
+    };
+
     const handleConfirmBooking = async (e) => {
         if (e && e.currentTarget) {
             if (e.currentTarget.disabled) return;
@@ -900,6 +936,26 @@ export default function HotelWebsite({ domain }) {
         setIsBooking(true);
 
         try {
+            if (guestEmail) {
+                try {
+                    await fetch('/api/members/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: guestEmail,
+                            first_name: firstName,
+                            last_name: lastName,
+                            phone: guestPhone,
+                            nationality,
+                            region: guestRegion,
+                            dob: guestDob,
+                            document_url: guestDocumentUrl,
+                            hotel_code: hotelCode
+                        })
+                    });
+                } catch (_) { }
+            }
+
             const dividedGrandTotal = finalTotal / safeRoomCount;
             let bookingPayloads = [];
 
@@ -914,6 +970,9 @@ export default function HotelWebsite({ domain }) {
                     email: guestEmail,
                     phone: guestPhone,
                     nationality: nationality,
+                    region: guestRegion,
+                    dob: guestDob,
+                    document_url: guestDocumentUrl,
                     total_price: dividedGrandTotal,
                     promo_code: appliedPromo ? appliedPromo.code : null,
                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
@@ -1483,6 +1542,18 @@ export default function HotelWebsite({ domain }) {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label><input value={guestPhone} onChange={e => setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" /></div>
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
+                                        </div>
+                                        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs font-bold text-blue-700">
+                                            Additional inputs below help make booking and check-in faster.
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Region / Province</label><input value={guestRegion} onChange={e => setGuestRegion(e.target.value)} disabled={isBooking} type="text" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="Metro Manila" /></div>
+                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Date of Birth</label><input value={guestDob} onChange={e => setGuestDob(e.target.value)} disabled={isBooking} type="date" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" /></div>
+                                        </div>
+                                        <div className="mt-4">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Check-in ID Upload</label>
+                                            <input type="file" accept="image/*,.pdf" disabled={isBooking} onChange={handleGuestDocumentUpload} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white" />
+                                            {guestDocumentUrl && <p className="text-[11px] text-emerald-600 font-bold mt-2">ID file attached.</p>}
                                         </div>
                                     </section>
                                 </div>
