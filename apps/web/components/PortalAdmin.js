@@ -105,6 +105,9 @@ export default function PortalAdmin() {
     const [newProviderForm, setNewProviderForm] = useState({ key: "", label: "" });
     const [multiPgHealth, setMultiPgHealth] = useState([]);
     const [isSavingMultiPg, setIsSavingMultiPg] = useState(false);
+    const [credentialHotelCode, setCredentialHotelCode] = useState("");
+    const [providerCredentials, setProviderCredentials] = useState({});
+    const [isSavingCredential, setIsSavingCredential] = useState(false);
 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [newAgent, setNewAgent] = useState({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
@@ -361,6 +364,9 @@ export default function PortalAdmin() {
 
     useEffect(() => {
         if (!isLoggedIn || activeTab !== "MULTI_PG") return;
+        const defaultHotelCode = partners?.[0]?.code || "";
+        if (defaultHotelCode && !credentialHotelCode) setCredentialHotelCode(defaultHotelCode);
+
         const fetchMultiPgConfig = async () => {
             try {
                 const res = await fetch(`${BASE_URL}/api/admin/multi-pg-config`);
@@ -377,7 +383,32 @@ export default function PortalAdmin() {
         };
         fetchMultiPgConfig();
         fetchMultiPgHealth();
-    }, [isLoggedIn, activeTab]);
+    }, [isLoggedIn, activeTab, partners]);
+
+    useEffect(() => {
+        if (!isLoggedIn || activeTab !== "MULTI_PG" || !credentialHotelCode) return;
+        const fetchProviderCredentials = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/portal/settings/pg?hotel_code=${encodeURIComponent(credentialHotelCode)}`);
+                const data = await res.json();
+                if (data?.success && Array.isArray(data?.rows)) {
+                    const map = {};
+                    data.rows.forEach((row) => {
+                        map[row.provider] = {
+                            public_key: row.public_key || "",
+                            secret_key: "",
+                            merchant_id: row.merchant_id || "",
+                            webhook_secret: row.webhook_secret || "",
+                            mode: row.mode || "sandbox",
+                            is_active: row.is_active === 1 || row.is_active === true
+                        };
+                    });
+                    setProviderCredentials(map);
+                }
+            } catch (e) { }
+        };
+        fetchProviderCredentials();
+    }, [isLoggedIn, activeTab, credentialHotelCode]);
 
     useEffect(() => {
         const isAuth = sessionStorage.getItem("hq_logged_in");
@@ -530,6 +561,62 @@ export default function PortalAdmin() {
                 .join(">")
         }));
         showToast("🗑️ Provider removed. Save config to persist.");
+    };
+
+    const handleCredentialField = (providerKey, field, value) => {
+        setProviderCredentials(prev => ({
+            ...prev,
+            [providerKey]: {
+                public_key: "",
+                secret_key: "",
+                merchant_id: "",
+                webhook_secret: "",
+                mode: "sandbox",
+                is_active: false,
+                ...(prev[providerKey] || {}),
+                [field]: value
+            }
+        }));
+    };
+
+    const handleSaveProviderCredential = async (providerKey) => {
+        if (!credentialHotelCode) return showToast("⚠️ Select hotel code first.");
+        const row = providerCredentials[providerKey] || {};
+        if (!row.public_key && !row.secret_key) {
+            return showToast("⚠️ Enter at least API/Public key or Secret key.");
+        }
+        try {
+            setIsSavingCredential(true);
+            const res = await fetch(`${BASE_URL}/api/portal/settings/pg`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hotel_code: credentialHotelCode,
+                    provider: providerKey,
+                    public_key: row.public_key || "",
+                    secret_key: row.secret_key || "",
+                    webhook_secret: row.webhook_secret || "",
+                    merchant_id: row.merchant_id || "",
+                    mode: row.mode || "sandbox",
+                    is_active: !!row.is_active,
+                    config_json: {}
+                })
+            });
+            const data = await res.json();
+            if (data?.success) {
+                showToast(`✅ [${providerKey}] credentials saved.`);
+                setProviderCredentials(prev => ({
+                    ...prev,
+                    [providerKey]: { ...(prev[providerKey] || {}), secret_key: "" }
+                }));
+            } else {
+                showToast(`❌ Save failed for ${providerKey}.`);
+            }
+        } catch (e) {
+            showToast("❌ Network error while saving credentials.");
+        } finally {
+            setIsSavingCredential(false);
+        }
     };
 
     const handleRegisterAgent = async (e) => {
@@ -1309,6 +1396,68 @@ export default function PortalAdmin() {
                                         </table>
                                     </div>
                                 )}
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
+                                    <div>
+                                        <h3 className="text-sm font-black text-slate-700">Provider Credentials</h3>
+                                        <p className="text-xs text-slate-500 font-bold mt-1">Hotel-specific API/Public key + Secret key settings.</p>
+                                    </div>
+                                    <div className="w-full md:w-64">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Target Hotel Code</label>
+                                        <select
+                                            value={credentialHotelCode}
+                                            onChange={(e) => setCredentialHotelCode(e.target.value)}
+                                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                                        >
+                                            <option value="">Select Hotel</option>
+                                            {partners.map((p) => (
+                                                <option key={`cred_hotel_${p.code}`} value={p.code}>{p.code} - {p.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {multiPgConfig.providers.map((pg) => {
+                                        const row = providerCredentials[pg.key] || {};
+                                        return (
+                                            <div key={`cred_${pg.key}`} className="border border-slate-200 rounded-2xl p-4">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h4 className="text-sm font-black text-slate-800">{pg.label} <span className="text-slate-400 font-mono">({pg.key})</span></h4>
+                                                    <label className="text-xs font-bold text-slate-600 flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!row.is_active}
+                                                            onChange={(e) => handleCredentialField(pg.key, "is_active", e.target.checked)}
+                                                        />
+                                                        Active for this hotel
+                                                    </label>
+                                                </div>
+                                                <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
+                                                    <input value={row.public_key || ""} onChange={(e) => handleCredentialField(pg.key, "public_key", e.target.value)} placeholder="API/Public Key" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <input type="password" value={row.secret_key || ""} onChange={(e) => handleCredentialField(pg.key, "secret_key", e.target.value)} placeholder="Secret Key (input to update)" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <input value={row.merchant_id || ""} onChange={(e) => handleCredentialField(pg.key, "merchant_id", e.target.value)} placeholder="Merchant ID" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <input value={row.webhook_secret || ""} onChange={(e) => handleCredentialField(pg.key, "webhook_secret", e.target.value)} placeholder="Webhook Secret" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <select value={row.mode || "sandbox"} onChange={(e) => handleCredentialField(pg.key, "mode", e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <option value="sandbox">sandbox</option>
+                                                        <option value="live">live</option>
+                                                    </select>
+                                                </div>
+                                                <div className="flex justify-end mt-3">
+                                                    <button
+                                                        onClick={() => handleSaveProviderCredential(pg.key)}
+                                                        disabled={isSavingCredential || !credentialHotelCode}
+                                                        className="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-black disabled:opacity-50"
+                                                    >
+                                                        Save {pg.label} Credentials
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     )}
