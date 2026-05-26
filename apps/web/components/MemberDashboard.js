@@ -11,6 +11,7 @@ export default function MemberDashboard({ hotelCode }) {
 
     // 💡 Password change form state
     const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
+    const [profileForm, setProfileForm] = useState({ fullName: '', phone: '', nationality: '' });
 
     // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
@@ -27,6 +28,11 @@ export default function MemberDashboard({ hotelCode }) {
 
                 const parsedUser = JSON.parse(savedUser);
                 setUser(parsedUser);
+                setProfileForm({
+                    fullName: parsedUser.name || `${parsedUser.first_name || ''} ${parsedUser.last_name || ''}`.trim(),
+                    phone: parsedUser.phone || '',
+                    nationality: parsedUser.nationality || ''
+                });
 
                 // Call backend API to fetch real booking history for this user
                 const res = await axios.get(`/api/members/bookings?email=${parsedUser.email}`);
@@ -118,6 +124,62 @@ export default function MemberDashboard({ hotelCode }) {
         }
         alert("✅ Password updated successfully!");
         setPwForm({ current: '', newPw: '', confirm: '' });
+    };
+
+    const handleProfileUpdate = async () => {
+        const fullName = String(profileForm.fullName || '').trim();
+        if (!fullName) {
+            alert("Please enter your name.");
+            return;
+        }
+
+        const nameParts = fullName.split(/\s+/);
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ');
+        const payload = {
+            email: user.email,
+            first_name: firstName,
+            last_name: lastName,
+            phone: profileForm.phone || '',
+            nationality: profileForm.nationality || '',
+            hotel_code: hotelCode || user.hotel_code || ''
+        };
+
+        try {
+            const candidates = ['/api/members/update', '/api/members/profile/update'];
+            let updatedMember = null;
+            let finalError = null;
+
+            for (const url of candidates) {
+                try {
+                    const res = await axios.post(url, payload);
+                    if (res?.data?.success) {
+                        updatedMember = res.data.member || payload;
+                        break;
+                    }
+                    finalError = res?.data?.message || `Failed at ${url}`;
+                } catch (err) {
+                    finalError = err?.response?.data?.message || err.message;
+                }
+            }
+
+            if (!updatedMember) {
+                alert(`❌ Failed to update profile. ${finalError || ''}`);
+                return;
+            }
+
+            const mergedUser = {
+                ...user,
+                ...updatedMember,
+                name: `${updatedMember.first_name || firstName} ${updatedMember.last_name || lastName}`.trim()
+            };
+            setUser(mergedUser);
+            localStorage.setItem('nplus_guest_user', JSON.stringify(mergedUser));
+            alert('✅ Profile updated successfully.');
+        } catch (error) {
+            console.error("Profile Update Error:", error);
+            alert("🚨 A server error occurred while updating profile.");
+        }
     };
 
     // 💡 Identify Google Login user (Only email users can change passwords)
@@ -247,7 +309,7 @@ export default function MemberDashboard({ hotelCode }) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
-                                        <input type="text" defaultValue={user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim()} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="text" value={profileForm.fullName} onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
@@ -257,7 +319,17 @@ export default function MemberDashboard({ hotelCode }) {
                                         </div>
                                     </div>
                                 </div>
-                                <button className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                                        <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nationality</label>
+                                        <input type="text" value={profileForm.nationality} onChange={(e) => setProfileForm({ ...profileForm, nationality: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    </div>
+                                </div>
+                                <button onClick={handleProfileUpdate} className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
                             </div>
 
                             {/* 💡 Render Password Change section ONLY if not a Google User */}
