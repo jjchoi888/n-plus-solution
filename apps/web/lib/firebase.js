@@ -9,5 +9,24 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase App
-export const app = initializeApp(firebaseConfig);
+const hasValidFirebaseConfig = Boolean(
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.appId
+);
+
+export let app = null;
+export let firebaseInitError = null;
+
+try {
+    if (hasValidFirebaseConfig) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        firebaseInitError = 'Firebase config is missing. Check NEXT_PUBLIC_FIREBASE_* env values.';
+    }
+} catch (error) {
+    firebaseInitError = error?.message || 'Failed to initialize Firebase.';
+}
+
+export { hasValidFirebaseConfig };
