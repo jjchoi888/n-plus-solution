@@ -89,19 +89,20 @@ export default function PortalAdmin() {
     const [pendingMemberCount, setPendingMemberCount] = useState(0);
     const [multiPgConfig, setMultiPgConfig] = useState({
         providers: [
-            { key: "stripe", label: "Stripe", enabled: true, priority: 1 },
-            { key: "paypal", label: "PayPal", enabled: true, priority: 2 },
-            { key: "xendit", label: "Xendit", enabled: false, priority: 3 }
+            { key: "paynplus", label: "Paynplus", enabled: true, priority: 1 },
+            { key: "aqwire", label: "Aqwire", enabled: true, priority: 2 },
+            { key: "hitpay", label: "HitPay", enabled: true, priority: 3 }
         ],
         routing: {
-            card: "stripe",
-            wallet: "paypal",
-            international: "stripe"
+            card: "paynplus",
+            wallet: "aqwire",
+            international: "hitpay"
         },
         fallbackEnabled: true,
-        fallbackChain: "stripe>paypal>xendit",
+        fallbackChain: "paynplus>aqwire>hitpay",
         timeoutMs: 8000
     });
+    const [newProviderForm, setNewProviderForm] = useState({ key: "", label: "" });
     const [multiPgHealth, setMultiPgHealth] = useState([]);
     const [isSavingMultiPg, setIsSavingMultiPg] = useState(false);
 
@@ -492,6 +493,43 @@ export default function PortalAdmin() {
         } catch (e) {
             showToast("❌ Failed to run Multi-PG health check.");
         }
+    };
+
+    const normalizeProviderKey = (raw) => String(raw || "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+
+    const handleAddManualProvider = () => {
+        const key = normalizeProviderKey(newProviderForm.key);
+        const label = String(newProviderForm.label || "").trim();
+        if (!key || !label) return showToast("⚠️ Enter provider key and label.");
+        if (multiPgConfig.providers.some(p => p.key === key)) return showToast("⚠️ Provider key already exists.");
+
+        const nextPriority = (multiPgConfig.providers.reduce((m, p) => Math.max(m, Number(p.priority || 0)), 0) || 0) + 1;
+        setMultiPgConfig(prev => ({
+            ...prev,
+            providers: [...prev.providers, { key, label, enabled: false, priority: nextPriority }]
+        }));
+        setNewProviderForm({ key: "", label: "" });
+        showToast("✅ Provider added. Set routing/enable then save.");
+    };
+
+    const handleRemoveProvider = (key) => {
+        const nextProviders = multiPgConfig.providers.filter(p => p.key !== key);
+        const fallbackProvider = nextProviders.find(p => p.enabled) || nextProviders[0];
+        setMultiPgConfig(prev => ({
+            ...prev,
+            providers: nextProviders,
+            routing: {
+                card: prev.routing.card === key ? (fallbackProvider?.key || "") : prev.routing.card,
+                wallet: prev.routing.wallet === key ? (fallbackProvider?.key || "") : prev.routing.wallet,
+                international: prev.routing.international === key ? (fallbackProvider?.key || "") : prev.routing.international
+            },
+            fallbackChain: String(prev.fallbackChain || "")
+                .split(">")
+                .map(v => v.trim())
+                .filter(v => v && v !== key)
+                .join(">")
+        }));
+        showToast("🗑️ Provider removed. Save config to persist.");
     };
 
     const handleRegisterAgent = async (e) => {
@@ -1118,10 +1156,37 @@ export default function PortalAdmin() {
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <div className="rounded-2xl border border-slate-200 p-4">
                                         <h3 className="text-sm font-black text-slate-700 mb-3">Provider Priority</h3>
+                                        <div className="grid grid-cols-12 gap-2 mb-4">
+                                            <input
+                                                value={newProviderForm.key}
+                                                onChange={(e) => setNewProviderForm(prev => ({ ...prev, key: e.target.value }))}
+                                                placeholder="provider key (e.g. adyen)"
+                                                className="col-span-4 border border-slate-200 rounded-lg px-2 py-2 text-sm"
+                                            />
+                                            <input
+                                                value={newProviderForm.label}
+                                                onChange={(e) => setNewProviderForm(prev => ({ ...prev, label: e.target.value }))}
+                                                placeholder="provider label"
+                                                className="col-span-5 border border-slate-200 rounded-lg px-2 py-2 text-sm"
+                                            />
+                                            <button
+                                                onClick={handleAddManualProvider}
+                                                className="col-span-3 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-black"
+                                            >
+                                                + Add Provider
+                                            </button>
+                                        </div>
                                         <div className="space-y-2">
                                             {multiPgConfig.providers.map((pg, idx) => (
                                                 <div key={pg.key} className="grid grid-cols-12 gap-2 items-center">
-                                                    <div className="col-span-5 font-bold text-sm text-slate-700">{pg.label}</div>
+                                                    <div className="col-span-4 font-bold text-sm text-slate-700">{pg.label}</div>
+                                                    <button
+                                                        onClick={() => handleRemoveProvider(pg.key)}
+                                                        className="col-span-1 text-[10px] px-2 py-1 rounded bg-red-50 text-red-600 font-black border border-red-200"
+                                                        title="Remove provider"
+                                                    >
+                                                        Del
+                                                    </button>
                                                     <div className="col-span-3">
                                                         <input
                                                             type="number"
