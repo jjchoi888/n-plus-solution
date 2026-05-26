@@ -333,7 +333,11 @@ export default function HotelWebsite({ domain }) {
     const [user, setUser] = useState(null);
     const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
     const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // LOGIN, REGISTER, FORGOT_PASSWORD
-    const [authForm, setAuthForm] = useState({ email: '', pw: '', first: '', last: '', phone: '', nationality: '' });
+    const [authForm, setAuthForm] = useState({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+    const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
+    const [googlePendingProfile, setGooglePendingProfile] = useState(null);
 
     const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
 
@@ -345,6 +349,11 @@ export default function HotelWebsite({ domain }) {
 
     const handleAuthSubmit = async (e) => {
         e.preventDefault();
+        if (guestAuthMode === 'REGISTER' && authForm.pw !== authForm.pwConfirm) {
+            setAlertMessage("❌ Password confirmation does not match.");
+            return;
+        }
+
         try {
             const payload = {
                 hotel_code: hotelCode,
@@ -374,6 +383,8 @@ export default function HotelWebsite({ domain }) {
                 setLastName(freshUser.last_name || '');
                 setGuestEmail(freshUser.email || '');
                 setGuestPhone(freshUser.phone || '');
+                setNationality(freshUser.nationality || 'Philippines');
+                setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
             } else {
                 setAlertMessage("❌ " + (data.message || t.authFailed));
             }
@@ -389,47 +400,106 @@ export default function HotelWebsite({ domain }) {
         try {
             const result = await signInWithPopup(auth, provider);
             const gUser = result.user;
+            const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(gUser.email || '')}`);
+            const profileData = await profileRes.json().catch(() => ({}));
+            const existingUser = profileData?.member;
+            const hasRequiredProfile = Boolean(
+                existingUser?.first_name &&
+                existingUser?.last_name &&
+                existingUser?.email &&
+                existingUser?.phone &&
+                existingUser?.nationality
+            );
 
+            if (profileData?.success && existingUser && hasRequiredProfile) {
+                localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
+                setUser(existingUser);
+                setShowGuestAuthModal(false);
+                setAlertMessage(t.welcomeBack);
+                setFirstName(existingUser.first_name || '');
+                setLastName(existingUser.last_name || '');
+                setGuestEmail(existingUser.email || '');
+                setGuestPhone(existingUser.phone || '');
+                setNationality(existingUser.nationality || 'Philippines');
+                return;
+            }
+
+            const displayNameParts = (gUser.displayName || '').trim().split(/\s+/).filter(Boolean);
+            setGooglePendingProfile(gUser);
+            setAuthForm({
+                email: gUser.email || '',
+                pw: '',
+                pwConfirm: '',
+                first: existingUser?.first_name || displayNameParts[0] || '',
+                last: existingUser?.last_name || displayNameParts.slice(1).join(' ') || '',
+                phone: existingUser?.phone || gUser.phoneNumber || '',
+                nationality: existingUser?.nationality || ''
+            });
+            setGuestAuthMode('GOOGLE_COMPLETE');
+        } catch (error) {
+            console.error("Google Popup Error:", error);
+            setAlertMessage("❌ " + t.googleFailed);
+        }
+    };
+
+    const handleGoogleProfileComplete = async (e) => {
+        e.preventDefault();
+        if (!googlePendingProfile?.email) {
+            setAlertMessage("❌ " + t.googleFailed);
+            return;
+        }
+        if (!authForm.first || !authForm.last || !authForm.email || !authForm.phone || !authForm.nationality) {
+            setAlertMessage("❌ " + t.fillRequired);
+            return;
+        }
+
+        try {
+            const pseudoPin = `google_${(googlePendingProfile.uid || 'guest').slice(-10)}`;
             const response = await fetch('/api/members/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     hotel_code: hotelCode,
-                    email: gUser.email,
-                    first_name: gUser.displayName ? gUser.displayName.split(' ')[0] : 'Guest',
-                    last_name: gUser.displayName ? gUser.displayName.split(' ')[1] || '' : '',
-                    phone: gUser.phoneNumber || '',
-                    nationality: 'Unknown',
+                    email: authForm.email,
+                    pin: pseudoPin,
+                    first_name: authForm.first,
+                    last_name: authForm.last,
+                    phone: authForm.phone,
+                    nationality: authForm.nationality,
                     membership_status: 'active'
                 })
             });
-
-            if (response.status === 409) {
-                const profileRes = await fetch(`/api/members/profile?email=${gUser.email}`);
-                const profileData = await profileRes.json();
-
-                if (profileData.success && profileData.member) {
-                    const existingUser = profileData.member;
-                    localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
-                    setUser(existingUser);
-                    setShowGuestAuthModal(false);
-                    setAlertMessage(t.welcomeBack);
-                }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok && response.status !== 409) {
+                setAlertMessage("❌ " + (data?.message || t.authFailed));
                 return;
             }
 
-            const data = await response.json();
-            if (data.success) {
-                const freshUser = data.member;
-                localStorage.setItem('nplus_guest_user', JSON.stringify(freshUser));
-                setUser(freshUser);
-                setShowGuestAuthModal(false);
-                setAlertMessage(guestAuthMode === 'REGISTER' ? t.welcomeNew : t.welcomeBack);
-            } else {
-                setAlertMessage("❌ " + (data.message || t.googleFailed));
-            }
-        } catch (error) {
-            console.error("Google Popup Error:", error);
+            const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(authForm.email)}`);
+            const profileData = await profileRes.json().catch(() => ({}));
+            const finalUser = profileData?.member || data?.member || {
+                first_name: authForm.first,
+                last_name: authForm.last,
+                email: authForm.email,
+                phone: authForm.phone,
+                nationality: authForm.nationality,
+                membership_status: 'active'
+            };
+
+            localStorage.setItem('nplus_guest_user', JSON.stringify(finalUser));
+            setUser(finalUser);
+            setShowGuestAuthModal(false);
+            setAlertMessage(t.welcomeNew);
+            setFirstName(finalUser.first_name || '');
+            setLastName(finalUser.last_name || '');
+            setGuestEmail(finalUser.email || '');
+            setGuestPhone(finalUser.phone || '');
+            setNationality(finalUser.nationality || 'Philippines');
+            setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
+            setGooglePendingProfile(null);
+            setGuestAuthMode('LOGIN');
+        } catch (err) {
+            setAlertMessage("🚨 " + t.serverError);
         }
     };
 
@@ -1477,7 +1547,7 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 💡 전역 알림(Alert) 모달창 */}
                 {alertMessage && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
+                    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
                             {/* 💡 헤더 색상을 브랜드 컬러로 변경 */}
                             <div className="theme-bg p-4 text-white flex justify-center items-center">
@@ -1516,7 +1586,7 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 💡 고객 인증(Auth) 모달창 */}
                 {showGuestAuthModal && (
-                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1100] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
                         <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-3xl" onClick={e => e.stopPropagation()}>
                             <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
                                 <div className="flex justify-end mb-2">
@@ -1547,7 +1617,12 @@ export default function HotelWebsite({ domain }) {
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.paymentMethod}</label>
-                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                <div className="relative">
+                                                    <input type={showLoginPassword ? "text" : "password"} required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 pr-16 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                    <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 hover:text-slate-700">
+                                                        {showLoginPassword ? 'Hide' : 'Show'}
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="flex justify-end mt-1 mb-2">
                                                 <button type="button" onClick={() => setGuestAuthMode('FORGOT_PASSWORD')} className="text-xs font-bold theme-text hover:underline">{t.forgotPw}</button>
@@ -1580,11 +1655,61 @@ export default function HotelWebsite({ domain }) {
                                                 <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="09..." />
                                             </div>
                                             <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
+                                                <input type="text" required value={authForm.nationality} onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Philippines" />
+                                            </div>
+                                            <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
-                                                <input type="password" required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                <div className="relative">
+                                                    <input type={showRegisterPassword ? "text" : "password"} required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 pr-16 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                    <button type="button" onClick={() => setShowRegisterPassword(!showRegisterPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 hover:text-slate-700">
+                                                        {showRegisterPassword ? 'Hide' : 'Show'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Confirm Password</label>
+                                                <div className="relative">
+                                                    <input type={showRegisterPasswordConfirm ? "text" : "password"} required value={authForm.pwConfirm} onChange={(e) => setAuthForm({ ...authForm, pwConfirm: e.target.value })} className="w-full p-3 pr-16 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
+                                                    <button type="button" onClick={() => setShowRegisterPasswordConfirm(!showRegisterPasswordConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 hover:text-slate-700">
+                                                        {showRegisterPasswordConfirm ? 'Hide' : 'Show'}
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="pt-2">
                                                 <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">{t.signUpBtn}</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                ) : guestAuthMode === 'GOOGLE_COMPLETE' ? (
+                                    <div className="animate-fade-in-up">
+                                        <h2 className="text-2xl font-black text-slate-800 mb-3 text-center">Complete Your Profile</h2>
+                                        <p className="text-xs font-bold text-slate-500 mb-6 text-center leading-relaxed">Google sign up succeeded. Please add required profile details.</p>
+                                        <form onSubmit={handleGoogleProfileComplete} className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.email}</label>
+                                                <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.firstName}</label>
+                                                    <input type="text" required value={authForm.first} onChange={(e) => setAuthForm({ ...authForm, first: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.lastName}</label>
+                                                    <input type="text" required value={authForm.last} onChange={(e) => setAuthForm({ ...authForm, last: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
+                                                <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
+                                                <input type="text" required value={authForm.nationality} onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="Philippines" />
+                                            </div>
+                                            <div className="pt-2">
+                                                <button type="submit" className="w-full theme-bg text-white font-black py-3.5 rounded-xl theme-hover transition-colors shadow-md text-sm">Save & Continue</button>
                                             </div>
                                         </form>
                                     </div>
@@ -1609,7 +1734,7 @@ export default function HotelWebsite({ domain }) {
                                     </div>
                                 ) : null}
 
-                                {guestAuthMode !== 'FORGOT_PASSWORD' && (
+                                {(guestAuthMode === 'LOGIN' || guestAuthMode === 'REGISTER') && (
                                     <div className="text-center pt-8 mt-8 border-t border-slate-100">
                                         {guestAuthMode === 'LOGIN' ? (
                                             <p className="text-sm font-bold text-slate-500">{t.noAccount}<button type="button" onClick={() => setGuestAuthMode('REGISTER')} className="theme-text hover:underline">{t.signUpLink}</button></p>
