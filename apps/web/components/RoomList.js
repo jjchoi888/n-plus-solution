@@ -402,6 +402,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       </div>
                     </div>
                   </div>
+                </div>
 
                 {/* Booking Summary */}
                 <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 theme-bg-light rounded-2xl p-6 border border-emerald-100 theme-border flex flex-col h-fit sticky top-6 text-left order-2">
@@ -485,8 +486,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       {btnText}
                     </button>
                   </div>
-                </div>
-
                 </div>
 
               </form>
