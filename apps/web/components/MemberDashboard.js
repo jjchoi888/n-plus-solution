@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axios from 'axios';
@@ -35,6 +35,8 @@ export default function MemberDashboard({ hotelCode }) {
         dob: '',
         documentUrl: ''
     });
+    const fileUploadInputRef = useRef(null);
+    const cameraCaptureInputRef = useRef(null);
 
     // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
@@ -227,6 +229,9 @@ export default function MemberDashboard({ hotelCode }) {
         reader.readAsDataURL(file);
     };
 
+    const openFileUpload = () => fileUploadInputRef.current?.click();
+    const openCameraCapture = () => cameraCaptureInputRef.current?.click();
+
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold bg-slate-50">Loading dashboard...</div>;
     }
@@ -348,6 +353,9 @@ export default function MemberDashboard({ hotelCode }) {
                             <h2 className="text-3xl font-black text-slate-800">My Profile</h2>
 
                             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-bold text-blue-700">
+                                    Additional inputs below help make booking and check-in faster. 입력된 정보는 암호화 되어서 보관됩니다.
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
@@ -371,9 +379,6 @@ export default function MemberDashboard({ hotelCode }) {
                                         <input type="text" value={profileForm.dob} onChange={(e) => setProfileForm({ ...profileForm, dob: e.target.value })} placeholder="MM/DD" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
                                 </div>
-                                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-bold text-blue-700">
-                                    Additional inputs below help make booking and check-in faster. Input data is stored encrypted.
-                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
@@ -396,7 +401,16 @@ export default function MemberDashboard({ hotelCode }) {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Upload (for fast check-in)</label>
-                                        <input type="file" accept="image/*" capture="environment" onChange={handleDocumentUpload} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button type="button" onClick={openFileUpload} className="px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm hover:bg-slate-100 transition-all">
+                                                File Upload
+                                            </button>
+                                            <button type="button" onClick={openCameraCapture} className="px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm hover:bg-slate-100 transition-all">
+                                                Camera Capture
+                                            </button>
+                                        </div>
+                                        <input ref={fileUploadInputRef} type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="hidden" />
+                                        <input ref={cameraCaptureInputRef} type="file" accept="image/*" capture="environment" onChange={handleDocumentUpload} className="hidden" />
                                     </div>
                                 </div>
                                 {profileForm.documentUrl && (

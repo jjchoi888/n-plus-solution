@@ -1056,8 +1056,16 @@ export default function HotelWebsite({ domain }) {
                         </div>
                     </div>
                     <div className={`md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
-                        {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }, { id: 'MYPAGE', label: t.myPageBtn }].map(menu => (
-                            <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
+                        {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }, ...(user ? [{ id: 'MYPAGE', label: t.myPageBtn }] : [{ id: 'LOGIN_SIGNUP', label: t.loginSignUpBtn }])].map(menu => (
+                            <button key={menu.id} onClick={() => {
+                                if (menu.id === 'LOGIN_SIGNUP') {
+                                    setGuestAuthMode('LOGIN');
+                                    setShowGuestAuthModal(true);
+                                } else {
+                                    setActiveMenu(menu.id);
+                                }
+                                setIsMobileMenuOpen(false);
+                            }} className={`p-4 text-left font-black text-sm tracking-widest uppercase ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? 'theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
                         ))}
                     </div>
                 </header>
