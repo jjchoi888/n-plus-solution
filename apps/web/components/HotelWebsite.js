@@ -1289,13 +1289,15 @@ export default function HotelWebsite({ domain }) {
                             ))}
                         </div>
                         <div className="flex items-center gap-2 md:gap-4">
+                            <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-3 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
+
                             <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                                 <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                             </select>
 
                             {!user ? (
-                                <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className="hidden sm:block px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
-                                    {t.loginSignUpBtn}
+                                <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className="px-3 md:px-4 py-2 border theme-border theme-text rounded-full font-bold text-xs md:text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
+                                    {t.loginBtn || 'Log In'}
                                 </button>
                             ) : (
                                 <div className="hidden sm:flex items-center gap-3">
@@ -1307,7 +1309,6 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                             )}
 
-                            <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
                             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
                         </div>
                     </div>
@@ -1807,18 +1808,6 @@ export default function HotelWebsite({ domain }) {
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.phone}</label><input value={guestPhone} onChange={e => setGuestPhone(e.target.value)} disabled={isBooking} type="tel" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="+1 234 567 890" /></div>
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
                                         </div>
-                                        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs font-bold text-blue-700">
-                                            Additional inputs below help make booking and check-in faster.
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Region / Province</label><input value={guestRegion} onChange={e => setGuestRegion(e.target.value)} disabled={isBooking} type="text" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" placeholder="Metro Manila" /></div>
-                                            <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Date of Birth</label><input value={guestDob} onChange={e => setGuestDob(e.target.value)} disabled={isBooking} type="date" className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none" /></div>
-                                        </div>
-                                        <div className="mt-4">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Check-in ID Upload</label>
-                                            <input type="file" accept="image/*,.pdf" disabled={isBooking} onChange={handleGuestDocumentUpload} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white" />
-                                            {guestDocumentUrl && <p className="text-[11px] text-emerald-600 font-bold mt-2">ID file attached.</p>}
-                                        </div>
                                     </section>
                                 </div>
 
@@ -1854,14 +1843,14 @@ export default function HotelWebsite({ domain }) {
 
                                         <div className="border-t border-slate-200 pt-4 space-y-3">
                                             <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.promoCode || 'Promo Code'}</div>
-                                            <div className="flex gap-2">
+                                            <div className="grid grid-cols-[1fr_112px] gap-2">
                                                 <input
                                                     value={promoCode}
                                                     onChange={(e) => setPromoCode(e.target.value)}
                                                     placeholder="E.g. WELCOME10"
                                                     className="flex-1 p-2.5 border border-slate-200 rounded-lg text-xs font-bold"
                                                 />
-                                                <button type="button" onClick={handleApplyPromo} className="px-3 py-2.5 rounded-lg bg-slate-900 text-white font-black text-xs">
+                                                <button type="button" onClick={handleApplyPromo} className="w-full py-2.5 rounded-lg bg-slate-900 text-white font-black text-xs">
                                                     {t.apply || 'Apply'}
                                                 </button>
                                             </div>
@@ -1874,7 +1863,7 @@ export default function HotelWebsite({ domain }) {
                                                     Balance: {Number(memberRewardsSnapshot.points || 0).toLocaleString()} pts
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="grid grid-cols-[1fr_112px] gap-2">
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -1884,7 +1873,7 @@ export default function HotelWebsite({ domain }) {
                                                     className="flex-1 p-2.5 border border-slate-200 rounded-lg text-xs font-bold"
                                                     disabled={!user || !memberRewardsSnapshot.enabled}
                                                 />
-                                                <button type="button" onClick={handleApplyRedeemPoints} disabled={!user || !memberRewardsSnapshot.enabled} className="px-3 py-2.5 rounded-lg bg-emerald-600 text-white font-black text-xs disabled:opacity-50">
+                                                <button type="button" onClick={handleApplyRedeemPoints} disabled={!user || !memberRewardsSnapshot.enabled} className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-black text-xs disabled:opacity-50">
                                                     Use Points
                                                 </button>
                                             </div>

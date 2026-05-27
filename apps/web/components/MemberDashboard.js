@@ -340,7 +340,7 @@ export default function MemberDashboard({ hotelCode }) {
 
             {/* 🖥️ Left Sidebar */}
             <div className={`fixed md:relative inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out z-40 w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl md:shadow-none`}>
-                <div className="p-6 border-b border-slate-100">
+                <div className="p-6 border-b border-slate-100 hidden md:block">
                     <div className="rounded-2xl bg-slate-900 text-white p-4 shadow-lg">
                         <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
                         <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
@@ -385,6 +385,29 @@ export default function MemberDashboard({ hotelCode }) {
             {/* 🚀 Main Content Area */}
             <main className="flex-1 p-4 md:p-12 overflow-y-auto">
                 <div className="max-w-4xl mx-auto">
+                    <div className="md:hidden mb-4 sticky top-2 z-20">
+                        <div className="rounded-2xl bg-slate-900 text-white p-4 shadow-lg border border-slate-700">
+                            <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
+                            <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
+                            <div className="text-xs text-slate-300 mt-1">{rewardsData?.tier?.key || 'MEMBER'} Tier</div>
+                            <div className="grid grid-cols-2 gap-2 mt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { setActiveTab('REWARDS'); setShowRewardsHistoryModal(true); }}
+                                    className="px-2 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-black"
+                                >
+                                    History
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowRewardsQrModal(true); }}
+                                    className="px-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-black"
+                                >
+                                    Use in Hotel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     {activeTab === 'BOOKINGS' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
