@@ -381,6 +381,7 @@ export default function HotelWebsite({ domain }) {
     const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
     const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
+    const hotelCode = getEffectiveHotelCode();
 
     // 로그인/가입/로그아웃 핸들러
     useEffect(() => {
@@ -643,7 +644,7 @@ export default function HotelWebsite({ domain }) {
         setActiveMenu('HOME');
     };
 
-    const getEffectiveHotelCode = () => {
+    function getEffectiveHotelCode() {
         if (typeof window === 'undefined') return 'sample001';
 
         const params = new URLSearchParams(window.location.search);
@@ -677,9 +678,7 @@ export default function HotelWebsite({ domain }) {
         }
 
         return 'sample001';
-    };
-
-    const hotelCode = getEffectiveHotelCode();
+    }
 
     const renderRewardBenefitIcon = (iconKey) => {
         const baseClass = "w-5 h-5 text-white";
