@@ -32,7 +32,8 @@ export default function MemberDashboard({ hotelCode }) {
         phone: '',
         nationality: '',
         region: '',
-        dob: '',
+        birthMonth: '',
+        birthDay: '',
         documentUrl: ''
     });
     const fileUploadInputRef = useRef(null);
@@ -59,7 +60,8 @@ export default function MemberDashboard({ hotelCode }) {
                     phone: parsedUser.phone || '',
                     nationality: parsedUser.nationality || '',
                     region: parsedUser.region || '',
-                    dob: parsedUser.dob || '',
+                    birthMonth: /^\d{2}\/\d{2}$/.test(parsedUser.dob || '') ? String(parsedUser.dob).slice(0, 2) : '',
+                    birthDay: /^\d{2}\/\d{2}$/.test(parsedUser.dob || '') ? String(parsedUser.dob).slice(3, 5) : '',
                     documentUrl: parsedUser.document_url || ''
                 });
 
@@ -160,6 +162,9 @@ export default function MemberDashboard({ hotelCode }) {
             alert("Please enter both first name and last name.");
             return;
         }
+        const composedDob = profileForm.birthMonth && profileForm.birthDay
+            ? `${profileForm.birthMonth}/${profileForm.birthDay}`
+            : '';
 
         const payload = {
             email: user.email,
@@ -168,16 +173,10 @@ export default function MemberDashboard({ hotelCode }) {
             phone: profileForm.phone || '',
             nationality: profileForm.nationality || '',
             region: profileForm.region || '',
-            dob: profileForm.dob || '',
+            dob: composedDob,
             document_url: profileForm.documentUrl || '',
             hotel_code: hotelCode || user.hotel_code || ''
         };
-
-        const md = String(profileForm.dob || '').trim();
-        if (md && !/^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])$/.test(md)) {
-            alert("Birthday must be in MM/DD format.");
-            return;
-        }
 
         try {
             const candidates = ['/api/members/update', '/api/members/profile/update'];
@@ -231,6 +230,13 @@ export default function MemberDashboard({ hotelCode }) {
 
     const openFileUpload = () => fileUploadInputRef.current?.click();
     const openCameraCapture = () => cameraCaptureInputRef.current?.click();
+    const optionalFieldClass = (value) => {
+        const isFilled = !!String(value || '').trim();
+        return `w-full p-4 border rounded-2xl font-bold outline-none transition-all ${isFilled
+            ? 'bg-slate-50 border-slate-100 focus:ring-2 focus:ring-blue-500'
+            : 'bg-amber-50 border-amber-300 focus:ring-2 focus:ring-amber-400'
+            }`;
+    };
 
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold bg-slate-50">Loading dashboard...</div>;
@@ -354,16 +360,16 @@ export default function MemberDashboard({ hotelCode }) {
 
                             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
                                 <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-bold text-blue-700">
-                                    Additional inputs below help make booking and check-in faster. 입력된 정보는 암호화 되어서 보관됩니다.
+                                    Additional inputs below help make booking and check-in faster. Entered data is stored encrypted.
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
-                                        <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })} className={optionalFieldClass(profileForm.firstName)} />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
-                                        <input type="text" value={profileForm.lastName} onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="text" value={profileForm.lastName} onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })} className={optionalFieldClass(profileForm.lastName)} />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -376,23 +382,36 @@ export default function MemberDashboard({ hotelCode }) {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Birthday (MM/DD)</label>
-                                        <input type="text" value={profileForm.dob} onChange={(e) => setProfileForm({ ...profileForm, dob: e.target.value })} placeholder="MM/DD" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <select value={profileForm.birthMonth} onChange={(e) => setProfileForm({ ...profileForm, birthMonth: e.target.value })} className={optionalFieldClass(profileForm.birthMonth)}>
+                                                <option value="">Month</option>
+                                                {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => (
+                                                    <option key={m} value={m}>{m}</option>
+                                                ))}
+                                            </select>
+                                            <select value={profileForm.birthDay} onChange={(e) => setProfileForm({ ...profileForm, birthDay: e.target.value })} className={optionalFieldClass(profileForm.birthDay)}>
+                                                <option value="">Day</option>
+                                                {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
+                                                    <option key={d} value={d}>{d}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
-                                        <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} className={optionalFieldClass(profileForm.phone)} />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nationality</label>
-                                        <input type="text" value={profileForm.nationality} onChange={(e) => setProfileForm({ ...profileForm, nationality: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="text" value={profileForm.nationality} onChange={(e) => setProfileForm({ ...profileForm, nationality: e.target.value })} className={optionalFieldClass(profileForm.nationality)} />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Province</label>
-                                        <select value={profileForm.region} onChange={(e) => setProfileForm({ ...profileForm, region: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                                        <select value={profileForm.region} onChange={(e) => setProfileForm({ ...profileForm, region: e.target.value })} className={optionalFieldClass(profileForm.region)}>
                                             <option value="">Select Province</option>
                                             {PH_PROVINCES.map((p) => (
                                                 <option key={p} value={p}>{p}</option>
@@ -415,6 +434,9 @@ export default function MemberDashboard({ hotelCode }) {
                                 </div>
                                 {profileForm.documentUrl && (
                                     <p className="text-xs text-slate-500 font-bold">ID file attached. It will be used to speed up booking and front desk check-in.</p>
+                                )}
+                                {!profileForm.documentUrl && (
+                                    <p className="text-xs text-amber-700 font-bold">No ID uploaded yet. You can still update your profile.</p>
                                 )}
                                 <button onClick={handleProfileUpdate} className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
                             </div>
