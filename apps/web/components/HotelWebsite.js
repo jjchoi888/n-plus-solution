@@ -1034,8 +1034,6 @@ export default function HotelWebsite({ domain }) {
         }
     }, [checkIn, checkOut, activeRoom, hotelCode, activeMenu]);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center text-xl font-bold text-slate-500 bg-slate-50">Loading your perfect stay...</div>;
-
     const handleTabClick = (e, setter, value) => { setter(value); if (e.target) e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); };
     const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
 
@@ -1093,6 +1091,8 @@ export default function HotelWebsite({ domain }) {
         if (adjustedPoints !== appliedRedeemPoints) setAppliedRedeemPoints(adjustedPoints);
         if (adjustedAmount !== appliedRedeemAmount) setAppliedRedeemAmount(adjustedAmount);
     }, [appliedRedeemPoints, maxRedeemPointsAllowed, redeemRatePer100, minRedeemPoints, appliedRedeemAmount]);
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center text-xl font-bold text-slate-500 bg-slate-50">Loading your perfect stay...</div>;
 
     const handleApplyRedeemPoints = () => {
         if (!user?.email) {
