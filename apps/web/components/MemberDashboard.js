@@ -46,7 +46,33 @@ export default function MemberDashboard({ hotelCode }) {
     const [rewardsConfig, setRewardsConfig] = useState(null);
     const [rewardsData, setRewardsData] = useState({ points: 0, tier: null, transactions: [] });
     const [rewardsLoading, setRewardsLoading] = useState(false);
+    const [showRewardsHistoryModal, setShowRewardsHistoryModal] = useState(false);
+    const [showRewardsQrModal, setShowRewardsQrModal] = useState(false);
+    const [qrRedeemPoints, setQrRedeemPoints] = useState('');
+    const [qrRedeemData, setQrRedeemData] = useState(null);
+    const [qrRedeemLoading, setQrRedeemLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    const refreshRewardsData = async (email, targetHotelCode) => {
+        if (!email || !targetHotelCode) return;
+        try {
+            setRewardsLoading(true);
+            const rewardsRes = await axios.get(`/api/members/rewards?email=${encodeURIComponent(email)}&hotel_code=${encodeURIComponent(targetHotelCode)}`);
+            if (rewardsRes?.data?.success) {
+                setRewardsEnabled(!!rewardsRes.data.rewards_enabled);
+                setRewardsConfig(rewardsRes.data.config || null);
+                setRewardsData({
+                    points: Number(rewardsRes.data.points || 0),
+                    tier: rewardsRes.data.tier || null,
+                    transactions: Array.isArray(rewardsRes.data.transactions) ? rewardsRes.data.transactions : []
+                });
+            }
+        } catch (err) {
+            console.error('Rewards refresh failed:', err);
+        } finally {
+            setRewardsLoading(false);
+        }
+    };
 
     // 💡 Load actual logged-in user data and bookings from DB
     useEffect(() => {
@@ -94,23 +120,12 @@ export default function MemberDashboard({ hotelCode }) {
                             setActiveTab('REWARDS');
                             sessionStorage.removeItem('nplus_open_rewards');
                         }
-
                         if (cfgEnabled && parsedUser.email) {
-                            setRewardsLoading(true);
-                            const rewardsRes = await axios.get(`/api/members/rewards?email=${encodeURIComponent(parsedUser.email)}&hotel_code=${encodeURIComponent(effectiveHotel)}`);
-                            if (rewardsRes?.data?.success) {
-                                setRewardsData({
-                                    points: Number(rewardsRes.data.points || 0),
-                                    tier: rewardsRes.data.tier || null,
-                                    transactions: Array.isArray(rewardsRes.data.transactions) ? rewardsRes.data.transactions : []
-                                });
-                            }
+                            await refreshRewardsData(parsedUser.email, effectiveHotel);
                         }
                     } catch (rewardErr) {
                         console.error('Rewards load failed:', rewardErr);
                         setRewardsEnabled(false);
-                    } finally {
-                        setRewardsLoading(false);
                     }
                 } else {
                     setRewardsEnabled(false);
@@ -253,6 +268,40 @@ export default function MemberDashboard({ hotelCode }) {
         }
     };
 
+    const handleGenerateRewardsQr = async () => {
+        const email = user?.email;
+        const hCode = hotelCode || user?.hotel_code || '';
+        const points = Math.max(0, Math.floor(Number(qrRedeemPoints || 0)));
+        if (!email || !hCode) {
+            alert("Please log in again and try.");
+            return;
+        }
+        if (points <= 0) {
+            alert("Please enter points to convert to QR payment.");
+            return;
+        }
+
+        try {
+            setQrRedeemLoading(true);
+            const res = await axios.post('/api/members/rewards/redeem-qr', {
+                email,
+                hotel_code: hCode,
+                points,
+                description: 'Hotel facility QR pay'
+            });
+            if (!res?.data?.success) {
+                alert(`Failed to generate QR: ${res?.data?.message || 'unknown error'}`);
+                return;
+            }
+            setQrRedeemData(res.data);
+            await refreshRewardsData(email, hCode);
+        } catch (error) {
+            alert(`Failed to generate QR: ${error?.response?.data?.message || error.message}`);
+        } finally {
+            setQrRedeemLoading(false);
+        }
+    };
+
     // 💡 Identify Google Login user (Only email users can change passwords)
     const isGoogleUser = user?.auth_provider === 'google' || user?.password === null || !user?.password;
 
@@ -291,11 +340,28 @@ export default function MemberDashboard({ hotelCode }) {
 
             {/* 🖥️ Left Sidebar */}
             <div className={`fixed md:relative inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out z-40 w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl md:shadow-none`}>
-                <div className="p-8 border-b border-slate-50">
-                    <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Guest Portal</h2>
-                    <h1 className="text-xl font-black text-slate-800 leading-tight">
-                        {isSingleHotel ? `Hotel ${hotelCode}` : "My Account"}
-                    </h1>
+                <div className="p-6 border-b border-slate-100">
+                    <div className="rounded-2xl bg-slate-900 text-white p-4 shadow-lg">
+                        <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
+                        <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
+                        <div className="text-xs text-slate-300 mt-1">{rewardsData?.tier?.key || 'MEMBER'} Tier</div>
+                        <div className="grid grid-cols-2 gap-2 mt-3">
+                            <button
+                                type="button"
+                                onClick={() => { setActiveTab('REWARDS'); setShowRewardsHistoryModal(true); setIsMobileMenuOpen(false); }}
+                                className="px-2 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-black"
+                            >
+                                History
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setShowRewardsQrModal(true); setIsMobileMenuOpen(false); }}
+                                className="px-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-black"
+                            >
+                                Use in Hotel
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1">
@@ -573,6 +639,88 @@ export default function MemberDashboard({ hotelCode }) {
                         </div>
                     )}
                 </div>
+
+                {showRewardsHistoryModal && (
+                    <div className="fixed inset-0 z-[1200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowRewardsHistoryModal(false)}>
+                        <div className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                                <h3 className="text-xl font-black text-slate-800">Point History</h3>
+                                <button type="button" className="text-slate-400 text-2xl font-black" onClick={() => setShowRewardsHistoryModal(false)}>×</button>
+                            </div>
+                            <div className="max-h-[70vh] overflow-y-auto">
+                                {rewardsLoading ? (
+                                    <div className="p-6 text-sm font-bold text-slate-500">Loading rewards history...</div>
+                                ) : rewardsData.transactions.length === 0 ? (
+                                    <div className="p-6 text-sm font-bold text-slate-500">No reward transactions yet.</div>
+                                ) : (
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-slate-50 text-slate-600 sticky top-0">
+                                            <tr>
+                                                <th className="text-left px-4 py-3 font-black">Date</th>
+                                                <th className="text-left px-4 py-3 font-black">Type</th>
+                                                <th className="text-left px-4 py-3 font-black">Points</th>
+                                                <th className="text-left px-4 py-3 font-black">Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {rewardsData.transactions.map((tx) => {
+                                                const signed = Number(tx.amount || 0);
+                                                const isRedeem = String(tx.type || '').toUpperCase() === 'REDEEM';
+                                                return (
+                                                    <tr key={`hist_${tx.id}`} className="border-t border-slate-100">
+                                                        <td className="px-4 py-3 text-slate-600">{String(tx.created_at || '').slice(0, 10) || '-'}</td>
+                                                        <td className="px-4 py-3 font-bold text-slate-700">{String(tx.type || '').toUpperCase() || '-'}</td>
+                                                        <td className={`px-4 py-3 font-black ${isRedeem ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                            {signed > 0 ? '+' : ''}{signed.toLocaleString()}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-slate-600">{tx.description || tx.reference_type || '-'}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showRewardsQrModal && (
+                    <div className="fixed inset-0 z-[1200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowRewardsQrModal(false)}>
+                        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                                <h3 className="text-lg font-black text-slate-800">QR Point Payment</h3>
+                                <button type="button" className="text-slate-400 text-2xl font-black" onClick={() => setShowRewardsQrModal(false)}>×</button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="text-xs font-bold text-slate-500">Available points: {Number(rewardsData.points || 0).toLocaleString()} pts</div>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={qrRedeemPoints}
+                                    onChange={(e) => setQrRedeemPoints(e.target.value)}
+                                    placeholder="Enter points to use"
+                                    className="w-full p-3 border border-slate-200 rounded-xl font-bold"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateRewardsQr}
+                                    disabled={qrRedeemLoading}
+                                    className="w-full py-3 rounded-xl bg-slate-900 text-white font-black disabled:opacity-50"
+                                >
+                                    {qrRedeemLoading ? 'Generating...' : 'Generate QR'}
+                                </button>
+                                {qrRedeemData?.qr_image_url && (
+                                    <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50 text-center">
+                                        <img src={qrRedeemData.qr_image_url} alt="Rewards QR" className="w-52 h-52 mx-auto rounded-xl border border-slate-200 bg-white p-2" />
+                                        <div className="mt-3 text-xs font-bold text-slate-600">Value: ₱{Number(qrRedeemData.value_amount || 0).toLocaleString()} | Points: {Number(qrRedeemData.points_used || 0).toLocaleString()}</div>
+                                        <div className="mt-1 text-[11px] text-slate-500">Show this QR at hotel facilities (valid 15 minutes).</div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

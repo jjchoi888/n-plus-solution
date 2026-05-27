@@ -371,6 +371,14 @@ export default function HotelWebsite({ domain }) {
     const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
     const [googlePendingProfile, setGooglePendingProfile] = useState(null);
     const [countryOptions] = useState(buildCountryOptions);
+    const [memberRewardsSnapshot, setMemberRewardsSnapshot] = useState({
+        enabled: false,
+        points: 0,
+        config: null
+    });
+    const [redeemPointsInput, setRedeemPointsInput] = useState('');
+    const [appliedRedeemPoints, setAppliedRedeemPoints] = useState(0);
+    const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
     const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
 
@@ -390,6 +398,31 @@ export default function HotelWebsite({ domain }) {
             setGuestDocumentUrl(parsedUser.document_url || '');
         }
     }, []);
+
+    useEffect(() => {
+        const loadMemberRewards = async () => {
+            if (!user?.email || !hotelCode) {
+                setMemberRewardsSnapshot({ enabled: false, points: 0, config: null });
+                return;
+            }
+            try {
+                const res = await fetch(`/api/members/rewards?email=${encodeURIComponent(user.email)}&hotel_code=${encodeURIComponent(hotelCode)}`);
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data?.success) {
+                    setMemberRewardsSnapshot({
+                        enabled: !!data.rewards_enabled,
+                        points: Number(data.points || 0),
+                        config: data.config || null
+                    });
+                } else {
+                    setMemberRewardsSnapshot({ enabled: false, points: 0, config: null });
+                }
+            } catch (_) {
+                setMemberRewardsSnapshot({ enabled: false, points: 0, config: null });
+            }
+        };
+        loadMemberRewards();
+    }, [user?.email, hotelCode]);
 
     const finalizeGoogleMember = async (gUser) => {
         if (!gUser?.email) {
@@ -808,6 +841,14 @@ export default function HotelWebsite({ domain }) {
     }, [hotelCode]);
 
     useEffect(() => {
+        if (!showBookingModal) {
+            setRedeemPointsInput('');
+            setAppliedRedeemPoints(0);
+            setAppliedRedeemAmount(0);
+        }
+    }, [showBookingModal]);
+
+    useEffect(() => {
         setLoading(true);
 
         fetch(`${BASE_URL}/api/settings/website?hotel=${hotelCode}`)
@@ -1021,6 +1062,12 @@ export default function HotelWebsite({ domain }) {
     const discountPct = appliedPromo ? Number(appliedPromo.discount_pct || 0) : 0;
     const discountAmount = appliedPromo ? (basePrice * discountPct) / 100 : 0;
     const finalTotal = basePrice + extraBedPrice - discountAmount;
+    const rewardsCfg = memberRewardsSnapshot.config || {};
+    const redeemRatePer100 = Math.max(1, Number(rewardsCfg.redeem_rate_points_per_100 || 100));
+    const minRedeemPoints = Math.max(0, Number(rewardsCfg.min_redeem_points || 0));
+    const maxRedeemPointsByPrice = Math.floor(Math.max(0, finalTotal) / 100) * redeemRatePer100;
+    const maxRedeemPointsAllowed = Math.max(0, Math.min(Number(memberRewardsSnapshot.points || 0), maxRedeemPointsByPrice));
+    const payableTotal = Math.max(0, finalTotal - Number(appliedRedeemAmount || 0));
 
     const handleApplyPromo = () => {
         const promo = activePromos.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
@@ -1032,6 +1079,62 @@ export default function HotelWebsite({ domain }) {
 
         setAppliedPromo(promo);
         setAlertMessage(t.promoApplied + promo.discount_pct + t.promoOff);
+    };
+
+    useEffect(() => {
+        if (appliedRedeemPoints <= 0) return;
+        let adjustedPoints = Math.min(appliedRedeemPoints, maxRedeemPointsAllowed);
+        adjustedPoints = Math.floor(adjustedPoints / redeemRatePer100) * redeemRatePer100;
+        if (adjustedPoints <= 0 || adjustedPoints < minRedeemPoints) {
+            setAppliedRedeemPoints(0);
+            setAppliedRedeemAmount(0);
+            return;
+        }
+        const adjustedAmount = Math.floor(adjustedPoints / redeemRatePer100) * 100;
+        if (adjustedPoints !== appliedRedeemPoints) setAppliedRedeemPoints(adjustedPoints);
+        if (adjustedAmount !== appliedRedeemAmount) setAppliedRedeemAmount(adjustedAmount);
+    }, [appliedRedeemPoints, maxRedeemPointsAllowed, redeemRatePer100, minRedeemPoints, appliedRedeemAmount]);
+
+    const handleApplyRedeemPoints = () => {
+        if (!user?.email) {
+            setAlertMessage("❌ Please log in first to use reward points.");
+            return;
+        }
+        if (!memberRewardsSnapshot.enabled) {
+            setAlertMessage("❌ Rewards program is not active for this hotel.");
+            return;
+        }
+        const raw = Math.max(0, Math.floor(Number(redeemPointsInput || 0)));
+        if (raw <= 0) {
+            setAlertMessage("❌ Enter points to use.");
+            return;
+        }
+        if (raw < minRedeemPoints) {
+            setAlertMessage(`❌ Minimum redeem is ${minRedeemPoints.toLocaleString()} points.`);
+            return;
+        }
+        if (maxRedeemPointsAllowed <= 0) {
+            setAlertMessage("❌ No redeemable points for this booking amount.");
+            return;
+        }
+
+        let usablePoints = Math.min(raw, maxRedeemPointsAllowed);
+        usablePoints = Math.floor(usablePoints / redeemRatePer100) * redeemRatePer100;
+        if (usablePoints < minRedeemPoints || usablePoints <= 0) {
+            setAlertMessage("❌ Enter a valid redeemable points amount.");
+            return;
+        }
+
+        const currencyAmount = Math.floor(usablePoints / redeemRatePer100) * 100;
+        setAppliedRedeemPoints(usablePoints);
+        setAppliedRedeemAmount(currencyAmount);
+        setAlertMessage(`✅ Points applied: ${usablePoints.toLocaleString()} pts (₱${currencyAmount.toLocaleString()} discount)`);
+    };
+
+    const handleClearRedeemPoints = () => {
+        setAppliedRedeemPoints(0);
+        setAppliedRedeemAmount(0);
+        setRedeemPointsInput('');
     };
 
     const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
@@ -1073,6 +1176,10 @@ export default function HotelWebsite({ domain }) {
         if (!firstName || !lastName || !guestEmail || !guestPhone) {
             resetBtn();
             return setAlertMessage(t.fillRequired);
+        }
+        if (appliedRedeemPoints > 0 && user?.email && String(guestEmail || '').toLowerCase() !== String(user.email || '').toLowerCase()) {
+            resetBtn();
+            return setAlertMessage("❌ Reward points can be used only when booking with your own member email.");
         }
 
         setIsBooking(true);
@@ -1127,7 +1234,15 @@ export default function HotelWebsite({ domain }) {
             const res = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookings: bookingPayloads })
+                body: JSON.stringify({
+                    bookings: bookingPayloads,
+                    points_redeem: appliedRedeemPoints > 0
+                        ? {
+                            email: user?.email || guestEmail,
+                            points_used: appliedRedeemPoints
+                        }
+                        : null
+                })
             });
 
             const data = await res.json();
@@ -1737,17 +1852,66 @@ export default function HotelWebsite({ domain }) {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div className="border-t border-slate-200 pt-4 space-y-3">
+                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.promoCode || 'Promo Code'}</div>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    value={promoCode}
+                                                    onChange={(e) => setPromoCode(e.target.value)}
+                                                    placeholder="E.g. WELCOME10"
+                                                    className="flex-1 p-2.5 border border-slate-200 rounded-lg text-xs font-bold"
+                                                />
+                                                <button type="button" onClick={handleApplyPromo} className="px-3 py-2.5 rounded-lg bg-slate-900 text-white font-black text-xs">
+                                                    {t.apply || 'Apply'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t border-slate-200 pt-4 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Use Reward Points</div>
+                                                <div className="text-[11px] font-bold text-slate-600">
+                                                    Balance: {Number(memberRewardsSnapshot.points || 0).toLocaleString()} pts
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={redeemPointsInput}
+                                                    onChange={(e) => setRedeemPointsInput(e.target.value)}
+                                                    placeholder={`Min ${Number(minRedeemPoints || 0).toLocaleString()} pts`}
+                                                    className="flex-1 p-2.5 border border-slate-200 rounded-lg text-xs font-bold"
+                                                    disabled={!user || !memberRewardsSnapshot.enabled}
+                                                />
+                                                <button type="button" onClick={handleApplyRedeemPoints} disabled={!user || !memberRewardsSnapshot.enabled} className="px-3 py-2.5 rounded-lg bg-emerald-600 text-white font-black text-xs disabled:opacity-50">
+                                                    Use Points
+                                                </button>
+                                            </div>
+                                            {appliedRedeemPoints > 0 && (
+                                                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs">
+                                                    <span className="font-bold text-emerald-700">Applied {appliedRedeemPoints.toLocaleString()} pts</span>
+                                                    <button type="button" onClick={handleClearRedeemPoints} className="font-black text-emerald-700 underline">Clear</button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* 결제 버튼 영역 (Summary 바로 아래에 위치) */}
                                     <div className="pt-6 border-t border-slate-300 w-full shrink-0">
                                         <div className="flex justify-between items-end mb-6">
                                             <span className="font-black text-slate-800 text-xl">{t.total}</span>
-                                            <span className="font-black theme-text text-3xl">₱{finalTotal.toLocaleString()}</span>
+                                            <div className="text-right">
+                                                {appliedRedeemAmount > 0 && (
+                                                    <div className="text-xs font-bold text-slate-500 line-through">₱{finalTotal.toLocaleString()}</div>
+                                                )}
+                                                <span className="font-black theme-text text-3xl">₱{payableTotal.toLocaleString()}</span>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-3 w-full">
                                             <button type="button" onClick={() => setShowBookingModal(false)} className="w-[30%] py-4 rounded-xl font-black text-sm border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center">← BACK</button>
-                                            <button type="button" onClick={handleConfirmBooking} disabled={isBooking} className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm theme-hover disabled:opacity-50">{t.confirmBook || 'Proceed to Payment ➔'}</button>
+                                            <button type="button" onClick={handleConfirmBooking} disabled={isBooking} className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm theme-hover disabled:opacity-50">{t.confirmBook || 'Proceed to Payment ➔'} ₱{payableTotal.toLocaleString()}</button>
                                         </div>
                                     </div>
                                 </div>
