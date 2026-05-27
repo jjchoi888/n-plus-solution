@@ -4,6 +4,21 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axios from 'axios';
 
+const PH_PROVINCES = [
+    'Abra', 'Agusan del Norte', 'Agusan del Sur', 'Aklan', 'Albay', 'Antique', 'Apayao', 'Aurora',
+    'Basilan', 'Bataan', 'Batanes', 'Batangas', 'Benguet', 'Biliran', 'Bohol', 'Bukidnon', 'Bulacan',
+    'Cagayan', 'Camarines Norte', 'Camarines Sur', 'Camiguin', 'Capiz', 'Catanduanes', 'Cavite', 'Cebu',
+    'Cotabato', 'Davao de Oro', 'Davao del Norte', 'Davao del Sur', 'Davao Occidental', 'Davao Oriental',
+    'Dinagat Islands', 'Eastern Samar', 'Guimaras', 'Ifugao', 'Ilocos Norte', 'Ilocos Sur', 'Iloilo',
+    'Isabela', 'Kalinga', 'La Union', 'Laguna', 'Lanao del Norte', 'Lanao del Sur', 'Leyte',
+    'Maguindanao del Norte', 'Maguindanao del Sur', 'Marinduque', 'Masbate', 'Metro Manila', 'Misamis Occidental',
+    'Misamis Oriental', 'Mountain Province', 'Negros Occidental', 'Negros Oriental', 'Northern Samar',
+    'Nueva Ecija', 'Nueva Vizcaya', 'Occidental Mindoro', 'Oriental Mindoro', 'Palawan', 'Pampanga',
+    'Pangasinan', 'Quezon', 'Quirino', 'Rizal', 'Romblon', 'Samar', 'Sarangani', 'Siquijor', 'Sorsogon',
+    'South Cotabato', 'Southern Leyte', 'Sultan Kudarat', 'Sulu', 'Surigao del Norte', 'Surigao del Sur',
+    'Tarlac', 'Tawi-Tawi', 'Zambales', 'Zamboanga del Norte', 'Zamboanga del Sur', 'Zamboanga Sibugay'
+];
+
 export default function MemberDashboard({ hotelCode }) {
     const isSingleHotel = !!hotelCode;
     const [activeTab, setActiveTab] = useState('BOOKINGS');
@@ -155,6 +170,12 @@ export default function MemberDashboard({ hotelCode }) {
             document_url: profileForm.documentUrl || '',
             hotel_code: hotelCode || user.hotel_code || ''
         };
+
+        const md = String(profileForm.dob || '').trim();
+        if (md && !/^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])$/.test(md)) {
+            alert("Birthday must be in MM/DD format.");
+            return;
+        }
 
         try {
             const candidates = ['/api/members/update', '/api/members/profile/update'];
@@ -346,9 +367,12 @@ export default function MemberDashboard({ hotelCode }) {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date of Birth</label>
-                                        <input type="date" value={profileForm.dob} onChange={(e) => setProfileForm({ ...profileForm, dob: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Birthday (MM/DD)</label>
+                                        <input type="text" value={profileForm.dob} onChange={(e) => setProfileForm({ ...profileForm, dob: e.target.value })} placeholder="MM/DD" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
+                                </div>
+                                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-bold text-blue-700">
+                                    Additional inputs below help make booking and check-in faster. Input data is stored encrypted.
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
@@ -362,20 +386,22 @@ export default function MemberDashboard({ hotelCode }) {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Region / Province</label>
-                                        <input type="text" value={profileForm.region} onChange={(e) => setProfileForm({ ...profileForm, region: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Province</label>
+                                        <select value={profileForm.region} onChange={(e) => setProfileForm({ ...profileForm, region: e.target.value })} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                                            <option value="">Select Province</option>
+                                            {PH_PROVINCES.map((p) => (
+                                                <option key={p} value={p}>{p}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Upload (for fast check-in)</label>
-                                        <input type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                        <input type="file" accept="image/*" capture="environment" onChange={handleDocumentUpload} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
                                     </div>
                                 </div>
                                 {profileForm.documentUrl && (
                                     <p className="text-xs text-slate-500 font-bold">ID file attached. It will be used to speed up booking and front desk check-in.</p>
                                 )}
-                                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-bold text-blue-700">
-                                    Additional inputs below help make booking and check-in faster.
-                                </div>
                                 <button onClick={handleProfileUpdate} className="px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-lg">Update Profile</button>
                             </div>
 
