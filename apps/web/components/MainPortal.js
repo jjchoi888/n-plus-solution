@@ -255,7 +255,7 @@ export default function MainPortal() {
         setUser(parsedUser);
         setIsMembershipActive(parsedUser.is_membership_active || false);
 
-        axios.get(`/api/members/profile?email=${parsedUser.email}&t=${Date.now()}`, {
+        axios.get(`/api/members/profile?email=${parsedUser.email}&hotel_code=${parsedUser.hotel_code || 'NPLUS01'}&t=${Date.now()}`, {
           headers: { 'Cache-Control': 'no-cache' }
         })
           .then(res => {
@@ -449,7 +449,7 @@ export default function MainPortal() {
         }
       } catch (apiError) {
         if (apiError.response && apiError.response.status === 409) {
-          const profileRes = await axios.get(`/api/members/profile?email=${gUser.email}`);
+          const profileRes = await axios.get(`/api/members/profile?email=${gUser.email}&hotel_code=NPLUS01`);
           if (profileRes.data && profileRes.data.success && profileRes.data.member) {
             const existingUser = profileRes.data.member;
             localStorage.setItem('nplus_guest_user', JSON.stringify(existingUser));
@@ -1845,3 +1845,4 @@ export default function MainPortal() {
     </main>
   );
 }
+

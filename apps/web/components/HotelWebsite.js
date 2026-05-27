@@ -396,7 +396,7 @@ export default function HotelWebsite({ domain }) {
             return;
         }
 
-        const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(gUser.email || '')}`);
+        const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(gUser.email || '')}&hotel_code=${encodeURIComponent(hotelCode || '')}`);
         const profileData = await profileRes.json().catch(() => ({}));
         const existingUser = profileData?.member;
         const hasRequiredProfile = Boolean(
@@ -571,7 +571,7 @@ export default function HotelWebsite({ domain }) {
                 return;
             }
 
-            const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(authForm.email)}`);
+            const profileRes = await fetch(`/api/members/profile?email=${encodeURIComponent(authForm.email)}&hotel_code=${encodeURIComponent(hotelCode || '')}`);
             const profileData = await profileRes.json().catch(() => ({}));
             const finalUser = profileData?.member || data?.member || {
                 first_name: authForm.first,
@@ -1952,3 +1952,5 @@ export default function HotelWebsite({ domain }) {
         </>
     );
 }
+
+
