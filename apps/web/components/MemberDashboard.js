@@ -66,7 +66,9 @@ export default function MemberDashboard({ hotelCode }) {
                 });
 
                 // Call backend API to fetch real booking history for this user
-                const res = await axios.get(`/api/members/bookings?email=${parsedUser.email}`);
+                const effectiveHotel = hotelCode || parsedUser.hotel_code || '';
+                const qs = new URLSearchParams({ email: parsedUser.email, hotel: effectiveHotel });
+                const res = await axios.get(`/api/members/bookings?${qs.toString()}`);
 
                 if (res.data && res.data.success) {
                     let fetchBookings = res.data.bookings || [];
