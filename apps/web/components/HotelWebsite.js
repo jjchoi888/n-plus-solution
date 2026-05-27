@@ -338,6 +338,7 @@ export default function HotelWebsite({ domain }) {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+    const [rewardPopup, setRewardPopup] = useState(null);
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -647,6 +648,38 @@ export default function HotelWebsite({ domain }) {
 
     const hotelCode = getEffectiveHotelCode();
 
+    useEffect(() => {
+        const fetchRewardsPopup = async () => {
+            try {
+                const res = await fetch(`/api/public/rewards-config?hotel_code=${encodeURIComponent(hotelCode)}`);
+                const data = await res.json().catch(() => ({}));
+                if (!data?.success || !data?.popup?.enabled) return;
+
+                const frequency = String(data.popup.frequency || 'ONCE_PER_SESSION').toUpperCase();
+                const sessionKey = `rewards_popup_session_${hotelCode}`;
+                const dailyKey = `rewards_popup_daily_${hotelCode}`;
+                const todayKey = new Date().toISOString().slice(0, 10);
+
+                if (frequency === 'ONCE_PER_SESSION' && sessionStorage.getItem(sessionKey) === '1') return;
+                if (frequency === 'ONCE_PER_DAY' && localStorage.getItem(dailyKey) === todayKey) return;
+
+                setRewardPopup({
+                    title: data.popup.title || 'Rewards Program',
+                    message: data.popup.message || 'Join our rewards program and earn points.',
+                    ctaLabel: data.popup.cta_label || 'View Rewards',
+                    ctaTarget: data.popup.cta_target || 'MYPAGE_REWARDS',
+                    frequency
+                });
+
+                sessionStorage.setItem(sessionKey, '1');
+                if (frequency === 'ONCE_PER_DAY') localStorage.setItem(dailyKey, todayKey);
+            } catch (e) {
+                console.error('Rewards popup fetch failed', e);
+            }
+        };
+
+        fetchRewardsPopup();
+    }, [hotelCode]);
     useEffect(() => {
         const fetchLivePromotions = async () => {
             try {
@@ -1695,6 +1728,42 @@ export default function HotelWebsite({ domain }) {
                     </div>
                 )}
 
+
+                {rewardPopup && (
+                    <div className="fixed inset-0 z-[1190] flex items-center justify-center bg-black/55 backdrop-blur-sm p-4" onClick={() => setRewardPopup(null)}>
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
+                            <div className="theme-bg p-4 text-white text-center">
+                                <h3 className="font-black text-lg">{rewardPopup.title || 'Rewards Program'}</h3>
+                            </div>
+                            <div className="p-6 text-slate-700 text-sm font-semibold whitespace-pre-wrap leading-relaxed text-center">
+                                {rewardPopup.message}
+                            </div>
+                            <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setRewardPopup(null)}
+                                    className="w-1/3 py-3 rounded-xl border border-slate-300 text-slate-700 font-black"
+                                >
+                                    Later
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setRewardPopup(null);
+                                        if ((rewardPopup?.ctaTarget || '').toUpperCase() === 'MYPAGE_REWARDS') {
+                                            sessionStorage.setItem('nplus_open_rewards', '1');
+                                        }
+                                        setActiveMenu('MYPAGE');
+                                        if (!user) setShowGuestAuthModal(true);
+                                    }}
+                                    className="w-2/3 py-3 rounded-xl theme-bg theme-hover text-white font-black"
+                                >
+                                    {rewardPopup.ctaLabel || 'View Rewards'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {/* 💡 전역 알림(Alert) 모달창 */}
                 {alertMessage && (
                     <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
@@ -1952,5 +2021,7 @@ export default function HotelWebsite({ domain }) {
         </>
     );
 }
+
+
 
 

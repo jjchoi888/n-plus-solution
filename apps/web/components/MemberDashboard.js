@@ -42,6 +42,10 @@ export default function MemberDashboard({ hotelCode }) {
     // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
     const [upcomingBookings, setUpcomingBookings] = useState([]);
+    const [rewardsEnabled, setRewardsEnabled] = useState(false);
+    const [rewardsConfig, setRewardsConfig] = useState(null);
+    const [rewardsData, setRewardsData] = useState({ points: 0, tier: null, transactions: [] });
+    const [rewardsLoading, setRewardsLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     // 💡 Load actual logged-in user data and bookings from DB
@@ -54,6 +58,7 @@ export default function MemberDashboard({ hotelCode }) {
 
                 const parsedUser = JSON.parse(savedUser);
                 setUser(parsedUser);
+                const effectiveHotel = hotelCode || parsedUser.hotel_code || '';
                 setProfileForm({
                     firstName: parsedUser.first_name || '',
                     lastName: parsedUser.last_name || '',
@@ -66,7 +71,6 @@ export default function MemberDashboard({ hotelCode }) {
                 });
 
                 // Call backend API to fetch real booking history for this user
-                const effectiveHotel = hotelCode || parsedUser.hotel_code || '';
                 const qs = new URLSearchParams({ email: parsedUser.email, hotel: effectiveHotel });
                 const res = await axios.get(`/api/members/bookings?${qs.toString()}`);
 
@@ -78,6 +82,38 @@ export default function MemberDashboard({ hotelCode }) {
                         fetchBookings = fetchBookings.filter(b => b.hotel_code === hotelCode);
                     }
                     setUpcomingBookings(fetchBookings);
+                }
+
+                if (effectiveHotel) {
+                    try {
+                        const cfgRes = await axios.get(`/api/public/rewards-config?hotel_code=${encodeURIComponent(effectiveHotel)}`);
+                        const cfgEnabled = !!cfgRes?.data?.rewards_enabled;
+                        setRewardsEnabled(cfgEnabled);
+                        setRewardsConfig(cfgRes?.data?.config || null);
+                        if (cfgEnabled && sessionStorage.getItem('nplus_open_rewards') === '1') {
+                            setActiveTab('REWARDS');
+                            sessionStorage.removeItem('nplus_open_rewards');
+                        }
+
+                        if (cfgEnabled && parsedUser.email) {
+                            setRewardsLoading(true);
+                            const rewardsRes = await axios.get(`/api/members/rewards?email=${encodeURIComponent(parsedUser.email)}&hotel_code=${encodeURIComponent(effectiveHotel)}`);
+                            if (rewardsRes?.data?.success) {
+                                setRewardsData({
+                                    points: Number(rewardsRes.data.points || 0),
+                                    tier: rewardsRes.data.tier || null,
+                                    transactions: Array.isArray(rewardsRes.data.transactions) ? rewardsRes.data.transactions : []
+                                });
+                            }
+                        }
+                    } catch (rewardErr) {
+                        console.error('Rewards load failed:', rewardErr);
+                        setRewardsEnabled(false);
+                    } finally {
+                        setRewardsLoading(false);
+                    }
+                } else {
+                    setRewardsEnabled(false);
                 }
             } catch (error) {
                 console.error("Failed to load real bookings:", error);
@@ -266,6 +302,7 @@ export default function MemberDashboard({ hotelCode }) {
                     {[
                         { id: 'BOOKINGS', label: 'My Bookings', icon: '🛎️' },
                         { id: 'RECEIPTS', label: 'Receipts', icon: '🧾' },
+                        ...(rewardsEnabled ? [{ id: 'REWARDS', label: 'Rewards', icon: '🎁' }] : []),
                         { id: 'PROFILE', label: 'My Profile', icon: '👤' }
                     ].map(menu => (
                         <button
@@ -356,6 +393,70 @@ export default function MemberDashboard({ hotelCode }) {
                         </div>
                     )}
 
+
+                    {activeTab === 'REWARDS' && rewardsEnabled && (
+                        <div className="space-y-6 animate-in fade-in duration-500">
+                            <h2 className="text-3xl font-black text-slate-800">Rewards</h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                    <div className="text-xs uppercase tracking-widest font-black text-slate-400">Current Points</div>
+                                    <div className="text-3xl font-black text-blue-700 mt-2">{Number(rewardsData.points || 0).toLocaleString()}</div>
+                                </div>
+                                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                    <div className="text-xs uppercase tracking-widest font-black text-slate-400">Current Tier</div>
+                                    <div className="text-2xl font-black text-slate-800 mt-2">{rewardsData?.tier?.key || 'MEMBER'}</div>
+                                    <div className="text-xs text-slate-500 mt-1">{rewardsData?.tier?.benefit || 'Member benefits active'}</div>
+                                </div>
+                                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                    <div className="text-xs uppercase tracking-widest font-black text-slate-400">Program</div>
+                                    <div className="text-lg font-black text-slate-800 mt-2">{rewardsConfig?.program_name || 'Hotel Rewards Club'}</div>
+                                    <div className="text-xs text-slate-500 mt-1">{rewardsConfig?.points_per_unit || 1} point(s) per {rewardsConfig?.points_unit_currency || 100} currency</div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <h3 className="text-lg font-black text-slate-800 mb-3">How You Earn</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm font-bold text-slate-700">
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Per Stay: {Number(rewardsConfig?.points_per_stay || 0).toLocaleString()} points</div>
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Welcome Bonus: {Number(rewardsConfig?.welcome_bonus_points || 0).toLocaleString()} points</div>
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Birthday Bonus: {Number(rewardsConfig?.birthday_bonus_points || 0).toLocaleString()} points</div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-x-auto">
+                                <div className="p-6 border-b border-slate-100">
+                                    <h3 className="text-lg font-black text-slate-800">Point History</h3>
+                                </div>
+                                {rewardsLoading ? (
+                                    <div className="p-6 text-sm font-bold text-slate-500">Loading rewards history...</div>
+                                ) : rewardsData.transactions.length === 0 ? (
+                                    <div className="p-6 text-sm font-bold text-slate-500">No reward transactions yet.</div>
+                                ) : (
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-slate-50 text-slate-600">
+                                            <tr>
+                                                <th className="text-left px-4 py-3 font-black">Date</th>
+                                                <th className="text-left px-4 py-3 font-black">Type</th>
+                                                <th className="text-left px-4 py-3 font-black">Points</th>
+                                                <th className="text-left px-4 py-3 font-black">Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {rewardsData.transactions.map((tx) => (
+                                                <tr key={String(tx.id)} className="border-t border-slate-100">
+                                                    <td className="px-4 py-3 text-slate-600">{String(tx.created_at || '').slice(0, 10) || '-'}</td>
+                                                    <td className="px-4 py-3 font-bold text-slate-700">{String(tx.type || '').toUpperCase() || '-'}</td>
+                                                    <td className="px-4 py-3 font-black text-blue-700">{Number(tx.amount || 0).toLocaleString()}</td>
+                                                    <td className="px-4 py-3 text-slate-600">{tx.description || tx.reference_type || '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     {activeTab === 'PROFILE' && (
                         <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-slate-800">My Profile</h2>
@@ -476,3 +577,5 @@ export default function MemberDashboard({ hotelCode }) {
         </div>
     );
 }
+
+
