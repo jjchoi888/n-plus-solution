@@ -648,6 +648,87 @@ export default function HotelWebsite({ domain }) {
 
     const hotelCode = getEffectiveHotelCode();
 
+    const renderRewardBenefitIcon = (iconKey) => {
+        const baseClass = "w-5 h-5 text-white";
+        if (iconKey === 'gift') {
+            return (
+                <svg className={baseClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="8" width="18" height="13" rx="2"></rect>
+                    <path d="M12 8v13"></path>
+                    <path d="M3 12h18"></path>
+                    <path d="M7.5 8a2.5 2.5 0 1 1 0-5c2.4 0 4.5 2.6 4.5 5"></path>
+                    <path d="M16.5 8a2.5 2.5 0 1 0 0-5c-2.4 0-4.5 2.6-4.5 5"></path>
+                </svg>
+            );
+        }
+        if (iconKey === 'star') {
+            return (
+                <svg className={baseClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3.1 1.1-6.5L2.6 9.8l6.5-.9L12 3z"></path>
+                </svg>
+            );
+        }
+        if (iconKey === 'moon') {
+            return (
+                <svg className={baseClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8z"></path>
+                </svg>
+            );
+        }
+        return (
+            <svg className={baseClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2v20"></path>
+                <path d="M2 12h20"></path>
+            </svg>
+        );
+    };
+
+    const getRewardPopupTheme = (themeKey) => {
+        const key = String(themeKey || 'CORPORATE_LIGHT').toUpperCase();
+        const themes = {
+            CORPORATE_LIGHT: {
+                panel: 'bg-white border border-slate-200 shadow-2xl',
+                header: 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white',
+                body: 'bg-slate-50 border-b border-slate-100',
+                bodyText: 'text-slate-700',
+                card: 'bg-white border border-slate-200',
+                iconWrap: 'bg-orange-500',
+                titleText: 'text-slate-800',
+                summaryText: 'text-slate-600',
+                footer: 'bg-slate-50 border-t border-slate-100',
+                laterBtn: 'border border-slate-300 text-slate-700',
+                ctaBtn: 'bg-slate-900 hover:bg-slate-800 text-white'
+            },
+            LUXE_GLASS: {
+                panel: 'bg-slate-900/70 border border-white/20 backdrop-blur-2xl shadow-2xl',
+                header: 'bg-gradient-to-r from-emerald-700/80 via-teal-700/80 to-slate-900/80 text-white',
+                body: 'bg-transparent border-b border-white/15',
+                bodyText: 'text-slate-100',
+                card: 'bg-white/10 border border-white/20',
+                iconWrap: 'bg-white/20',
+                titleText: 'text-white',
+                summaryText: 'text-slate-200',
+                footer: 'bg-white/5 border-t border-white/15',
+                laterBtn: 'border border-white/30 text-white/90',
+                ctaBtn: 'bg-emerald-500 hover:bg-emerald-600 text-white'
+            },
+            MODERN_LILAC: {
+                panel: 'bg-[#F1ECFF] border border-[#DDD0FF] shadow-2xl',
+                header: 'bg-gradient-to-r from-[#5A48CC] via-[#6E56D6] to-[#8E7AE8] text-white',
+                body: 'bg-[#EFE8FF] border-b border-[#DDD0FF]',
+                bodyText: 'text-[#2F2B5A]',
+                card: 'bg-white/80 border border-[#D7C9FF]',
+                iconWrap: 'bg-[#6B56DA]',
+                titleText: 'text-[#241F4D]',
+                summaryText: 'text-[#4A4475]',
+                footer: 'bg-[#EFE8FF] border-t border-[#DDD0FF]',
+                laterBtn: 'border border-[#B9A8F5] text-[#3A3270]',
+                ctaBtn: 'bg-[#3F35A8] hover:bg-[#342A97] text-white'
+            }
+        };
+        return themes[key] || themes.CORPORATE_LIGHT;
+    };
+
     useEffect(() => {
         const fetchRewardsPopup = async () => {
             try {
@@ -663,12 +744,40 @@ export default function HotelWebsite({ domain }) {
                 if (frequency === 'ONCE_PER_SESSION' && sessionStorage.getItem(sessionKey) === '1') return;
                 if (frequency === 'ONCE_PER_DAY' && localStorage.getItem(dailyKey) === todayKey) return;
 
+                const rewardConfig = data.config || {};
+                const popupBenefits = [
+                    {
+                        icon: 'gift',
+                        title: 'Welcome Bonus',
+                        summary: `${Number(rewardConfig.welcome_bonus_points || 0).toLocaleString()} points on join`
+                    },
+                    {
+                        icon: 'star',
+                        title: 'Stay Rewards',
+                        summary: `${Number(rewardConfig.points_per_stay || 0).toLocaleString()} points per stay`
+                    },
+                    {
+                        icon: 'moon',
+                        title: 'Birthday Benefit',
+                        summary: `${Number(rewardConfig.birthday_bonus_points || 0).toLocaleString()} bonus points`
+                    },
+                    {
+                        icon: 'star',
+                        title: 'Tier Perks',
+                        summary: rewardConfig.tier_enabled
+                            ? `Upgrades and member-only benefits`
+                            : `Flexible member discounts`
+                    }
+                ];
+
                 setRewardPopup({
                     title: data.popup.title || 'Rewards Program',
                     message: data.popup.message || 'Join our rewards program and earn points.',
                     ctaLabel: data.popup.cta_label || 'View Rewards',
                     ctaTarget: data.popup.cta_target || 'MYPAGE_REWARDS',
-                    frequency
+                    theme: data.popup.theme || rewardConfig.popup_theme || 'CORPORATE_LIGHT',
+                    frequency,
+                    benefits: popupBenefits
                 });
 
                 sessionStorage.setItem(sessionKey, '1');
@@ -1731,18 +1840,35 @@ export default function HotelWebsite({ domain }) {
 
                 {rewardPopup && (
                     <div className="fixed inset-0 z-[1190] flex items-center justify-center bg-black/55 backdrop-blur-sm p-4" onClick={() => setRewardPopup(null)}>
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
-                            <div className="theme-bg p-4 text-white text-center">
-                                <h3 className="font-black text-lg">{rewardPopup.title || 'Rewards Program'}</h3>
+                        <div className={`${getRewardPopupTheme(rewardPopup?.theme).panel} rounded-3xl w-full max-w-md min-h-[520px] md:min-h-[460px] overflow-hidden`} onClick={(e) => e.stopPropagation()}>
+                            <div className={`${getRewardPopupTheme(rewardPopup?.theme).header} p-4 text-center`}>
+                                <h3 className="font-black text-lg tracking-wide">{rewardPopup.title || 'Rewards Program'}</h3>
                             </div>
-                            <div className="p-6 text-slate-700 text-sm font-semibold whitespace-pre-wrap leading-relaxed text-center">
-                                {rewardPopup.message}
+                            <div className={`${getRewardPopupTheme(rewardPopup?.theme).body} p-5 md:p-6`}>
+                                <p className={`${getRewardPopupTheme(rewardPopup?.theme).bodyText} text-sm font-semibold whitespace-pre-wrap leading-relaxed text-center`}>
+                                    {rewardPopup.message}
+                                </p>
                             </div>
-                            <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+                            <div className="p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {(rewardPopup.benefits || []).slice(0, 4).map((item, idx) => (
+                                    <div key={`rw_benefit_${idx}`} className={`${getRewardPopupTheme(rewardPopup?.theme).card} rounded-xl p-3`}>
+                                        <div className="flex items-start gap-3">
+                                            <div className={`${getRewardPopupTheme(rewardPopup?.theme).iconWrap} w-9 h-9 rounded-full flex items-center justify-center shrink-0`}>
+                                                {renderRewardBenefitIcon(item.icon)}
+                                            </div>
+                                            <div>
+                                                <div className={`${getRewardPopupTheme(rewardPopup?.theme).titleText} text-sm font-black`}>{item.title}</div>
+                                                <div className={`${getRewardPopupTheme(rewardPopup?.theme).summaryText} text-xs font-semibold mt-0.5`}>{item.summary}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className={`${getRewardPopupTheme(rewardPopup?.theme).footer} p-4 flex gap-2 mt-auto`}>
                                 <button
                                     type="button"
                                     onClick={() => setRewardPopup(null)}
-                                    className="w-1/3 py-3 rounded-xl border border-slate-300 text-slate-700 font-black"
+                                    className={`${getRewardPopupTheme(rewardPopup?.theme).laterBtn} w-1/3 py-3 rounded-xl font-black`}
                                 >
                                     Later
                                 </button>
@@ -1756,7 +1882,7 @@ export default function HotelWebsite({ domain }) {
                                         setActiveMenu('MYPAGE');
                                         if (!user) setShowGuestAuthModal(true);
                                     }}
-                                    className="w-2/3 py-3 rounded-xl theme-bg theme-hover text-white font-black"
+                                    className={`${getRewardPopupTheme(rewardPopup?.theme).ctaBtn} w-2/3 py-3 rounded-xl font-black`}
                                 >
                                     {rewardPopup.ctaLabel || 'View Rewards'}
                                 </button>
