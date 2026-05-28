@@ -392,6 +392,11 @@ export default function HotelWebsite({ domain }) {
         ).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (referralFromLink) {
             setAuthForm((prev) => ({ ...prev, referralCode: prev.referralCode || referralFromLink }));
+            const savedUser = localStorage.getItem('nplus_guest_user');
+            if (!savedUser) {
+                setGuestAuthMode('REGISTER');
+                setShowGuestAuthModal(true);
+            }
         }
     }, []);
 
