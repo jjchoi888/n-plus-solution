@@ -59,6 +59,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [fees, setFees] = useState({ child: 500, extraBed: 1000 });
+  const [memberRewardsSnapshot, setMemberRewardsSnapshot] = useState({ enabled: false, points: 0, config: null });
+  const [redeemPointsInput, setRedeemPointsInput] = useState("");
+  const [appliedRedeemPoints, setAppliedRedeemPoints] = useState(0);
+  const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
   const effectiveCheckIn = checkIn || searchParams?.checkIn || "";
   const effectiveCheckOut = checkOut || searchParams?.checkOut || "";
@@ -98,6 +102,34 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     }
   }, [rooms, effectiveCheckIn, effectiveCheckOut, effectiveHotelCode, lang, refreshKey]);
 
+  useEffect(() => {
+    const loadRewards = async () => {
+      try {
+        const savedUser = localStorage.getItem('nplus_guest_user');
+        const user = savedUser ? JSON.parse(savedUser) : null;
+        const email = String(user?.email || '').trim();
+        if (!email || !effectiveHotelCode || effectiveHotelCode === 'ALL') {
+          setMemberRewardsSnapshot({ enabled: false, points: 0, config: null });
+          return;
+        }
+        const res = await fetch(`${BASE_URL}/api/members/rewards?email=${encodeURIComponent(email)}&hotel_code=${encodeURIComponent(effectiveHotelCode)}`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.success) {
+          setMemberRewardsSnapshot({
+            enabled: !!data.rewards_enabled,
+            points: Number(data.points || 0),
+            config: data.config || null
+          });
+        } else {
+          setMemberRewardsSnapshot({ enabled: false, points: 0, config: null });
+        }
+      } catch (_) {
+        setMemberRewardsSnapshot({ enabled: false, points: 0, config: null });
+      }
+    };
+    loadRewards();
+  }, [effectiveHotelCode, isCheckoutOpen]);
+
   const actualRooms = (rooms && rooms.length > 0) ? rooms : fetchedRooms;
 
   let nights = 1;
@@ -127,6 +159,26 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     else if (appliedPromo.type === 'fixed') discountAmount = appliedPromo.value;
   }
   const grandTotal = Math.max(0, subTotal - discountAmount);
+  const rewardsCfg = memberRewardsSnapshot.config || {};
+  const redeemRatePer100 = Math.max(1, Number(rewardsCfg.redeem_rate_points_per_100 || 100));
+  const minRedeemPoints = Math.max(0, Number(rewardsCfg.min_redeem_points || 0));
+  const maxRedeemPointsByPrice = Math.floor(Math.max(0, grandTotal) / 100) * redeemRatePer100;
+  const maxRedeemPointsAllowed = Math.max(0, Math.min(Number(memberRewardsSnapshot.points || 0), maxRedeemPointsByPrice));
+  const payableGrandTotal = Math.max(0, grandTotal - Number(appliedRedeemAmount || 0));
+
+  useEffect(() => {
+    if (appliedRedeemPoints <= 0) return;
+    let adjustedPoints = Math.min(appliedRedeemPoints, maxRedeemPointsAllowed);
+    adjustedPoints = Math.floor(adjustedPoints / redeemRatePer100) * redeemRatePer100;
+    if (adjustedPoints <= 0 || adjustedPoints < minRedeemPoints) {
+      setAppliedRedeemPoints(0);
+      setAppliedRedeemAmount(0);
+      return;
+    }
+    const adjustedAmount = Math.floor(adjustedPoints / redeemRatePer100) * 100;
+    if (adjustedPoints !== appliedRedeemPoints) setAppliedRedeemPoints(adjustedPoints);
+    if (adjustedAmount !== appliedRedeemAmount) setAppliedRedeemAmount(adjustedAmount);
+  }, [appliedRedeemPoints, maxRedeemPointsAllowed, redeemRatePer100, minRedeemPoints, appliedRedeemAmount]);
 
   const handleApplyPromo = async () => {
     if (!promoInput) return;
@@ -183,7 +235,14 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     setIsBooking(true);
 
     try {
-      const dividedGrandTotal = grandTotal / totalRoomsInCart;
+      const savedUser = localStorage.getItem('nplus_guest_user');
+      const user = savedUser ? JSON.parse(savedUser) : null;
+      if (appliedRedeemPoints > 0 && user?.email && String(formData.email || '').toLowerCase() !== String(user.email || '').toLowerCase()) {
+        resetBtn();
+        return setModal({ show: true, title: t.error, message: "Reward points can be used only with your member email.", type: 'warning', highlight: '' });
+      }
+
+      const dividedGrandTotal = payableGrandTotal / totalRoomsInCart;
       let bookingPayloads = [];
 
       for (const room of actualRooms) {
@@ -214,7 +273,12 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       const response = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookings: bookingPayloads })
+        body: JSON.stringify({
+          bookings: bookingPayloads,
+          points_redeem: appliedRedeemPoints > 0 && user?.email
+            ? { email: user.email, points_used: appliedRedeemPoints }
+            : null
+        })
       });
 
       const data = await response.json();
@@ -234,7 +298,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   if (isFetching) return <div className="p-20 text-center text-emerald-600 theme-text font-bold text-xl animate-pulse">Searching available rooms...</div>;
 
-  const btnText = `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook || ''}`.trim();
+  const btnText = `${lang === 'ko' ? '' : t.pay} ₱${payableGrandTotal.toLocaleString()} ${t.andBook || ''}`.trim();
 
   return (
     <>
@@ -347,7 +411,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isCartOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
                   </button>
                 </div>
-                <span className="text-2xl font-black text-emerald-600 theme-text">₱{grandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
+                <span className="text-2xl font-black text-emerald-600 theme-text">₱{payableGrandTotal.toLocaleString()} <span className="text-sm font-medium text-gray-500">/ {nights} {t.night.replace('/', '').trim()}</span></span>
               </div>
               <button onClick={() => setIsCheckoutOpen(true)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 theme-bg text-white hover:bg-emerald-700 theme-hover rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 text-lg">
                 {t.proceedCheckout} →
@@ -445,10 +509,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
                     <div className="border-t border-emerald-200 theme-border pt-4 text-left">
                       <label className="block text-xs font-bold text-emerald-700 theme-text uppercase mb-2 text-left">{t.promoCode}</label>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-[1fr_112px] gap-2">
                         <input type="text" value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())} placeholder="e.g. WELCOME10" className="flex-1 border border-emerald-200 theme-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 theme-focus uppercase bg-white" disabled={appliedPromo} />
                         {!appliedPromo ? (
-                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="bg-emerald-600 theme-bg text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 theme-hover transition">{t.apply}</button>
+                          <button type="button" onClick={handleApplyPromo} disabled={isApplyingPromo} className="w-full bg-emerald-600 theme-bg text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 theme-hover transition">{t.apply}</button>
                         ) : (
                           <button type="button" onClick={() => { setAppliedPromo(null); setPromoInput(""); }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition">X</button>
                         )}
@@ -460,12 +524,55 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                         </div>
                       )}
                     </div>
+
+                    <div className="border-t border-emerald-200 theme-border pt-4 text-left">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold text-emerald-700 theme-text uppercase text-left">Use Reward Points</label>
+                        <span className="text-xs font-bold text-emerald-700">Balance: {Number(memberRewardsSnapshot.points || 0).toLocaleString()} pts</span>
+                      </div>
+                      <div className="grid grid-cols-[1fr_112px] gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={redeemPointsInput}
+                          onChange={(e) => setRedeemPointsInput(e.target.value)}
+                          placeholder={`Min ${Number(minRedeemPoints || 0).toLocaleString()} pts`}
+                          disabled={!memberRewardsSnapshot.enabled}
+                          className="flex-1 border border-emerald-200 theme-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 theme-focus bg-white disabled:opacity-60"
+                        />
+                        <button
+                          type="button"
+                          disabled={!memberRewardsSnapshot.enabled}
+                          onClick={() => {
+                            const raw = Math.max(0, Math.floor(Number(redeemPointsInput || 0)));
+                            if (raw <= 0) return setModal({ show: true, title: t.error, message: "Enter points to use.", type: 'warning', highlight: '' });
+                            if (raw < minRedeemPoints) return setModal({ show: true, title: t.error, message: `Minimum redeem is ${minRedeemPoints.toLocaleString()} points.`, type: 'warning', highlight: '' });
+                            if (maxRedeemPointsAllowed <= 0) return setModal({ show: true, title: t.error, message: "No redeemable points for this booking amount.", type: 'warning', highlight: '' });
+                            let usablePoints = Math.min(raw, maxRedeemPointsAllowed);
+                            usablePoints = Math.floor(usablePoints / redeemRatePer100) * redeemRatePer100;
+                            if (usablePoints < minRedeemPoints || usablePoints <= 0) return setModal({ show: true, title: t.error, message: "Enter a valid redeemable points amount.", type: 'warning', highlight: '' });
+                            const currencyAmount = Math.floor(usablePoints / redeemRatePer100) * 100;
+                            setAppliedRedeemPoints(usablePoints);
+                            setAppliedRedeemAmount(currencyAmount);
+                          }}
+                          className="w-full bg-emerald-600 theme-bg text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 theme-hover transition disabled:opacity-50"
+                        >
+                          Use Points
+                        </button>
+                      </div>
+                      {appliedRedeemPoints > 0 && (
+                        <div className="mt-3 flex justify-between items-center text-xs font-black text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                          <span>Applied {appliedRedeemPoints.toLocaleString()} pts</span>
+                          <button type="button" onClick={() => { setAppliedRedeemPoints(0); setAppliedRedeemAmount(0); setRedeemPointsInput(''); }} className="underline">Clear</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-6 border-t-4 border-emerald-200 theme-border pt-4">
                     <p className="flex justify-between items-center text-xl font-black text-gray-900">
                       <span>Total</span>
-                      <span className="text-emerald-600 theme-text">₱{grandTotal.toLocaleString()}</span>
+                      <span className="text-emerald-600 theme-text">₱{payableGrandTotal.toLocaleString()}</span>
                     </p>
                   </div>
 
@@ -481,7 +588,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       type="button"
                       onClick={submitBooking}
                       disabled={isBooking}
-                      className="w-2/3 bg-emerald-600 theme-bg text-white py-4 md:py-4 rounded-xl md:rounded-2xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-lg hover:bg-emerald-700 theme-hover disabled:opacity-50"
+                      className="w-2/3 bg-emerald-600 theme-bg text-white py-4 md:py-4 rounded-xl md:rounded-2xl font-black shadow-lg transition-transform active:scale-95 text-sm md:text-base hover:bg-emerald-700 theme-hover disabled:opacity-50 whitespace-nowrap"
                     >
                       {btnText}
                     </button>

@@ -1809,6 +1809,21 @@ export default function HotelWebsite({ domain }) {
                                             <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.nationality}</label><select value={nationality} onChange={e => setNationality(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl theme-focus outline-none bg-white cursor-pointer"><optgroup label="Top Options">{topCountries.map(c => <option key={`top_${c}`} value={c}>{c}</option>)}</optgroup></select></div>
                                         </div>
                                     </section>
+
+                                    <section>
+                                        <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">2. {t.extraOptions || 'Extra Options'}</h3>
+                                        <div className="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-800">{t.extraBed || 'Extra Bed'}</p>
+                                                <p className="text-xs text-slate-500">₱1,000 / night</p>
+                                            </div>
+                                            <div className="flex items-center gap-3 bg-white rounded-full border border-slate-300 px-1 py-1 shadow-sm">
+                                                <button type="button" onClick={() => setExtraBed(Math.max(0, extraBed - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-slate-600 hover:text-emerald-600">-</button>
+                                                <span className="w-4 text-center font-bold text-emerald-600">{extraBed}</span>
+                                                <button type="button" onClick={() => setExtraBed(extraBed + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-slate-600 hover:text-emerald-600">+</button>
+                                            </div>
+                                        </div>
+                                    </section>
                                 </div>
 
                                 {/* 2. 우측 사이드바 (Summary + Button, 레이아웃 순서 고정) */}
