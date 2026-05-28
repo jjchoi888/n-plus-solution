@@ -366,7 +366,7 @@ export default function HotelWebsite({ domain }) {
     const [user, setUser] = useState(null);
     const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
     const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // LOGIN, REGISTER, FORGOT_PASSWORD
-    const [authForm, setAuthForm] = useState({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
+    const [authForm, setAuthForm] = useState({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '', referralCode: '' });
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
@@ -383,6 +383,17 @@ export default function HotelWebsite({ domain }) {
 
     const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
     const hotelCode = getEffectiveHotelCode();
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search || '');
+        const referralFromLink = String(
+            params.get('ref') || params.get('referral') || params.get('referral_code') || ''
+        ).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (referralFromLink) {
+            setAuthForm((prev) => ({ ...prev, referralCode: prev.referralCode || referralFromLink }));
+        }
+    }, []);
 
     // 로그인/가입/로그아웃 핸들러
     useEffect(() => {
@@ -468,7 +479,8 @@ export default function HotelWebsite({ domain }) {
             first: existingUser?.first_name || displayNameParts[0] || '',
             last: existingUser?.last_name || displayNameParts.slice(1).join(' ') || '',
             phone: existingUser?.phone || gUser.phoneNumber || '',
-            nationality: existingUser?.nationality || ''
+            nationality: existingUser?.nationality || '',
+            referralCode: ''
         });
         setGuestAuthMode('GOOGLE_COMPLETE');
     };
@@ -489,6 +501,7 @@ export default function HotelWebsite({ domain }) {
                 last_name: authForm.last,
                 phone: authForm.phone,
                 nationality: authForm.nationality || 'Philippines',
+                referral_code: authForm.referralCode || '',
                 membership_status: 'active'
             };
 
@@ -513,7 +526,7 @@ export default function HotelWebsite({ domain }) {
                 setGuestRegion(freshUser.region || '');
                 setGuestDob(freshUser.dob || '');
                 setGuestDocumentUrl(freshUser.document_url || '');
-                setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
+                setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '', referralCode: '' });
             } else {
                 setAlertMessage("❌ " + (data.message || t.authFailed));
             }
@@ -598,6 +611,7 @@ export default function HotelWebsite({ domain }) {
                     last_name: authForm.last,
                     phone: authForm.phone,
                     nationality: authForm.nationality,
+                    referral_code: authForm.referralCode || '',
                     membership_status: 'active'
                 })
             });
@@ -630,7 +644,7 @@ export default function HotelWebsite({ domain }) {
             setGuestRegion(finalUser.region || '');
             setGuestDob(finalUser.dob || '');
             setGuestDocumentUrl(finalUser.document_url || '');
-            setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '' });
+            setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '', referralCode: '' });
             setGooglePendingProfile(null);
             setGuestAuthMode('LOGIN');
         } catch (err) {
@@ -2227,6 +2241,16 @@ export default function HotelWebsite({ domain }) {
                                                 />
                                             </div>
                                             <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Referral Code (optional)</label>
+                                                <input
+                                                    type="text"
+                                                    value={authForm.referralCode || ''}
+                                                    onChange={(e) => setAuthForm({ ...authForm, referralCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })}
+                                                    className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl uppercase tracking-widest"
+                                                    placeholder="Enter referral code"
+                                                />
+                                            </div>
+                                            <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Password</label>
                                                 <div className="relative">
                                                     <input type={showRegisterPassword ? "text" : "password"} required value={authForm.pw} onChange={(e) => setAuthForm({ ...authForm, pw: e.target.value })} className="w-full p-3 pr-16 border border-slate-300 focus:theme-border outline-none text-sm tracking-widest rounded-xl" placeholder="••••••••" />
@@ -2283,6 +2307,16 @@ export default function HotelWebsite({ domain }) {
                                                     onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })}
                                                     className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl"
                                                     placeholder="Type to search country"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Referral Code (optional)</label>
+                                                <input
+                                                    type="text"
+                                                    value={authForm.referralCode || ''}
+                                                    onChange={(e) => setAuthForm({ ...authForm, referralCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })}
+                                                    className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl uppercase tracking-widest"
+                                                    placeholder="Enter referral code"
                                                 />
                                             </div>
                                             <div className="pt-2">

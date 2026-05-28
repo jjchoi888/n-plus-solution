@@ -48,7 +48,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     const [upcomingBookings, setUpcomingBookings] = useState([]);
     const [rewardsEnabled, setRewardsEnabled] = useState(false);
     const [rewardsConfig, setRewardsConfig] = useState(null);
-    const [rewardsData, setRewardsData] = useState({ points: 0, tier: null, transactions: [] });
+    const [rewardsData, setRewardsData] = useState({ points: 0, tier: null, transactions: [], referralCode: '' });
     const [rewardsLoading, setRewardsLoading] = useState(false);
     const [showRewardsHistoryModal, setShowRewardsHistoryModal] = useState(false);
     const [showRewardsQrModal, setShowRewardsQrModal] = useState(false);
@@ -68,6 +68,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                 setRewardsData({
                     points: Number(rewardsRes.data.points || 0),
                     tier: rewardsRes.data.tier || null,
+                    referralCode: rewardsRes.data.referral_code || '',
                     transactions: Array.isArray(rewardsRes.data.transactions) ? rewardsRes.data.transactions : []
                 });
             }
@@ -329,6 +330,25 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
             }`;
     };
 
+    const buildReferralLink = () => {
+        if (!rewardsData?.referralCode || typeof window === 'undefined') return '';
+        const url = new URL(window.location.href);
+        url.searchParams.set('ref', rewardsData.referralCode);
+        url.hash = '';
+        return url.toString();
+    };
+
+    const copyReferralLink = async () => {
+        const link = buildReferralLink();
+        if (!link) return;
+        try {
+            await navigator.clipboard?.writeText(link);
+            alert('Referral link copied.');
+        } catch (_) {
+            window.prompt('Copy this referral link:', link);
+        }
+    };
+
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold bg-slate-50">Loading dashboard...</div>;
     }
@@ -370,6 +390,15 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                         <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
                         <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
                         <div className="text-xs text-slate-300 mt-1">{rewardsData?.tier?.key || 'MEMBER'} Tier</div>
+                        {rewardsData?.referralCode && (
+                            <button
+                                type="button"
+                                onClick={copyReferralLink}
+                                className="mt-2 w-full rounded-lg bg-white/10 px-2 py-1 text-left text-[10px] font-black uppercase tracking-widest text-emerald-200 hover:bg-white/20"
+                            >
+                                Copy Referral Link
+                            </button>
+                        )}
                         <div className="grid grid-cols-2 gap-2 mt-3">
                             <button
                                 type="button"
@@ -415,6 +444,15 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                             <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
                             <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
                             <div className="text-xs text-slate-300 mt-1">{rewardsData?.tier?.key || 'MEMBER'} Tier</div>
+                            {rewardsData?.referralCode && (
+                                <button
+                                    type="button"
+                                    onClick={copyReferralLink}
+                                    className="mt-2 w-full rounded-lg bg-white/10 px-2 py-1 text-left text-[10px] font-black uppercase tracking-widest text-emerald-200 hover:bg-white/20"
+                                >
+                                    Copy Referral Link
+                                </button>
+                            )}
                             <div className="grid grid-cols-2 gap-2 mt-3">
                                 <button
                                     type="button"
@@ -531,11 +569,28 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
 
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
                                 <h3 className="text-lg font-black text-slate-800 mb-3">How You Earn</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm font-bold text-slate-700">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm font-bold text-slate-700">
                                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Per Stay: {Number(rewardsConfig?.points_per_stay || 0).toLocaleString()} points</div>
                                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Welcome Bonus: {Number(rewardsConfig?.welcome_bonus_points || 0).toLocaleString()} points</div>
                                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Birthday Bonus: {Number(rewardsConfig?.birthday_bonus_points || 0).toLocaleString()} points</div>
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">Referral Bonus: {Number(rewardsConfig?.referral_bonus_points || 0).toLocaleString()} points</div>
                                 </div>
+                                {rewardsData?.referralCode && (
+                                    <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Your Referral Link</div>
+                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="break-all rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-900">{buildReferralLink()}</div>
+                                            <button
+                                                type="button"
+                                                onClick={copyReferralLink}
+                                                className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700"
+                                            >
+                                                Copy Link
+                                            </button>
+                                        </div>
+                                        <p className="mt-2 text-xs font-bold text-emerald-800">Share this link with a new member. Their signup form will automatically include your referral code, and referral points are credited after they join this hotel.</p>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-x-auto">
