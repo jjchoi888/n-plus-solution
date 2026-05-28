@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
@@ -1329,19 +1329,25 @@ export default function HotelWebsite({ domain }) {
                             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
                         </div>
                     </div>
-                    <div className={`md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
-                        {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }, ...(user ? [{ id: 'MYPAGE', label: t.myPageBtn }] : [{ id: 'LOGIN_SIGNUP', label: t.loginSignUpBtn }])].map(menu => (
-                            <button key={menu.id} onClick={() => {
-                                if (menu.id === 'LOGIN_SIGNUP') {
-                                    setGuestAuthMode('LOGIN');
-                                    setShowGuestAuthModal(true);
-                                } else {
-                                    setActiveMenu(menu.id);
-                                }
-                                setIsMobileMenuOpen(false);
-                            }} className={`p-4 text-left font-black text-sm tracking-widest uppercase ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? 'theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
-                        ))}
-                    </div>
+                    {isMobileMenuOpen && (
+                        <div className="md:hidden fixed inset-0 top-[72px] z-40 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+                            <div className="absolute right-5 top-8 flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
+                                {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }, ...(user ? [{ id: 'MYPAGE', label: t.myPageBtn }] : [{ id: 'LOGIN_SIGNUP', label: t.loginSignUpBtn }])].map(menu => (
+                                    <button key={menu.id} onClick={() => {
+                                        if (menu.id === 'LOGIN_SIGNUP') {
+                                            setGuestAuthMode('LOGIN');
+                                            setShowGuestAuthModal(true);
+                                        } else {
+                                            setActiveMenu(menu.id);
+                                        }
+                                        setIsMobileMenuOpen(false);
+                                    }} className={`flex h-24 w-24 items-center justify-center rounded-full bg-white/85 px-3 text-center text-base font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95 ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? 'theme-text ring-4 ring-white/40' : 'text-slate-900'}`}>
+                                        {menu.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </header>
 
                 {/* 🏠 메인 화면 */}

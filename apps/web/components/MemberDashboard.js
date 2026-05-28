@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -334,7 +334,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     }
 
     return (
-        <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans ${isSiteMobileMenuOpen ? 'mt-[320px] md:mt-[72px]' : 'mt-[72px]'}`}>
+        <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans mt-[72px]">
 
             {/* 📱 Mobile Menu Button */}
             <div className={`${isSiteMobileMenuOpen ? 'hidden' : 'flex'} md:hidden bg-white p-4 border-b justify-between items-center sticky top-0 z-50`}>
@@ -342,8 +342,29 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-2xl text-slate-600">☰</button>
             </div>
 
+            {isMobileMenuOpen && (
+                <div className="md:hidden fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+                    <div className="absolute right-5 top-24 flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
+                        {[
+                            { id: 'BOOKINGS', label: 'Bookings' },
+                            { id: 'RECEIPTS', label: 'Receipts' },
+                            ...(rewardsEnabled ? [{ id: 'REWARDS', label: 'Rewards' }] : []),
+                            { id: 'PROFILE', label: 'Profile' }
+                        ].map(menu => (
+                            <button
+                                key={`mobile_${menu.id}`}
+                                type="button"
+                                onClick={() => { setActiveTab(menu.id); setIsMobileMenuOpen(false); }}
+                                className={`flex h-24 w-24 items-center justify-center rounded-full bg-white/85 px-3 text-center text-base font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95 ${activeTab === menu.id ? 'text-blue-700 ring-4 ring-white/40' : 'text-slate-900'}`}
+                            >
+                                {menu.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
             {/* 🖥️ Left Sidebar */}
-            <div className={`fixed md:relative inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out z-40 w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl md:shadow-none`}>
+            <div className="hidden md:relative md:translate-x-0 md:flex z-40 w-64 bg-white border-r border-slate-200 flex-col shadow-none">
                 <div className="p-6 border-b border-slate-100 hidden md:block">
                     <div className="rounded-2xl bg-slate-900 text-white p-4 shadow-lg">
                         <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
