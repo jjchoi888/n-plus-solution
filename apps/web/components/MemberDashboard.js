@@ -58,22 +58,26 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshRewardsData = async (email, targetHotelCode) => {
-        if (!email || !targetHotelCode) return;
+        if (!email || !targetHotelCode) return null;
         try {
             setRewardsLoading(true);
             const rewardsRes = await axios.get(`/api/members/rewards?email=${encodeURIComponent(email)}&hotel_code=${encodeURIComponent(targetHotelCode)}`);
             if (rewardsRes?.data?.success) {
-                setRewardsEnabled(!!rewardsRes.data.rewards_enabled);
+                const nextReferralCode = rewardsRes.data.referral_code || '';
+                setRewardsEnabled(!!rewardsRes.data.rewards_enabled || !!nextReferralCode);
                 setRewardsConfig(rewardsRes.data.config || null);
                 setRewardsData({
                     points: Number(rewardsRes.data.points || 0),
                     tier: rewardsRes.data.tier || null,
-                    referralCode: rewardsRes.data.referral_code || '',
+                    referralCode: nextReferralCode,
                     transactions: Array.isArray(rewardsRes.data.transactions) ? rewardsRes.data.transactions : []
                 });
+                return rewardsRes.data;
             }
+            return null;
         } catch (err) {
             console.error('Rewards refresh failed:', err);
+            return null;
         } finally {
             setRewardsLoading(false);
         }
@@ -101,18 +105,23 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                     documentUrl: parsedUser.document_url || ''
                 });
 
-                // Call backend API to fetch real booking history for this user
-                const qs = new URLSearchParams({ email: parsedUser.email, hotel: effectiveHotel });
-                const res = await axios.get(`/api/members/bookings?${qs.toString()}`);
+                // Booking history should not block rewards/referral loading.
+                try {
+                    const qs = new URLSearchParams({ email: parsedUser.email, hotel: effectiveHotel });
+                    const res = await axios.get(`/api/members/bookings?${qs.toString()}`);
 
-                if (res.data && res.data.success) {
-                    let fetchBookings = res.data.bookings || [];
+                    if (res.data && res.data.success) {
+                        let fetchBookings = res.data.bookings || [];
 
-                    // If accessed via a single hotel website (?hotel=A001), filter bookings accordingly
-                    if (hotelCode) {
-                        fetchBookings = fetchBookings.filter(b => b.hotel_code === hotelCode);
+                        // If accessed via a single hotel website (?hotel=A001), filter bookings accordingly
+                        if (hotelCode) {
+                            fetchBookings = fetchBookings.filter(b => b.hotel_code === hotelCode);
+                        }
+                        setUpcomingBookings(fetchBookings);
                     }
-                    setUpcomingBookings(fetchBookings);
+                } catch (bookingErr) {
+                    console.error('Failed to load real bookings:', bookingErr);
+                    setUpcomingBookings([]);
                 }
 
                 if (effectiveHotel) {
@@ -121,12 +130,16 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                         const cfgEnabled = !!cfgRes?.data?.rewards_enabled;
                         setRewardsEnabled(cfgEnabled);
                         setRewardsConfig(cfgRes?.data?.config || null);
-                        if (cfgEnabled && sessionStorage.getItem('nplus_open_rewards') === '1') {
+
+                        const rewardData = parsedUser.email
+                            ? await refreshRewardsData(parsedUser.email, effectiveHotel)
+                            : null;
+                        const shouldShowRewards = cfgEnabled || !!rewardData?.referral_code;
+                        setRewardsEnabled(shouldShowRewards);
+
+                        if (shouldShowRewards && sessionStorage.getItem('nplus_open_rewards') === '1') {
                             setActiveTab('REWARDS');
                             sessionStorage.removeItem('nplus_open_rewards');
-                        }
-                        if (cfgEnabled && parsedUser.email) {
-                            await refreshRewardsData(parsedUser.email, effectiveHotel);
                         }
                     } catch (rewardErr) {
                         console.error('Rewards load failed:', rewardErr);
@@ -390,7 +403,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                         <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
                         <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
                         <div className="text-xs text-slate-300 mt-1">{rewardsData?.tier?.key || 'MEMBER'} Tier</div>
-                        {rewardsData?.referralCode && (
+                        {rewardsData?.referralCode ? (
                             <button
                                 type="button"
                                 onClick={copyReferralLink}
@@ -398,6 +411,10 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                             >
                                 Copy Referral Link
                             </button>
+                        ) : (
+                            <div className="mt-2 rounded-lg bg-white/5 px-2 py-1 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                Referral link loading
+                            </div>
                         )}
                         <div className="grid grid-cols-2 gap-2 mt-3">
                             <button
@@ -444,7 +461,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                             <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
                             <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
                             <div className="text-xs text-slate-300 mt-1">{rewardsData?.tier?.key || 'MEMBER'} Tier</div>
-                            {rewardsData?.referralCode && (
+                            {rewardsData?.referralCode ? (
                                 <button
                                     type="button"
                                     onClick={copyReferralLink}
@@ -452,6 +469,10 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                 >
                                     Copy Referral Link
                                 </button>
+                            ) : (
+                                <div className="mt-2 rounded-lg bg-white/5 px-2 py-1 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Referral link loading
+                                </div>
                             )}
                             <div className="grid grid-cols-2 gap-2 mt-3">
                                 <button
