@@ -1797,7 +1797,7 @@ export default function HotelWebsite({ domain }) {
                 {/* 💡 고객용 MY PAGE */}
                 {activeMenu === 'MYPAGE' && (
                     <div className="w-full flex-grow bg-slate-50 min-h-screen pt-20">
-                        <MemberDashboard hotelCode={hotelCode} />
+                        <MemberDashboard hotelCode={hotelCode} isSiteMobileMenuOpen={isMobileMenuOpen} />
                     </div>
                 )}
 

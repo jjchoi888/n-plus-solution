@@ -19,10 +19,14 @@ const PH_PROVINCES = [
     'Tarlac', 'Tawi-Tawi', 'Zambales', 'Zamboanga del Norte', 'Zamboanga del Sur', 'Zamboanga Sibugay'
 ];
 
-export default function MemberDashboard({ hotelCode }) {
+export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = false }) {
     const isSingleHotel = !!hotelCode;
     const [activeTab, setActiveTab] = useState('BOOKINGS');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        if (isSiteMobileMenuOpen) setIsMobileMenuOpen(false);
+    }, [isSiteMobileMenuOpen]);
 
     // 💡 Password change form state
     const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
@@ -330,10 +334,10 @@ export default function MemberDashboard({ hotelCode }) {
     }
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans mt-[72px]">
+        <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans ${isSiteMobileMenuOpen ? 'mt-[320px] md:mt-[72px]' : 'mt-[72px]'}`}>
 
             {/* 📱 Mobile Menu Button */}
-            <div className="md:hidden bg-white p-4 border-b flex justify-between items-center sticky top-0 z-50">
+            <div className={`${isSiteMobileMenuOpen ? 'hidden' : 'flex'} md:hidden bg-white p-4 border-b justify-between items-center sticky top-0 z-50`}>
                 <span className="font-black text-blue-600">MY PAGE</span>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-2xl text-slate-600">☰</button>
             </div>
