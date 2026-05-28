@@ -19,7 +19,7 @@ const PH_PROVINCES = [
     'Tarlac', 'Tawi-Tawi', 'Zambales', 'Zamboanga del Norte', 'Zamboanga del Sur', 'Zamboanga Sibugay'
 ];
 
-export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = false }) {
+export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = false, posRewardToken = '' }) {
     const isSingleHotel = !!hotelCode;
     const [activeTab, setActiveTab] = useState('BOOKINGS');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -55,6 +55,9 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     const [qrRedeemPoints, setQrRedeemPoints] = useState('');
     const [qrRedeemData, setQrRedeemData] = useState(null);
     const [qrRedeemLoading, setQrRedeemLoading] = useState(false);
+    const [posRewardIntent, setPosRewardIntent] = useState(null);
+    const [posRewardTokenInput, setPosRewardTokenInput] = useState('');
+    const [posRewardPayLoading, setPosRewardPayLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshRewardsData = async (email, targetHotelCode) => {
@@ -157,6 +160,14 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
 
         loadUserData();
     }, [hotelCode]);
+
+    useEffect(() => {
+        const token = String(posRewardToken || '').trim();
+        if (!token) return;
+        setShowRewardsQrModal(true);
+        setPosRewardTokenInput(token);
+        if (hotelCode || user?.hotel_code) loadPosRewardIntent(token);
+    }, [posRewardToken, hotelCode, user?.hotel_code]);
 
     const handleDownloadReceipt = (booking) => {
         const doc = new jsPDF();
@@ -286,37 +297,52 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         }
     };
 
-    const handleGenerateRewardsQr = async () => {
-        const email = user?.email;
+    const loadPosRewardIntent = async (tokenValue) => {
+        const token = String(tokenValue || '').trim();
         const hCode = hotelCode || user?.hotel_code || '';
-        const points = Math.max(0, Math.floor(Number(qrRedeemPoints || 0)));
-        if (!email || !hCode) {
-            alert("Please log in again and try.");
-            return;
-        }
-        if (points <= 0) {
-            alert("Please enter points to convert to QR payment.");
-            return;
-        }
-
+        if (!token || !hCode) return null;
         try {
             setQrRedeemLoading(true);
-            const res = await axios.post('/api/members/rewards/redeem-qr', {
+            const res = await axios.get(`/api/members/rewards/pos-payment-intent?token=${encodeURIComponent(token)}&hotel_code=${encodeURIComponent(hCode)}`);
+            if (res?.data?.success) {
+                setPosRewardIntent(res.data.intent || null);
+                setPosRewardTokenInput(token);
+                return res.data.intent || null;
+            }
+            return null;
+        } catch (error) {
+            alert(`Failed to load POS payment QR: ${error?.response?.data?.message || error.message}`);
+            return null;
+        } finally {
+            setQrRedeemLoading(false);
+        }
+    };
+
+    const handlePayPosRewardQr = async () => {
+        const email = user?.email;
+        const hCode = hotelCode || user?.hotel_code || '';
+        const token = String(posRewardIntent?.token || posRewardTokenInput || '').trim();
+        if (!email || !hCode) return alert('Please log in again and try.');
+        if (!token) return alert('Please scan or enter a POS reward payment QR first.');
+        try {
+            setPosRewardPayLoading(true);
+            const res = await axios.post('/api/members/rewards/pay-pos-qr', {
                 email,
                 hotel_code: hCode,
-                points,
-                description: 'Hotel facility QR pay'
+                token
             });
             if (!res?.data?.success) {
-                alert(`Failed to generate QR: ${res?.data?.message || 'unknown error'}`);
+                alert(`Reward points payment failed: ${res?.data?.message || 'unknown error'}`);
                 return;
             }
             setQrRedeemData(res.data);
+            setPosRewardIntent(prev => ({ ...(prev || {}), status: 'PAID', points_used: res.data.points_used, currency_amount: res.data.value_amount }));
             await refreshRewardsData(email, hCode);
+            alert(`Reward points payment completed. ${Number(res.data.points_used || 0).toLocaleString()} pts used.`);
         } catch (error) {
-            alert(`Failed to generate QR: ${error?.response?.data?.message || error.message}`);
+            alert(`Reward points payment failed: ${error?.response?.data?.message || error.message}`);
         } finally {
-            setQrRedeemLoading(false);
+            setPosRewardPayLoading(false);
         }
     };
 
@@ -813,32 +839,59 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                     <div className="fixed inset-0 z-[1200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowRewardsQrModal(false)}>
                         <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
                             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                                <h3 className="text-lg font-black text-slate-800">QR Point Payment</h3>
+                                <h3 className="text-lg font-black text-slate-800">Pay POS QR with Points</h3>
                                 <button type="button" className="text-slate-400 text-2xl font-black" onClick={() => setShowRewardsQrModal(false)}>×</button>
                             </div>
                             <div className="p-6 space-y-4">
+                                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs font-bold text-blue-700">
+                                    Scan the QR shown on the hotel POS. This screen approves the POS payment with your reward points.
+                                </div>
                                 <div className="text-xs font-bold text-slate-500">Available points: {Number(rewardsData.points || 0).toLocaleString()} pts</div>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={qrRedeemPoints}
-                                    onChange={(e) => setQrRedeemPoints(e.target.value)}
-                                    placeholder="Enter points to use"
-                                    className="w-full p-3 border border-slate-200 rounded-xl font-bold"
-                                />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={posRewardTokenInput}
+                                        onChange={(e) => setPosRewardTokenInput(e.target.value)}
+                                        placeholder="POS reward QR token"
+                                        className="flex-1 p-3 border border-slate-200 rounded-xl font-bold"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => loadPosRewardIntent(posRewardTokenInput)}
+                                        disabled={qrRedeemLoading}
+                                        className="px-4 rounded-xl bg-slate-900 text-white text-xs font-black disabled:opacity-50"
+                                    >
+                                        Load
+                                    </button>
+                                </div>
+
+                                {posRewardIntent && (
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Request</div>
+                                        <div className="mt-2 flex items-center justify-between text-sm font-bold text-slate-700"><span>Store</span><span>{posRewardIntent.store_name || '-'}</span></div>
+                                        <div className="mt-1 flex items-center justify-between text-sm font-bold text-slate-700"><span>Table</span><span>{posRewardIntent.table_number || '-'}</span></div>
+                                        <div className="mt-1 flex items-center justify-between text-sm font-bold text-slate-700"><span>Status</span><span>{posRewardIntent.status || 'PENDING'}</span></div>
+                                        <div className="mt-3 flex items-end justify-between border-t border-slate-200 pt-3">
+                                            <span className="text-sm font-black text-slate-600">Amount</span>
+                                            <span className="text-2xl font-black text-slate-900">₱{Number(posRewardIntent.amount || posRewardIntent.currency_amount || 0).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     type="button"
-                                    onClick={handleGenerateRewardsQr}
-                                    disabled={qrRedeemLoading}
-                                    className="w-full py-3 rounded-xl bg-slate-900 text-white font-black disabled:opacity-50"
+                                    onClick={handlePayPosRewardQr}
+                                    disabled={posRewardPayLoading || !posRewardIntent || String(posRewardIntent.status || '').toUpperCase() !== 'PENDING'}
+                                    className="w-full py-3 rounded-xl bg-emerald-600 text-white font-black disabled:opacity-50"
                                 >
-                                    {qrRedeemLoading ? 'Generating...' : 'Generate QR'}
+                                    {posRewardPayLoading ? 'Paying...' : 'Pay with Reward Points'}
                                 </button>
-                                {qrRedeemData?.qr_image_url && (
-                                    <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50 text-center">
-                                        <img src={qrRedeemData.qr_image_url} alt="Rewards QR" className="w-52 h-52 mx-auto rounded-xl border border-slate-200 bg-white p-2" />
-                                        <div className="mt-3 text-xs font-bold text-slate-600">Value: ₱{Number(qrRedeemData.value_amount || 0).toLocaleString()} | Points: {Number(qrRedeemData.points_used || 0).toLocaleString()}</div>
-                                        <div className="mt-1 text-[11px] text-slate-500">Show this QR at hotel facilities (valid 15 minutes).</div>
+
+                                {qrRedeemData?.success && (
+                                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+                                        <div className="text-sm font-black text-emerald-700">Payment completed</div>
+                                        <div className="mt-2 text-xs font-bold text-emerald-800">Used {Number(qrRedeemData.points_used || 0).toLocaleString()} pts for ₱{Number(qrRedeemData.value_amount || 0).toLocaleString()}</div>
+                                        <div className="mt-1 text-[11px] text-emerald-700">You may now return to the cashier.</div>
                                     </div>
                                 )}
                             </div>

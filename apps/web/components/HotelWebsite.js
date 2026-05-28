@@ -377,6 +377,7 @@ export default function HotelWebsite({ domain }) {
         points: 0,
         config: null
     });
+    const [pendingPosRewardToken, setPendingPosRewardToken] = useState('');
     const [redeemPointsInput, setRedeemPointsInput] = useState('');
     const [appliedRedeemPoints, setAppliedRedeemPoints] = useState(0);
     const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
@@ -390,11 +391,24 @@ export default function HotelWebsite({ domain }) {
         const referralFromLink = String(
             params.get('ref') || params.get('referral') || params.get('referral_code') || ''
         ).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const posRewardToken = String(
+            params.get('pos_reward_token') || params.get('reward_payment_token') || ''
+        ).trim();
+        const savedUser = localStorage.getItem('nplus_guest_user');
+
         if (referralFromLink) {
             setAuthForm((prev) => ({ ...prev, referralCode: prev.referralCode || referralFromLink }));
-            const savedUser = localStorage.getItem('nplus_guest_user');
             if (!savedUser) {
                 setGuestAuthMode('REGISTER');
+                setShowGuestAuthModal(true);
+            }
+        }
+
+        if (posRewardToken) {
+            setPendingPosRewardToken(posRewardToken);
+            setActiveMenu('MYPAGE');
+            if (!savedUser) {
+                setGuestAuthMode('LOGIN');
                 setShowGuestAuthModal(true);
             }
         }
@@ -1822,7 +1836,7 @@ export default function HotelWebsite({ domain }) {
                 {/* 💡 고객용 MY PAGE */}
                 {activeMenu === 'MYPAGE' && (
                     <div className="w-full flex-grow bg-slate-50 min-h-screen pt-20">
-                        <MemberDashboard hotelCode={hotelCode} isSiteMobileMenuOpen={isMobileMenuOpen} />
+                        <MemberDashboard hotelCode={hotelCode} isSiteMobileMenuOpen={isMobileMenuOpen} posRewardToken={pendingPosRewardToken} />
                     </div>
                 )}
 
