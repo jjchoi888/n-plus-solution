@@ -64,8 +64,15 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         if (!email || !targetHotelCode) return null;
         try {
             setRewardsLoading(true);
-            const rewardsRes = await axios.get(`/api/members/rewards?email=${encodeURIComponent(email)}&hotel_code=${encodeURIComponent(targetHotelCode)}`);
+            const pendingReferralCode = typeof window !== 'undefined'
+                ? String(localStorage.getItem('nplus_pending_referral_code') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
+                : '';
+            const referralQuery = pendingReferralCode ? `&referral_code=${encodeURIComponent(pendingReferralCode)}` : '';
+            const rewardsRes = await axios.get(`/api/members/rewards?email=${encodeURIComponent(email)}&hotel_code=${encodeURIComponent(targetHotelCode)}${referralQuery}`);
             if (rewardsRes?.data?.success) {
+                if (rewardsRes.data.referral_applied && typeof window !== 'undefined') {
+                    localStorage.removeItem('nplus_pending_referral_code');
+                }
                 const nextReferralCode = rewardsRes.data.referral_code || '';
                 setRewardsEnabled(!!rewardsRes.data.rewards_enabled || !!nextReferralCode);
                 setRewardsConfig(rewardsRes.data.config || null);

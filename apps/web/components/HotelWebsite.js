@@ -397,6 +397,7 @@ export default function HotelWebsite({ domain }) {
         const savedUser = localStorage.getItem('nplus_guest_user');
 
         if (referralFromLink) {
+            try { localStorage.setItem('nplus_pending_referral_code', referralFromLink); } catch (_) { }
             setAuthForm((prev) => ({ ...prev, referralCode: prev.referralCode || referralFromLink }));
             if (!savedUser) {
                 setGuestAuthMode('REGISTER');
