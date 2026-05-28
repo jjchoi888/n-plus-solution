@@ -385,7 +385,7 @@ export default function MemberDashboard({ hotelCode }) {
             {/* 🚀 Main Content Area */}
             <main className="flex-1 p-4 md:p-12 overflow-y-auto">
                 <div className="max-w-4xl mx-auto">
-                    <div className="md:hidden mb-4 sticky top-2 z-20">
+                    <div className={`${isMobileMenuOpen ? 'hidden' : 'block'} md:hidden mb-4`}>
                         <div className="rounded-2xl bg-slate-900 text-white p-4 shadow-lg border border-slate-700">
                             <div className="text-[10px] uppercase tracking-widest font-black text-slate-300">My Reward</div>
                             <div className="text-2xl font-black mt-1">{Number(rewardsData.points || 0).toLocaleString()} pts</div>
