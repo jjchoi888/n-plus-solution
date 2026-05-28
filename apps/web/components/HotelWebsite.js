@@ -1202,6 +1202,8 @@ export default function HotelWebsite({ domain }) {
     };
 
     const handleConfirmBooking = async (e) => {
+        if (isBooking) return;
+
         if (e && e.currentTarget) {
             if (e.currentTarget.disabled) return;
             e.currentTarget.disabled = true;
@@ -1209,8 +1211,6 @@ export default function HotelWebsite({ domain }) {
             e.currentTarget.style.opacity = "0.7";
             e.currentTarget.style.cursor = "wait";
         }
-
-        if (isBooking) return;
 
         const resetBtn = () => {
             setIsBooking(false);
@@ -1294,7 +1294,15 @@ export default function HotelWebsite({ domain }) {
                 })
             });
 
-            const data = await res.json();
+            const raw = await res.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch (_) { data = { message: raw }; }
+
+            if (!res.ok) {
+                setAlertMessage(t.bookingFailed + (data.message || t.bookingApiError));
+                resetBtn();
+                return;
+            }
 
             if (data.success && data.paymentUrl) {
                 window.location.replace(data.paymentUrl);

@@ -199,6 +199,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   const submitBooking = async (e) => {
     e.preventDefault();
+    if (isBooking) return;
+
     const btn = e.currentTarget;
 
     if (btn) {
@@ -208,8 +210,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
       btn.style.opacity = "0.7";
       btn.style.cursor = "wait";
     }
-
-    if (isBooking) return;
 
     const resetBtn = () => {
       setIsBooking(false);
@@ -281,7 +281,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         })
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data = {};
+      try { data = raw ? JSON.parse(raw) : {}; } catch (_) { data = { message: raw }; }
+
+      if (!response.ok) {
+        setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
+        resetBtn();
+        return;
+      }
 
       if (data.success && data.paymentUrl) {
         window.location.replace(data.paymentUrl);
