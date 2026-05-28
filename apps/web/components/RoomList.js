@@ -422,15 +422,15 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
         {/* 결제 모달창 */}
         {isCheckoutOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] overflow-y-auto text-left">
-              <div className="bg-emerald-600 theme-bg text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-                <h2 className="text-xl font-bold">{t.secureCheckout}</h2>
-                <button onClick={() => setIsCheckoutOpen(false)} className="text-white hover:text-gray-200 text-3xl font-light">×</button>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6 animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh] text-left">
+              <div className="theme-bg p-5 md:p-6 text-white flex justify-between items-center shrink-0">
+                <h2 className="text-xl md:text-2xl font-black">{t.secureCheckout}</h2>
+                <button onClick={() => setIsCheckoutOpen(false)} className="text-white/80 hover:text-white text-3xl font-bold">×</button>
               </div>
 
-              <form className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div className="lg:col-span-8 space-y-6 text-left order-1">
+              <form className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
+                <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8 text-left order-1">
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 text-left">{t.guestDetails}</h3>
                     <div className="grid grid-cols-2 gap-4 text-left">
@@ -469,7 +469,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                 </div>
 
                 {/* Booking Summary */}
-                <div className="lg:col-span-4 lg:row-span-2 w-full bg-emerald-50 theme-bg-light rounded-2xl p-6 border border-emerald-100 theme-border flex flex-col h-fit sticky top-6 text-left order-2">
+                <div className="w-full lg:w-[350px] theme-bg-light p-6 md:p-8 shrink-0 border-t lg:border-t-0 lg:border-l theme-border flex flex-col text-left order-2">
                   <h3 className="text-lg font-bold text-emerald-900 theme-text mb-4 border-b border-emerald-200 theme-border pb-2 text-left">{t.summary}</h3>
 
                   <div className="space-y-4 text-sm text-emerald-800 theme-text flex-grow">
