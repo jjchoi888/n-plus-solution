@@ -941,6 +941,17 @@ export default function HotelWebsite({ domain }) {
             const resIds = params.get('res_ids');
 
             if (paymentStatus === 'success') {
+                const invoice = params.get('invoice') || '';
+                const resIdList = String(resIds || '').split(',').map(id => id.trim()).filter(Boolean);
+
+                if (resIdList.length > 0 && hotelCode) {
+                    fetch(`${BASE_URL}/api/public/reservations/confirm-paid-return`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ res_ids: resIdList, hotel_code: hotelCode, invoice })
+                    }).catch(err => console.error('Payment return confirmation failed:', err));
+                }
+
                 // 1. 성공 모달창 활성화 및 예약 번호 저장
                 setModalResId(resIds || '');
                 setShowBookingSuccessModal(true);
