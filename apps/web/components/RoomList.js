@@ -461,7 +461,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       </div>
                       <div className="flex items-center gap-3 bg-white rounded-full border border-gray-300 px-1 py-1 shadow-sm">
                         <button type="button" onClick={() => setExtraBeds(Math.max(0, extraBeds - 1))} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600 hover:theme-text">-</button>
-                        <span className="w-4 text-center font-bold text-emerald-600 theme-text">{extraBeds}</span>
+                        <span className="w-4 text-center font-bold text-emerald-600">{extraBeds}</span>
                         <button type="button" onClick={() => setExtraBeds(extraBeds + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-gray-600 hover:text-emerald-600 hover:theme-text">+</button>
                       </div>
                     </div>
@@ -555,7 +555,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                             setAppliedRedeemPoints(usablePoints);
                             setAppliedRedeemAmount(currencyAmount);
                           }}
-                          className="w-full bg-emerald-600 theme-bg text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 theme-hover transition disabled:opacity-50"
+                          className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-black text-xs disabled:opacity-50"
                         >
                           Use Points
                         </button>
