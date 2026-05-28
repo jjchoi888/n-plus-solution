@@ -355,7 +355,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                 key={`mobile_${menu.id}`}
                                 type="button"
                                 onClick={() => { setActiveTab(menu.id); setIsMobileMenuOpen(false); }}
-                                className={`flex h-24 w-24 items-center justify-center rounded-full bg-white/85 px-3 text-center text-base font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95 ${activeTab === menu.id ? 'text-blue-700 ring-4 ring-white/40' : 'text-slate-900'}`}
+                                className={`flex h-20 w-20 items-center justify-center rounded-full bg-white/85 px-3 text-center text-xs font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95 ${activeTab === menu.id ? 'text-blue-700 ring-4 ring-white/40' : 'text-slate-900'}`}
                             >
                                 {menu.label}
                             </button>
