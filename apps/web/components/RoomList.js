@@ -298,7 +298,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
   if (isFetching) return <div className="p-20 text-center text-emerald-600 theme-text font-bold text-xl animate-pulse">Searching available rooms...</div>;
 
-  const btnText = `${lang === 'ko' ? '' : t.pay} ₱${payableGrandTotal.toLocaleString()} ${t.andBook || ''}`.trim();
+  const btnText = `${t.pay || 'Proceed to Payment ➔'}`.trim();
 
   return (
     <>

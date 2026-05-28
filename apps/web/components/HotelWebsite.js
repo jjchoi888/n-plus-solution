@@ -1914,7 +1914,7 @@ export default function HotelWebsite({ domain }) {
                                         </div>
                                         <div className="flex items-center gap-3 w-full">
                                             <button type="button" onClick={() => setShowBookingModal(false)} className="w-[30%] py-4 rounded-xl font-black text-sm border-2 theme-border theme-text bg-transparent hover:bg-slate-50 transition-colors flex items-center justify-center">← BACK</button>
-                                            <button type="button" onClick={handleConfirmBooking} disabled={isBooking} className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm theme-hover disabled:opacity-50">{t.confirmBook || 'Proceed to Payment ➔'} ₱{payableTotal.toLocaleString()}</button>
+                                            <button type="button" onClick={handleConfirmBooking} disabled={isBooking} className="w-[70%] theme-bg text-white py-4 rounded-xl font-black shadow-lg transition-transform active:scale-95 text-sm theme-hover disabled:opacity-50 whitespace-nowrap">{t.confirmBook || 'Proceed to Payment ➔'}</button>
                                         </div>
                                     </div>
                                 </div>
