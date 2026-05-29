@@ -372,6 +372,7 @@ export default function HotelWebsite({ domain }) {
     const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
     const [googlePendingProfile, setGooglePendingProfile] = useState(null);
     const [countryOptions] = useState(buildCountryOptions);
+    const [showAuthCountryMenu, setShowAuthCountryMenu] = useState(false);
     const [memberRewardsSnapshot, setMemberRewardsSnapshot] = useState({
         enabled: false,
         points: 0,
@@ -1223,12 +1224,79 @@ export default function HotelWebsite({ domain }) {
         setRedeemPointsInput('');
     };
 
-    const topCountries = ["Philippines", "South Korea", "China", "Japan", "United States"];
+    const topCountries = PRIORITY_COUNTRIES;
     const otherCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czech Republic,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Macedonia,Norway,Oman,Pakistan,Palau,Panama,Papua New Guinea,Paraguay,Peru,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
+    const authCountryQuery = String(authForm.nationality || '').trim().toLowerCase();
+    const filteredPriorityCountries = PRIORITY_COUNTRIES.filter((country) => country.toLowerCase().includes(authCountryQuery));
+    const filteredOtherCountries = countryOptions.filter((country) => !PRIORITY_COUNTRIES.includes(country) && country.toLowerCase().includes(authCountryQuery));
 
     const formatSlashedZero = (id) => {
         return String(id).replace(/0/g, '0̸');
     };
+
+    const renderAuthCountryField = () => (
+        <div className="relative">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
+            <input
+                type="text"
+                autoComplete="off"
+                required
+                value={authForm.nationality}
+                onFocus={() => setShowAuthCountryMenu(true)}
+                onChange={(e) => {
+                    setAuthForm({ ...authForm, nationality: e.target.value });
+                    setShowAuthCountryMenu(true);
+                }}
+                onBlur={() => {
+                    window.setTimeout(() => setShowAuthCountryMenu(false), 150);
+                }}
+                className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl"
+                placeholder="Type to search country"
+            />
+            {showAuthCountryMenu && (
+                <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                    {filteredPriorityCountries.length > 0 && (
+                        <>
+                            <div className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Top Countries</div>
+                            {filteredPriorityCountries.map((country) => (
+                                <button
+                                    key={`priority_${country}`}
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        setAuthForm({ ...authForm, nationality: country });
+                                        setShowAuthCountryMenu(false);
+                                    }}
+                                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-black text-slate-900 hover:bg-slate-50"
+                                >
+                                    <span>{country}</span>
+                                </button>
+                            ))}
+                            <div className="mx-4 border-t border-slate-200" />
+                        </>
+                    )}
+                    {filteredOtherCountries.length > 0 ? (
+                        filteredOtherCountries.map((country) => (
+                            <button
+                                key={`country_${country}`}
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    setAuthForm({ ...authForm, nationality: country });
+                                    setShowAuthCountryMenu(false);
+                                }}
+                                className="flex w-full items-center px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            >
+                                <span>{country}</span>
+                            </button>
+                        ))
+                    ) : filteredPriorityCountries.length === 0 ? (
+                        <div className="px-4 py-3 text-sm font-bold text-slate-400">No matching countries</div>
+                    ) : null}
+                </div>
+            )}
+        </div>
+    );
 
     const handleGuestDocumentUpload = (e) => {
         const file = e.target.files?.[0];
@@ -2291,19 +2359,7 @@ export default function HotelWebsite({ domain }) {
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
                                                 <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" placeholder="09..." />
                                             </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
-                                                <input
-                                                    type="text"
-                                                    list="nplus-country-list"
-                                                    autoComplete="off"
-                                                    required
-                                                    value={authForm.nationality}
-                                                    onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })}
-                                                    className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl"
-                                                    placeholder="Type to search country"
-                                                />
-                                            </div>
+                                            {renderAuthCountryField()}
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Referral Code (optional)</label>
                                                 <input
@@ -2360,19 +2416,7 @@ export default function HotelWebsite({ domain }) {
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.phone}</label>
                                                 <input type="tel" required value={authForm.phone} onChange={(e) => setAuthForm({ ...authForm, phone: e.target.value })} className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl" />
                                             </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t.nationality}</label>
-                                                <input
-                                                    type="text"
-                                                    list="nplus-country-list"
-                                                    autoComplete="off"
-                                                    required
-                                                    value={authForm.nationality}
-                                                    onChange={(e) => setAuthForm({ ...authForm, nationality: e.target.value })}
-                                                    className="w-full p-3 border border-slate-300 focus:theme-border outline-none text-sm rounded-xl"
-                                                    placeholder="Type to search country"
-                                                />
-                                            </div>
+                                            {renderAuthCountryField()}
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Referral Code (optional)</label>
                                                 <input
@@ -2418,11 +2462,6 @@ export default function HotelWebsite({ domain }) {
                                         )}
                                     </div>
                                 )}
-                                <datalist id="nplus-country-list">
-                                    {countryOptions.map((country) => (
-                                        <option key={`country_${country}`} value={country} />
-                                    ))}
-                                </datalist>
                             </div>
                         </div>
                     </div>

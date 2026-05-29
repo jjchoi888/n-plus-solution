@@ -19,6 +19,31 @@ const PH_PROVINCES = [
     'Tarlac', 'Tawi-Tawi', 'Zambales', 'Zamboanga del Norte', 'Zamboanga del Sur', 'Zamboanga Sibugay'
 ];
 
+const normalizeMemberBooking = (booking = {}) => {
+    const reservationId = booking.id || booking.res_id || booking.reservation_id || '';
+    const hotelName = booking.hotel_name || booking.hotel_code || 'Hotel Booking';
+    const totalAmount = Number(
+        booking.total_amount ??
+        booking.total_price ??
+        booking.amount ??
+        booking.paid_amount ??
+        0
+    );
+
+    return {
+        ...booking,
+        id: reservationId,
+        reservation_id: reservationId,
+        hotel_name: hotelName,
+        room_type: booking.room_type || booking.room_name || 'Room',
+        check_in: booking.check_in || booking.check_in_date || '',
+        check_out: booking.check_out || booking.check_out_date || '',
+        total_amount: Number.isFinite(totalAmount) ? totalAmount : 0,
+        paid_amount: Number.isFinite(Number(booking.paid_amount)) ? Number(booking.paid_amount) : (Number.isFinite(totalAmount) ? totalAmount : 0),
+        status: booking.status || 'CONFIRMED'
+    };
+};
+
 export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = false, posRewardToken = '' }) {
     const isSingleHotel = !!hotelCode;
     const [activeTab, setActiveTab] = useState('BOOKINGS');
@@ -121,7 +146,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                     const res = await axios.get(`/api/members/bookings?${qs.toString()}`);
 
                     if (res.data && res.data.success) {
-                        let fetchBookings = res.data.bookings || [];
+                        let fetchBookings = (res.data.bookings || []).map(normalizeMemberBooking);
 
                         // If accessed via a single hotel website (?hotel=A001), filter bookings accordingly
                         if (hotelCode) {
@@ -177,20 +202,25 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     }, [posRewardToken, hotelCode, user?.hotel_code]);
 
     const handleDownloadReceipt = (booking) => {
+        const normalizedBooking = normalizeMemberBooking(booking);
+        const guestName = user?.name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || normalizedBooking.guest_name || normalizedBooking.email || 'Guest';
         const doc = new jsPDF();
         doc.text("OFFICIAL RECEIPT", 105, 20, null, null, "center");
         autoTable(doc, {
             startY: 30,
             head: [['Description', 'Details']],
             body: [
-                ['Guest', user.name],
-                ['Hotel', booking.hotel_name],
-                ['Stay', `${booking.check_in} - ${booking.check_out}`],
-                ['Total Paid', `PHP ${booking.total_amount.toLocaleString()}`]
+                ['Guest', guestName],
+                ['Reservation ID', normalizedBooking.id || '-'],
+                ['Hotel', normalizedBooking.hotel_name],
+                ['Room Type', normalizedBooking.room_type],
+                ['Stay', `${normalizedBooking.check_in} - ${normalizedBooking.check_out}`],
+                ['Status', normalizedBooking.status || 'CONFIRMED'],
+                ['Total Paid', `PHP ${Number(normalizedBooking.total_amount || 0).toLocaleString()}`]
             ],
             theme: 'grid'
         });
-        doc.save(`Receipt_${booking.id}.pdf`);
+        doc.save(`Receipt_${normalizedBooking.id || 'booking'}.pdf`);
     };
 
     // 💡 Real cancellation logic integrated with the server
@@ -581,7 +611,9 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {upcomingBookings.map(b => (
+                                    {upcomingBookings.map((booking) => {
+                                        const b = normalizeMemberBooking(booking);
+                                        return (
                                         <div key={`rcpt-${b.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group">
                                             <div className="mb-8">
                                                 <div className="flex justify-between items-center mb-4">
@@ -589,11 +621,16 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                                     <span className="text-[10px] font-mono font-bold text-slate-400">#{b.id}</span>
                                                 </div>
                                                 <h4 className="font-black text-slate-800 mb-1">{b.hotel_name}</h4>
+                                                <p className="text-xs font-bold text-blue-600 mb-2">{b.room_type}</p>
                                                 <p className="text-xs font-bold text-slate-500">{b.check_in} ~ {b.check_out}</p>
+                                                <div className="mt-4 flex items-center justify-between gap-3">
+                                                    <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700">{b.status || 'CONFIRMED'}</span>
+                                                    <span className="text-base font-black text-slate-900">PHP {Number(b.total_amount || 0).toLocaleString()}</span>
+                                                </div>
                                             </div>
                                             <button onClick={() => handleDownloadReceipt(b)} className="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Download PDF</button>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             )}
                         </div>
