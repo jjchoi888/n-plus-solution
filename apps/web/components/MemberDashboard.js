@@ -815,7 +815,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                             <tr>
                                                 <th className="text-left px-4 py-3 font-black">Date</th>
                                                 <th className="text-left px-4 py-3 font-black">Type</th>
-                                                <th className="text-left px-4 py-3 font-black">Points</th>
+                                                <th className="text-right px-4 py-3 font-black">Points</th>
                                                 <th className="text-left px-4 py-3 font-black">Description</th>
                                             </tr>
                                         </thead>
@@ -823,11 +823,18 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                             {rewardsData.transactions.map((tx) => {
                                                 const signed = Number(tx.amount || 0);
                                                 const isRedeem = String(tx.type || '').toUpperCase() === 'REDEEM';
+                                                const badgeClass = isRedeem
+                                                    ? 'bg-rose-50 border-rose-200 text-rose-700'
+                                                    : 'bg-emerald-50 border-emerald-200 text-emerald-700';
                                                 return (
                                                     <tr key={`hist_${tx.id}`} className="border-t border-slate-100">
                                                         <td className="px-4 py-3 text-slate-600">{String(tx.created_at || '').slice(0, 10) || '-'}</td>
-                                                        <td className="px-4 py-3 font-bold text-slate-700">{String(tx.type || '').toUpperCase() || '-'}</td>
-                                                        <td className={`px-4 py-3 font-black ${isRedeem ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-flex min-w-[84px] items-center justify-center rounded-md border px-3 py-1 text-xs font-black tracking-wide ${badgeClass}`}>
+                                                                {String(tx.type || '').toUpperCase() || '-'}
+                                                            </span>
+                                                        </td>
+                                                        <td className={`px-4 py-3 text-right font-black ${isRedeem ? 'text-rose-600' : 'text-emerald-600'}`}>
                                                             {signed > 0 ? '+' : ''}{signed.toLocaleString()}
                                                         </td>
                                                         <td className="px-4 py-3 text-slate-600">{tx.description || tx.reference_type || '-'}</td>
