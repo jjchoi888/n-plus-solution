@@ -798,7 +798,9 @@ export default function HotelWebsite({ domain }) {
 
     useEffect(() => {
         const fetchRewardsPopup = async () => {
-            if (user) {
+            // `user` starts as an empty object before guest state hydrates.
+            // Only hide the rewards popup for an authenticated member.
+            if (user?.email) {
                 setRewardPopup(null);
                 return;
             }
@@ -807,17 +809,28 @@ export default function HotelWebsite({ domain }) {
                 const data = await res.json().catch(() => ({}));
                 if (!data?.success || !data?.popup?.enabled) return;
 
+                const rewardConfig = data.config || {};
                 const frequency = String(data.popup.frequency || 'ONCE_PER_SESSION').toUpperCase();
                 const sessionKey = `rewards_popup_session_${hotelCode}`;
                 const dailyKey = `rewards_popup_daily_${hotelCode}`;
                 const hideTodayKey = 'rewards_popup_hide_today_' + hotelCode;
                 const todayKey = new Date().toISOString().slice(0, 10);
+                const popupSignature = JSON.stringify({
+                    hotelCode,
+                    title: data.popup.title || 'Rewards Program',
+                    message: data.popup.message || 'Join our rewards program and earn points.',
+                    ctaLabel: data.popup.cta_label || 'View Rewards',
+                    ctaTarget: data.popup.cta_target || 'MYPAGE_REWARDS',
+                    theme: data.popup.theme || rewardConfig.popup_theme || 'CORPORATE_LIGHT',
+                    welcome: Number(rewardConfig.welcome_bonus_points || 0),
+                    stay: Number(rewardConfig.points_per_stay || 0),
+                    birthday: Number(rewardConfig.birthday_bonus_points || 0),
+                    tierEnabled: Boolean(rewardConfig.tier_enabled)
+                });
 
-                if (frequency === 'ONCE_PER_SESSION' && sessionStorage.getItem(sessionKey) === '1') return;
-                if (frequency === 'ONCE_PER_DAY' && localStorage.getItem(dailyKey) === todayKey) return;
-                if (localStorage.getItem(hideTodayKey) === todayKey) return;
-
-                const rewardConfig = data.config || {};
+                if (frequency === 'ONCE_PER_SESSION' && sessionStorage.getItem(sessionKey) === popupSignature) return;
+                if (frequency === 'ONCE_PER_DAY' && localStorage.getItem(dailyKey) === `${todayKey}::${popupSignature}`) return;
+                if (localStorage.getItem(hideTodayKey) === `${todayKey}::${popupSignature}`) return;
                 const popupBenefits = [
                     {
                         icon: 'gift',
@@ -851,11 +864,12 @@ export default function HotelWebsite({ domain }) {
                     ctaTarget: data.popup.cta_target || 'MYPAGE_REWARDS',
                     theme: data.popup.theme || rewardConfig.popup_theme || 'CORPORATE_LIGHT',
                     frequency,
-                    benefits: popupBenefits
+                    benefits: popupBenefits,
+                    signature: popupSignature
                 });
 
-                sessionStorage.setItem(sessionKey, '1');
-                if (frequency === 'ONCE_PER_DAY') localStorage.setItem(dailyKey, todayKey);
+                sessionStorage.setItem(sessionKey, popupSignature);
+                if (frequency === 'ONCE_PER_DAY') localStorage.setItem(dailyKey, `${todayKey}::${popupSignature}`);
             } catch (e) {
                 console.error('Rewards popup fetch failed', e);
             }
@@ -866,7 +880,10 @@ export default function HotelWebsite({ domain }) {
 
     const dismissRewardPopup = () => {
         if (hideRewardPopupToday && typeof window !== 'undefined') {
-            localStorage.setItem('rewards_popup_hide_today_' + hotelCode, new Date().toISOString().slice(0, 10));
+            localStorage.setItem(
+                'rewards_popup_hide_today_' + hotelCode,
+                `${new Date().toISOString().slice(0, 10)}::${rewardPopup?.signature || ''}`
+            );
         }
         setRewardPopup(null);
         setHideRewardPopupToday(false);
