@@ -661,19 +661,32 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                             <tr>
                                                 <th className="text-left px-4 py-3 font-black">Date</th>
                                                 <th className="text-left px-4 py-3 font-black">Type</th>
-                                                <th className="text-left px-4 py-3 font-black">Points</th>
+                                                <th className="text-right px-4 py-3 font-black">Points</th>
                                                 <th className="text-left px-4 py-3 font-black">Description</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {rewardsData.transactions.map((tx) => (
-                                                <tr key={String(tx.id)} className="border-t border-slate-100">
-                                                    <td className="px-4 py-3 text-slate-600">{String(tx.created_at || '').slice(0, 10) || '-'}</td>
-                                                    <td className="px-4 py-3 font-bold text-slate-700">{String(tx.type || '').toUpperCase() || '-'}</td>
-                                                    <td className="px-4 py-3 font-black text-blue-700">{Number(tx.amount || 0).toLocaleString()}</td>
-                                                    <td className="px-4 py-3 text-slate-600">{tx.description || tx.reference_type || '-'}</td>
-                                                </tr>
-                                            ))}
+                                            {rewardsData.transactions.map((tx) => {
+                                                const signed = Number(tx.amount || 0);
+                                                const isRedeem = String(tx.type || '').toUpperCase() === 'REDEEM';
+                                                const badgeClass = isRedeem
+                                                    ? 'bg-red-50 border-red-200 text-red-600'
+                                                    : 'bg-green-50 border-green-200 text-green-600';
+                                                return (
+                                                    <tr key={String(tx.id)} className="border-t border-slate-100">
+                                                        <td className="px-4 py-3 text-slate-600">{String(tx.created_at || '').slice(0, 10) || '-'}</td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-flex min-w-[84px] items-center justify-center rounded-md border px-3 py-1 text-xs font-black tracking-wide ${badgeClass}`}>
+                                                                {String(tx.type || '').toUpperCase() || '-'}
+                                                            </span>
+                                                        </td>
+                                                        <td className={`px-4 py-3 text-right font-black ${isRedeem ? 'text-red-600' : 'text-blue-600'}`}>
+                                                            {signed > 0 ? '+' : ''}{signed.toLocaleString()}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-slate-600">{tx.description || tx.reference_type || '-'}</td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 )}
@@ -746,12 +759,27 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Upload (for fast check-in)</label>
+                                        <div className="flex items-center gap-2 min-h-[20px]">
+                                            {profileForm.documentUrl ? (
+                                                <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-black text-emerald-700">
+                                                    <span>✓</span>
+                                                    <span>ID uploaded</span>
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-black text-slate-500">
+                                                    <span>○</span>
+                                                    <span>No file yet</span>
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <button type="button" onClick={openFileUpload} className="px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm hover:bg-slate-100 transition-all">
-                                                File Upload
+                                            <button type="button" onClick={openFileUpload} className={`px-3 py-3 rounded-xl border font-bold text-sm transition-all flex items-center justify-center gap-2 ${profileForm.documentUrl ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>
+                                                <span>File Upload</span>
+                                                {profileForm.documentUrl && <span className="text-base leading-none">✓</span>}
                                             </button>
-                                            <button type="button" onClick={openCameraCapture} className="px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm hover:bg-slate-100 transition-all">
-                                                Camera Capture
+                                            <button type="button" onClick={openCameraCapture} className={`px-3 py-3 rounded-xl border font-bold text-sm transition-all flex items-center justify-center gap-2 ${profileForm.documentUrl ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>
+                                                <span>Camera Capture</span>
+                                                {profileForm.documentUrl && <span className="text-base leading-none">✓</span>}
                                             </button>
                                         </div>
                                         <input ref={fileUploadInputRef} type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="hidden" />
