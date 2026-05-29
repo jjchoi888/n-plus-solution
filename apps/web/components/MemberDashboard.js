@@ -824,8 +824,8 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                                 const signed = Number(tx.amount || 0);
                                                 const isRedeem = String(tx.type || '').toUpperCase() === 'REDEEM';
                                                 const badgeClass = isRedeem
-                                                    ? 'bg-rose-50 border-rose-200 text-rose-700'
-                                                    : 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                                                    ? 'bg-red-50 border-red-200 text-red-600'
+                                                    : 'bg-green-50 border-green-200 text-green-600';
                                                 return (
                                                     <tr key={`hist_${tx.id}`} className="border-t border-slate-100">
                                                         <td className="px-4 py-3 text-slate-600">{String(tx.created_at || '').slice(0, 10) || '-'}</td>
@@ -834,7 +834,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                                                 {String(tx.type || '').toUpperCase() || '-'}
                                                             </span>
                                                         </td>
-                                                        <td className={`px-4 py-3 text-right font-black ${isRedeem ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                        <td className={`px-4 py-3 text-right font-black ${isRedeem ? 'text-red-600' : 'text-blue-600'}`}>
                                                             {signed > 0 ? '+' : ''}{signed.toLocaleString()}
                                                         </td>
                                                         <td className="px-4 py-3 text-slate-600">{tx.description || tx.reference_type || '-'}</td>
