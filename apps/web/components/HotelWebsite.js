@@ -867,9 +867,6 @@ export default function HotelWebsite({ domain }) {
                     benefits: popupBenefits,
                     signature: popupSignature
                 });
-
-                sessionStorage.setItem(sessionKey, popupSignature);
-                if (frequency === 'ONCE_PER_DAY') localStorage.setItem(dailyKey, `${todayKey}::${popupSignature}`);
             } catch (e) {
                 console.error('Rewards popup fetch failed', e);
             }
@@ -879,6 +876,17 @@ export default function HotelWebsite({ domain }) {
     }, [hotelCode, user]);
 
     const dismissRewardPopup = () => {
+        if (typeof window !== 'undefined' && rewardPopup?.signature) {
+            const todayKey = new Date().toISOString().slice(0, 10);
+            const sessionKey = `rewards_popup_session_${hotelCode}`;
+            const dailyKey = `rewards_popup_daily_${hotelCode}`;
+            if (rewardPopup?.frequency === 'ONCE_PER_SESSION') {
+                sessionStorage.setItem(sessionKey, rewardPopup.signature);
+            }
+            if (rewardPopup?.frequency === 'ONCE_PER_DAY') {
+                localStorage.setItem(dailyKey, `${todayKey}::${rewardPopup.signature}`);
+            }
+        }
         if (hideRewardPopupToday && typeof window !== 'undefined') {
             localStorage.setItem(
                 'rewards_popup_hide_today_' + hotelCode,
