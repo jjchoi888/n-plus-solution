@@ -71,6 +71,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
     const [upcomingBookings, setUpcomingBookings] = useState([]);
+    const [receiptDocuments, setReceiptDocuments] = useState([]);
     const [rewardsEnabled, setRewardsEnabled] = useState(false);
     const [rewardsConfig, setRewardsConfig] = useState(null);
     const [rewardsData, setRewardsData] = useState({ points: 0, tier: null, transactions: [], referralCode: '' });
@@ -159,6 +160,19 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                     setUpcomingBookings([]);
                 }
 
+                try {
+                    const receiptQs = new URLSearchParams({ email: parsedUser.email, hotel_code: effectiveHotel });
+                    const receiptRes = await axios.get(`/api/members/receipts?${receiptQs.toString()}`);
+                    if (receiptRes?.data?.success) {
+                        setReceiptDocuments(Array.isArray(receiptRes.data.receipts) ? receiptRes.data.receipts : []);
+                    } else {
+                        setReceiptDocuments([]);
+                    }
+                } catch (receiptErr) {
+                    console.error('Failed to load archived receipts:', receiptErr);
+                    setReceiptDocuments([]);
+                }
+
                 if (effectiveHotel) {
                     try {
                         const cfgRes = await axios.get(`/api/public/rewards-config?hotel_code=${encodeURIComponent(effectiveHotel)}`);
@@ -201,26 +215,26 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         if (hotelCode || user?.hotel_code) loadPosRewardIntent(token);
     }, [posRewardToken, hotelCode, user?.hotel_code]);
 
-    const handleDownloadReceipt = (booking) => {
-        const normalizedBooking = normalizeMemberBooking(booking);
-        const guestName = user?.name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || normalizedBooking.guest_name || normalizedBooking.email || 'Guest';
-        const doc = new jsPDF();
-        doc.text("OFFICIAL RECEIPT", 105, 20, null, null, "center");
-        autoTable(doc, {
-            startY: 30,
-            head: [['Description', 'Details']],
-            body: [
-                ['Guest', guestName],
-                ['Reservation ID', normalizedBooking.id || '-'],
-                ['Hotel', normalizedBooking.hotel_name],
-                ['Room Type', normalizedBooking.room_type],
-                ['Stay', `${normalizedBooking.check_in} - ${normalizedBooking.check_out}`],
-                ['Status', normalizedBooking.status || 'CONFIRMED'],
-                ['Total Paid', `PHP ${Number(normalizedBooking.total_amount || 0).toLocaleString()}`]
-            ],
-            theme: 'grid'
-        });
-        doc.save(`Receipt_${normalizedBooking.id || 'booking'}.pdf`);
+    const handleDownloadReceipt = async (receipt) => {
+        try {
+            const qs = new URLSearchParams({
+                hotel_code: hotelCode || user?.hotel_code || ''
+            });
+            const res = await axios.get(`/api/members/receipts/${receipt.id}/pdf?${qs.toString()}`, {
+                responseType: 'blob'
+            });
+            const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${receipt.receipt_no || `receipt_${receipt.id}`}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Receipt download failed:', error);
+            alert('Failed to download the archived receipt PDF.');
+        }
     };
 
     // 💡 Real cancellation logic integrated with the server
@@ -603,32 +617,43 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                             <h2 className="text-3xl font-black text-slate-800">Receipts & Folios</h2>
 
                             {/* 💡 Handling empty receipt data */}
-                            {upcomingBookings.length === 0 ? (
+                            {receiptDocuments.length === 0 ? (
                                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">
                                     <div className="text-5xl mb-4">🧾</div>
                                     <h3 className="text-lg font-bold text-slate-700 mb-2">No receipts available.</h3>
-                                    <p className="text-sm text-slate-500">Book a stay to generate receipts.</p>
+                                    <p className="text-sm text-slate-500">Issued reservation, deposit, and checkout receipts will be stored here.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {upcomingBookings.map((booking) => {
-                                        const b = normalizeMemberBooking(booking);
+                                    {receiptDocuments.map((receipt) => {
+                                        const receiptKind = String(receipt.receipt_kind || 'RECEIPT').toUpperCase();
+                                        const receiptTypeLabel = receiptKind === 'CHECKIN'
+                                            ? 'Check-in Deposit'
+                                            : receiptKind === 'CHECKOUT'
+                                                ? 'Check-out Settlement'
+                                                : receiptKind === 'CONFIRMATION'
+                                                    ? 'Reservation Confirmation'
+                                                    : 'Official Receipt';
                                         return (
-                                        <div key={`rcpt-${b.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group">
+                                        <div key={`rcpt-${receipt.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group">
                                             <div className="mb-8">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🧾</div>
-                                                    <span className="text-[10px] font-mono font-bold text-slate-400">#{b.id}</span>
+                                                    <span className="text-[10px] font-mono font-bold text-slate-400">#{receipt.receipt_no || receipt.id}</span>
                                                 </div>
-                                                <h4 className="font-black text-slate-800 mb-1">{b.hotel_name}</h4>
-                                                <p className="text-xs font-bold text-blue-600 mb-2">{b.room_type}</p>
-                                                <p className="text-xs font-bold text-slate-500">{b.check_in} ~ {b.check_out}</p>
+                                                <h4 className="font-black text-slate-800 mb-1">{receiptTypeLabel}</h4>
+                                                <p className="text-xs font-bold text-blue-600 mb-2">{receipt.room_type || 'Accommodation'}</p>
+                                                <p className="text-xs font-bold text-slate-500">{receipt.check_in || '-'} ~ {receipt.check_out || '-'}</p>
+                                                <p className="mt-3 text-xs font-semibold text-slate-500 line-clamp-2">{receipt.description || 'Issued hotel receipt'}</p>
                                                 <div className="mt-4 flex items-center justify-between gap-3">
-                                                    <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700">{b.status || 'CONFIRMED'}</span>
-                                                    <span className="text-base font-black text-slate-900">PHP {Number(b.total_amount || 0).toLocaleString()}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700">{receiptKind}</span>
+                                                        <span className="mt-2 text-[11px] font-bold text-slate-400">{receipt.date || String(receipt.timestamp || '').slice(0, 10) || '-'}</span>
+                                                    </div>
+                                                    <span className="text-base font-black text-slate-900">PHP {Number(receipt.amount || 0).toLocaleString()}</span>
                                                 </div>
                                             </div>
-                                            <button onClick={() => handleDownloadReceipt(b)} className="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Download PDF</button>
+                                            <button onClick={() => handleDownloadReceipt(receipt)} className="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Download PDF</button>
                                         </div>
                                     )})}
                                 </div>
