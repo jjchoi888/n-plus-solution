@@ -369,6 +369,151 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         }
     };
 
+    const qrScannerSupported = typeof window !== 'undefined'
+        && 'BarcodeDetector' in window
+        && !!navigator.mediaDevices?.getUserMedia;
+
+    const stopQrScanner = () => {
+        try {
+            if (qrScannerRafRef.current && typeof window !== 'undefined') {
+                window.cancelAnimationFrame(qrScannerRafRef.current);
+            }
+        } catch (_) { }
+        qrScannerRafRef.current = null;
+
+        try {
+            qrScannerStreamRef.current?.getTracks?.().forEach((track) => track.stop());
+        } catch (_) { }
+        qrScannerStreamRef.current = null;
+
+        if (qrScannerVideoRef.current) {
+            try {
+                qrScannerVideoRef.current.pause();
+            } catch (_) { }
+            qrScannerVideoRef.current.srcObject = null;
+        }
+
+        setIsQrScannerActive(false);
+        setIsQrScannerStarting(false);
+    };
+
+    const extractPosRewardToken = (rawValue) => {
+        const raw = String(rawValue || '').trim();
+        if (!raw) return '';
+
+        const parseUrlToken = (value) => {
+            try {
+                const url = new URL(value);
+                return String(
+                    url.searchParams.get('pos_reward_token')
+                    || url.searchParams.get('reward_payment_token')
+                    || url.searchParams.get('token')
+                    || ''
+                ).trim();
+            } catch (_) {
+                return '';
+            }
+        };
+
+        const directFromUrl = parseUrlToken(raw);
+        if (directFromUrl) return directFromUrl;
+
+        if (raw.includes('pos_reward_token=') || raw.includes('reward_payment_token=')) {
+            try {
+                const query = raw.includes('?') ? raw.split('?')[1] : raw;
+                const params = new URLSearchParams(query);
+                return String(
+                    params.get('pos_reward_token')
+                    || params.get('reward_payment_token')
+                    || params.get('token')
+                    || raw
+                ).trim();
+            } catch (_) {
+                return raw;
+            }
+        }
+
+        return raw;
+    };
+
+    const startQrScanner = async () => {
+        if (!qrScannerSupported) {
+            setQrScannerError('Camera QR scanning is not supported on this browser. Please use Chrome or Edge on mobile, or paste the POS reward token manually.');
+            return;
+        }
+
+        try {
+            stopQrScanner();
+            setQrScannerError('');
+            setQrRedeemData(null);
+            setPosRewardIntent(null);
+            setIsQrScannerStarting(true);
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: 'environment' }
+                },
+                audio: false
+            });
+
+            qrScannerStreamRef.current = stream;
+            const video = qrScannerVideoRef.current;
+            if (!video) {
+                throw new Error('Scanner preview could not be initialized.');
+            }
+
+            video.srcObject = stream;
+            video.setAttribute('playsinline', 'true');
+            await video.play();
+
+            const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+            setIsQrScannerActive(true);
+            setIsQrScannerStarting(false);
+
+            const scanFrame = async () => {
+                if (!qrScannerVideoRef.current) return;
+                try {
+                    const codes = await detector.detect(qrScannerVideoRef.current);
+                    const rawValue = codes?.[0]?.rawValue || '';
+                    const token = extractPosRewardToken(rawValue);
+                    if (token) {
+                        setPosRewardTokenInput(token);
+                        setQrScannerError('');
+                        stopQrScanner();
+                        await loadPosRewardIntent(token);
+                        return;
+                    }
+                } catch (_) {
+                    // keep scanning until a QR is detected
+                }
+                qrScannerRafRef.current = window.requestAnimationFrame(scanFrame);
+            };
+
+            qrScannerRafRef.current = window.requestAnimationFrame(scanFrame);
+        } catch (error) {
+            stopQrScanner();
+            setQrScannerError(error?.message || 'Unable to access the camera for QR scanning.');
+        }
+    };
+
+    useEffect(() => {
+        if (!showRewardsQrModal) {
+            stopQrScanner();
+            setQrScannerError('');
+        }
+    }, [showRewardsQrModal]);
+
+    useEffect(() => {
+        return () => stopQrScanner();
+    }, []);
+
+    useEffect(() => {
+        if (!showRewardsQrModal || !qrScannerSupported || isQrScannerActive || posRewardIntent || String(posRewardTokenInput || '').trim()) {
+            return;
+        }
+        startQrScanner();
+    }, [showRewardsQrModal, posRewardIntent, posRewardTokenInput, isQrScannerActive]);
+
     const handlePayPosRewardQr = async () => {
         const email = user?.email;
         const hCode = hotelCode || user?.hotel_code || '';
