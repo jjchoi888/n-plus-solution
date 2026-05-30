@@ -84,6 +84,9 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     const [posRewardIntent, setPosRewardIntent] = useState(null);
     const [posRewardTokenInput, setPosRewardTokenInput] = useState('');
     const [posRewardPayLoading, setPosRewardPayLoading] = useState(false);
+    const [isQrScannerStarting, setIsQrScannerStarting] = useState(false);
+    const [isQrScannerActive, setIsQrScannerActive] = useState(false);
+    const [qrScannerError, setQrScannerError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshRewardsData = async (email, targetHotelCode) => {
@@ -1151,5 +1154,6 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         </div>
     );
 }
+
 
 
