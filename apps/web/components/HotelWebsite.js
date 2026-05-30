@@ -514,17 +514,26 @@ export default function HotelWebsite({ domain }) {
         }
 
         try {
-            const payload = {
-                hotel_code: hotelCode,
-                email: authForm.email,
-                pin: authForm.pw,
-                first_name: authForm.first,
-                last_name: authForm.last,
-                phone: authForm.phone,
-                nationality: authForm.nationality || 'Philippines',
-                referral_code: authForm.referralCode || '',
-                membership_status: 'active'
-            };
+            const isRegisterAttempt = guestAuthMode === 'REGISTER';
+            const payload = isRegisterAttempt
+                ? {
+                    auth_mode: 'register',
+                    hotel_code: hotelCode,
+                    email: authForm.email,
+                    pin: authForm.pw,
+                    first_name: authForm.first,
+                    last_name: authForm.last,
+                    phone: authForm.phone,
+                    nationality: authForm.nationality || 'Philippines',
+                    referral_code: authForm.referralCode || '',
+                    membership_status: 'active'
+                }
+                : {
+                    auth_mode: 'login',
+                    hotel_code: hotelCode,
+                    email: authForm.email,
+                    pin: authForm.pw
+                };
 
             const res = await fetch('/api/members/auth', {
                 method: 'POST',
