@@ -454,6 +454,8 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
             setQrRedeemData(null);
             setPosRewardIntent(null);
             setIsQrScannerStarting(true);
+            setIsQrScannerActive(true);
+            await new Promise((resolve) => window.requestAnimationFrame(resolve));
 
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -473,7 +475,6 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
             await video.play();
 
             const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-            setIsQrScannerActive(true);
             setIsQrScannerStarting(false);
 
             const scanFrame = async () => {
@@ -1130,7 +1131,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                     </div>
 
                                     <div className={`overflow-hidden rounded-2xl border ${isQrScannerActive ? 'border-emerald-200 bg-slate-950' : 'border-dashed border-slate-200 bg-slate-50'}`}>
-                                        {isQrScannerActive ? (
+                                        {(isQrScannerActive || isQrScannerStarting) ? (
                                             <div className="relative">
                                                 <video
                                                     ref={qrScannerVideoRef}
@@ -1196,6 +1197,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         </div>
     );
 }
+
 
 
 
