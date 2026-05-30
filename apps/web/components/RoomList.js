@@ -130,6 +130,24 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     loadRewards();
   }, [effectiveHotelCode, isCheckoutOpen]);
 
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+    try {
+      const savedUser = localStorage.getItem('nplus_guest_user');
+      const user = savedUser ? JSON.parse(savedUser) : null;
+      if (!user) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.first_name || user.firstName || prev.firstName || '',
+        lastName: user.last_name || user.lastName || prev.lastName || '',
+        email: user.email || prev.email || '',
+        phone: user.phone || prev.phone || '',
+        nationality: user.nationality || prev.nationality || 'Philippines'
+      }));
+    } catch (_) { }
+  }, [isCheckoutOpen]);
+
   const actualRooms = (rooms && rooms.length > 0) ? rooms : fetchedRooms;
 
   let nights = 1;
@@ -632,3 +650,4 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
     </>
   );
 }
+
