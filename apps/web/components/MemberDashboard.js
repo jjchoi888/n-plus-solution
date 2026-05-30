@@ -67,6 +67,9 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     });
     const fileUploadInputRef = useRef(null);
     const cameraCaptureInputRef = useRef(null);
+    const qrScannerVideoRef = useRef(null);
+    const qrScannerStreamRef = useRef(null);
+    const qrScannerRafRef = useRef(null);
 
     // 💡 State initialization (removed mock data)
     const [user, setUser] = useState({});
@@ -1154,6 +1157,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         </div>
     );
 }
+
 
 
 
