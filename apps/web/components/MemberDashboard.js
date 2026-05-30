@@ -1102,22 +1102,61 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                     Scan the QR shown on the hotel POS. This screen approves the POS payment with your reward points.
                                 </div>
                                 <div className="text-xs font-bold text-slate-500">Available points: {Number(rewardsData.points || 0).toLocaleString()} pts</div>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={posRewardTokenInput}
-                                        onChange={(e) => setPosRewardTokenInput(e.target.value)}
-                                        placeholder="POS reward QR token"
-                                        className="flex-1 p-3 border border-slate-200 rounded-xl font-bold"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => loadPosRewardIntent(posRewardTokenInput)}
-                                        disabled={qrRedeemLoading}
-                                        className="px-4 rounded-xl bg-slate-900 text-white text-xs font-black disabled:opacity-50"
-                                    >
-                                        Load
-                                    </button>
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+                                        <input
+                                            type="text"
+                                            value={posRewardTokenInput}
+                                            onChange={(e) => setPosRewardTokenInput(e.target.value)}
+                                            placeholder="POS reward QR token"
+                                            className="flex-1 p-3 border border-slate-200 rounded-xl font-bold"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => loadPosRewardIntent(posRewardTokenInput)}
+                                            disabled={qrRedeemLoading}
+                                            className="px-4 rounded-xl bg-slate-900 text-white text-xs font-black disabled:opacity-50"
+                                        >
+                                            Load
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={isQrScannerActive ? stopQrScanner : startQrScanner}
+                                            disabled={isQrScannerStarting}
+                                            className="px-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-black disabled:opacity-50"
+                                        >
+                                            {isQrScannerStarting ? 'Starting...' : (isQrScannerActive ? 'Stop Scan' : 'Scan QR')}
+                                        </button>
+                                    </div>
+
+                                    <div className={`overflow-hidden rounded-2xl border ${isQrScannerActive ? 'border-emerald-200 bg-slate-950' : 'border-dashed border-slate-200 bg-slate-50'}`}>
+                                        {isQrScannerActive ? (
+                                            <div className="relative">
+                                                <video
+                                                    ref={qrScannerVideoRef}
+                                                    autoPlay
+                                                    muted
+                                                    playsInline
+                                                    className="h-56 w-full object-cover"
+                                                />
+                                                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                                                    <div className="h-40 w-40 rounded-3xl border-4 border-white/80 shadow-[0_0_0_9999px_rgba(15,23,42,0.28)]" />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 text-xs font-bold text-slate-500">
+                                                {qrScannerSupported
+                                                    ? 'Tap "Scan QR" to open the camera and read the hotel POS QR automatically.'
+                                                    : 'Camera QR scanning is not supported on this browser yet. You can still paste the POS reward token manually.'}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {qrScannerError && (
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] font-bold text-amber-700">
+                                            {qrScannerError}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {posRewardIntent && (
