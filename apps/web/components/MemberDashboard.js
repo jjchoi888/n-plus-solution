@@ -94,6 +94,7 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
 
     const [bookingSearchTerm, setBookingSearchTerm] = useState('');
     const [bookingStatusFilter, setBookingStatusFilter] = useState('ALL');
+    const [bookingDateFilter, setBookingDateFilter] = useState('');
     const [bookingCurrentPage, setBookingCurrentPage] = useState(1);
     const BOOKINGS_PER_PAGE = 5;
 
@@ -600,7 +601,10 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
         const matchesSearch = (b.id || '').toLowerCase().includes(bookingSearchTerm.toLowerCase()) || 
                               (b.room_type || '').toLowerCase().includes(bookingSearchTerm.toLowerCase());
         const matchesStatus = bookingStatusFilter === 'ALL' || (b.status || 'CONFIRMED').toUpperCase() === bookingStatusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesDate = !bookingDateFilter || 
+                            (b.check_in && b.check_in.includes(bookingDateFilter)) || 
+                            (b.check_out && b.check_out.includes(bookingDateFilter));
+        return matchesSearch && matchesStatus && matchesDate;
     });
 
     const totalBookingPages = Math.max(1, Math.ceil(filteredBookings.length / BOOKINGS_PER_PAGE));
@@ -749,6 +753,12 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                         value={bookingSearchTerm} 
                                         onChange={e => { setBookingSearchTerm(e.target.value); setBookingCurrentPage(1); }} 
                                         className="flex-1 p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" 
+                                    />
+                                    <input 
+                                        type="date"
+                                        value={bookingDateFilter}
+                                        onChange={e => { setBookingDateFilter(e.target.value); setBookingCurrentPage(1); }}
+                                        className="p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 text-slate-500 cursor-pointer"
                                     />
                                     <select 
                                         value={bookingStatusFilter} 
