@@ -824,13 +824,14 @@ export default function HotelWebsite({ domain }) {
                 const dailyKey = `rewards_popup_daily_${hotelCode}`;
                 const hideTodayKey = 'rewards_popup_hide_today_' + hotelCode;
                 const todayKey = new Date().toISOString().slice(0, 10);
+               
                 const popupSignature = JSON.stringify({
                     hotelCode,
                     title: data.popup.title || 'Rewards Program',
                     message: data.popup.message || 'Join our rewards program and earn points.',
                     ctaLabel: data.popup.cta_label || 'View Rewards',
                     ctaTarget: data.popup.cta_target || 'MYPAGE_REWARDS',
-                    theme: data.popup.theme || rewardConfig.popup_theme || 'CORPORATE_LIGHT',
+                    theme: rewardConfig.popup_theme || data?.popup?.theme || 'CORPORATE_LIGHT',
                     welcome: Number(rewardConfig.welcome_bonus_points || 0),
                     stay: Number(rewardConfig.points_per_stay || 0),
                     birthday: Number(rewardConfig.birthday_bonus_points || 0),
@@ -871,11 +872,12 @@ export default function HotelWebsite({ domain }) {
                     message: data.popup.message || 'Join our rewards program and earn points.',
                     ctaLabel: data.popup.cta_label || 'View Rewards',
                     ctaTarget: data.popup.cta_target || 'MYPAGE_REWARDS',
-                    theme: data.popup.theme || rewardConfig.popup_theme || 'CORPORATE_LIGHT',
+                    theme: rewardConfig.popup_theme || data?.popup?.theme || 'CORPORATE_LIGHT',
                     frequency,
                     benefits: popupBenefits,
                     signature: popupSignature
                 });
+
             } catch (e) {
                 console.error('Rewards popup fetch failed', e);
             }
@@ -1435,7 +1437,7 @@ export default function HotelWebsite({ domain }) {
         <>
             <style dangerouslySetInnerHTML={{
                 __html: `
-        @import url('<https://fonts.googleapis.com/css2?family=${themeFont.replace(/> /g, '+')}:wght@300;400;600;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${themeFont.replace(/ /g, '+')}:wght@300;400;600;900&display=swap');
         :root { --theme-color: ${themeColor}; --theme-color-light: ${themeColor}15; --theme-color-border: ${themeColor}40; }
         .custom-font { font-family: '${themeFont}', sans-serif; }
         .theme-bg { background-color: var(--theme-color) !important; }
