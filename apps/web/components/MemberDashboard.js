@@ -23,10 +23,10 @@ const normalizeMemberBooking = (booking = {}) => {
     const reservationId = booking.id || booking.res_id || booking.reservation_id || '';
     const hotelName = booking.hotel_name || booking.hotel_code || 'Hotel Booking';
     const totalAmount = Number(
-        booking.total_amount ??
-        booking.total_price ??
-        booking.amount ??
-        booking.paid_amount ??
+        booking.total_price ||
+        booking.total_amount ||
+        booking.amount ||
+        booking.paid_amount ||
         0
     );
 
@@ -765,8 +765,8 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                     <table className="w-full text-left text-sm font-bold">
                                         <thead className="bg-slate-100 border-b border-slate-200 text-slate-500 uppercase text-[11px] tracking-widest">
                                             <tr>
-                                                <th className="p-4">Reservation Info</th>
                                                 <th className="p-4">Dates</th>
+                                                <th className="p-4">Reservation Info</th>
                                                 <th className="p-4 text-right">Amount</th>
                                                 <th className="p-4 text-center">Status</th>
                                                 <th className="p-4 text-right">Action</th>
@@ -778,16 +778,16 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                                             ) : (
                                                 paginatedBookings.map(b => (
                                                     <tr key={b.id} className="hover:bg-slate-50 transition-colors">
-                                                        <td className="p-4">
-                                                            <div className="text-slate-800 text-base">{b.room_type}</div>
-                                                            <div className="text-[11px] text-slate-400 font-mono uppercase">ID: {b.id}</div>
-                                                        </td>
                                                         <td className="p-4 text-slate-600">
                                                             <div><span className="text-[10px] text-slate-400 uppercase mr-1">In</span>{b.check_in}</div>
                                                             <div><span className="text-[10px] text-slate-400 uppercase mr-1">Out</span>{b.check_out}</div>
                                                         </td>
+                                                        <td className="p-4">
+                                                            <div className="text-slate-800 text-base">{b.room_type}</div>
+                                                            <div className="text-[11px] text-slate-400 font-mono uppercase">ID: {b.id}</div>
+                                                        </td>
                                                         <td className="p-4 text-right">
-                                                            <span className="font-black text-slate-800">₱{Number(b.total_amount || b.paid_amount || b.total_price || b.amount || 0).toLocaleString()}</span>
+                                                            <span className="font-black text-slate-800">₱{Number(b.total_price || b.total_amount || b.paid_amount || b.amount || 0).toLocaleString()}</span>
                                                         </td>
                                                         <td className="p-4 text-center">
                                                             <span className={`inline-flex min-w-[84px] items-center justify-center rounded-md border px-3 py-1 text-xs font-black tracking-wide ${(b.status || 'CONFIRMED').toUpperCase() === 'CANCELLED' ? 'bg-red-50 border-red-200 text-red-600' : (b.status || 'CONFIRMED').toUpperCase() === 'PENDING' ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'}`}>
