@@ -83,7 +83,6 @@ const translations = {
         paymentMethod: 'Payment Method', cardNum: 'Card Number', expiry: 'Expiry Date', cvv: 'CVV',
         bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Proceed to Payment ➔', processing: 'Processing...',
 
-        // --- 신규 추가된 시스템 알림 및 Auth 번역 ---
         selectValidDates: "Please select valid dates.",
         checkoutAfterCheckin: "Check-out must be after check-in.",
         notEnoughRooms: "Not enough rooms available.",
@@ -100,7 +99,7 @@ const translations = {
         promoAuto2: " ] has been applied automatically!\nPlease select your check-in/check-out dates below to proceed.",
         promoCopied1: "🎁 Promo code '",
         promoCopied2: "' has been copied!\nPlease select your dates and room, then apply it at checkout.",
-        guestNameMissing: "Please enter the guest's First and Last Name.", // 💡 추가됨
+        guestNameMissing: "Please enter the guest's First and Last Name.",
 
         loginTo: "Log In to ",
         continueGoogle: "Continue with Google",
@@ -160,7 +159,7 @@ const translations = {
         promoAuto2: " ] 프로모션 혜택이 자동 적용되었습니다!\n아래 화면에서 원하시는 '체크인/체크아웃 날짜'를 선택하고 예약을 진행해 주세요.",
         promoCopied1: "🎁 '",
         promoCopied2: "' 코드가 복사되었습니다!\n원하시는 날짜와 객실을 선택 후 결제창에서 적용(Apply)을 눌러주세요.",
-        guestNameMissing: "투숙객의 영문 이름과 성을 모두 입력해 주세요.", // 💡 추가됨
+        guestNameMissing: "투숙객의 영문 이름과 성을 모두 입력해 주세요.",
 
         loginTo: "로그인 - ",
         continueGoogle: "Google로 계속하기",
@@ -220,7 +219,7 @@ const translations = {
         promoAuto2: " ] 已自动应用！\n请在下方选择您的入住/退房日期以继续。",
         promoCopied1: "🎁 优惠码 '",
         promoCopied2: "' 已复制！\n请选择您的日期和客房，然后在结账时应用它。",
-        guestNameMissing: "请输入入住客人的姓氏和名字。", // 💡 追加
+        guestNameMissing: "请输入入住客人的姓氏和名字。",
 
         loginTo: "登录到 ",
         continueGoogle: "使用 Google 继续",
@@ -280,7 +279,7 @@ const translations = {
         promoAuto2: " ] が自動的に適用されました！\nチェックイン/チェックアウトの日付を選択して続行してください。",
         promoCopied1: "🎁 プロモコード '",
         promoCopied2: "' をコピーしました！\n日付と客室を選択し、お支払い画面で適用してください。",
-        guestNameMissing: "宿泊者の名と姓を入力してください。", // 💡 追加
+        guestNameMissing: "宿泊者の名と姓を入力してください。",
 
         loginTo: "ログイン - ",
         continueGoogle: "Googleで続行",
@@ -365,7 +364,7 @@ export default function HotelWebsite({ domain }) {
 
     const [user, setUser] = useState(null);
     const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
-    const [guestAuthMode, setGuestAuthMode] = useState('LOGIN'); // LOGIN, REGISTER, FORGOT_PASSWORD
+    const [guestAuthMode, setGuestAuthMode] = useState('LOGIN');
     const [authForm, setAuthForm] = useState({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '', referralCode: '' });
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -383,7 +382,7 @@ export default function HotelWebsite({ domain }) {
     const [appliedRedeemPoints, setAppliedRedeemPoints] = useState(0);
     const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
-    const t = translations[lang] || translations.en; // 💡 렌더링 최상단에서 t 변수 초기화
+    const t = translations[lang] || translations.en;
     const hotelCode = getEffectiveHotelCode();
 
     useEffect(() => {
@@ -1436,7 +1435,7 @@ export default function HotelWebsite({ domain }) {
         <>
             <style dangerouslySetInnerHTML={{
                 __html: `
-        @import url('https://fonts.googleapis.com/css2?family=${themeFont.replace(/ /g, '+')}:wght@300;400;600;900&display=swap');
+        @import url('<https://fonts.googleapis.com/css2?family=${themeFont.replace(/> /g, '+')}:wght@300;400;600;900&display=swap');
         :root { --theme-color: ${themeColor}; --theme-color-light: ${themeColor}15; --theme-color-border: ${themeColor}40; }
         .custom-font { font-family: '${themeFont}', sans-serif; }
         .theme-bg { background-color: var(--theme-color) !important; }
@@ -1973,7 +1972,7 @@ export default function HotelWebsite({ domain }) {
 
                             <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
                                 {/* 1. 게스트 정보 */}
-                                
+
                                 <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto space-y-8">
                                     <section>
                                         <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">1. {t.guestDetails}</h3>
@@ -2099,7 +2098,7 @@ export default function HotelWebsite({ domain }) {
                             </div>
                         </div>
                     </div>
-                )}               
+                )}
 
                 {/* 🎈 우측 상단 바운스 대화 풍선 */}
                 {activePromos.length > 0 && (
@@ -2183,83 +2182,81 @@ export default function HotelWebsite({ domain }) {
                 )}
 
 
-                {rewardPopup && (
-                    <div className="fixed z-[1190] right-4 bottom-5 md:right-8 md:bottom-8 w-[calc(100vw-2rem)] max-w-md animate-fade-in">
-                        <div className="relative overflow-hidden border border-amber-100 bg-white shadow-2xl">
-                            <div
-                                className="absolute inset-0 bg-cover bg-center opacity-35"
-                                style={{ backgroundImage: `url(${sliderImages[0]})` }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-br from-white via-amber-50/95 to-emerald-50/90" />
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={dismissRewardPopup}
-                                    className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center border border-slate-300 bg-white/80 text-lg font-black text-slate-700 hover:bg-white"
-                                    aria-label="Close rewards popup"
-                                >
-                                    x
-                                </button>
-                                <div className="border-b border-amber-100 p-5 pr-12 md:p-6 md:pr-14">
-                                    <div className="mb-2 text-[10px] font-black uppercase tracking-[0.28em] text-emerald-700">Hotel Rewards</div>
-                                    <h3 className="text-2xl font-black leading-tight text-slate-900">{rewardPopup.title || 'Rewards Program'}</h3>
-                                    <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-700 whitespace-pre-wrap">
-                                        {rewardPopup.message}
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
-                                    {(rewardPopup.benefits || []).slice(0, 4).map((item, idx) => (
-                                        <div key={`rw_benefit_${idx}`} className="border border-white/80 bg-white/85 p-3 shadow-sm backdrop-blur">
-                                            <div className="flex items-start gap-3">
-                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-emerald-600 text-white">
-                                                    {renderRewardBenefitIcon(item.icon)}
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-black text-slate-900">{item.title}</div>
-                                                    <div className="mt-0.5 text-xs font-semibold text-slate-600">{item.summary}</div>
+                {rewardPopup && (() => {
+                    const popupTheme = getRewardPopupTheme(rewardPopup.theme);
+                    return (
+                        <div className="fixed z-[1190] right-4 bottom-5 md:right-8 md:bottom-8 w-[calc(100vw-2rem)] max-w-md animate-fade-in">
+                            <div className={`relative overflow-hidden rounded-xl ${popupTheme.panel}`}>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={dismissRewardPopup}
+                                        className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 hover:bg-black/20 text-lg font-black text-white mix-blend-difference"
+                                        aria-label="Close rewards popup"
+                                    >
+                                        ✕
+                                    </button>
+                                    <div className={`p-5 pr-12 md:p-6 md:pr-14 ${popupTheme.header}`}>
+                                        <div className="mb-2 text-[10px] font-black uppercase tracking-[0.28em] opacity-80">Hotel Rewards</div>
+                                        <h3 className="text-2xl font-black leading-tight">{rewardPopup.title || 'Rewards Program'}</h3>
+                                        <p className="mt-3 text-sm font-semibold leading-relaxed opacity-90 whitespace-pre-wrap">
+                                            {rewardPopup.message}
+                                        </p>
+                                    </div>
+                                    <div className={`grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 ${popupTheme.body}`}>
+                                        {(rewardPopup.benefits || []).slice(0, 4).map((item, idx) => (
+                                            <div key={`rw_benefit_${idx}`} className={`p-3 rounded-xl shadow-sm backdrop-blur ${popupTheme.card}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`flex h-9 w-9 shrink-0 rounded-full items-center justify-center text-white ${popupTheme.iconWrap}`}>
+                                                        {renderRewardBenefitIcon(item.icon)}
+                                                    </div>
+                                                    <div>
+                                                        <div className={`text-sm font-black ${popupTheme.titleText}`}>{item.title}</div>
+                                                        <div className={`mt-0.5 text-xs font-semibold ${popupTheme.summaryText}`}>{item.summary}</div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="border-t border-amber-100 bg-white/70 p-5 backdrop-blur">
-                                    <div className="mb-4 grid grid-cols-[120px_1fr] gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={dismissRewardPopup}
-                                            className="border border-slate-300 bg-white py-3 font-black text-slate-700 hover:bg-slate-50"
-                                        >
-                                            Later
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                dismissRewardPopup();
-                                                if ((rewardPopup?.ctaTarget || '').toUpperCase() === 'MYPAGE_REWARDS') {
-                                                    sessionStorage.setItem('nplus_open_rewards', '1');
-                                                }
-                                                setActiveMenu('MYPAGE');
-                                                if (!user) setShowGuestAuthModal(true);
-                                            }}
-                                            className="theme-bg py-3 font-black text-white shadow-lg theme-hover"
-                                        >
-                                            {rewardPopup.ctaLabel || 'View Rewards'}
-                                        </button>
+                                        ))}
                                     </div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={hideRewardPopupToday}
-                                            onChange={(e) => setHideRewardPopupToday(e.target.checked)}
-                                            className="h-4 w-4 accent-emerald-600"
-                                        />
-                                        Do not show again today
-                                    </label>
+                                    <div className={`p-5 backdrop-blur ${popupTheme.footer}`}>
+                                        <div className="mb-4 grid grid-cols-[120px_1fr] gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={dismissRewardPopup}
+                                                className={`py-3 rounded-xl font-black ${popupTheme.laterBtn} hover:opacity-80 transition-opacity`}
+                                            >
+                                                Later
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    dismissRewardPopup();
+                                                    if ((rewardPopup?.ctaTarget || '').toUpperCase() === 'MYPAGE_REWARDS') {
+                                                        sessionStorage.setItem('nplus_open_rewards', '1');
+                                                    }
+                                                    setActiveMenu('MYPAGE');
+                                                    if (!user) setShowGuestAuthModal(true);
+                                                }}
+                                                className={`py-3 rounded-xl font-black shadow-lg ${popupTheme.ctaBtn} transition-opacity hover:opacity-90`}
+                                            >
+                                                {rewardPopup.ctaLabel || 'View Rewards'}
+                                            </button>
+                                        </div>
+                                        <label className={`flex items-center gap-2 text-xs font-bold cursor-pointer ${popupTheme.summaryText}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={hideRewardPopupToday}
+                                                onChange={(e) => setHideRewardPopupToday(e.target.checked)}
+                                                className="h-4 w-4 rounded cursor-pointer"
+                                            />
+                                            Do not show again today
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
                 {/* 💡 전역 알림(Alert) 모달창 */}                {alertMessage && (
                     <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAlertMessage('')}>
                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center border border-slate-100" onClick={e => e.stopPropagation()}>
@@ -2286,8 +2283,8 @@ export default function HotelWebsite({ domain }) {
                         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                             <div className="hidden md:block flex-1"></div>
                             <div className="flex-1 flex justify-center gap-4">
-                                {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `https://${sns.ig}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16.11 7.99a.01.01 0 0 1 .02 0" /><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18" /></svg></a>}
-                                {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `https://${sns.fb}`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>}
+                                {sns?.ig && <a href={sns.ig.startsWith('http') ? sns.ig : `<https://${sns.ig}>`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16.11 7.99a.01.01 0 0 1 .02 0" /><path d="M15.82 12.18A4 4 0 1 1 11.82 8a4 4 0 0 1 4 4.18" /></svg></a>}
+                                {sns?.fb && <a href={sns.fb.startsWith('http') ? sns.fb : `<https://${sns.fb}>`} target="_blank" rel="noreferrer" className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>}
                             </div>
                             <div className="flex-1 flex justify-center md:justify-end w-full">
                                 <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
@@ -2507,7 +2504,3 @@ export default function HotelWebsite({ domain }) {
         </>
     );
 }
-
-
-
-
