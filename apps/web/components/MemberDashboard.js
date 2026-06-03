@@ -98,6 +98,12 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     const [bookingCurrentPage, setBookingCurrentPage] = useState(1);
     const BOOKINGS_PER_PAGE = 5;
 
+    const [receiptSearchTerm, setReceiptSearchTerm] = useState('');
+    const [receiptTypeFilter, setReceiptTypeFilter] = useState('ALL');
+    const [receiptDateFilter, setReceiptDateFilter] = useState('');
+    const [receiptCurrentPage, setReceiptCurrentPage] = useState(1);
+    const RECEIPTS_PER_PAGE = 5;
+
     const refreshRewardsData = async (email, targetHotelCode) => {
         if (!email || !targetHotelCode) return null;
         try {
@@ -610,6 +616,20 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
     const totalBookingPages = Math.max(1, Math.ceil(filteredBookings.length / BOOKINGS_PER_PAGE));
     const paginatedBookings = filteredBookings.slice((bookingCurrentPage - 1) * BOOKINGS_PER_PAGE, bookingCurrentPage * BOOKINGS_PER_PAGE);
 
+    const filteredReceipts = receiptDocuments.filter(r => {
+        const matchesSearch = (r.id || '').toLowerCase().includes(receiptSearchTerm.toLowerCase()) || 
+                              (r.room_type || '').toLowerCase().includes(receiptSearchTerm.toLowerCase()) ||
+                              (r.receipt_no || '').toLowerCase().includes(receiptSearchTerm.toLowerCase());
+        const kind = String(r.receipt_kind || 'RECEIPT').toUpperCase();
+        const matchesType = receiptTypeFilter === 'ALL' || kind === receiptTypeFilter;
+        const rDate = r.date || String(r.timestamp || '').slice(0, 10) || '';
+        const matchesDate = !receiptDateFilter || rDate.includes(receiptDateFilter);
+        return matchesSearch && matchesType && matchesDate;
+    });
+
+    const totalReceiptPages = Math.max(1, Math.ceil(filteredReceipts.length / RECEIPTS_PER_PAGE));
+    const paginatedReceipts = filteredReceipts.slice((receiptCurrentPage - 1) * RECEIPTS_PER_PAGE, receiptCurrentPage * RECEIPTS_PER_PAGE);
+
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold bg-slate-50">Loading dashboard...</div>;
     }
@@ -844,48 +864,99 @@ export default function MemberDashboard({ hotelCode, isSiteMobileMenuOpen = fals
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-3xl font-black text-slate-800">Receipts & Folios</h2>
 
-                            {/* 💡 Handling empty receipt data */}
-                            {receiptDocuments.length === 0 ? (
-                                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">
-                                    <div className="text-5xl mb-4">🧾</div>
-                                    <h3 className="text-lg font-bold text-slate-700 mb-2">No receipts available.</h3>
-                                    <p className="text-sm text-slate-500">Issued reservation, deposit, and checkout receipts will be stored here.</p>
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 bg-slate-50">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search Receipt ID or Room..." 
+                                        value={receiptSearchTerm} 
+                                        onChange={e => { setReceiptSearchTerm(e.target.value); setReceiptCurrentPage(1); }} 
+                                        className="flex-1 p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" 
+                                    />
+                                    <input 
+                                        type="date"
+                                        value={receiptDateFilter}
+                                        onChange={e => { setReceiptDateFilter(e.target.value); setReceiptCurrentPage(1); }}
+                                        className="p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 text-slate-500 cursor-pointer"
+                                    />
+                                    <select 
+                                        value={receiptTypeFilter} 
+                                        onChange={e => { setReceiptTypeFilter(e.target.value); setReceiptCurrentPage(1); }} 
+                                        className="p-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none cursor-pointer"
+                                    >
+                                        <option value="ALL">All Types</option>
+                                        <option value="CHECKIN">Check-in</option>
+                                        <option value="CHECKOUT">Check-out</option>
+                                        <option value="CONFIRMATION">Confirmation</option>
+                                        <option value="RECEIPT">Receipt</option>
+                                    </select>
                                 </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {receiptDocuments.map((receipt) => {
-                                        const receiptKind = String(receipt.receipt_kind || 'RECEIPT').toUpperCase();
-                                        const receiptTypeLabel = receiptKind === 'CHECKIN'
-                                            ? 'Check-in Deposit'
-                                            : receiptKind === 'CHECKOUT'
-                                                ? 'Check-out Settlement'
-                                                : receiptKind === 'CONFIRMATION'
-                                                    ? 'Reservation Confirmation'
-                                                    : 'Official Receipt';
-                                        return (
-                                        <div key={`rcpt-${receipt.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group">
-                                            <div className="mb-8">
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🧾</div>
-                                                    <span className="text-[10px] font-mono font-bold text-slate-400">#{receipt.receipt_no || receipt.id}</span>
-                                                </div>
-                                                <h4 className="font-black text-slate-800 mb-1">{receiptTypeLabel}</h4>
-                                                <p className="text-xs font-bold text-blue-600 mb-2">{receipt.room_type || 'Accommodation'}</p>
-                                                <p className="text-xs font-bold text-slate-500">{receipt.check_in || '-'} ~ {receipt.check_out || '-'}</p>
-                                                <p className="mt-3 text-xs font-semibold text-slate-500 line-clamp-2">{receipt.description || 'Issued hotel receipt'}</p>
-                                                <div className="mt-4 flex items-center justify-between gap-3">
-                                                    <div className="flex flex-col">
-                                                        <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700">{receiptKind}</span>
-                                                        <span className="mt-2 text-[11px] font-bold text-slate-400">{receipt.date || String(receipt.timestamp || '').slice(0, 10) || '-'}</span>
-                                                    </div>
-                                                    <span className="text-base font-black text-slate-900">PHP {Number(receipt.amount || 0).toLocaleString()}</span>
-                                                </div>
-                                            </div>
-                                            <button onClick={() => handleDownloadReceipt(receipt)} className="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Download PDF</button>
-                                        </div>
-                                    )})}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm font-bold">
+                                        <thead className="bg-slate-100 border-b border-slate-200 text-slate-500 uppercase text-[11px] tracking-widest">
+                                            <tr>
+                                                <th className="p-4">Date</th>
+                                                <th className="p-4">Receipt Info</th>
+                                                <th className="p-4 text-right">Amount</th>
+                                                <th className="p-4 text-center">Type</th>
+                                                <th className="p-4 text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {paginatedReceipts.length === 0 ? (
+                                                <tr><td colSpan="5" className="p-10 text-center text-slate-400">No receipts match your search.</td></tr>
+                                            ) : (
+                                                paginatedReceipts.map(receipt => {
+                                                    const receiptKind = String(receipt.receipt_kind || 'RECEIPT').toUpperCase();
+                                                    return (
+                                                        <tr key={receipt.id} className="hover:bg-slate-50 transition-colors">
+                                                            <td className="p-4 text-slate-600">
+                                                                {receipt.date || String(receipt.timestamp || '').slice(0, 10) || '-'}
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <div className="text-slate-800 text-base">{receipt.room_type || 'Accommodation'}</div>
+                                                                <div className="text-[11px] text-slate-400 font-mono uppercase">ID: {receipt.receipt_no || receipt.id}</div>
+                                                            </td>
+                                                            <td className="p-4 text-right">
+                                                                <span className="font-black text-slate-800">₱{Number(receipt.amount || receipt.paid_amount || receipt.total_amount || 0).toLocaleString()}</span>
+                                                            </td>
+                                                            <td className="p-4 text-center">
+                                                                <span className="inline-flex min-w-[84px] items-center justify-center rounded-md border px-3 py-1 text-[10px] font-black tracking-wide bg-emerald-50 border-emerald-200 text-emerald-700">
+                                                                    {receiptKind}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 text-right">
+                                                                <button onClick={() => handleDownloadReceipt(receipt)} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors font-black text-xs inline-flex items-center gap-1">
+                                                                    <span>📄</span> PDF Export
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            )}
+                                {totalReceiptPages > 1 && (
+                                    <div className="p-4 border-t border-slate-100 flex justify-between items-center bg-slate-50">
+                                        <button 
+                                            onClick={() => setReceiptCurrentPage(prev => Math.max(1, prev - 1))} 
+                                            disabled={receiptCurrentPage === 1}
+                                            className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs disabled:opacity-50"
+                                        >
+                                            Previous
+                                        </button>
+                                        <span className="text-xs font-bold text-slate-500">Page {receiptCurrentPage} of {totalReceiptPages}</span>
+                                        <button 
+                                            onClick={() => setReceiptCurrentPage(prev => Math.min(totalReceiptPages, prev + 1))} 
+                                            disabled={receiptCurrentPage === totalReceiptPages}
+                                            className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs disabled:opacity-50"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
