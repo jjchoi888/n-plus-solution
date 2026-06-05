@@ -1144,32 +1144,33 @@ export default function HotelWebsite({ domain }) {
     const htmlRenderClass = isClassicTemplate
         ? "leading-relaxed text-stone-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2"
         : "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
+    const hotelDisplayName = sns?.hotel_name || safeConfig.hotel_name || safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel";
     const pageShellClass = isClassicTemplate
         ? "min-h-screen bg-[#f5efe6] flex flex-col animate-fade-in custom-font selection:bg-slate-700 selection:text-white"
-        : "min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white";
+        : "min-h-screen bg-[#f7f7f5] flex flex-col animate-fade-in custom-font selection:bg-slate-900 selection:text-white";
     const headerClass = isClassicTemplate
         ? "fixed top-0 w-full z-50 bg-[#fffaf2]/95 backdrop-blur-md shadow-[0_10px_30px_rgba(15,23,42,0.08)] border-b border-stone-200/80"
-        : "fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm";
+        : "fixed top-0 w-full z-50 bg-slate-950/45 backdrop-blur-xl border-b border-white/10";
     const navWrapClass = isClassicTemplate
         ? "hidden md:flex gap-8 font-black text-sm text-stone-500 uppercase tracking-[0.2em]"
-        : "hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest";
-    const navActiveClass = isClassicTemplate ? "text-slate-900 border-b-2 border-stone-400" : "theme-text border-b-2 theme-border";
-    const navIdleClass = isClassicTemplate ? "hover:text-slate-900" : "hover:theme-text";
+        : "hidden md:flex gap-8 font-bold text-sm text-white/72 uppercase tracking-[0.24em]";
+    const navActiveClass = isClassicTemplate ? "text-slate-900 border-b-2 border-stone-400" : "text-white border-b-2 border-white";
+    const navIdleClass = isClassicTemplate ? "hover:text-slate-900" : "hover:text-white";
     const primaryActionClass = isClassicTemplate
         ? "theme-bg theme-hover text-white px-3 md:px-7 py-2 md:py-2.5 rounded-md font-black shadow-md text-xs md:text-base whitespace-nowrap"
-        : "theme-bg theme-hover text-white px-3 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap";
+        : "theme-bg theme-hover text-white px-3 md:px-7 py-2.5 md:py-3 rounded-none font-bold shadow-[0_20px_40px_rgba(15,23,42,0.25)] text-xs md:text-base whitespace-nowrap uppercase tracking-[0.22em]";
     const secondaryActionClass = isClassicTemplate
         ? "px-3 md:px-4 py-2 border theme-border theme-text rounded-md font-bold text-xs md:text-sm hover:bg-white/60 transition-colors whitespace-nowrap"
-        : "px-3 md:px-4 py-2 border theme-border theme-text rounded-full font-bold text-xs md:text-sm hover:bg-slate-50 transition-colors whitespace-nowrap";
+        : "px-3 md:px-4 py-2 border border-white/35 text-white rounded-none font-bold text-xs md:text-sm hover:bg-white/10 transition-colors whitespace-nowrap uppercase tracking-[0.18em]";
     const heroSectionClass = isClassicTemplate
         ? "relative h-[78vh] flex flex-col items-center justify-center mt-[78px] overflow-hidden bg-stone-900 group"
-        : "relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900 group";
+        : "relative min-h-screen flex flex-col items-center justify-center mt-0 overflow-hidden bg-slate-950 group";
     const aboutSectionClass = isClassicTemplate
         ? "py-20 px-6 md:px-8 bg-[#fbf7f1] text-center border-y border-stone-200"
-        : "py-24 px-8 bg-white text-center";
+        : "py-28 px-6 md:px-8 bg-white text-center relative overflow-hidden";
     const aboutTitleClass = isClassicTemplate
         ? "text-3xl md:text-4xl font-black mb-6 text-slate-800 tracking-tight"
-        : "text-3xl font-black mb-8 theme-text";
+        : "text-4xl md:text-5xl font-light mb-8 text-slate-900";
     const tabActiveClass = isClassicTemplate
         ? "bg-white text-slate-800 shadow-[0_-4px_10px_rgba(15,23,42,0.05)] text-base md:text-lg z-10 relative"
         : "bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative";
@@ -1182,6 +1183,15 @@ export default function HotelWebsite({ domain }) {
     const contactPanelClass = isClassicTemplate
         ? "bg-white/90 rounded-[28px] shadow-[0_20px_60px_rgba(15,23,42,0.08)] border border-stone-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8"
         : "bg-white rounded-2xl md:rounded-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8";
+    const languageSelectClass = isClassicTemplate
+        ? "bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200"
+        : "bg-white/10 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-none text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-white/15 transition-colors border border-white/15";
+    const mobileMenuOverlayClass = isClassicTemplate
+        ? "md:hidden fixed inset-0 top-[72px] z-40 bg-black/80 backdrop-blur-sm"
+        : "md:hidden fixed inset-0 top-[72px] z-40 bg-slate-950/90 backdrop-blur-md";
+    const mobileMenuButtonClass = isClassicTemplate
+        ? "flex h-20 w-20 items-center justify-center rounded-full bg-white/85 px-3 text-center text-xs font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95"
+        : "flex h-20 w-20 items-center justify-center rounded-none bg-white/10 border border-white/10 px-3 text-center text-xs font-black text-white shadow-2xl backdrop-blur-md transition-transform active:scale-95";
 
     const renderPriceStr = (price, name) => {
         if (lang === 'ko') return `${name} 객실을 ₱${price.toLocaleString()}${t.night} ${t.startingFrom}`;
@@ -1500,7 +1510,7 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 헤더 */}
                 <header className={headerClass}>
-                    <div className="flex justify-between items-center px-6 md:px-12 py-4 relative z-50">
+                    <div className={`flex justify-between items-center px-6 md:px-12 py-4 relative z-50 ${isClassicTemplate ? '' : 'max-w-[1400px] mx-auto w-full'}`}>
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveMenu('HOME')}>
                             {safeConfig.logo_url ? <img src={safeConfig.logo_url} className={isClassicTemplate ? "h-10 md:h-14 object-contain" : "h-8 md:h-12 object-contain"} alt="Logo" /> : <span className={`text-2xl font-black theme-text uppercase ${isClassicTemplate ? 'tracking-[0.12em]' : ''}`}>{safeConfig.welcome_title || 'LOGO'}</span>}
                         </div>
@@ -1512,7 +1522,7 @@ export default function HotelWebsite({ domain }) {
                         <div className="flex items-center gap-2 md:gap-4">
                             <button onClick={() => setActiveMenu('BOOK')} className={primaryActionClass}>{t.bookNow}</button>
 
-                            <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
+                            <select value={lang} onChange={(e) => setLang(e.target.value)} className={languageSelectClass}>
                                 <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                             </select>
 
@@ -1530,11 +1540,11 @@ export default function HotelWebsite({ domain }) {
                                 </div>
                             )}
 
-                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
+                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`md:hidden text-2xl p-2 ${isClassicTemplate ? 'theme-text' : 'text-white'}`}>{isMobileMenuOpen ? '✕' : '☰'}</button>
                         </div>
                     </div>
                     {isMobileMenuOpen && (
-                        <div className="md:hidden fixed inset-0 top-[72px] z-40 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+                        <div className={mobileMenuOverlayClass} onClick={() => setIsMobileMenuOpen(false)}>
                             <div className="absolute right-5 top-8 flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
                                 {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }, ...(user ? [{ id: 'MYPAGE', label: t.myPageBtn }] : [{ id: 'LOGIN_SIGNUP', label: t.loginSignUpBtn }])].map(menu => (
                                     <button key={menu.id} onClick={() => {
@@ -1545,7 +1555,7 @@ export default function HotelWebsite({ domain }) {
                                             setActiveMenu(menu.id);
                                         }
                                         setIsMobileMenuOpen(false);
-                                    }} className={`flex h-20 w-20 items-center justify-center rounded-full bg-white/85 px-3 text-center text-xs font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95 ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? 'theme-text ring-4 ring-white/40' : 'text-slate-900'}`}>
+                                    }} className={`${mobileMenuButtonClass} ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? (isClassicTemplate ? 'theme-text ring-4 ring-white/40' : 'theme-text border-[var(--theme-color)] bg-white/15') : (isClassicTemplate ? 'text-slate-900' : 'text-white')}`}>
                                         {menu.label}
                                     </button>
                                 ))}
@@ -1556,79 +1566,164 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 🏠 메인 화면 */}
                 {activeMenu === 'HOME' && (
-                    <div className="animate-fade-in-up">
-                        <section className={heroSectionClass}>
-                            {safeConfig.slider_style === 'auto_slide' ? (
-                                <div
-                                    className="absolute inset-0 flex transition-transform duration-700 ease-in-out z-10"
-                                    style={{ transform: `translateX(-${currentSlide * 100}%)`, width: `${sliderImages.length * 100}%` }}
-                                >
-                                    {sliderImages.map((img, idx) => (
-                                        <img key={idx} src={img} className={`w-full h-full object-cover ${isClassicTemplate ? 'opacity-70' : 'opacity-60'}`} style={{ width: `${100 / sliderImages.length}%` }} alt="slide" />
-                                    ))}
-                                </div>
-                            ) : (
-                                sliderImages.map((img, idx) => (
-                                    <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? `${isClassicTemplate ? 'opacity-70' : 'opacity-60'} z-10` : 'opacity-0 z-0'}`} alt="slide" />
-                                ))
-                            )}
-
-                            {!isMainSliderAuto && sliderImages.length > 1 && (
-                                <>
-                                    <button onClick={prevMainSlide} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                                    </button>
-                                    <button onClick={nextMainSlide} className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                                    </button>
-
-                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
-                                        {sliderImages.map((_, idx) => (
-                                            <div key={`dot_${idx}`} className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all shadow-sm ${currentSlide === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                    isClassicTemplate ? (
+                        <div className="animate-fade-in-up">
+                            <section className={heroSectionClass}>
+                                {safeConfig.slider_style === 'auto_slide' ? (
+                                    <div
+                                        className="absolute inset-0 flex transition-transform duration-700 ease-in-out z-10"
+                                        style={{ transform: `translateX(-${currentSlide * 100}%)`, width: `${sliderImages.length * 100}%` }}
+                                    >
+                                        {sliderImages.map((img, idx) => (
+                                            <img key={idx} src={img} className="w-full h-full object-cover opacity-70" style={{ width: `${100 / sliderImages.length}%` }} alt="slide" />
                                         ))}
                                     </div>
-                                </>
-                            )}
+                                ) : (
+                                    sliderImages.map((img, idx) => (
+                                        <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-70 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                                    ))
+                                )}
 
-                            {(() => {
-                                let finalPos = { title: { x: 10, y: 20, w: 80, size: 48, align: 'center' }, subtitle: { x: 30, y: 50, w: 80, size: 18, align: 'center' } };
-                                try {
-                                    if (safeConfig.welcome_text_pos) {
-                                        const parsed = typeof safeConfig.welcome_text_pos === 'string' ? JSON.parse(safeConfig.welcome_text_pos) : safeConfig.welcome_text_pos;
-                                        if (parsed.title) finalPos.title = { ...finalPos.title, ...parsed.title };
-                                        if (parsed.subtitle) finalPos.subtitle = { ...finalPos.subtitle, ...parsed.subtitle };
-                                    }
-                                } catch (e) { }
-
-                                return (
+                                {!isMainSliderAuto && sliderImages.length > 1 && (
                                     <>
-                                        <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
-                                            style={{ left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.title.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.title.w))}%`, maxWidth: '100vw' }}>
-                                            <h1 className={`text-white leading-tight drop-shadow-2xl whitespace-pre-wrap w-full ${isClassicTemplate ? 'font-black tracking-tight' : 'font-black'}`}
-                                                style={{ textAlign: finalPos.title.align, fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` }}>
-                                                {safeConfig.welcome_title || "Welcome"}
-                                            </h1>
-                                        </div>
+                                        <button onClick={prevMainSlide} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                        </button>
+                                        <button onClick={nextMainSlide} className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                        </button>
 
-                                        <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
-                                            style={{ left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.subtitle.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.subtitle.w))}%`, maxWidth: '100vw' }}>
-                                            <p className={`text-slate-200 drop-shadow-lg whitespace-pre-wrap w-full ${isClassicTemplate ? 'font-semibold' : 'font-medium'}`}
-                                                style={{ textAlign: finalPos.subtitle.align, fontSize: `clamp(0.9rem, ${finalPos.subtitle.size * 0.08}vw, ${finalPos.subtitle.size}px)` }}>
-                                                {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
-                                            </p>
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+                                            {sliderImages.map((_, idx) => (
+                                                <div key={`dot_${idx}`} className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all shadow-sm ${currentSlide === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                            ))}
                                         </div>
                                     </>
-                                );
-                            })()}
-                        </section>
+                                )}
 
-                        <section className={aboutSectionClass}>
-                            <div className="max-w-3xl mx-auto">
-                                <h2 className={aboutTitleClass}>{t.aboutUs}</h2>
-                                <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: cleanDescription || "Information updating..." }} />
-                            </div>
-                        </section>
-                    </div>
+                                {(() => {
+                                    let finalPos = { title: { x: 10, y: 20, w: 80, size: 48, align: 'center' }, subtitle: { x: 30, y: 50, w: 80, size: 18, align: 'center' } };
+                                    try {
+                                        if (safeConfig.welcome_text_pos) {
+                                            const parsed = typeof safeConfig.welcome_text_pos === 'string' ? JSON.parse(safeConfig.welcome_text_pos) : safeConfig.welcome_text_pos;
+                                            if (parsed.title) finalPos.title = { ...finalPos.title, ...parsed.title };
+                                            if (parsed.subtitle) finalPos.subtitle = { ...finalPos.subtitle, ...parsed.subtitle };
+                                        }
+                                    } catch (e) { }
+
+                                    return (
+                                        <>
+                                            <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
+                                                style={{ left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.title.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.title.w))}%`, maxWidth: '100vw' }}>
+                                                <h1 className="text-white leading-tight drop-shadow-2xl whitespace-pre-wrap w-full font-black tracking-tight"
+                                                    style={{ textAlign: finalPos.title.align, fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` }}>
+                                                    {safeConfig.welcome_title || "Welcome"}
+                                                </h1>
+                                            </div>
+
+                                            <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
+                                                style={{ left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.subtitle.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.subtitle.w))}%`, maxWidth: '100vw' }}>
+                                                <p className="text-slate-200 drop-shadow-lg whitespace-pre-wrap w-full font-semibold"
+                                                    style={{ textAlign: finalPos.subtitle.align, fontSize: `clamp(0.9rem, ${finalPos.subtitle.size * 0.08}vw, ${finalPos.subtitle.size}px)` }}>
+                                                    {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
+                                                </p>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                            </section>
+
+                            <section className={aboutSectionClass}>
+                                <div className="max-w-3xl mx-auto">
+                                    <h2 className={aboutTitleClass}>{t.aboutUs}</h2>
+                                    <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: cleanDescription || "Information updating..." }} />
+                                </div>
+                            </section>
+                        </div>
+                    ) : (
+                        <div className="animate-fade-in-up">
+                            <section className={heroSectionClass}>
+                                {safeConfig.slider_style === 'auto_slide' ? (
+                                    <div
+                                        className="absolute inset-0 flex transition-transform duration-700 ease-in-out z-10"
+                                        style={{ transform: `translateX(-${currentSlide * 100}%)`, width: `${sliderImages.length * 100}%` }}
+                                    >
+                                        {sliderImages.map((img, idx) => (
+                                            <img key={idx} src={img} className="w-full h-full object-cover opacity-60" style={{ width: `${100 / sliderImages.length}%` }} alt="slide" />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    sliderImages.map((img, idx) => (
+                                        <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                                    ))
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/45 to-slate-950/15 z-10"></div>
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_34%)] z-10 pointer-events-none"></div>
+
+                                {!isMainSliderAuto && sliderImages.length > 1 && (
+                                    <>
+                                        <button onClick={prevMainSlide} className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 md:p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                        </button>
+                                        <button onClick={nextMainSlide} className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 md:p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                        </button>
+                                    </>
+                                )}
+
+                                <div className="relative z-20 w-full max-w-[1400px] mx-auto px-6 md:px-12 pt-28 md:pt-36 pb-14 md:pb-20 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-end min-h-screen">
+                                    <div className="max-w-3xl">
+                                        <div className="text-white/70 uppercase tracking-[0.35em] text-[11px] md:text-xs font-black mb-5">Signature Stay</div>
+                                        <h1 className="text-white text-5xl md:text-7xl xl:text-[92px] leading-[0.95] font-light tracking-[-0.04em] mb-6 whitespace-pre-wrap">
+                                            {safeConfig.welcome_title || hotelDisplayName}
+                                        </h1>
+                                        <p className="text-base md:text-xl text-white/82 font-light max-w-2xl leading-relaxed whitespace-pre-wrap">
+                                            {safeConfig.welcome_subtitle || "A cinematic arrival, curated spaces, and a reservation journey designed to feel premium from the first scroll."}
+                                        </p>
+                                        <div className="mt-10 flex flex-wrap gap-4">
+                                            <button onClick={() => setActiveMenu('ROOMS')} className="theme-bg theme-hover text-white px-8 py-4 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl">
+                                                Explore Rooms
+                                            </button>
+                                            <button onClick={() => setActiveMenu('CONTACT')} className="px-8 py-4 text-sm font-bold tracking-[0.2em] uppercase text-white border border-white/30 hover:bg-white/10 transition-colors">
+                                                Get Directions
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="justify-self-stretch lg:justify-self-end w-full max-w-xl lg:max-w-md">
+                                        <div className="backdrop-blur-xl bg-white/10 border border-white/15 shadow-[0_30px_80px_rgba(15,23,42,0.35)] p-6 md:p-8 text-white">
+                                            <div className="text-[10px] uppercase tracking-[0.34em] font-black text-white/60 mb-4">Editorial Preview</div>
+                                            <h2 className="text-2xl md:text-3xl font-light leading-tight mb-4">{hotelDisplayName}</h2>
+                                            <div className="w-12 h-px bg-white/50 mb-5"></div>
+                                            <div className="text-sm md:text-base text-white/78 font-light leading-relaxed line-clamp-6" dangerouslySetInnerHTML={{ __html: cleanDescription || "Experience a refined stay with memorable views, thoughtful hospitality, and tailored comfort." }} />
+                                            <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <div className="text-white/45 uppercase tracking-[0.24em] text-[10px] font-black mb-1">Contact</div>
+                                                    <div className="text-white/90 font-medium whitespace-pre-wrap">{sns?.phone || safeConfig.contact_phone || 'Available on request'}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-white/45 uppercase tracking-[0.24em] text-[10px] font-black mb-1">Email</div>
+                                                    <div className="text-white/90 font-medium break-all">{sns?.email || safeConfig.contact_email || 'contact@hotel.com'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className={aboutSectionClass}>
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-full bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.04),transparent_55%)]"></div>
+                                </div>
+                                <div className="relative z-10 max-w-4xl mx-auto">
+                                    <div className="text-[11px] uppercase tracking-[0.34em] font-black text-slate-400 mb-4">About</div>
+                                    <h2 className={aboutTitleClass}>{hotelDisplayName}</h2>
+                                    <div className="w-14 h-px theme-bg mx-auto mb-10"></div>
+                                    <div className={`${htmlRenderClass} text-center font-light`} dangerouslySetInnerHTML={{ __html: cleanDescription || "Information updating..." }} />
+                                </div>
+                            </section>
+                        </div>
+                    )
                 )}
 
                 {/* 💡 예약 화면 (BOOK) */}
@@ -1852,156 +1947,276 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 🍴 FACILITIES */}
                 {activeMenu === 'FACILITIES' && (
-                    <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
-                        {facilities.length > 0 ? (
-                            <div>
-                                <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
-                                    {facilities.map((fac, idx) => (
-                                        <button key={idx} onClick={(e) => handleTabClick(e, setActiveFacIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeFacIdx === idx ? tabActiveClass : tabIdleClass}`}>{fac.title || 'Facility'}</button>
-                                    ))}
-                                </div>
-                                <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px`}>
-                                    <div className="lg:col-span-7 flex flex-col gap-6">
-                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
-                                            {(() => {
-                                                const activeItem = facilities[activeFacIdx] || {};
-                                                let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"]);
+                    isClassicTemplate ? (
+                        <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
+                            {facilities.length > 0 ? (
+                                <div>
+                                    <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
+                                        {facilities.map((fac, idx) => (
+                                            <button key={idx} onClick={(e) => handleTabClick(e, setActiveFacIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeFacIdx === idx ? tabActiveClass : tabIdleClass}`}>{fac.title || 'Facility'}</button>
+                                        ))}
+                                    </div>
+                                    <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px`}>
+                                        <div className="lg:col-span-7 flex flex-col gap-6">
+                                            <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
+                                                {(() => {
+                                                    const activeItem = facilities[activeFacIdx] || {};
+                                                    let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"]);
 
-                                                return (
-                                                    <>
-                                                        {images.map((img, idx) => (
-                                                            <img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" />
-                                                        ))}
+                                                    return (
+                                                        <>
+                                                            {images.map((img, idx) => (
+                                                                <img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" />
+                                                            ))}
 
-                                                        {/* 💡 [수정] 부대시설 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
-                                                        {!isFacSliderAuto && images.length > 1 && (
-                                                            <>
-                                                                <button onClick={() => prevFacSlide(images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                                                                </button>
-                                                                <button onClick={() => nextFacSlide(images.length)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                                                                </button>
-
-                                                                {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
-                                                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
-                                                                    {images.map((_, idx) => (
-                                                                        <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(facSlideIdx % images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
-                                                                    ))}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
+                                                            {!isFacSliderAuto && images.length > 1 && (
+                                                                <>
+                                                                    <button onClick={() => prevFacSlide(images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                    </button>
+                                                                    <button onClick={() => nextFacSlide(images.length)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                    </button>
+                                                                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
+                                                                        {images.map((_, idx) => (
+                                                                            <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(facSlideIdx % images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                                                        ))}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+                                        <div className="lg:col-span-3 flex flex-col justify-center">
+                                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{facilities[activeFacIdx]?.title}</h3>
+                                            <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: facilities[activeFacIdx]?.description || '' }} />
                                         </div>
                                     </div>
-                                    <div className="lg:col-span-3 flex flex-col justify-center">
-                                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 border-b border-slate-300 pb-2 inline-block self-start whitespace-pre-wrap">{facilities[activeFacIdx]?.title}</h3>
-                                        <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: facilities[activeFacIdx]?.description || '' }} />
+                                </div>
+                            ) : <p className="text-center text-slate-400 font-bold py-20">{t.noFac}</p>}
+                        </section>
+                    ) : (
+                        <section className="pt-28 md:pt-36 pb-24 px-6 md:px-10 max-w-[1400px] mx-auto animate-fade-in-up w-full flex-grow">
+                            {facilities.length > 0 ? (
+                                <div>
+                                    <div className="text-center mb-16 md:mb-24">
+                                        <div className="text-[11px] uppercase tracking-[0.34em] font-black text-slate-400 mb-4">Experience</div>
+                                        <h2 className="text-4xl md:text-6xl font-light text-slate-900">World-Class Facilities</h2>
+                                    </div>
+                                    <div className="space-y-20 md:space-y-28">
+                                        {facilities.map((fac, idx) => {
+                                            const images = fac.image_urls?.length > 0 ? fac.image_urls : (fac.image_url ? [fac.image_url] : ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"]);
+                                            return (
+                                                <article key={`${fac.title || 'facility'}_${idx}`} className={`grid grid-cols-1 lg:grid-cols-12 items-center gap-8 md:gap-10 ${idx % 2 !== 0 ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+                                                    <div className="lg:col-span-7">
+                                                        <div className="relative h-[300px] md:h-[420px] lg:h-[560px] overflow-hidden shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+                                                            <img src={images[0]} alt={fac.title || 'Facility'} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="lg:col-span-5">
+                                                        <div className={`bg-white shadow-[0_25px_70px_rgba(15,23,42,0.10)] p-8 md:p-12 ${idx % 2 !== 0 ? 'lg:-mr-16' : 'lg:-ml-16'} relative z-10`}>
+                                                            <div className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-400 mb-4">Facility {String(idx + 1).padStart(2, '0')}</div>
+                                                            <h3 className="text-3xl md:text-4xl font-light text-slate-900 mb-5 whitespace-pre-wrap leading-tight">{fac.title || 'Facility'}</h3>
+                                                            <div className="w-12 h-px theme-bg mb-6"></div>
+                                                            <div className={`${htmlRenderClass} font-light`} dangerouslySetInnerHTML={{ __html: fac.description || '' }} />
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                            </div>
-                        ) : <p className="text-center text-slate-400 font-bold py-20">{t.noFac}</p>}
-                    </section>
+                            ) : <p className="text-center text-slate-400 font-bold py-20">{t.noFac}</p>}
+                        </section>
+                    )
                 )}
 
                 {/* 🗺️ ATTRACTIONS */}
                 {activeMenu === 'ATTRACTIONS' && (
-                    <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
-                        {attractions.length > 0 ? (
-                            <div>
-                                <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
-                                    {attractions.map((att, idx) => (
-                                        <button key={idx} onClick={(e) => handleTabClick(e, setActiveAttIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeAttIdx === idx ? tabActiveClass : tabIdleClass}`}>{att.title || 'Attraction'}</button>
-                                    ))}
-                                </div>
-                                <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px`}>
-                                    <div className="lg:col-span-7 flex flex-col gap-6">
-                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
-                                            {(() => {
-                                                const activeItem = attractions[activeAttIdx] || {};
-                                                let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"]);
+                    isClassicTemplate ? (
+                        <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
+                            {attractions.length > 0 ? (
+                                <div>
+                                    <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
+                                        {attractions.map((att, idx) => (
+                                            <button key={idx} onClick={(e) => handleTabClick(e, setActiveAttIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeAttIdx === idx ? tabActiveClass : tabIdleClass}`}>{att.title || 'Attraction'}</button>
+                                        ))}
+                                    </div>
+                                    <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px`}>
+                                        <div className="lg:col-span-7 flex flex-col gap-6">
+                                            <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
+                                                {(() => {
+                                                    const activeItem = attractions[activeAttIdx] || {};
+                                                    let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"]);
 
-                                                return (
-                                                    <>
-                                                        {images.map((img, idx) => (
-                                                            <img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" />
-                                                        ))}
+                                                    return (
+                                                        <>
+                                                            {images.map((img, idx) => (
+                                                                <img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" />
+                                                            ))}
 
-                                                        {/* 💡 [수정] 관광지 갤러리: 화살표 항상 노출 & 하단 점(Dots) 추가 */}
-                                                        {!isAttSliderAuto && images.length > 1 && (
-                                                            <>
-                                                                <button onClick={() => prevAttSlide(images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                                                                </button>
-                                                                <button onClick={() => nextAttSlide(images.length)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                                                                </button>
-
-                                                                {/* 모바일 화면용 사진 위치 표시 점(Dots) */}
-                                                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
-                                                                    {images.map((_, idx) => (
-                                                                        <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(attSlideIdx % images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
-                                                                    ))}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
+                                                            {!isAttSliderAuto && images.length > 1 && (
+                                                                <>
+                                                                    <button onClick={() => prevAttSlide(images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                    </button>
+                                                                    <button onClick={() => nextAttSlide(images.length)} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 md:p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all opacity-80 hover:opacity-100">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                    </button>
+                                                                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
+                                                                        {images.map((_, idx) => (
+                                                                            <div key={`dot_${idx}`} className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all shadow-sm ${(attSlideIdx % images.length) === idx ? 'bg-white scale-125' : 'bg-white/50'}`}></div>
+                                                                        ))}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+                                        <div className="lg:col-span-3 flex flex-col justify-center">
+                                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{attractions[activeAttIdx]?.title}</h3>
+                                            <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: attractions[activeAttIdx]?.description || '' }} />
                                         </div>
                                     </div>
-                                    <div className="lg:col-span-3 flex flex-col justify-center">
-                                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{attractions[activeAttIdx]?.title}</h3>
-                                        <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: attractions[activeAttIdx]?.description || '' }} />
+                                </div>
+                            ) : <p className="text-center text-slate-400 font-bold py-20">{t.noAtt}</p>}
+                        </section>
+                    ) : (
+                        <section className="pt-28 md:pt-36 pb-24 px-6 md:px-10 max-w-[1400px] mx-auto animate-fade-in-up w-full flex-grow">
+                            {attractions.length > 0 ? (
+                                <div>
+                                    <div className="text-center mb-16 md:mb-20">
+                                        <div className="text-[11px] uppercase tracking-[0.34em] font-black text-slate-400 mb-4">Location</div>
+                                        <h2 className="text-4xl md:text-6xl font-light text-slate-900">Explore The Area</h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
+                                        {attractions.map((att, idx) => {
+                                            const images = att.image_urls?.length > 0 ? att.image_urls : (att.image_url ? [att.image_url] : ["https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"]);
+                                            return (
+                                                <article key={`${att.title || 'attraction'}_${idx}`} className="bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] overflow-hidden group flex flex-col">
+                                                    <div className="relative h-[260px] overflow-hidden">
+                                                        <img src={images[0]} alt={att.title || 'Attraction'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent"></div>
+                                                    </div>
+                                                    <div className="p-7 md:p-8 flex flex-col flex-1">
+                                                        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-400 mb-3">Destination {String(idx + 1).padStart(2, '0')}</div>
+                                                        <h3 className="text-2xl md:text-3xl font-light text-slate-900 mb-4 whitespace-pre-wrap leading-tight">{att.title || 'Attraction'}</h3>
+                                                        <div className={`${htmlRenderClass} font-light line-clamp-5`} dangerouslySetInnerHTML={{ __html: att.description || '' }} />
+                                                        <button type="button" onClick={() => { setActiveAttIdx(idx); }} className="mt-6 text-left theme-text text-sm font-bold tracking-[0.2em] uppercase hover:opacity-70 transition-opacity">
+                                                            View Highlight
+                                                        </button>
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                            </div>
-                        ) : <p className="text-center text-slate-400 font-bold py-20">{t.noAtt}</p>}
-                    </section>
+                            ) : <p className="text-center text-slate-400 font-bold py-20">{t.noAtt}</p>}
+                        </section>
+                    )
                 )}
 
                 {/* 📍 CONTACT 섹션 */}
                 {activeMenu === 'CONTACT' && (
-                    <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
-                        <div className={contactPanelClass}>
-                            <div className="lg:col-span-7 w-full h-[300px] md:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
-                                {safeConfig.map_embed_url ? (
-                                    <iframe
-                                        src={safeConfig.map_embed_url}
-                                        width="100%"
-                                        height="100%"
-                                        style={{ border: 0 }}
-                                        allowFullScreen=""
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                        title="Google Map"
-                                    ></iframe>
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm">{t.mapUpdating}</div>
-                                )}
-                            </div>
-                            <div className="lg:col-span-3 flex flex-col">
-                                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
-                                <div className="space-y-4 md:space-y-6 text-slate-600 flex-1">
-                                    <div>
-                                        <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{sns?.title || "Contact Us"}</p>
-                                        {(sns?.address || sns?.city || sns?.province) && (
-                                            <p className="flex items-start gap-3 mb-3 text-sm font-medium">
-                                                <span className="shrink-0 mt-0.5 text-base">🏠</span>
-                                                <span className="whitespace-pre-wrap">
-                                                    {[sns?.address, sns?.city, sns?.province, "Philippines"].filter(Boolean).join(", ")}
-                                                </span>
-                                            </p>
-                                        )}
-                                        {sns?.phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{sns.phone}</span></p>}
-                                        {sns?.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{sns.email}</span></p>}
+                    isClassicTemplate ? (
+                        <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
+                            <div className={contactPanelClass}>
+                                <div className="lg:col-span-7 w-full h-[300px] md:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
+                                    {safeConfig.map_embed_url ? (
+                                        <iframe
+                                            src={safeConfig.map_embed_url}
+                                            width="100%"
+                                            height="100%"
+                                            style={{ border: 0 }}
+                                            allowFullScreen=""
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                            title="Google Map"
+                                        ></iframe>
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm">{t.mapUpdating}</div>
+                                    )}
+                                </div>
+                                <div className="lg:col-span-3 flex flex-col">
+                                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
+                                    <div className="space-y-4 md:space-y-6 text-slate-600 flex-1">
+                                        <div>
+                                            <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{sns?.title || "Contact Us"}</p>
+                                            {(sns?.address || sns?.city || sns?.province) && (
+                                                <p className="flex items-start gap-3 mb-3 text-sm font-medium">
+                                                    <span className="shrink-0 mt-0.5 text-base">🏠</span>
+                                                    <span className="whitespace-pre-wrap">
+                                                        {[sns?.address, sns?.city, sns?.province, "Philippines"].filter(Boolean).join(", ")}
+                                                    </span>
+                                                </p>
+                                            )}
+                                            {sns?.phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{sns.phone}</span></p>}
+                                            {sns?.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{sns.email}</span></p>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    ) : (
+                        <section className="pt-28 md:pt-36 pb-24 px-6 md:px-10 max-w-[1400px] mx-auto animate-fade-in-up w-full flex-grow">
+                            <div className="relative overflow-hidden bg-slate-950 text-white shadow-[0_32px_80px_rgba(15,23,42,0.25)]">
+                                <div className="absolute inset-y-0 right-0 w-1/2 theme-bg opacity-15 pointer-events-none"></div>
+                                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-0">
+                                    <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                                        <div className="text-[11px] uppercase tracking-[0.34em] font-black text-white/45 mb-4">Connect</div>
+                                        <h2 className="text-4xl md:text-6xl font-light leading-[1.02] mb-8">Ready for an unforgettable stay?</h2>
+                                        <div className="space-y-7 text-white/78">
+                                            <div>
+                                                <div className="text-[10px] uppercase tracking-[0.28em] font-black text-white/45 mb-2">Property</div>
+                                                <p className="text-lg md:text-xl text-white font-medium">{sns?.title || hotelDisplayName}</p>
+                                            </div>
+                                            {(sns?.address || sns?.city || sns?.province) && (
+                                                <div>
+                                                    <div className="text-[10px] uppercase tracking-[0.28em] font-black text-white/45 mb-2">Address</div>
+                                                    <p className="text-base md:text-lg font-light whitespace-pre-wrap">{[sns?.address, sns?.city, sns?.province, "Philippines"].filter(Boolean).join(", ")}</p>
+                                                </div>
+                                            )}
+                                            {sns?.phone && (
+                                                <div>
+                                                    <div className="text-[10px] uppercase tracking-[0.28em] font-black text-white/45 mb-2">Phone</div>
+                                                    <p className="text-base md:text-lg font-light whitespace-pre-wrap">{sns.phone}</p>
+                                                </div>
+                                            )}
+                                            {sns?.email && (
+                                                <div>
+                                                    <div className="text-[10px] uppercase tracking-[0.28em] font-black text-white/45 mb-2">Email</div>
+                                                    <p className="text-base md:text-lg font-light break-all">{sns.email}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="p-6 md:p-8 lg:p-10">
+                                        <div className="h-[320px] md:h-[520px] bg-white/5 border border-white/10 backdrop-blur-sm overflow-hidden [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
+                                            {safeConfig.map_embed_url ? (
+                                                <iframe
+                                                    src={safeConfig.map_embed_url}
+                                                    width="100%"
+                                                    height="100%"
+                                                    style={{ border: 0 }}
+                                                    allowFullScreen=""
+                                                    loading="lazy"
+                                                    referrerPolicy="no-referrer-when-downgrade"
+                                                    title="Google Map"
+                                                ></iframe>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white/50 font-bold text-sm">{t.mapUpdating}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )
                 )}
 
                 {/* 💡 고객용 MY PAGE */}
