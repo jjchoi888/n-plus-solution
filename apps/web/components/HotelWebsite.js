@@ -370,6 +370,7 @@ export default function HotelWebsite({ domain }) {
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
     const [googlePendingProfile, setGooglePendingProfile] = useState(null);
+    const [postAuthDestination, setPostAuthDestination] = useState('');
     const [countryOptions] = useState(buildCountryOptions);
     const [showAuthCountryMenu, setShowAuthCountryMenu] = useState(false);
     const [memberRewardsSnapshot, setMemberRewardsSnapshot] = useState({
@@ -384,6 +385,26 @@ export default function HotelWebsite({ domain }) {
 
     const t = translations[lang] || translations.en;
     const hotelCode = getEffectiveHotelCode();
+
+    const navigateAfterAuth = (destination = postAuthDestination) => {
+        const normalizedDestination = String(destination || '').toUpperCase();
+        setPostAuthDestination('');
+        if (!normalizedDestination) return;
+        if (normalizedDestination === 'MYPAGE_REWARDS' && typeof window !== 'undefined') {
+            sessionStorage.setItem('nplus_open_rewards', '1');
+        }
+        if (normalizedDestination === 'MYPAGE' || normalizedDestination === 'MYPAGE_REWARDS') {
+            setActiveMenu('MYPAGE');
+            if (typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    };
+
+    const closeGuestAuthModal = () => {
+        setShowGuestAuthModal(false);
+        setPostAuthDestination('');
+    };
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -487,6 +508,7 @@ export default function HotelWebsite({ domain }) {
             setGuestRegion(existingUser.region || '');
             setGuestDob(existingUser.dob || '');
             setGuestDocumentUrl(existingUser.document_url || '');
+            navigateAfterAuth();
             return;
         }
 
@@ -556,6 +578,7 @@ export default function HotelWebsite({ domain }) {
                 setGuestDob(freshUser.dob || '');
                 setGuestDocumentUrl(freshUser.document_url || '');
                 setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '', referralCode: '' });
+                navigateAfterAuth();
             } else {
                 setAlertMessage("❌ " + (data.message || t.authFailed));
             }
@@ -676,6 +699,7 @@ export default function HotelWebsite({ domain }) {
             setAuthForm({ email: '', pw: '', pwConfirm: '', first: '', last: '', phone: '', nationality: '', referralCode: '' });
             setGooglePendingProfile(null);
             setGuestAuthMode('LOGIN');
+            navigateAfterAuth();
         } catch (err) {
             setAlertMessage("🚨 " + t.serverError);
         }
@@ -1191,13 +1215,85 @@ export default function HotelWebsite({ domain }) {
         : "md:hidden fixed inset-0 top-[72px] z-40 bg-slate-950/90 backdrop-blur-md";
     const mobileMenuButtonClass = isClassicTemplate
         ? "flex h-20 w-20 items-center justify-center rounded-full bg-white/85 px-3 text-center text-xs font-black shadow-2xl backdrop-blur-md transition-transform active:scale-95"
-        : "flex h-20 w-20 items-center justify-center rounded-none bg-white/10 border border-white/10 px-3 text-center text-xs font-black text-white shadow-2xl backdrop-blur-md transition-transform active:scale-95";
+        : "flex h-20 w-20 items-center justify-center rounded-none bg-white/85 border border-white/45 px-3 text-center text-xs font-black text-slate-900 shadow-2xl backdrop-blur-md transition-transform active:scale-95";
+    const mobileMenuActiveClass = isClassicTemplate
+        ? "theme-text ring-4 ring-white/40"
+        : "theme-text bg-white/90 border-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.24)]";
+    const mobileMenuIdleClass = isClassicTemplate
+        ? "text-slate-900"
+        : "text-slate-900 hover:bg-white/90 hover:border-white/70";
 
     const renderPriceStr = (price, name) => {
         if (lang === 'ko') return `${name} 객실을 ₱${price.toLocaleString()}${t.night} ${t.startingFrom}`;
         if (lang === 'zh') return `${t.expStart} ${name} ${t.startingFrom} ₱${price.toLocaleString()}${t.night}`;
         if (lang === 'ja') return `${name} を ₱${price.toLocaleString()}${t.night} からご体験ください。`;
         return `${t.expStart} ${name} ${t.startingFrom} ₱${price.toLocaleString()}${t.night}.`;
+    };
+
+    const renderMobileMenuIcon = (menuId) => {
+        const iconClass = "h-7 w-7";
+        switch (menuId) {
+            case 'HOME':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 10.5 12 3l9 7.5" />
+                        <path d="M5.5 9.5V21h13V9.5" />
+                        <path d="M9.5 21v-6h5v6" />
+                    </svg>
+                );
+            case 'ROOMS':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 19v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7" />
+                        <path d="M4 14h16" />
+                        <path d="M7 10V7.5A1.5 1.5 0 0 1 8.5 6h3A1.5 1.5 0 0 1 13 7.5V10" />
+                        <path d="M20 19v2M4 19v2" />
+                    </svg>
+                );
+            case 'FACILITIES':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="4" y="4" width="6" height="6" rx="1.2" />
+                        <rect x="14" y="4" width="6" height="6" rx="1.2" />
+                        <rect x="4" y="14" width="6" height="6" rx="1.2" />
+                        <rect x="14" y="14" width="6" height="6" rx="1.2" />
+                    </svg>
+                );
+            case 'ATTRACTIONS':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z" />
+                        <circle cx="12" cy="10" r="2.4" />
+                    </svg>
+                );
+            case 'CONTACT':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M22 16.92v2a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 3.08 4.18 2 2 0 0 1 5.06 2h2a2 2 0 0 1 2 1.72l.38 2.65a2 2 0 0 1-.57 1.67l-1.3 1.3a16 16 0 0 0 7.14 7.14l1.3-1.3a2 2 0 0 1 1.67-.57l2.65.38A2 2 0 0 1 22 16.92Z" />
+                    </svg>
+                );
+            case 'MYPAGE':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.5" />
+                        <path d="M5 20a7 7 0 0 1 14 0" />
+                    </svg>
+                );
+            case 'LOGIN_SIGNUP':
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                        <path d="M10 17l5-5-5-5" />
+                        <path d="M15 12H3" />
+                    </svg>
+                );
+            default:
+                return (
+                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="8" />
+                    </svg>
+                );
+        }
     };
 
     // 💡 [수정됨] 복잡한 계산식과 함수들을 return 밖으로 완전히 빼내어 문법 에러 원천 차단
@@ -1555,8 +1651,9 @@ export default function HotelWebsite({ domain }) {
                                             setActiveMenu(menu.id);
                                         }
                                         setIsMobileMenuOpen(false);
-                                    }} className={`${mobileMenuButtonClass} ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? (isClassicTemplate ? 'theme-text ring-4 ring-white/40' : 'theme-text border-[var(--theme-color)] bg-white/15') : (isClassicTemplate ? 'text-slate-900' : 'text-white')}`}>
-                                        {menu.label}
+                                    }} className={`${mobileMenuButtonClass} ${(menu.id !== 'LOGIN_SIGNUP' && activeMenu === menu.id) ? mobileMenuActiveClass : mobileMenuIdleClass}`} aria-label={menu.label} title={menu.label}>
+                                        {renderMobileMenuIcon(menu.id)}
+                                        <span className="sr-only">{menu.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -2495,12 +2592,15 @@ export default function HotelWebsite({ domain }) {
                                             <button
                                                 type="button"
                                                 onClick={() => {
+                                                    const rewardTarget = (rewardPopup?.ctaTarget || 'MYPAGE_REWARDS').toUpperCase();
                                                     dismissRewardPopup();
-                                                    if ((rewardPopup?.ctaTarget || '').toUpperCase() === 'MYPAGE_REWARDS') {
-                                                        sessionStorage.setItem('nplus_open_rewards', '1');
+                                                    if (user) {
+                                                        navigateAfterAuth(rewardTarget);
+                                                        return;
                                                     }
-                                                    setActiveMenu('MYPAGE');
-                                                    if (!user) setShowGuestAuthModal(true);
+                                                    setPostAuthDestination(rewardTarget);
+                                                    setGuestAuthMode('REGISTER');
+                                                    setShowGuestAuthModal(true);
                                                 }}
                                                 className={`py-3 rounded-xl font-black shadow-lg ${popupTheme.ctaBtn} transition-opacity hover:opacity-90`}
                                             >
@@ -2562,11 +2662,11 @@ export default function HotelWebsite({ domain }) {
 
                 {/* 💡 고객 인증(Auth) 모달창 */}
                 {showGuestAuthModal && (
-                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1100] p-4 animate-fade-in" onClick={() => setShowGuestAuthModal(false)}>
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1100] p-4 animate-fade-in" onClick={closeGuestAuthModal}>
                         <div className="bg-white w-full max-w-[400px] overflow-hidden transform transition-all border border-slate-200 shadow-2xl rounded-3xl" onClick={e => e.stopPropagation()}>
                             <div className="p-8 overflow-y-auto max-h-[90vh] custom-scrollbar">
                                 <div className="flex justify-end mb-2">
-                                    <button onClick={() => setShowGuestAuthModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+                                    <button onClick={closeGuestAuthModal} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
                                 </div>
 
                                 {guestAuthMode === 'LOGIN' ? (
