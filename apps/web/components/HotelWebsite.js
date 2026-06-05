@@ -1232,7 +1232,7 @@ export default function HotelWebsite({ domain }) {
 
     const renderMobileMenuIcon = (menuId) => {
         const iconClass = "h-7 w-7";
-        const imageIconClass = "h-8 w-8 object-contain";
+        const imageIconClass = "h-10 w-10 object-contain";
         switch (menuId) {
             case 'HOME':
                 return (
