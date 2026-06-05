@@ -1073,8 +1073,16 @@ export default function HotelWebsite({ domain }) {
         }
     } catch (e) { }
 
-    const themeColor = safeConfig.theme_color?.startsWith('#') ? safeConfig.theme_color : '#2563eb';
+    const rawDescription = String(safeConfig.description || '');
+    const descriptionTemplateMatch = rawDescription.match(/<!--TEMPLATE:(.*?)-->/);
+    const hiddenTemplate = descriptionTemplateMatch ? descriptionTemplateMatch[1].trim() : '';
+    const rawThemeColor = String(safeConfig.theme_color || '#2563eb');
+    const [normalizedThemeColor, legacyThemeTemplate = ''] = rawThemeColor.split('|');
+    const themeColor = normalizedThemeColor?.startsWith('#') ? normalizedThemeColor : '#2563eb';
     const themeFont = safeConfig.theme_font || 'Inter';
+    const cleanDescription = rawDescription.replace(/<!--TEMPLATE:.*?-->/g, '');
+    const websiteTemplate = hiddenTemplate || textPos.template || sns.website_template || safeConfig.website_template || legacyThemeTemplate || 'modern';
+    const isClassicTemplate = websiteTemplate === 'classic';
 
     const sliderImages = [];
     if (gallery.length > 0) sliderImages.push(...gallery);
@@ -1133,7 +1141,47 @@ export default function HotelWebsite({ domain }) {
     }, [checkIn, checkOut, activeRoom, hotelCode, activeMenu]);
 
     const handleTabClick = (e, setter, value) => { setter(value); if (e.target) e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); };
-    const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
+    const htmlRenderClass = isClassicTemplate
+        ? "leading-relaxed text-stone-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2"
+        : "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
+    const pageShellClass = isClassicTemplate
+        ? "min-h-screen bg-[#f5efe6] flex flex-col animate-fade-in custom-font selection:bg-slate-700 selection:text-white"
+        : "min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white";
+    const headerClass = isClassicTemplate
+        ? "fixed top-0 w-full z-50 bg-[#fffaf2]/95 backdrop-blur-md shadow-[0_10px_30px_rgba(15,23,42,0.08)] border-b border-stone-200/80"
+        : "fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm";
+    const navWrapClass = isClassicTemplate
+        ? "hidden md:flex gap-8 font-black text-sm text-stone-500 uppercase tracking-[0.2em]"
+        : "hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest";
+    const navActiveClass = isClassicTemplate ? "text-slate-900 border-b-2 border-stone-400" : "theme-text border-b-2 theme-border";
+    const navIdleClass = isClassicTemplate ? "hover:text-slate-900" : "hover:theme-text";
+    const primaryActionClass = isClassicTemplate
+        ? "theme-bg theme-hover text-white px-3 md:px-7 py-2 md:py-2.5 rounded-md font-black shadow-md text-xs md:text-base whitespace-nowrap"
+        : "theme-bg theme-hover text-white px-3 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap";
+    const secondaryActionClass = isClassicTemplate
+        ? "px-3 md:px-4 py-2 border theme-border theme-text rounded-md font-bold text-xs md:text-sm hover:bg-white/60 transition-colors whitespace-nowrap"
+        : "px-3 md:px-4 py-2 border theme-border theme-text rounded-full font-bold text-xs md:text-sm hover:bg-slate-50 transition-colors whitespace-nowrap";
+    const heroSectionClass = isClassicTemplate
+        ? "relative h-[78vh] flex flex-col items-center justify-center mt-[78px] overflow-hidden bg-stone-900 group"
+        : "relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900 group";
+    const aboutSectionClass = isClassicTemplate
+        ? "py-20 px-6 md:px-8 bg-[#fbf7f1] text-center border-y border-stone-200"
+        : "py-24 px-8 bg-white text-center";
+    const aboutTitleClass = isClassicTemplate
+        ? "text-3xl md:text-4xl font-black mb-6 text-slate-800 tracking-tight"
+        : "text-3xl font-black mb-8 theme-text";
+    const tabActiveClass = isClassicTemplate
+        ? "bg-white text-slate-800 shadow-[0_-4px_10px_rgba(15,23,42,0.05)] text-base md:text-lg z-10 relative"
+        : "bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative";
+    const tabIdleClass = isClassicTemplate
+        ? "bg-stone-100 text-stone-500 hover:bg-stone-200 text-xs md:text-sm mt-1.5 md:mt-2"
+        : "bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2";
+    const panelClass = isClassicTemplate
+        ? "bg-white/90 rounded-b-[28px] rounded-tr-[28px] shadow-[0_20px_60px_rgba(15,23,42,0.08)] border border-stone-200 p-5 md:p-8"
+        : "bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8";
+    const contactPanelClass = isClassicTemplate
+        ? "bg-white/90 rounded-[28px] shadow-[0_20px_60px_rgba(15,23,42,0.08)] border border-stone-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8"
+        : "bg-white rounded-2xl md:rounded-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8";
 
     const renderPriceStr = (price, name) => {
         if (lang === 'ko') return `${name} 객실을 ₱${price.toLocaleString()}${t.night} ${t.startingFrom}`;
@@ -1448,34 +1496,34 @@ export default function HotelWebsite({ domain }) {
         .theme-focus:focus { border-color: var(--theme-color) !important; box-shadow: 0 0 0 2px var(--theme-color-light) !important; outline: none; }
     `}} />
 
-            <div className="min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white" onContextMenu={(e) => e.preventDefault()}>
+            <div className={pageShellClass} onContextMenu={(e) => e.preventDefault()}>
 
                 {/* 헤더 */}
-                <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
+                <header className={headerClass}>
                     <div className="flex justify-between items-center px-6 md:px-12 py-4 relative z-50">
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveMenu('HOME')}>
-                            {safeConfig.logo_url ? <img src={safeConfig.logo_url} className="h-8 md:h-12 object-contain" alt="Logo" /> : <span className="text-2xl font-black theme-text uppercase">{safeConfig.welcome_title || 'LOGO'}</span>}
+                            {safeConfig.logo_url ? <img src={safeConfig.logo_url} className={isClassicTemplate ? "h-10 md:h-14 object-contain" : "h-8 md:h-12 object-contain"} alt="Logo" /> : <span className={`text-2xl font-black theme-text uppercase ${isClassicTemplate ? 'tracking-[0.12em]' : ''}`}>{safeConfig.welcome_title || 'LOGO'}</span>}
                         </div>
-                        <div className="hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest">
+                        <div className={navWrapClass}>
                             {[{ id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact }].map(menu => (
-                                <button key={menu.id} onClick={() => setActiveMenu(menu.id)} className={`transition-colors pb-1 ${activeMenu === menu.id ? 'theme-text border-b-2 theme-border' : 'hover:theme-text'}`}>{menu.label}</button>
+                                <button key={menu.id} onClick={() => setActiveMenu(menu.id)} className={`transition-colors pb-1 ${activeMenu === menu.id ? navActiveClass : navIdleClass}`}>{menu.label}</button>
                             ))}
                         </div>
                         <div className="flex items-center gap-2 md:gap-4">
-                            <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-3 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
+                            <button onClick={() => setActiveMenu('BOOK')} className={primaryActionClass}>{t.bookNow}</button>
 
                             <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                                 <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                             </select>
 
                             {!user ? (
-                                <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className="px-3 md:px-4 py-2 border theme-border theme-text rounded-full font-bold text-xs md:text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
+                                <button onClick={() => { setGuestAuthMode('LOGIN'); setShowGuestAuthModal(true); }} className={secondaryActionClass}>
                                     {t.loginBtn || 'Log In'}
                                 </button>
                             ) : (
                                 <div className="hidden sm:flex items-center gap-3">
                                     <span className="text-xs font-black text-slate-500 uppercase">{user.first_name || user.name}</span>
-                                    <button onClick={() => { setActiveMenu('MYPAGE'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-4 py-2 border theme-border theme-text rounded-full font-bold text-sm hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm">
+                                    <button onClick={() => { setActiveMenu('MYPAGE'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`${secondaryActionClass} shadow-sm`}>
                                         {t.myPageBtn}
                                     </button>
                                     <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">{t.logoutBtn}</button>
@@ -1509,19 +1557,19 @@ export default function HotelWebsite({ domain }) {
                 {/* 🏠 메인 화면 */}
                 {activeMenu === 'HOME' && (
                     <div className="animate-fade-in-up">
-                        <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900 group">
+                        <section className={heroSectionClass}>
                             {safeConfig.slider_style === 'auto_slide' ? (
                                 <div
                                     className="absolute inset-0 flex transition-transform duration-700 ease-in-out z-10"
                                     style={{ transform: `translateX(-${currentSlide * 100}%)`, width: `${sliderImages.length * 100}%` }}
                                 >
                                     {sliderImages.map((img, idx) => (
-                                        <img key={idx} src={img} className="w-full h-full object-cover opacity-60" style={{ width: `${100 / sliderImages.length}%` }} alt="slide" />
+                                        <img key={idx} src={img} className={`w-full h-full object-cover ${isClassicTemplate ? 'opacity-70' : 'opacity-60'}`} style={{ width: `${100 / sliderImages.length}%` }} alt="slide" />
                                     ))}
                                 </div>
                             ) : (
                                 sliderImages.map((img, idx) => (
-                                    <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                                    <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? `${isClassicTemplate ? 'opacity-70' : 'opacity-60'} z-10` : 'opacity-0 z-0'}`} alt="slide" />
                                 ))
                             )}
 
@@ -1556,7 +1604,7 @@ export default function HotelWebsite({ domain }) {
                                     <>
                                         <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
                                             style={{ left: `${Math.max(0, Math.min(90, finalPos.title.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.title.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.title.w))}%`, maxWidth: '100vw' }}>
-                                            <h1 className="text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap w-full"
+                                            <h1 className={`text-white leading-tight drop-shadow-2xl whitespace-pre-wrap w-full ${isClassicTemplate ? 'font-black tracking-tight' : 'font-black'}`}
                                                 style={{ textAlign: finalPos.title.align, fontSize: `clamp(1.5rem, ${finalPos.title.size * 0.08}vw, ${finalPos.title.size}px)` }}>
                                                 {safeConfig.welcome_title || "Welcome"}
                                             </h1>
@@ -1564,7 +1612,7 @@ export default function HotelWebsite({ domain }) {
 
                                         <div className="absolute z-20 px-4 transition-all duration-500 ease-out pointer-events-none"
                                             style={{ left: `${Math.max(0, Math.min(90, finalPos.subtitle.x))}%`, top: `${Math.max(0, Math.min(90, finalPos.subtitle.y))}%`, width: `${Math.max(20, Math.min(100, finalPos.subtitle.w))}%`, maxWidth: '100vw' }}>
-                                            <p className="text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap w-full"
+                                            <p className={`text-slate-200 drop-shadow-lg whitespace-pre-wrap w-full ${isClassicTemplate ? 'font-semibold' : 'font-medium'}`}
                                                 style={{ textAlign: finalPos.subtitle.align, fontSize: `clamp(0.9rem, ${finalPos.subtitle.size * 0.08}vw, ${finalPos.subtitle.size}px)` }}>
                                                 {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
                                             </p>
@@ -1574,10 +1622,10 @@ export default function HotelWebsite({ domain }) {
                             })()}
                         </section>
 
-                        <section className="py-24 px-8 bg-white text-center">
+                        <section className={aboutSectionClass}>
                             <div className="max-w-3xl mx-auto">
-                                <h2 className="text-3xl font-black mb-8 theme-text">{t.aboutUs}</h2>
-                                <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: safeConfig.description || "Information updating..." }} />
+                                <h2 className={aboutTitleClass}>{t.aboutUs}</h2>
+                                <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: cleanDescription || "Information updating..." }} />
                             </div>
                         </section>
                     </div>
@@ -1682,12 +1730,12 @@ export default function HotelWebsite({ domain }) {
                                 <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x relative z-10">
                                     {visibleRooms.map(r => (
                                         <button key={r.id} onClick={(e) => handleTabClick(e, setSelectedRoomId, r.id)}
-                                            className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${selectedRoomId === r.id || activeRoom.id === r.id ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>
+                                            className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-nowrap transition-all border-t border-l border-r border-slate-200 ${selectedRoomId === r.id || activeRoom.id === r.id ? tabActiveClass : tabIdleClass}`}>
                                             {r.name}
                                         </button>
                                     ))}
                                 </div>
-                                <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-30 -mt-px">
+                                <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-30 -mt-px`}>
                                     <div className="lg:col-span-7 flex flex-col gap-4 md:gap-6">
                                         <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
                                             {activeRoom.images && activeRoom.images.length > 0 ? (
@@ -1809,10 +1857,10 @@ export default function HotelWebsite({ domain }) {
                             <div>
                                 <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
                                     {facilities.map((fac, idx) => (
-                                        <button key={idx} onClick={(e) => handleTabClick(e, setActiveFacIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeFacIdx === idx ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>{fac.title || 'Facility'}</button>
+                                        <button key={idx} onClick={(e) => handleTabClick(e, setActiveFacIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeFacIdx === idx ? tabActiveClass : tabIdleClass}`}>{fac.title || 'Facility'}</button>
                                     ))}
                                 </div>
-                                <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
+                                <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px`}>
                                     <div className="lg:col-span-7 flex flex-col gap-6">
                                         <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
                                             {(() => {
@@ -1865,10 +1913,10 @@ export default function HotelWebsite({ domain }) {
                             <div>
                                 <div className="flex overflow-x-auto gap-2 mb-0 px-2 md:px-4 scrollbar-hide snap-x">
                                     {attractions.map((att, idx) => (
-                                        <button key={idx} onClick={(e) => handleTabClick(e, setActiveAttIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeAttIdx === idx ? 'bg-white theme-text shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-base md:text-lg z-10 relative' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs md:text-sm mt-1.5 md:mt-2'}`}>{att.title || 'Attraction'}</button>
+                                        <button key={idx} onClick={(e) => handleTabClick(e, setActiveAttIdx, idx)} className={`snap-center px-5 md:px-6 py-3 md:py-4 font-black rounded-t-2xl whitespace-pre-wrap leading-tight text-center transition-all border-t border-l border-r border-slate-200 ${activeAttIdx === idx ? tabActiveClass : tabIdleClass}`}>{att.title || 'Attraction'}</button>
                                     ))}
                                 </div>
-                                <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px">
+                                <div className={`${panelClass} grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8 relative z-0 -mt-px`}>
                                     <div className="lg:col-span-7 flex flex-col gap-6">
                                         <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900 group">
                                             {(() => {
@@ -1917,7 +1965,7 @@ export default function HotelWebsite({ domain }) {
                 {/* 📍 CONTACT 섹션 */}
                 {activeMenu === 'CONTACT' && (
                     <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
-                        <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8">
+                        <div className={contactPanelClass}>
                             <div className="lg:col-span-7 w-full h-[300px] md:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
                                 {safeConfig.map_embed_url ? (
                                     <iframe
