@@ -1232,6 +1232,7 @@ export default function HotelWebsite({ domain }) {
 
     const renderMobileMenuIcon = (menuId) => {
         const iconClass = "h-7 w-7";
+        const imageIconClass = "h-8 w-8 object-contain";
         switch (menuId) {
             case 'HOME':
                 return (
@@ -1243,28 +1244,15 @@ export default function HotelWebsite({ domain }) {
                 );
             case 'ROOMS':
                 return (
-                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M4 19v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7" />
-                        <path d="M4 14h16" />
-                        <path d="M7 10V7.5A1.5 1.5 0 0 1 8.5 6h3A1.5 1.5 0 0 1 13 7.5V10" />
-                        <path d="M20 19v2M4 19v2" />
-                    </svg>
+                    <img src="/rooms_icon.png" alt="" aria-hidden="true" className={imageIconClass} />
                 );
             case 'FACILITIES':
                 return (
-                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <rect x="4" y="4" width="6" height="6" rx="1.2" />
-                        <rect x="14" y="4" width="6" height="6" rx="1.2" />
-                        <rect x="4" y="14" width="6" height="6" rx="1.2" />
-                        <rect x="14" y="14" width="6" height="6" rx="1.2" />
-                    </svg>
+                    <img src="/facilities_icon.png" alt="" aria-hidden="true" className={imageIconClass} />
                 );
             case 'ATTRACTIONS':
                 return (
-                    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z" />
-                        <circle cx="12" cy="10" r="2.4" />
-                    </svg>
+                    <img src="/attractions_icon.png" alt="" aria-hidden="true" className={imageIconClass} />
                 );
             case 'CONTACT':
                 return (
