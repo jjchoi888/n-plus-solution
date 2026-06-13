@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 import BookingBar from "./BookingBar";
 import RoomList from "./RoomList";
 import { CONTACT_EMAIL, CONTACT_WHATSAPP_URL, openConfiguredContactEmail } from "../lib/contactChannels";
-import { FEATURED_HOTELS } from "../lib/hotelDirectory";
+import { fetchPortalHotels } from "../lib/portalHotels";
 
 const heroImages = [
   "/hero1.png",
@@ -141,6 +141,7 @@ export default function MainPortal() {
   const [searchData, setSearchData] = useState(null); 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [alertMessage, setAlertMessage] = useState("");
+  const [featuredHotels, setFeaturedHotels] = useState([]);
 
   const [activeView, setActiveView] = useState("HOME");
   const [loginEmail, setLoginEmail] = useState("");
@@ -174,6 +175,24 @@ export default function MainPortal() {
     document.addEventListener("contextmenu", preventRightClick);
     return () => document.removeEventListener("contextmenu", preventRightClick);
   }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadPortalHotels = async () => {
+      try {
+        const hotels = await fetchPortalHotels(lang);
+        if (!isCancelled) setFeaturedHotels(hotels);
+      } catch {
+        if (!isCancelled) setFeaturedHotels([]);
+      }
+    };
+
+    loadPortalHotels();
+    return () => {
+      isCancelled = true;
+    };
+  }, [lang]);
 
   const handleMenuClick = (action) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -425,25 +444,26 @@ export default function MainPortal() {
               </button>
 
               <div ref={sliderRef} className="flex overflow-x-auto gap-6 snap-x pb-8 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {FEATURED_HOTELS.map((dest, idx) => (
+                {featuredHotels.map((hotel, idx) => (
                   <div key={idx} className="snap-start shrink-0 w-full sm:w-[300px] md:w-[320px]">
-                    <a href={dest.url} className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200">
+                    <a href={hotel.url} className="block group relative h-[380px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-200">
                       <Image
-                        src={dest.img}
-                        alt={dest.name}
+                        src={hotel.image}
+                        alt={hotel.name}
                         fill
                         sizes="(max-width: 640px) 100vw, 320px"
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        unoptimized={String(hotel.image).startsWith("http")}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute bottom-0 left-0 w-full p-6 text-white transform transition-transform duration-300">
                         <p className="text-emerald-400 font-bold text-[10px] tracking-widest uppercase mb-2 flex items-center gap-1">
                           {t.partnerHotel} <span className="opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
                         </p>
-                        <h3 className="text-xl font-black mb-2">{dest.name}</h3>
+                        <h3 className="text-xl font-black mb-2">{hotel.name}</h3>
                         <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-300">
                            <p className="text-xs text-slate-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-t border-white/20 pt-2 flex items-center gap-2">
-                             <span>⚡</span> {t.poweredBy[dest.descKey]}
+                             <span>📍</span> {hotel.address}
                            </p>
                         </div>
                       </div>

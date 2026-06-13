@@ -1,10 +1,10 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { HOTEL_REGIONS } from "../lib/hotelDirectory";
+import { fetchPortalHotels, groupHotelsByProvince } from "../lib/portalHotels";
 
 const translations = {
-  en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Region & Hotel", allHotels: "All Philippines", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel" },
-  ko: { destination: "목적지", whereTo: "어디로 떠나시나요?", mapTitle: "지역 및 호텔 선택", allHotels: "필리핀 전체", checkIn: "체크인", checkOut: "체크아웃", guestsRooms: "인원 및 객실", guests: "명", room: "객실", adult: "성인", child: "어린이", infant: "유아", free: "무료", search: "검색하기", searching: "검색 중...", error: "알림", selectDates: "체크인과 체크아웃 날짜를 모두 선택해 주세요.", fetchError: "객실 정보를 불러오지 못했습니다. 다시 시도해 주세요.", fullyBooked: "예약 마감!", noRooms: "선택하신 날짜에 예약 가능한 객실이 없습니다.\n일정을 변경해 주세요.", ok: "확인", okChange: "일정 변경하기", proceed: "남은 방으로 진행", viewOnMap: "지도에서 보기", selectHotel: "이 호텔 선택하기" }
+  en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Province & Hotel", allHotels: "All Philippines", allProvinces: "Search All Provinces", selectProvince: "Select Province", selectMunicipality: "Select City/Municipality", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", loadingHotels: "Loading registered hotels...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel", availableHotels: "Available Hotels", noHotelsFound: "No registered hotels found in this area." },
+  ko: { destination: "목적지", whereTo: "어디로 떠나시나요?", mapTitle: "지역 및 호텔 선택", allHotels: "필리핀 전체", allProvinces: "전체 지역 검색", selectProvince: "주/도 선택", selectMunicipality: "시/군 선택", checkIn: "체크인", checkOut: "체크아웃", guestsRooms: "인원 및 객실", guests: "명", room: "객실", adult: "성인", child: "어린이", infant: "유아", free: "무료", search: "검색하기", searching: "검색 중...", loadingHotels: "등록된 호텔 정보를 불러오는 중입니다...", error: "알림", selectDates: "체크인과 체크아웃 날짜를 모두 선택해 주세요.", fetchError: "객실 정보를 불러오지 못했습니다. 다시 시도해 주세요.", fullyBooked: "예약 마감!", noRooms: "선택하신 날짜에 예약 가능한 객실이 없습니다.\n일정을 변경해 주세요.", ok: "확인", okChange: "일정 변경하기", proceed: "남은 방으로 진행", viewOnMap: "지도에서 보기", selectHotel: "이 호텔 선택하기", availableHotels: "등록 호텔", noHotelsFound: "이 지역에 등록된 호텔이 없습니다." }
 };
 
 const BASE_URL = '';
@@ -35,7 +35,9 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
   // 🗺️ 모달 & 구글맵 상태 관리
   const [isMapOpen, setIsMapOpen] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState("");
+  const [portalHotels, setPortalHotels] = useState([]);
+  const [isHotelsLoading, setIsHotelsLoading] = useState(false);
+  const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [mapQuery, setMapQuery] = useState("Philippines"); // 구글맵 Iframe 검색어
   const [activeMapHotel, setActiveMapHotel] = useState(null); // 지도에 포커스된 호텔
@@ -66,10 +68,42 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
     });
   };
 
-  // 💡 [드롭다운 로직] Region 선택 시
-  const handleRegionChange = (e) => {
+  useEffect(() => {
+    if (destination.code === "ALL") {
+      setDestination({ code: "ALL", name: t.allHotels });
+    }
+  }, [t.allHotels, destination.code]);
+
+  useEffect(() => {
+    if (!isMapOpen || portalHotels.length > 0) return;
+
+    let isCancelled = false;
+
+    const loadPortalHotels = async () => {
+      setIsHotelsLoading(true);
+      try {
+        const hotels = await fetchPortalHotels(lang);
+        if (!isCancelled) setPortalHotels(hotels);
+      } catch (error) {
+        if (!isCancelled) {
+          setPortalHotels([]);
+          setModal({ show: true, title: t.error, message: t.fetchError, type: "error" });
+        }
+      } finally {
+        if (!isCancelled) setIsHotelsLoading(false);
+      }
+    };
+
+    loadPortalHotels();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isMapOpen, lang, portalHotels.length, t.error, t.fetchError]);
+
+  // 💡 [드롭다운 로직] Province 선택 시
+  const handleProvinceChange = (e) => {
     const val = e.target.value;
-    setSelectedRegion(val);
+    setSelectedProvince(val);
     setSelectedCity(""); // Region이 바뀌면 City 초기화
     setActiveMapHotel(null);
     setMapQuery(val ? `${val}, Philippines` : "Philippines");
@@ -80,13 +114,13 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
     const val = e.target.value;
     setSelectedCity(val);
     setActiveMapHotel(null);
-    setMapQuery(val ? `${val}, ${selectedRegion}, Philippines` : `${selectedRegion}, Philippines`);
+    setMapQuery(val ? `${val}, ${selectedProvince}, Philippines` : `${selectedProvince}, Philippines`);
   };
 
   // 💡 호텔 리스트 클릭 시 (지도 뷰어 이동용)
   const handleHotelFocus = (hotel) => {
     setActiveMapHotel(hotel);
-    setMapQuery(hotel.address);
+    setMapQuery(hotel.mapQuery || hotel.address);
   };
 
   // 💡 최종 호텔(지점) 선택 적용
@@ -107,14 +141,15 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
   };
 
   // 💡 필터링된 호탤 리스트 계산
-  const availableCities = selectedRegion ? HOTEL_REGIONS.find(r => r.region === selectedRegion)?.cities || [] : [];
+  const hotelProvinces = groupHotelsByProvince(portalHotels);
+  const availableCities = selectedProvince ? hotelProvinces.find((province) => province.province === selectedProvince)?.cities || [] : [];
   let filteredHotels = [];
   if (selectedCity) {
     filteredHotels = availableCities.find(c => c.name === selectedCity)?.hotels || [];
-  } else if (selectedRegion) {
+  } else if (selectedProvince) {
     availableCities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; });
   } else {
-    HOTEL_REGIONS.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
+    hotelProvinces.forEach(p => { p.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
   }
 
   return (
@@ -204,7 +239,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
               ✕
             </button>
 
-            {/* 왼쪽 패널: 지역(Region) -> 도시(City) 필터 & 리스트 */}
+            {/* 왼쪽 패널: Province -> City/Municipal 필터 & 리스트 */}
             <div className="w-full md:w-1/3 bg-white border-r border-slate-200 flex flex-col h-full shadow-lg z-10">
               
               <div className="p-6 pb-4 border-b border-slate-100">
@@ -212,19 +247,19 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                 
                 {/* 1. 맨 위로 올린 전체 지역 검색 버튼 */}
                 <button onClick={() => handleSelectHotel('ALL', t.allHotels)} className="w-full py-3.5 mb-5 rounded-xl bg-slate-900 text-white font-black hover:bg-slate-800 transition-colors shadow-md flex items-center justify-center gap-2">
-                  🌍 Search All Regions
+                  🌍 {t.allProvinces}
                 </button>
 
                 {/* 2. 연동형 드롭다운 필터 */}
                 <div className="space-y-3">
                   <select 
                     className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer" 
-                    value={selectedRegion} 
-                    onChange={handleRegionChange}
+                    value={selectedProvince} 
+                    onChange={handleProvinceChange}
                   >
-                    <option value="">🗺️ Select Region </option>
-                    {HOTEL_REGIONS.map(loc => (
-                      <option key={loc.region} value={loc.region}>{loc.region}</option>
+                    <option value="">🗺️ {t.selectProvince}</option>
+                    {hotelProvinces.map((loc) => (
+                      <option key={loc.province} value={loc.province}>{loc.province}</option>
                     ))}
                   </select>
 
@@ -232,9 +267,9 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                     className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
                     value={selectedCity} 
                     onChange={handleCityChange} 
-                    disabled={!selectedRegion}
+                    disabled={!selectedProvince}
                   >
-                    <option value="">🏙️ Select City/Municipal </option>
+                    <option value="">🏙️ {t.selectMunicipality}</option>
                     {availableCities.map(c => (
                       <option key={c.name} value={c.name}>{c.name}</option>
                     ))}
@@ -244,9 +279,14 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
               {/* 3. 필터링된 호텔 리스트 (스크롤) */}
               <div className="overflow-y-auto flex-1 p-4 space-y-3 bg-slate-50">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Available Hotels ({filteredHotels.length})</div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">{t.availableHotels} ({filteredHotels.length})</div>
                 
-                {filteredHotels.length > 0 ? filteredHotels.map(hotel => (
+                {isHotelsLoading ? (
+                  <div className="text-center py-10 text-slate-400 font-bold flex flex-col items-center">
+                    <span className="text-4xl mb-3 animate-pulse">🏨</span>
+                    {t.loadingHotels}
+                  </div>
+                ) : filteredHotels.length > 0 ? filteredHotels.map(hotel => (
                   <div 
                     key={hotel.code} 
                     className={`p-5 rounded-2xl cursor-pointer transition-all border shadow-sm ${activeMapHotel?.code === hotel.code ? 'bg-emerald-50 border-emerald-500 shadow-md ring-2 ring-emerald-200' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md'}`} 
@@ -268,7 +308,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                 )) : (
                   <div className="text-center py-10 text-slate-400 font-bold flex flex-col items-center">
                     <span className="text-4xl mb-3">📭</span>
-                    No hotels found in this area.
+                    {t.noHotelsFound}
                   </div>
                 )}
               </div>
@@ -280,19 +320,25 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                  <span className="animate-pulse text-red-500">🔴</span> Live Google Maps
               </div>
               
-              {/* API 키가 필요 없는 구글맵 주소 검색 Iframe */}
-              <iframe 
-                  title="Google Maps Location"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`} 
-                  width="100%"
-                  height="100%" 
-                  frameBorder="0" 
-                  style={{ border: 0 }} 
-                  allowFullScreen="" 
-                  aria-hidden="false" 
-                  tabIndex="0"
+              {activeMapHotel?.mapEmbedUrl ? (
+                <div
                   className="absolute inset-0 w-full h-full bg-slate-100"
-              ></iframe>
+                  dangerouslySetInnerHTML={{ __html: activeMapHotel.mapEmbedUrl }}
+                />
+              ) : (
+                <iframe 
+                    title="Google Maps Location"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`} 
+                    width="100%"
+                    height="100%" 
+                    frameBorder="0" 
+                    style={{ border: 0 }} 
+                    allowFullScreen="" 
+                    aria-hidden="false" 
+                    tabIndex="0"
+                    className="absolute inset-0 w-full h-full bg-slate-100"
+                ></iframe>
+              )}
             </div>
           </div>
         </div>

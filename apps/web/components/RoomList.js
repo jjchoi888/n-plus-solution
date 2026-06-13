@@ -212,7 +212,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {actualRooms.map((room) => {
             const currentCount = cart[room.id] || 0;
-            const locationName = getHotelDisplayName(room.hotelCode);
+            const locationName = room.hotelName || getHotelDisplayName(room.hotelCode);
             const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
             return (
