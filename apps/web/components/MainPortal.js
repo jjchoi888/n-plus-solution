@@ -489,130 +489,137 @@ export default function MainPortal() {
                    selectedDestination={selectedDestination}
                    onDestinationChange={handleDestinationChange}
                  />
-                 {categorySections.length > 0 && (
-                   <div className="border-t border-slate-100 px-2 pt-5">
-                     <div className="mb-4">
-                       <h4 className="text-sm md:text-base font-black text-slate-900">{categoryT.title}</h4>
-                       <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{categoryT.desc}</p>
-                     </div>
-
-                     <div className="space-y-4">
-                       {categorySections.map((section) => (
-                         <div key={section.id} className="space-y-3">
-                           <div className="flex items-center justify-between gap-3">
-                             <p className="text-[11px] md:text-xs font-black tracking-[0.24em] text-slate-400 uppercase">
-                               {section.label}
-                             </p>
-                             <span className="text-[10px] md:text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
-                               {section.categories.length} {categoryT.tags}
-                             </span>
-                           </div>
-                           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-                             {section.categories.map((category) => {
-                               const isActive = activeCategoryId === category.id;
-                               return (
-                                 <button
-                                   key={category.id}
-                                   type="button"
-                                   onClick={() => handleCategoryToggle(category.id)}
-                                   className={`rounded-2xl border px-3 py-4 text-center transition-all duration-200 ${
-                                     isActive
-                                       ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
-                                       : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"
-                                   }`}
-                                 >
-                                   <span className="block text-2xl mb-2">{category.icon}</span>
-                                   <span className="block text-xs font-black text-slate-800 leading-tight min-h-[2rem]">
-                                     {category.label}
-                                   </span>
-                                   <span className="block text-[10px] text-slate-500 mt-1">
-                                     {category.hotels.length} {categoryT.hotels}
-                                   </span>
-                                 </button>
-                               );
-                             })}
-                           </div>
-                         </div>
-                       ))}
-
-                       {activeCategory && (
-                         <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50/40 shadow-sm">
-                           <div className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 px-4 py-4 md:flex-row md:items-center md:justify-between">
-                             <div>
-                               <p className="text-[11px] font-black tracking-[0.22em] text-emerald-600 uppercase">
-                                 {categoryT.selected}
-                               </p>
-                               <h5 className="mt-1 text-lg font-black text-slate-900">
-                                 <span className="mr-2">{activeCategory.icon}</span>
-                                 {activeCategory.label}
-                               </h5>
-                             </div>
-                             <button
-                               type="button"
-                               onClick={() => setActiveCategoryId("")}
-                               className="self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800"
-                             >
-                               {t.close}
-                             </button>
-                           </div>
-
-                           <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
-                             {activeCategory.hotels.map((hotel) => (
-                               <div
-                                 key={hotel.code}
-                                 className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-                               >
-                                 <div className="relative h-40 bg-slate-100">
-                                   <Image
-                                     src={hotel.image}
-                                     alt={hotel.name}
-                                     fill
-                                     sizes="(max-width: 768px) 100vw, 33vw"
-                                     className="object-cover"
-                                     unoptimized={String(hotel.image).startsWith("http")}
-                                   />
-                                 </div>
-                                 <div className="flex flex-col gap-3 p-4">
-                                   <div>
-                                     <h6 className="text-base font-black text-slate-900">{hotel.name}</h6>
-                                     <p className="mt-1 text-sm font-semibold text-slate-600">
-                                       {[hotel.cityMunicipal, hotel.province].filter(Boolean).join(", ") || categoryT.noLocation}
-                                     </p>
-                                     {hotel.address && (
-                                       <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
-                                         {hotel.address}
-                                       </p>
-                                     )}
-                                   </div>
-                                   <div className="mt-auto flex gap-2">
-                                     <button
-                                       type="button"
-                                       onClick={() => handleCategoryHotelSelect(hotel)}
-                                       className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-700"
-                                     >
-                                       {categoryT.select}
-                                     </button>
-                                     <a
-                                       href={hotel.url}
-                                       className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-black text-slate-700 hover:bg-slate-50"
-                                     >
-                                       {categoryT.open}
-                                     </a>
-                                   </div>
-                                 </div>
-                               </div>
-                             ))}
-                           </div>
-                         </div>
-                       )}
-                     </div>
-                   </div>
-                 )}
                </div>
             </div>
           </section>
 
-          <section className="w-full bg-white mt-20 md:mt-32 pt-24 pb-20 px-6 border-b border-slate-100">
+          {categorySections.length > 0 && (
+            <section className="w-full bg-white pt-28 md:pt-40 pb-10 px-6">
+              <div className="max-w-6xl mx-auto">
+                <div className="rounded-[32px] border border-slate-200 bg-white p-6 md:p-8 shadow-xl">
+                  <div className="mb-6">
+                    <h4 className="text-xl md:text-2xl font-black text-slate-900">{categoryT.title}</h4>
+                    <p className="text-sm md:text-base text-slate-500 mt-2 leading-relaxed max-w-3xl">
+                      {categoryT.desc}
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {categorySections.map((section) => (
+                      <div key={section.id} className="space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[11px] md:text-xs font-black tracking-[0.24em] text-slate-400 uppercase">
+                            {section.label}
+                          </p>
+                          <span className="text-[10px] md:text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                            {section.categories.length} {categoryT.tags}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                          {section.categories.map((category) => {
+                            const isActive = activeCategoryId === category.id;
+                            return (
+                              <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => handleCategoryToggle(category.id)}
+                                className={`rounded-2xl border px-3 py-4 text-center transition-all duration-200 ${
+                                  isActive
+                                    ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                                    : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"
+                                }`}
+                              >
+                                <span className="block text-2xl mb-2">{category.icon}</span>
+                                <span className="block text-xs font-black text-slate-800 leading-tight min-h-[2rem]">
+                                  {category.label}
+                                </span>
+                                <span className="block text-[10px] text-slate-500 mt-1">
+                                  {category.hotels.length} {categoryT.hotels}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {activeCategory && (
+                      <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50/40 shadow-sm">
+                        <div className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="text-[11px] font-black tracking-[0.22em] text-emerald-600 uppercase">
+                              {categoryT.selected}
+                            </p>
+                            <h5 className="mt-1 text-lg font-black text-slate-900">
+                              <span className="mr-2">{activeCategory.icon}</span>
+                              {activeCategory.label}
+                            </h5>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveCategoryId("")}
+                            className="self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800"
+                          >
+                            {t.close}
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
+                          {activeCategory.hotels.map((hotel) => (
+                            <div
+                              key={hotel.code}
+                              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                            >
+                              <div className="relative h-40 bg-slate-100">
+                                <Image
+                                  src={hotel.image}
+                                  alt={hotel.name}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, 33vw"
+                                  className="object-cover"
+                                  unoptimized={String(hotel.image).startsWith("http")}
+                                />
+                              </div>
+                              <div className="flex flex-col gap-3 p-4">
+                                <div>
+                                  <h6 className="text-base font-black text-slate-900">{hotel.name}</h6>
+                                  <p className="mt-1 text-sm font-semibold text-slate-600">
+                                    {[hotel.cityMunicipal, hotel.province].filter(Boolean).join(", ") || categoryT.noLocation}
+                                  </p>
+                                  {hotel.address && (
+                                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                                      {hotel.address}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="mt-auto flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCategoryHotelSelect(hotel)}
+                                    className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-700"
+                                  >
+                                    {categoryT.select}
+                                  </button>
+                                  <a
+                                    href={hotel.url}
+                                    className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-black text-slate-700 hover:bg-slate-50"
+                                  >
+                                    {categoryT.open}
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section className="w-full bg-white pt-14 pb-20 px-6 border-b border-slate-100">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">{t.whyChoose}</h2>
