@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 import BookingBar from "./BookingBar";
 import RoomList from "./RoomList";
 import { CONTACT_EMAIL, CONTACT_WHATSAPP_URL, openConfiguredContactEmail } from "../lib/contactChannels";
-import { fetchPortalHotels } from "../lib/portalHotels";
+import { buildCategoryGroups, fetchPortalHotels } from "../lib/portalHotels";
 
 const heroImages = [
   "/hero1.png",
@@ -136,12 +136,65 @@ const translations = {
   }
 };
 
+const categoryTranslations = {
+  en: {
+    title: "Explore by Category",
+    desc: "Tap a category to see matching hotels and quickly send one back into the booking search.",
+    propertyType: "Property Type",
+    guestHighlight: "Guest Search Highlights",
+    tags: "tags",
+    hotels: "hotels",
+    selected: "Selected Category",
+    select: "Use for Search",
+    open: "Open Hotel",
+    noLocation: "Location details will be updated soon.",
+  },
+  ko: {
+    title: "카테고리로 호텔 찾기",
+    desc: "카테고리 버튼을 누르면 해당 호텔 카드가 열리고, 원하는 호텔을 바로 검색 필터에 반영할 수 있습니다.",
+    propertyType: "숙소 유형",
+    guestHighlight: "게스트 검색 포인트",
+    tags: "카테고리",
+    hotels: "개 호텔",
+    selected: "선택된 카테고리",
+    select: "검색에 반영",
+    open: "호텔 보기",
+    noLocation: "위치 정보가 곧 업데이트됩니다.",
+  },
+  ja: {
+    title: "カテゴリーでホテルを探す",
+    desc: "カテゴリーを選ぶと該当ホテルのカードが表示され、予約検索にすぐ反映できます。",
+    propertyType: "宿泊タイプ",
+    guestHighlight: "検索ハイライト",
+    tags: "カテゴリ",
+    hotels: "軒",
+    selected: "選択中のカテゴリー",
+    select: "検索に反映",
+    open: "ホテルを見る",
+    noLocation: "所在地情報はまもなく更新されます。",
+  },
+  zh: {
+    title: "按分类查找酒店",
+    desc: "点击分类后会展开对应酒店卡片，并可直接带回上方搜索过滤器。",
+    propertyType: "酒店类型",
+    guestHighlight: "宾客搜索亮点",
+    tags: "个分类",
+    hotels: "家酒店",
+    selected: "当前分类",
+    select: "用于搜索",
+    open: "查看酒店",
+    noLocation: "位置信息即将更新。",
+  },
+};
+
 export default function MainPortal() {
   const [lang, setLang] = useState("en"); 
   const [searchData, setSearchData] = useState(null); 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [alertMessage, setAlertMessage] = useState("");
   const [featuredHotels, setFeaturedHotels] = useState([]);
+  const [selectedDestination, setSelectedDestination] = useState(null);
+  const [activeCategoryId, setActiveCategoryId] = useState("");
 
   const [activeView, setActiveView] = useState("HOME");
   const [loginEmail, setLoginEmail] = useState("");
@@ -152,8 +205,24 @@ export default function MainPortal() {
   const [contactMode, setContactMode] = useState('CHOICE'); // 'CHOICE' 또는 'EMAIL'
 
   const t = translations[lang] || translations.en;
+  const categoryT = categoryTranslations[lang] || categoryTranslations.en;
   const hasEmailContact = Boolean(CONTACT_EMAIL);
   const hasWhatsappContact = Boolean(CONTACT_WHATSAPP_URL);
+  const categoryGroups = buildCategoryGroups(featuredHotels);
+  const activeCategory =
+    categoryGroups.find((category) => category.id === activeCategoryId) || null;
+  const categorySections = [
+    {
+      id: "propertyType",
+      label: categoryT.propertyType,
+      categories: categoryGroups.filter((category) => category.group === "propertyType"),
+    },
+    {
+      id: "guestHighlight",
+      label: categoryT.guestHighlight,
+      categories: categoryGroups.filter((category) => category.group === "guestHighlight"),
+    },
+  ].filter((section) => section.categories.length > 0);
 
   const sliderRef = useRef(null);
   const slideLeft = () => { if (sliderRef.current) sliderRef.current.scrollBy({ left: -350, behavior: 'smooth' }); };
@@ -244,6 +313,20 @@ export default function MainPortal() {
     if (!opened) {
       setAlertMessage(t.contactPending);
     }
+  };
+
+  const handleDestinationChange = (nextDestination) => {
+    setSelectedDestination(nextDestination);
+    setActiveCategoryId("");
+  };
+
+  const handleCategoryToggle = (categoryId) => {
+    setActiveCategoryId((current) => (current === categoryId ? "" : categoryId));
+  };
+
+  const handleCategoryHotelSelect = (hotel) => {
+    setSelectedDestination({ code: hotel.code, name: hotel.name });
+    setActiveCategoryId("");
   };
 
   return (
@@ -400,7 +483,131 @@ export default function MainPortal() {
                     </h3>
                     <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 md:px-3 py-1 rounded-full">{t.zeroComm}</span>
                  </div>
-                 <BookingBar lang={lang} onSearchResults={setSearchData} />
+                 <BookingBar
+                   lang={lang}
+                   onSearchResults={setSearchData}
+                   selectedDestination={selectedDestination}
+                   onDestinationChange={handleDestinationChange}
+                 />
+                 {categorySections.length > 0 && (
+                   <div className="border-t border-slate-100 px-2 pt-5">
+                     <div className="mb-4">
+                       <h4 className="text-sm md:text-base font-black text-slate-900">{categoryT.title}</h4>
+                       <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{categoryT.desc}</p>
+                     </div>
+
+                     <div className="space-y-4">
+                       {categorySections.map((section) => (
+                         <div key={section.id} className="space-y-3">
+                           <div className="flex items-center justify-between gap-3">
+                             <p className="text-[11px] md:text-xs font-black tracking-[0.24em] text-slate-400 uppercase">
+                               {section.label}
+                             </p>
+                             <span className="text-[10px] md:text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                               {section.categories.length} {categoryT.tags}
+                             </span>
+                           </div>
+                           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                             {section.categories.map((category) => {
+                               const isActive = activeCategoryId === category.id;
+                               return (
+                                 <button
+                                   key={category.id}
+                                   type="button"
+                                   onClick={() => handleCategoryToggle(category.id)}
+                                   className={`rounded-2xl border px-3 py-4 text-center transition-all duration-200 ${
+                                     isActive
+                                       ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                                       : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"
+                                   }`}
+                                 >
+                                   <span className="block text-2xl mb-2">{category.icon}</span>
+                                   <span className="block text-xs font-black text-slate-800 leading-tight min-h-[2rem]">
+                                     {category.label}
+                                   </span>
+                                   <span className="block text-[10px] text-slate-500 mt-1">
+                                     {category.hotels.length} {categoryT.hotels}
+                                   </span>
+                                 </button>
+                               );
+                             })}
+                           </div>
+                         </div>
+                       ))}
+
+                       {activeCategory && (
+                         <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50/40 shadow-sm">
+                           <div className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                             <div>
+                               <p className="text-[11px] font-black tracking-[0.22em] text-emerald-600 uppercase">
+                                 {categoryT.selected}
+                               </p>
+                               <h5 className="mt-1 text-lg font-black text-slate-900">
+                                 <span className="mr-2">{activeCategory.icon}</span>
+                                 {activeCategory.label}
+                               </h5>
+                             </div>
+                             <button
+                               type="button"
+                               onClick={() => setActiveCategoryId("")}
+                               className="self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800"
+                             >
+                               {t.close}
+                             </button>
+                           </div>
+
+                           <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
+                             {activeCategory.hotels.map((hotel) => (
+                               <div
+                                 key={hotel.code}
+                                 className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                               >
+                                 <div className="relative h-40 bg-slate-100">
+                                   <Image
+                                     src={hotel.image}
+                                     alt={hotel.name}
+                                     fill
+                                     sizes="(max-width: 768px) 100vw, 33vw"
+                                     className="object-cover"
+                                     unoptimized={String(hotel.image).startsWith("http")}
+                                   />
+                                 </div>
+                                 <div className="flex flex-col gap-3 p-4">
+                                   <div>
+                                     <h6 className="text-base font-black text-slate-900">{hotel.name}</h6>
+                                     <p className="mt-1 text-sm font-semibold text-slate-600">
+                                       {[hotel.cityMunicipal, hotel.province].filter(Boolean).join(", ") || categoryT.noLocation}
+                                     </p>
+                                     {hotel.address && (
+                                       <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                                         {hotel.address}
+                                       </p>
+                                     )}
+                                   </div>
+                                   <div className="mt-auto flex gap-2">
+                                     <button
+                                       type="button"
+                                       onClick={() => handleCategoryHotelSelect(hotel)}
+                                       className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-700"
+                                     >
+                                       {categoryT.select}
+                                     </button>
+                                     <a
+                                       href={hotel.url}
+                                       className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-black text-slate-700 hover:bg-slate-50"
+                                     >
+                                       {categoryT.open}
+                                     </a>
+                                   </div>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
                </div>
             </div>
           </section>

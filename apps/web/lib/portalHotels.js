@@ -29,6 +29,48 @@ const parseJsonSafely = (value, fallback) => {
 
 const normalizeText = (value) => String(value || "").trim();
 
+const CATEGORY_DEFINITIONS = [
+  { id: "city-hotel", label: "City Hotel", icon: "🏙️", group: "propertyType" },
+  { id: "business-hotel", label: "Business Hotel", icon: "💼", group: "propertyType" },
+  { id: "airport-hotel", label: "Airport Hotel", icon: "✈️", group: "propertyType" },
+  { id: "beach-hotel-resort", label: "Beach Hotel & Resort", icon: "🏖️", group: "propertyType" },
+  { id: "island-resort", label: "Island Resort", icon: "🌴", group: "propertyType" },
+  { id: "lakeside-hotel-resort", label: "Lakeside Hotel & Resort", icon: "🏞️", group: "propertyType" },
+  { id: "mountain-hotel-resort", label: "Mountain Hotel & Resort", icon: "⛰️", group: "propertyType" },
+  { id: "boutique-hotel", label: "Boutique Hotel", icon: "🛍️", group: "propertyType" },
+  { id: "heritage-hotel", label: "Heritage Hotel", icon: "🏛️", group: "propertyType" },
+  { id: "wellness-resort", label: "Wellness Resort", icon: "🌿", group: "propertyType" },
+  { id: "pet-friendly", label: "Pet Friendly", icon: "🐾", group: "guestHighlight" },
+  { id: "family-friendly", label: "Family Friendly", icon: "👨‍👩‍👧‍👦", group: "guestHighlight" },
+  { id: "couple-getaway", label: "Couple Getaway", icon: "💕", group: "guestHighlight" },
+  { id: "workation-friendly", label: "Workation Friendly", icon: "💻", group: "guestHighlight" },
+  { id: "with-pool", label: "With Pool", icon: "🏊", group: "guestHighlight" },
+  { id: "spa-wellness", label: "Spa & Wellness", icon: "🧖", group: "guestHighlight" },
+  { id: "event-wedding-venue", label: "Event & Wedding Venue", icon: "💍", group: "guestHighlight" },
+  { id: "nature-escape", label: "Nature Escape", icon: "🍃", group: "guestHighlight" },
+  { id: "near-tourist-spots", label: "Near Tourist Spots", icon: "📍", group: "guestHighlight" },
+  { id: "long-stay-friendly", label: "Long Stay Friendly", icon: "🧳", group: "guestHighlight" },
+  { id: "luxury-stay", label: "Luxury Stay", icon: "✨", group: "guestHighlight" },
+  { id: "all-inclusive-feel", label: "All-Inclusive Feel", icon: "🍽️", group: "guestHighlight" },
+];
+
+const normalizeCategoryKey = (value) =>
+  normalizeText(value)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const CATEGORY_INDEX = new Map(
+  CATEGORY_DEFINITIONS.flatMap((category) => [
+    [normalizeCategoryKey(category.id), category],
+    [normalizeCategoryKey(category.label), category],
+  ]),
+);
+
+const CATEGORY_FIELD_MATCHER =
+  /(category|categories|tag|tags|highlight|property[_\s-]?type|propertytype|guest[_\s-]?search|guestsearch)/i;
+
 export const parseGoogleMapEmbedSrc = (rawValue, fallbackQuery = "Philippines") => {
   const raw = normalizeText(rawValue);
   const fallback = `https://maps.google.com/maps?q=${encodeURIComponent(fallbackQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`;
@@ -74,6 +116,65 @@ export const parseGoogleMapEmbedSrc = (rawValue, fallbackQuery = "Philippines") 
 };
 
 const getSnsSettings = (config) => parseJsonSafely(config?.sns_json, {});
+
+const coerceCategoryValues = (value) => {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => coerceCategoryValues(item));
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    if ((trimmed.startsWith("[") && trimmed.endsWith("]")) || (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
+      try {
+        return coerceCategoryValues(JSON.parse(trimmed));
+      } catch {
+        return trimmed.split(/[\n,]/).map((item) => normalizeText(item)).filter(Boolean);
+      }
+    }
+
+    return trimmed.split(/[\n,]/).map((item) => normalizeText(item)).filter(Boolean);
+  }
+
+  if (typeof value === "object") {
+    return Object.entries(value).flatMap(([key, objectValue]) => {
+      if (objectValue === true) return [key];
+      return coerceCategoryValues(objectValue);
+    });
+  }
+
+  return [String(value)];
+};
+
+const extractHotelCategories = (config) => {
+  const sns = getSnsSettings(config);
+  const rawValues = [];
+
+  [config, sns].forEach((source) => {
+    Object.entries(source || {}).forEach(([key, value]) => {
+      if (CATEGORY_FIELD_MATCHER.test(key)) {
+        rawValues.push(...coerceCategoryValues(value));
+      }
+    });
+  });
+
+  const matched = [];
+  const seen = new Set();
+
+  rawValues.forEach((value) => {
+    const normalized = normalizeCategoryKey(value);
+    const category = CATEGORY_INDEX.get(normalized);
+    if (category && !seen.has(category.id)) {
+      matched.push(category);
+      seen.add(category.id);
+    }
+  });
+
+  return matched;
+};
 
 const extractHotelName = (config) => {
   const sns = getSnsSettings(config);
@@ -203,6 +304,7 @@ const fetchHotelConfig = async (hotelCode) => {
     normalizeText(config.map_url) ||
     normalizeText(getSnsSettings(config)?.map_link);
   const mapQuery = buildMapQuery(name, address);
+  const categories = extractHotelCategories(config);
 
   return {
     code: hotelCode,
@@ -214,6 +316,7 @@ const fetchHotelConfig = async (hotelCode) => {
     mapEmbedUrl: parseGoogleMapEmbedSrc(rawMapLink, mapQuery),
     mapLink: rawMapLink,
     image: extractPrimaryImage(config),
+    categories,
     url: buildHotelUrl(hotelCode),
   };
 };
@@ -249,6 +352,14 @@ export const groupHotelsByProvince = (hotels) =>
       })),
     }))
     .sort((a, b) => a.province.localeCompare(b.province));
+
+export const buildCategoryGroups = (hotels) =>
+  CATEGORY_DEFINITIONS.map((category) => ({
+    ...category,
+    hotels: hotels.filter((hotel) =>
+      Array.isArray(hotel.categories) && hotel.categories.some((item) => item.id === category.id),
+    ),
+  })).filter((category) => category.hotels.length > 0);
 
 export const fetchPortalHotels = async (lang = "en", options = {}) => {
   const { forceRefresh = false } = options;

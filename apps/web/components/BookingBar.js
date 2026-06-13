@@ -20,7 +20,7 @@ const getHotelDate = (offsetDays = 0) => {
     return `${year}-${month}-${day}`;
 };
 
-export default function BookingBar({ lang = 'en', onSearchResults }) {
+export default function BookingBar({ lang = 'en', onSearchResults, selectedDestination = null, onDestinationChange }) {
   const t = translations[lang] || translations.en;
 
   // 기본 예약 상태 관리
@@ -75,6 +75,11 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
   }, [t.allHotels, destination.code]);
 
   useEffect(() => {
+    if (!selectedDestination?.code) return;
+    setDestination(selectedDestination);
+  }, [selectedDestination]);
+
+  useEffect(() => {
     if (!isMapOpen || portalHotels.length > 0) return;
 
     let isCancelled = false;
@@ -125,7 +130,9 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
   // 💡 최종 호텔(지점) 선택 적용
   const handleSelectHotel = (code, name) => {
-    setDestination({ code, name });
+    const nextDestination = { code, name };
+    setDestination(nextDestination);
+    onDestinationChange?.(nextDestination);
     setIsMapOpen(false); // 모달 닫기
   };
 
