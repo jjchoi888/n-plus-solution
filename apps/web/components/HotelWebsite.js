@@ -1,8 +1,37 @@
 "use client";
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 
 const BASE_URL = '';
+
+const passthroughImageLoader = ({ src }) => src;
+
+function CmsImage({
+  src,
+  alt,
+  className,
+  fill = false,
+  width = 1600,
+  height = 900,
+  sizes,
+  priority = false
+}) {
+  return (
+    <Image
+      loader={passthroughImageLoader}
+      unoptimized
+      src={src}
+      alt={alt}
+      className={className}
+      fill={fill}
+      width={fill ? undefined : width}
+      height={fill ? undefined : height}
+      sizes={sizes}
+      priority={priority}
+    />
+  );
+}
 
 // 💡 [추가] 낮 12시 이전이면 날짜를 하루 빼서 '호텔 영업일' 기준으로 맞춰주는 함수
 const getHotelDate = (offsetDays = 0) => {
@@ -150,18 +179,19 @@ export default function HotelWebsite({ domain }) {
     if (typeof window === 'undefined') return domain || 'sample001';
     
     const params = new URLSearchParams(window.location.search);
-    const hotelParam = params.get('hotel');
+    const hotelParam = params.get('hotel')?.trim();
     
     // 1순위: URL 파라미터 (?hotel=sample001)
     if (hotelParam) return hotelParam;
+
+    // 2순위: 상위 라우터가 넘겨준 호텔 코드
+    if (domain) return domain;
     
-    // 2순위: 도메인 분석 (로컬 환경 대응)
-    const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      return 'sample001'; 
-    }
+    // 3순위: 라우터가 저장한 최근 호텔 코드
+    const storedHotelCode = window.localStorage.getItem('hotelCode');
+    if (storedHotelCode) return storedHotelCode;
     
-    // 3순위: 기본값 (매우 중요)
+    // 4순위: 기본값
     return 'sample001'; 
   };
 
@@ -227,7 +257,7 @@ export default function HotelWebsite({ domain }) {
   const sliderImages = [];
   if (gallery.length > 0) sliderImages.push(...gallery);
   else if (safeConfig.bg_image_url) sliderImages.push(safeConfig.bg_image_url);
-  if (sliderImages.length === 0) sliderImages.push("https://images.unsplash.com/photo-1542314831-c6a4d27a658d?q=80&w=2000&auto=format&fit=crop"); 
+  if (sliderImages.length === 0) sliderImages.push("/hero1.png");
 
   useEffect(() => {
     let timer;
@@ -290,7 +320,18 @@ export default function HotelWebsite({ domain }) {
         <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
           <div className="flex justify-between items-center px-6 md:px-12 py-4 relative z-50">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveMenu('HOME')}>
-                {safeConfig.logo_url ? <img src={safeConfig.logo_url} className="h-8 md:h-12 object-contain" alt="Logo" /> : <span className="text-2xl font-black theme-text uppercase">{safeConfig.welcome_title || 'LOGO'}</span>}
+                {safeConfig.logo_url ? (
+                  <CmsImage
+                    src={safeConfig.logo_url}
+                    alt="Logo"
+                    width={240}
+                    height={96}
+                    className="h-8 md:h-12 w-auto object-contain"
+                    sizes="240px"
+                  />
+                ) : (
+                  <span className="text-2xl font-black theme-text uppercase">{safeConfig.welcome_title || 'LOGO'}</span>
+                )}
               </div>
               <div className="hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest">
                 {[ { id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact } ].map(menu => (
@@ -317,7 +358,15 @@ export default function HotelWebsite({ domain }) {
           <div className="animate-fade-in-up">
             <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
               {sliderImages.map((img, idx) => (
-                  <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                  <CmsImage
+                    key={idx}
+                    src={img}
+                    alt="slide"
+                    fill
+                    sizes="100vw"
+                    className={`object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`}
+                    priority={idx === 0}
+                  />
               ))}
               <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
                    style={{ left: `${textPos.title?.x ?? 50}%`, top: `${textPos.title?.y ?? 40}%`, transform: `translate(-${textPos.title?.x ?? 50}%, -${textPos.title?.y ?? 40}%)`, textAlign: (textPos.title?.x ?? 50) < 30 ? 'left' : (textPos.title?.x ?? 50) > 70 ? 'right' : 'center' }}>
@@ -346,7 +395,14 @@ export default function HotelWebsite({ domain }) {
               {/* 1. 뒷배경 슬라이더 */}
               <div className="fixed inset-0 z-0 bg-slate-50">
                   {sliderImages.map((img, idx) => (
-                      <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-40 z-10' : 'opacity-0 z-0'}`} alt="slide" />
+                      <CmsImage
+                        key={idx}
+                        src={img}
+                        alt="slide"
+                        fill
+                        sizes="100vw"
+                        className={`object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-40 z-10' : 'opacity-0 z-0'}`}
+                      />
                   ))}
                   <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none"></div>
               </div>
@@ -451,7 +507,14 @@ export default function HotelWebsite({ domain }) {
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
                                 {activeRoom.images && activeRoom.images.length > 0 ? (
                                     activeRoom.images.map((img, idx) => (
-                                        <img key={idx} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="room" />
+                                        <CmsImage
+                                          key={idx}
+                                          src={img}
+                                          alt="room"
+                                          fill
+                                          sizes="(max-width: 768px) 100vw, 60vw"
+                                          className={`object-cover transition-opacity duration-1000 ease-in-out ${(roomSlideIdx % activeRoom.images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                                        />
                                     ))
                                 ) : ( <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-bold bg-slate-100">{t.noImg}</div> )}
                             </div>
@@ -561,8 +624,17 @@ export default function HotelWebsite({ domain }) {
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
                                 {(() => {
                                     const activeItem = facilities[activeFacIdx] || {};
-                                    let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000"]);
-                                    return images.map((img, idx) => ( <img key={`fac_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="facility" /> ));
+                                    let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["/hero1.png"]);
+                                    return images.map((img, idx) => (
+                                      <CmsImage
+                                        key={`fac_slide_${idx}`}
+                                        src={img}
+                                        alt="facility"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        className={`object-cover transition-opacity duration-1000 ease-in-out ${(facSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                                      />
+                                    ));
                                 })()}
                             </div>
                         </div>
@@ -591,8 +663,17 @@ export default function HotelWebsite({ domain }) {
                             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden relative shadow-inner bg-slate-900">
                                 {(() => {
                                     const activeItem = attractions[activeAttIdx] || {};
-                                    let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["https://images.unsplash.com/photo-1542314831-c6a4d27a658d?auto=format&fit=crop&q=80&w=1000"]);
-                                    return images.map((img, idx) => ( <img key={`att_slide_${idx}`} src={img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} alt="attraction" /> ));
+                                    let images = activeItem.image_urls?.length > 0 ? activeItem.image_urls : (activeItem.image_url ? [activeItem.image_url] : ["/hero1.png"]);
+                                    return images.map((img, idx) => (
+                                      <CmsImage
+                                        key={`att_slide_${idx}`}
+                                        src={img}
+                                        alt="attraction"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        className={`object-cover transition-opacity duration-1000 ease-in-out ${(attSlideIdx % images.length) === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                                      />
+                                    ));
                                 })()}
                             </div>
                         </div>

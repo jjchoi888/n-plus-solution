@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { getHotelDisplayName } from "../lib/hotelDirectory";
 
 const BASE_URL = '';
 
@@ -13,18 +14,6 @@ const translations = {
   ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
   zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
   ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
-};
-
-const getHotelName = (code) => {
-    if (!code || code === 'ALL') return null;
-    const mapping = {
-        'NPLUS01': '📍 Metro Manila (Premier)',
-        'NPLUS02': '📍 Cebu (Resort & Spa)',
-        'NPLUS03': '📍 Boracay (Beachfront)',
-        'NPLUS04': '📍 Palawan (Eco Lodge)',
-        'NPLUS05': '📍 BGC (Boutique)'
-    };
-    return mapping[code] || `📍 Branch: ${code}`;
 };
 
 const RoomImageCarousel = ({ images, name }) => {
@@ -223,7 +212,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {actualRooms.map((room) => {
             const currentCount = cart[room.id] || 0;
-            const locationName = getHotelName(room.hotelCode);
+            const locationName = getHotelDisplayName(room.hotelCode);
             const showLocationBadge = effectiveHotelCode === 'ALL' && locationName;
 
             return (

@@ -10,7 +10,7 @@ export const apiClient = async (endpoint, options = {}) => {
   
   if (lang) url.searchParams.append('lang', lang);
 
-  // 💡 [핵심] BookingBar에서 넘겨준 목적지(ALL, NPLUS01 등)를 URL에 붙입니다.
+  // 💡 [핵심] BookingBar에서 넘겨준 목적지(ALL, sample001 등)를 URL에 붙입니다.
   // 아무것도 안 넘어오면 기본값으로 'ALL'을 세팅합니다.
   const targetHotel = hotelCode || 'ALL';
   url.searchParams.append('hotel', targetHotel);

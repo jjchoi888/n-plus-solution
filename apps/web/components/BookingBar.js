@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { roomApi } from "../lib/api"; 
+import { HOTEL_REGIONS } from "../lib/hotelDirectory";
 
 const translations = {
   en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Region & Hotel", allHotels: "All Philippines", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel" },
@@ -19,38 +19,6 @@ const getHotelDate = (offsetDays = 0) => {
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
-
-// 🗺️ 1. 필리핀 Region -> City/Municipal 계층형 데이터 (호텔 주소 포함)
-const PH_LOCATIONS = [
-  {
-    region: "NCR (Metro Manila)",
-    cities: [
-      { name: "Makati City", hotels: [{ code: "NPLUS01", name: "NPLUS Manila Premier", address: "Makati, Metro Manila, Philippines" }] },
-      { name: "Taguig City (BGC)", hotels: [{ code: "NPLUS05", name: "NPLUS BGC Boutique", address: "BGC, Taguig, Metro Manila, Philippines" }] },
-      { name: "Quezon City", hotels: [{ code: "NPLUS06", name: "NPLUS QC Suites", address: "Quezon City, Metro Manila, Philippines" }] }
-    ]
-  },
-  {
-    region: "Central Visayas",
-    cities: [
-      { name: "Cebu City", hotels: [{ code: "NPLUS02", name: "NPLUS Cebu Resort & Spa", address: "Cebu City, Cebu, Philippines" }] },
-      { name: "Lapu-Lapu City", hotels: [{ code: "NPLUS07", name: "NPLUS Mactan Ocean", address: "Lapu-Lapu City, Cebu, Philippines" }] }
-    ]
-  },
-  {
-    region: "Western Visayas",
-    cities: [
-      { name: "Malay (Boracay)", hotels: [{ code: "NPLUS03", name: "NPLUS Boracay Beachfront", address: "Boracay Island, Malay, Aklan, Philippines" }] }
-    ]
-  },
-  {
-    region: "MIMAROPA",
-    cities: [
-      { name: "El Nido", hotels: [{ code: "NPLUS04", name: "NPLUS Palawan Eco Lodge", address: "El Nido, Palawan, Philippines" }] },
-      { name: "Puerto Princesa", hotels: [{ code: "NPLUS08", name: "NPLUS Puerto City Hotel", address: "Puerto Princesa, Palawan, Philippines" }] }
-    ]
-  }
-];
 
 export default function BookingBar({ lang = 'en', onSearchResults }) {
   const t = translations[lang] || translations.en;
@@ -139,14 +107,14 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
   };
 
   // 💡 필터링된 호탤 리스트 계산
-  const availableCities = selectedRegion ? PH_LOCATIONS.find(r => r.region === selectedRegion)?.cities || [] : [];
+  const availableCities = selectedRegion ? HOTEL_REGIONS.find(r => r.region === selectedRegion)?.cities || [] : [];
   let filteredHotels = [];
   if (selectedCity) {
     filteredHotels = availableCities.find(c => c.name === selectedCity)?.hotels || [];
   } else if (selectedRegion) {
     availableCities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; });
   } else {
-    PH_LOCATIONS.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
+    HOTEL_REGIONS.forEach(r => { r.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
   }
 
   return (
@@ -255,7 +223,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
                     onChange={handleRegionChange}
                   >
                     <option value="">🗺️ Select Region </option>
-                    {PH_LOCATIONS.map(loc => (
+                    {HOTEL_REGIONS.map(loc => (
                       <option key={loc.region} value={loc.region}>{loc.region}</option>
                     ))}
                   </select>
