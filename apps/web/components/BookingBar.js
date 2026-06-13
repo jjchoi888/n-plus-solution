@@ -3,8 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import { fetchPortalHotels, groupHotelsByProvince } from "../lib/portalHotels";
 
 const translations = {
-  en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Province & Hotel", allHotels: "All Philippines", allProvinces: "Search All Provinces", selectProvince: "Select Province", selectMunicipality: "Select City/Municipality", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", loadingHotels: "Loading registered hotels...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel", availableHotels: "Available Hotels", noHotelsFound: "No registered hotels found in this area." },
-  ko: { destination: "목적지", whereTo: "어디로 떠나시나요?", mapTitle: "지역 및 호텔 선택", allHotels: "필리핀 전체", allProvinces: "전체 지역 검색", selectProvince: "주/도 선택", selectMunicipality: "시/군 선택", checkIn: "체크인", checkOut: "체크아웃", guestsRooms: "인원 및 객실", guests: "명", room: "객실", adult: "성인", child: "어린이", infant: "유아", free: "무료", search: "검색하기", searching: "검색 중...", loadingHotels: "등록된 호텔 정보를 불러오는 중입니다...", error: "알림", selectDates: "체크인과 체크아웃 날짜를 모두 선택해 주세요.", fetchError: "객실 정보를 불러오지 못했습니다. 다시 시도해 주세요.", fullyBooked: "예약 마감!", noRooms: "선택하신 날짜에 예약 가능한 객실이 없습니다.\n일정을 변경해 주세요.", ok: "확인", okChange: "일정 변경하기", proceed: "남은 방으로 진행", viewOnMap: "지도에서 보기", selectHotel: "이 호텔 선택하기", availableHotels: "등록 호텔", noHotelsFound: "이 지역에 등록된 호텔이 없습니다." }
+  en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Province & Hotel", allHotels: "All Philippines", allProvinces: "Search All Provinces", selectProvince: "Select Province", selectMunicipality: "Select City/Municipality", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", loadingHotels: "Loading registered hotels...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel", availableHotels: "Available Hotels", noHotelsFound: "No registered hotels found in this area.", noProvinceData: "Some hotels are missing province/city settings in the web builder." },
+  ko: { destination: "목적지", whereTo: "어디로 떠나시나요?", mapTitle: "지역 및 호텔 선택", allHotels: "필리핀 전체", allProvinces: "전체 지역 검색", selectProvince: "Select Province", selectMunicipality: "City / Municipal 선택", checkIn: "체크인", checkOut: "체크아웃", guestsRooms: "인원 및 객실", guests: "명", room: "객실", adult: "성인", child: "어린이", infant: "유아", free: "무료", search: "검색하기", searching: "검색 중...", loadingHotels: "등록된 호텔 정보를 불러오는 중입니다...", error: "알림", selectDates: "체크인과 체크아웃 날짜를 모두 선택해 주세요.", fetchError: "객실 정보를 불러오지 못했습니다. 다시 시도해 주세요.", fullyBooked: "예약 마감!", noRooms: "선택하신 날짜에 예약 가능한 객실이 없습니다.\n일정을 변경해 주세요.", ok: "확인", okChange: "일정 변경하기", proceed: "남은 방으로 진행", viewOnMap: "지도에서 보기", selectHotel: "이 호텔 선택하기", availableHotels: "등록 호텔", noHotelsFound: "이 지역에 등록된 호텔이 없습니다.", noProvinceData: "일부 호텔에 Province / City 설정이 없어 드롭다운에 표시되지 않습니다." }
 };
 
 const BASE_URL = '';
@@ -142,6 +142,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
   // 💡 필터링된 호탤 리스트 계산
   const hotelProvinces = groupHotelsByProvince(portalHotels);
+  const hotelsMissingProvinceData = portalHotels.filter((hotel) => !hotel.province || !hotel.cityMunicipal);
   const availableCities = selectedProvince ? hotelProvinces.find((province) => province.province === selectedProvince)?.cities || [] : [];
   let filteredHotels = [];
   if (selectedCity) {
@@ -149,7 +150,7 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
   } else if (selectedProvince) {
     availableCities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; });
   } else {
-    hotelProvinces.forEach(p => { p.cities.forEach(c => { filteredHotels = [...filteredHotels, ...c.hotels]; }); });
+    filteredHotels = portalHotels;
   }
 
   return (
@@ -252,6 +253,11 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
 
                 {/* 2. 연동형 드롭다운 필터 */}
                 <div className="space-y-3">
+                  {hotelsMissingProvinceData.length > 0 && (
+                    <p className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs font-bold text-amber-700">
+                      {t.noProvinceData}
+                    </p>
+                  )}
                   <select 
                     className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer" 
                     value={selectedProvince} 
@@ -321,10 +327,18 @@ export default function BookingBar({ lang = 'en', onSearchResults }) {
               </div>
               
               {activeMapHotel?.mapEmbedUrl ? (
-                <div
-                  className="absolute inset-0 w-full h-full bg-slate-100"
-                  dangerouslySetInnerHTML={{ __html: activeMapHotel.mapEmbedUrl }}
-                />
+                <iframe 
+                    title="Google Maps Location"
+                    src={activeMapHotel.mapEmbedUrl}
+                    width="100%"
+                    height="100%" 
+                    frameBorder="0" 
+                    style={{ border: 0 }} 
+                    allowFullScreen="" 
+                    aria-hidden="false" 
+                    tabIndex="0"
+                    className="absolute inset-0 w-full h-full bg-slate-100"
+                ></iframe>
               ) : (
                 <iframe 
                     title="Google Maps Location"

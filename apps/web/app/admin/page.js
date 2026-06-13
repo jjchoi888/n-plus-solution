@@ -12,6 +12,7 @@ export default function AdminRoomManager() {
   const [loginError, setLoginError] = useState("");
 
   const [savedRooms, setSavedRooms] = useState([]);
+  const [websiteConfig, setWebsiteConfig] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [existingImages, setExistingImages] = useState([]);
   const [modal, setModal] = useState({ show: false, title: '', message: '', type: 'success' });
@@ -19,6 +20,7 @@ export default function AdminRoomManager() {
   // 요금 설정 상태
   const [globalFees, setGlobalFees] = useState({ childFee: 500, extraBedFee: 1000 });
   const [isSavingFees, setIsSavingFees] = useState(false);
+  const [isSavingWebsite, setIsSavingWebsite] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,6 +31,13 @@ export default function AdminRoomManager() {
   
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [listingSettings, setListingSettings] = useState({
+    hotelName: "",
+    province: "",
+    cityMunicipal: "",
+    address: "",
+    googleMapLink: "",
+  });
 
   const fetchRooms = async () => {
     try {
@@ -50,10 +59,40 @@ export default function AdminRoomManager() {
     } catch (e) { console.error(e); }
   };
 
+  const fetchWebsiteSettings = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/settings/website?hotel=${HOTEL_CODE}`);
+      const data = await res.json();
+      if (!(data.success && data.config)) return;
+
+      setWebsiteConfig(data.config);
+
+      let sns = {};
+      try {
+        sns = data.config.sns_json
+          ? typeof data.config.sns_json === "string"
+            ? JSON.parse(data.config.sns_json)
+            : data.config.sns_json
+          : {};
+      } catch {
+        sns = {};
+      }
+
+      setListingSettings({
+        hotelName: data.config.hotel_name || sns.hotel_name || sns.title || data.config.footer_company_name || "",
+        province: data.config.province || data.config.property_province || sns.province || "",
+        cityMunicipal: data.config.city_municipality || data.config.city || sns.city_municipality || sns.city || sns.municipality || "",
+        address: sns.address || data.config.address || data.config.property_address || "",
+        googleMapLink: data.config.map_embed_url || data.config.map_url || sns.map_link || "",
+      });
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => {
     if (isLoggedIn) {
         fetchRooms();
         fetchFees(); 
+        fetchWebsiteSettings();
     }
   }, [isLoggedIn]);
 
@@ -74,6 +113,11 @@ export default function AdminRoomManager() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleListingSettingsChange = (e) => {
+    const { name, value } = e.target;
+    setListingSettings((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
@@ -128,6 +172,61 @@ export default function AdminRoomManager() {
         setModal({ show: true, type: 'error', title: 'Network Error', message: 'Could not connect to the server.' });
     } finally {
         setIsSavingFees(false);
+    }
+  };
+
+  const handleSaveWebsiteSettings = async () => {
+    if (!websiteConfig) return;
+
+    setIsSavingWebsite(true);
+    try {
+      let existingSns = {};
+      try {
+        existingSns = websiteConfig.sns_json
+          ? typeof websiteConfig.sns_json === "string"
+            ? JSON.parse(websiteConfig.sns_json)
+            : websiteConfig.sns_json
+          : {};
+      } catch {
+        existingSns = {};
+      }
+
+      const payload = {
+        ...websiteConfig,
+        hotel_code: HOTEL_CODE,
+        hotel_name: listingSettings.hotelName,
+        footer_company_name: listingSettings.hotelName,
+        province: listingSettings.province,
+        city_municipality: listingSettings.cityMunicipal,
+        map_embed_url: listingSettings.googleMapLink,
+        sns_json: JSON.stringify({
+          ...existingSns,
+          title: listingSettings.hotelName,
+          hotel_name: listingSettings.hotelName,
+          province: listingSettings.province,
+          city_municipality: listingSettings.cityMunicipal,
+          address: listingSettings.address,
+          map_link: listingSettings.googleMapLink,
+        }),
+      };
+
+      const res = await fetch(`${BASE_URL}/api/settings/website`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setModal({ show: true, type: "success", title: "Website Settings Saved", message: "Hotel listing and map settings have been updated." });
+        fetchWebsiteSettings();
+      } else {
+        setModal({ show: true, type: "error", title: "Error", message: data.error || data.message || "Failed to save website settings." });
+      }
+    } catch (error) {
+      setModal({ show: true, type: "error", title: "Network Error", message: "Could not connect to the server." });
+    } finally {
+      setIsSavingWebsite(false);
     }
   };
 
@@ -219,6 +318,72 @@ export default function AdminRoomManager() {
             <div className="mt-6 flex justify-end">
                 <button onClick={handleSaveFees} disabled={isSavingFees} className={`font-bold py-3 px-8 rounded-xl shadow-md transition-all ${isSavingFees ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark text-white hover:-translate-y-1 hover:shadow-lg'}`}>
                     {isSavingFees ? 'Saving...' : 'Save Settings'}
+                </button>
+            </div>
+        </div>
+
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-black text-gray-800 mb-6 border-b pb-4">🏨 Portal Listing & Map Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-2">Hotel Name</label>
+                    <input
+                      type="text"
+                      name="hotelName"
+                      value={listingSettings.hotelName}
+                      onChange={handleListingSettingsChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-bold text-gray-800"
+                      placeholder="Bayfront Hotel"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-2">Province</label>
+                    <input
+                      type="text"
+                      name="province"
+                      value={listingSettings.province}
+                      onChange={handleListingSettingsChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-bold text-gray-800"
+                      placeholder="Cebu"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-2">City / Municipal</label>
+                    <input
+                      type="text"
+                      name="cityMunicipal"
+                      value={listingSettings.cityMunicipal}
+                      onChange={handleListingSettingsChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-bold text-gray-800"
+                      placeholder="Cebu City"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-2">Google Map Link</label>
+                    <input
+                      type="text"
+                      name="googleMapLink"
+                      value={listingSettings.googleMapLink}
+                      onChange={handleListingSettingsChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-bold text-gray-800"
+                      placeholder="https://maps.google.com/..."
+                    />
+                </div>
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-bold text-gray-600 mb-2">Property Address</label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={listingSettings.address}
+                      onChange={handleListingSettingsChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald outline-none font-bold text-gray-800"
+                      placeholder="Street, Barangay, City, Province"
+                    />
+                </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+                <button onClick={handleSaveWebsiteSettings} disabled={isSavingWebsite} className={`font-bold py-3 px-8 rounded-xl shadow-md transition-all ${isSavingWebsite ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark text-white hover:-translate-y-1 hover:shadow-lg'}`}>
+                    {isSavingWebsite ? 'Saving...' : 'Save Listing Settings'}
                 </button>
             </div>
         </div>

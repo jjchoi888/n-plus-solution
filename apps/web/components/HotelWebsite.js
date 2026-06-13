@@ -2,6 +2,7 @@
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
+import { parseGoogleMapEmbedSrc } from "../lib/portalHotels";
 
 const BASE_URL = '';
 
@@ -253,6 +254,11 @@ export default function HotelWebsite({ domain }) {
 
   const themeColor = safeConfig.theme_color?.startsWith('#') ? safeConfig.theme_color : '#2563eb';
   const themeFont = safeConfig.theme_font || 'Inter';
+  const hotelDisplayName = safeConfig.hotel_name || sns?.hotel_name || sns?.title || safeConfig.footer_company_name || safeConfig.property_name || "Our Hotel";
+  const contactMapSrc = parseGoogleMapEmbedSrc(
+    safeConfig.map_embed_url || safeConfig.map_url || sns?.map_link,
+    sns?.address || hotelDisplayName,
+  );
   
   const sliderImages = [];
   if (gallery.length > 0) sliderImages.push(...gallery);
@@ -330,7 +336,7 @@ export default function HotelWebsite({ domain }) {
                     sizes="240px"
                   />
                 ) : (
-                  <span className="text-2xl font-black theme-text uppercase">{safeConfig.welcome_title || 'LOGO'}</span>
+                  <span className="text-2xl font-black theme-text uppercase">{hotelDisplayName}</span>
                 )}
               </div>
               <div className="hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest">
@@ -692,13 +698,28 @@ export default function HotelWebsite({ domain }) {
           <section className="pt-24 md:pt-32 pb-20 px-4 md:px-6 max-w-7xl mx-auto animate-fade-in-up w-full flex-grow">
              <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl border border-slate-200 p-5 md:p-8 grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8">
                 <div className="lg:col-span-7 w-full h-[300px] md:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden shadow-inner border border-slate-100 bg-slate-100 [&_iframe]:!w-full [&_iframe]:!h-full [&_div]:!w-full [&_div]:!h-full">
-                    {safeConfig.map_embed_url ? ( <div dangerouslySetInnerHTML={{ __html: safeConfig.map_embed_url }} className="w-full h-full" /> ) : ( <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm">{t.mapUpdating}</div> )}
+                    {contactMapSrc ? (
+                      <iframe
+                        title="Hotel Location"
+                        src={contactMapSrc}
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        style={{ border: 0 }}
+                        allowFullScreen=""
+                        aria-hidden="false"
+                        tabIndex="0"
+                        className="w-full h-full bg-slate-100"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm">{t.mapUpdating}</div>
+                    )}
                 </div>
                 <div className="lg:col-span-3 flex flex-col">
                     <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 self-start">{t.contactUs}</h3>
                     <div className="space-y-4 md:space-y-6 text-slate-600 flex-1">
                         <div>
-                            <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{safeConfig.welcome_title || "Our Hotel"}</p>
+                            <p className="font-black text-lg md:text-xl text-slate-800 mb-4">{hotelDisplayName}</p>
                             {sns?.address && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">🏠</span> <span className="whitespace-pre-wrap">{sns.address}</span></p>}
                             {sns?.phone && <p className="flex items-start gap-3 mb-3 text-sm font-medium"><span className="shrink-0 mt-0.5 text-base">📞</span> <span className="whitespace-pre-wrap">{sns.phone}</span></p>}
                             {sns?.email && <p className="flex items-center gap-3 mb-3 text-sm font-medium"><span className="shrink-0 text-base">✉️</span> <span>{sns.email}</span></p>}
@@ -923,7 +944,7 @@ export default function HotelWebsite({ domain }) {
                 </div>
                 <div className="flex-1 flex justify-center md:justify-end w-full">
                     <p className="text-xs md:text-sm font-bold text-slate-500 text-center md:text-right">
-                        &copy; {new Date().getFullYear()} <span className="theme-text">{safeConfig.footer_company_name || safeConfig.welcome_title || "Our Hotel"}</span>. {t.rights}
+                        &copy; {new Date().getFullYear()} <span className="theme-text">{hotelDisplayName}</span>. {t.rights}
                     </p>
                 </div>
             </div>

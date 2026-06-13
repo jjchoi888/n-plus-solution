@@ -29,10 +29,70 @@ const parseJsonSafely = (value, fallback) => {
 
 const normalizeText = (value) => String(value || "").trim();
 
+export const parseGoogleMapEmbedSrc = (rawValue, fallbackQuery = "Philippines") => {
+  const raw = normalizeText(rawValue);
+  const fallback = `https://maps.google.com/maps?q=${encodeURIComponent(fallbackQuery)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`;
+
+  if (!raw) return fallback;
+
+  const iframeMatch = raw.match(/src=["']([^"']+)["']/i);
+  const candidate = iframeMatch?.[1] || raw;
+
+  if (/output=embed/i.test(candidate)) return candidate;
+
+  try {
+    const parsed = new URL(candidate);
+    const host = parsed.hostname.toLowerCase();
+    const query =
+      parsed.searchParams.get("q") ||
+      parsed.searchParams.get("query") ||
+      parsed.searchParams.get("destination") ||
+      parsed.searchParams.get("daddr");
+
+    if (query) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    if (host.includes("maps.google.") || host.includes("www.google.")) {
+      const placeMatch = decodeURIComponent(parsed.pathname).match(/\/place\/([^/]+)/i);
+      if (placeMatch?.[1]) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(placeMatch[1].replace(/\+/g, " "))}&t=m&z=14&ie=UTF8&iwloc=&output=embed`;
+      }
+
+      const atMatch = parsed.pathname.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+      if (atMatch) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(`${atMatch[1]},${atMatch[2]}`)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`;
+      }
+    }
+
+    if (host.includes("maps.app.goo.gl")) return fallback;
+  } catch {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(candidate)}&t=m&z=14&ie=UTF8&iwloc=&output=embed`;
+  }
+
+  return fallback;
+};
+
+const getSnsSettings = (config) => parseJsonSafely(config?.sns_json, {});
+
+const extractHotelName = (config) => {
+  const sns = getSnsSettings(config);
+  return (
+    normalizeText(config?.hotel_name) ||
+    normalizeText(sns?.hotel_name) ||
+    normalizeText(sns?.title) ||
+    normalizeText(config?.footer_company_name) ||
+    normalizeText(config?.property_name) ||
+    normalizeText(config?.hotel_code) ||
+    "Hotel"
+  );
+};
+
 const extractAddress = (config) => {
-  const sns = parseJsonSafely(config?.sns_json, {});
+  const sns = getSnsSettings(config);
   return normalizeText(
     sns?.address ||
+      sns?.full_address ||
       config?.address ||
       config?.property_address ||
       config?.full_address,
@@ -46,13 +106,32 @@ const cleanLocationParts = (address) =>
     .filter(Boolean)
     .filter((part) => !/^philippines$/i.test(part));
 
-const extractProvince = (address) => {
+const extractProvince = (config, address) => {
+  const sns = getSnsSettings(config);
+  const configuredProvince =
+    normalizeText(config?.province) ||
+    normalizeText(config?.property_province) ||
+    normalizeText(sns?.province);
+
+  if (configuredProvince) return configuredProvince;
+
   const parts = cleanLocationParts(address);
-  if (parts.length === 0) return "Unassigned";
+  if (parts.length === 0) return "";
   return parts[parts.length - 1];
 };
 
-const extractCityMunicipality = (address, province) => {
+const extractCityMunicipality = (config, address, province) => {
+  const sns = getSnsSettings(config);
+  const configuredCity =
+    normalizeText(config?.city_municipality) ||
+    normalizeText(config?.city) ||
+    normalizeText(config?.municipality) ||
+    normalizeText(sns?.city_municipality) ||
+    normalizeText(sns?.city) ||
+    normalizeText(sns?.municipality);
+
+  if (configuredCity) return configuredCity;
+
   const parts = cleanLocationParts(address);
   if (parts.length <= 1) return province;
   return parts[parts.length - 2];
@@ -115,13 +194,15 @@ const fetchHotelConfig = async (hotelCode) => {
   if (!data?.success || !data?.config) return null;
 
   const config = data.config;
-  const name =
-    normalizeText(config.welcome_title) ||
-    normalizeText(config.footer_company_name) ||
-    hotelCode;
+  const name = extractHotelName(config);
   const address = extractAddress(config);
-  const province = extractProvince(address);
-  const cityMunicipal = extractCityMunicipality(address, province);
+  const province = extractProvince(config, address);
+  const cityMunicipal = extractCityMunicipality(config, address, province);
+  const rawMapLink =
+    normalizeText(config.map_embed_url) ||
+    normalizeText(config.map_url) ||
+    normalizeText(getSnsSettings(config)?.map_link);
+  const mapQuery = buildMapQuery(name, address);
 
   return {
     code: hotelCode,
@@ -129,8 +210,9 @@ const fetchHotelConfig = async (hotelCode) => {
     address: address || hotelCode,
     province,
     cityMunicipal,
-    mapQuery: buildMapQuery(name, address),
-    mapEmbedUrl: normalizeText(config.map_embed_url),
+    mapQuery,
+    mapEmbedUrl: parseGoogleMapEmbedSrc(rawMapLink, mapQuery),
+    mapLink: rawMapLink,
     image: extractPrimaryImage(config),
     url: buildHotelUrl(hotelCode),
   };
@@ -143,7 +225,9 @@ export const getCachedHotelDisplayName = (hotelCode) =>
 
 export const groupHotelsByProvince = (hotels) =>
   Array.from(
-    hotels.reduce((provinceMap, hotel) => {
+    hotels
+      .filter((hotel) => normalizeText(hotel.province))
+      .reduce((provinceMap, hotel) => {
       if (!provinceMap.has(hotel.province)) {
         provinceMap.set(hotel.province, new Map());
       }
@@ -155,7 +239,7 @@ export const groupHotelsByProvince = (hotels) =>
 
       cityMap.get(hotel.cityMunicipal).push(hotel);
       return provinceMap;
-    }, new Map()).entries(),
+      }, new Map()).entries(),
   )
     .map(([province, cityMap]) => ({
       province,
