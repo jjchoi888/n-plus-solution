@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { buildHotelUrl } from "../lib/portalHotels";
 
 const resolveHotelCode = () => {
@@ -22,11 +22,7 @@ const resolveHotelCode = () => {
 };
 
 export default function FloatingBackButton() {
-  const [hotelCode, setHotelCode] = useState(null);
-
-  useEffect(() => {
-    setHotelCode(resolveHotelCode());
-  }, []);
+  const [hotelCode] = useState(resolveHotelCode);
 
   if (!hotelCode) return null;
 

@@ -133,6 +133,33 @@ const translations = {
     }
 };
 
+const collectStyleCandidates = (candidate) => {
+  if (candidate === null || candidate === undefined) return [];
+
+  if (Array.isArray(candidate)) {
+    return candidate.flatMap(collectStyleCandidates);
+  }
+
+  if (typeof candidate === "object") {
+    return [
+      candidate.value,
+      candidate.label,
+      candidate.name,
+      candidate.id,
+      candidate.key,
+      candidate.mode,
+      candidate.style,
+      candidate.version,
+      candidate.website_style,
+      candidate.website_version,
+      candidate.style_version,
+      candidate.style_mode,
+    ].flatMap(collectStyleCandidates);
+  }
+
+  return [candidate];
+};
+
 const resolveWebsiteStyle = (config = {}, sns = {}) => {
   const candidates = [
     config.website_style,
@@ -145,6 +172,10 @@ const resolveWebsiteStyle = (config = {}, sns = {}) => {
     config.site_style,
     config.site_version,
     config.theme_style,
+    config.layout_style,
+    config.layout_version,
+    config.builder_style,
+    config.builder_version,
     config.template,
     config.style,
     sns.website_style,
@@ -152,34 +183,69 @@ const resolveWebsiteStyle = (config = {}, sns = {}) => {
     sns.style_version,
     sns.style_mode,
     sns.design_style,
-  ];
+    sns.version_style,
+    sns.site_style,
+    sns.site_version,
+    sns.theme_style,
+    sns.layout_style,
+    sns.layout_version,
+    sns.builder_style,
+    sns.builder_version,
+    sns.template,
+    sns.style,
+  ].flatMap(collectStyleCandidates);
+
+  const modernTokens = new Set([
+    "2",
+    "v2",
+    "ver2",
+    "style2",
+    "version2",
+    "modern",
+    "modernstyle",
+    "모던",
+    "현대",
+    "モダン",
+    "现代",
+    "現代",
+  ]);
+  const classicTokens = new Set([
+    "1",
+    "v1",
+    "ver1",
+    "style1",
+    "version1",
+    "classic",
+    "classicstyle",
+    "클래식",
+    "기본",
+    "クラシック",
+    "经典",
+    "經典",
+  ]);
 
   for (const candidate of candidates) {
-    if (candidate === null || candidate === undefined) continue;
-
     if (typeof candidate === "number") {
       return candidate === 2 ? "modern" : "classic";
     }
 
-    const normalized = String(candidate).trim().toLowerCase();
+    const normalized = String(candidate).trim().toLowerCase().replace(/[\s_-]+/g, "");
     if (!normalized) continue;
 
     if (
+      modernTokens.has(normalized) ||
       normalized.includes("modern") ||
-      normalized === "2" ||
-      normalized === "v2" ||
-      normalized === "ver2" ||
-      normalized === "style2"
+      normalized.includes("모던") ||
+      normalized.includes("モダン")
     ) {
       return "modern";
     }
 
     if (
+      classicTokens.has(normalized) ||
       normalized.includes("classic") ||
-      normalized === "1" ||
-      normalized === "v1" ||
-      normalized === "ver1" ||
-      normalized === "style1"
+      normalized.includes("클래식") ||
+      normalized.includes("クラシック")
     ) {
       return "classic";
     }

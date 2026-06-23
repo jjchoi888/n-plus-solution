@@ -3,10 +3,23 @@ import { useState, useEffect } from "react";
 
 const BASE_URL = '';
 
-// 💡 [핵심] Vercel 환경 변수에서 호텔 코드 가져오기
-const HOTEL_CODE = process.env.NEXT_PUBLIC_HOTEL_CODE || 'sample001';
+const DEFAULT_HOTEL_CODE = process.env.NEXT_PUBLIC_HOTEL_CODE || 'NPLUS01';
+
+const resolveHotelCode = () => {
+  if (typeof window === "undefined") return DEFAULT_HOTEL_CODE;
+
+  const params = new URLSearchParams(window.location.search);
+  const hotelParam = params.get("hotel")?.trim();
+  if (hotelParam) return hotelParam;
+
+  const storedHotelCode = window.localStorage.getItem("hotelCode")?.trim();
+  if (storedHotelCode) return storedHotelCode;
+
+  return DEFAULT_HOTEL_CODE;
+};
 
 export default function AdminRoomManager() {
+  const [hotelCode] = useState(resolveHotelCode);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginData, setLoginData] = useState({ user_id: "", password: "" });
   const [loginError, setLoginError] = useState("");
@@ -42,7 +55,7 @@ export default function AdminRoomManager() {
   const fetchRooms = async () => {
     try {
       // 💡 꼬리표 달기
-      const res = await fetch(`${BASE_URL}/api/admin/room-types?hotel=${HOTEL_CODE}`);
+      const res = await fetch(`${BASE_URL}/api/admin/room-types?hotel=${hotelCode}`);
       const data = await res.json();
       if(data.success) setSavedRooms(data.rooms);
     } catch (e) { console.error(e); }
@@ -51,7 +64,7 @@ export default function AdminRoomManager() {
   const fetchFees = async () => {
     try {
         // 💡 꼬리표 달기
-        const res = await fetch(`${BASE_URL}/api/settings/fees?hotel=${HOTEL_CODE}`);
+        const res = await fetch(`${BASE_URL}/api/settings/fees?hotel=${hotelCode}`);
         const data = await res.json();
         if (data.success && data.fees) {
             setGlobalFees({ childFee: data.fees.child_fee, extraBedFee: data.fees.extra_bed_fee });
@@ -61,7 +74,7 @@ export default function AdminRoomManager() {
 
   const fetchWebsiteSettings = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/settings/website?hotel=${HOTEL_CODE}`);
+      const res = await fetch(`${BASE_URL}/api/settings/website?hotel=${hotelCode}`);
       const data = await res.json();
       if (!(data.success && data.config)) return;
 
@@ -94,7 +107,7 @@ export default function AdminRoomManager() {
         fetchFees(); 
         fetchWebsiteSettings();
     }
-  }, [isLoggedIn]);
+  }, [hotelCode, isLoggedIn]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -102,7 +115,7 @@ export default function AdminRoomManager() {
     try {
       const res = await fetch(`${BASE_URL}/api/login`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...loginData, hotel_code: HOTEL_CODE }) // 💡 소속 호텔 코드로 로그인 
+        body: JSON.stringify({ ...loginData, hotel_code: hotelCode }) // 💡 소속 호텔 코드로 로그인 
       });
       const data = await res.json();
       if (data.success && (data.role === 'Master' || data.role === 'FrontDesk')) setIsLoggedIn(true);
@@ -160,7 +173,7 @@ export default function AdminRoomManager() {
         const res = await fetch(`${BASE_URL}/api/settings/fees`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...globalFees, hotel_code: HOTEL_CODE }) // 💡 호텔 코드 쏘기
+            body: JSON.stringify({ ...globalFees, hotel_code: hotelCode }) // 💡 호텔 코드 쏘기
         });
         const data = await res.json();
         if (data.success) {
@@ -193,7 +206,7 @@ export default function AdminRoomManager() {
 
       const payload = {
         ...websiteConfig,
-        hotel_code: HOTEL_CODE,
+        hotel_code: hotelCode,
         hotel_name: listingSettings.hotelName,
         footer_company_name: listingSettings.hotelName,
         province: listingSettings.province,
@@ -236,7 +249,7 @@ export default function AdminRoomManager() {
 
     try {
         // 💡 URL 파라미터로 꼬리표 달기
-        const response = await fetch(`${BASE_URL}/api/admin/room-types/${id}?name=${encodeURIComponent(nameEn || '')}&hotel=${HOTEL_CODE}`, { method: 'DELETE' });
+        const response = await fetch(`${BASE_URL}/api/admin/room-types/${id}?name=${encodeURIComponent(nameEn || '')}&hotel=${hotelCode}`, { method: 'DELETE' });
         const result = await response.json();
         if (result.success) {
             setModal({ show: true, type: 'success', title: 'Success', message: 'Room successfully deleted!' });
@@ -257,7 +270,7 @@ export default function AdminRoomManager() {
     selectedFiles.forEach(file => submitData.append("images", file));
     
     // 💡 폼 데이터에 호텔 코드 끼워넣기
-    submitData.append("hotel_code", HOTEL_CODE);
+    submitData.append("hotel_code", hotelCode);
 
     if (editingId) {
         submitData.append("roomId", editingId);
@@ -282,7 +295,7 @@ export default function AdminRoomManager() {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-            <div className="text-center mb-8"><h1 className="text-3xl font-black text-emerald tracking-tighter">Web Admin</h1><p className="text-gray-500 mt-2 text-sm font-medium">Property: {HOTEL_CODE}</p></div>
+            <div className="text-center mb-8"><h1 className="text-3xl font-black text-emerald tracking-tighter">Web Admin</h1><p className="text-gray-500 mt-2 text-sm font-medium">Property: {hotelCode}</p></div>
             {loginError && <p className="text-red-500 text-sm mb-4 text-center bg-red-50 p-2 rounded">{loginError}</p>}
             <form onSubmit={handleLogin} className="space-y-6">
               <div><label className="block text-sm font-bold text-gray-700 mb-2">User ID</label><input type="text" required value={loginData.user_id} onChange={(e) => setLoginData({...loginData, user_id: e.target.value})} className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald outline-none" /></div>
@@ -299,7 +312,7 @@ export default function AdminRoomManager() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         <div className="bg-emerald px-8 py-6 flex justify-between items-center rounded-2xl shadow-md">
-          <div><h1 className="text-3xl font-bold text-white">Room Type Manager</h1><p className="text-emerald-100 mt-2 font-bold tracking-widest">[{HOTEL_CODE}] PROPERTY</p></div>
+          <div><h1 className="text-3xl font-bold text-white">Room Type Manager</h1><p className="text-emerald-100 mt-2 font-bold tracking-widest">[{hotelCode}] PROPERTY</p></div>
           <button onClick={() => setIsLoggedIn(false)} className="text-white text-sm font-bold border border-white px-4 py-2 rounded hover:bg-white hover:text-emerald transition">Logout</button>
         </div>
 
