@@ -133,6 +133,61 @@ const translations = {
     }
 };
 
+const resolveWebsiteStyle = (config = {}, sns = {}) => {
+  const candidates = [
+    config.website_style,
+    config.website_version,
+    config.style_version,
+    config.style_mode,
+    config.design_style,
+    config.template_style,
+    config.version_style,
+    config.site_style,
+    config.site_version,
+    config.theme_style,
+    config.template,
+    config.style,
+    sns.website_style,
+    sns.website_version,
+    sns.style_version,
+    sns.style_mode,
+    sns.design_style,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate === null || candidate === undefined) continue;
+
+    if (typeof candidate === "number") {
+      return candidate === 2 ? "modern" : "classic";
+    }
+
+    const normalized = String(candidate).trim().toLowerCase();
+    if (!normalized) continue;
+
+    if (
+      normalized.includes("modern") ||
+      normalized === "2" ||
+      normalized === "v2" ||
+      normalized === "ver2" ||
+      normalized === "style2"
+    ) {
+      return "modern";
+    }
+
+    if (
+      normalized.includes("classic") ||
+      normalized === "1" ||
+      normalized === "v1" ||
+      normalized === "ver1" ||
+      normalized === "style1"
+    ) {
+      return "classic";
+    }
+  }
+
+  return "classic";
+};
+
 export default function HotelWebsite({ domain }) {
   const [lang, setLang] = useState('en');
   const [config, setConfig] = useState(null);
@@ -255,6 +310,7 @@ export default function HotelWebsite({ domain }) {
   const themeColor = safeConfig.theme_color?.startsWith('#') ? safeConfig.theme_color : '#2563eb';
   const themeFont = safeConfig.theme_font || 'Inter';
   const hotelDisplayName = safeConfig.hotel_name || sns?.hotel_name || sns?.title || safeConfig.footer_company_name || safeConfig.property_name || "Our Hotel";
+  const websiteStyle = resolveWebsiteStyle(safeConfig, sns);
   const contactMapSrc = parseGoogleMapEmbedSrc(
     safeConfig.map_embed_url || safeConfig.map_url || sns?.map_link,
     sns?.address || hotelDisplayName,
@@ -318,12 +374,88 @@ export default function HotelWebsite({ domain }) {
         .theme-border { border-color: var(--theme-color-border) !important; }
         .theme-hover:hover { opacity: 0.85; transform: translateY(-2px); transition: all 0.2s; }
         .theme-focus:focus { border-color: var(--theme-color) !important; box-shadow: 0 0 0 2px var(--theme-color-light) !important; outline: none; }
+        .site-shell { position: relative; }
+        .site-shell-modern {
+          background:
+            radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 34%),
+            linear-gradient(180deg, #f8fbff 0%, #eef6ff 38%, #f8fafc 100%);
+        }
+        .site-shell-modern .site-header {
+          background: rgba(15, 23, 42, 0.82) !important;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+          box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+        }
+        .site-shell-modern .site-logo-text {
+          color: white !important;
+        }
+        .site-shell-modern .site-nav-button {
+          color: rgba(226, 232, 240, 0.78);
+        }
+        .site-shell-modern .site-nav-button:hover,
+        .site-shell-modern .site-nav-button-active {
+          color: white !important;
+        }
+        .site-shell-modern .site-nav-button-active {
+          border-color: rgba(255, 255, 255, 0.34) !important;
+        }
+        .site-shell-modern .site-book-button {
+          border-radius: 1rem !important;
+          box-shadow: 0 18px 40px rgba(37, 99, 235, 0.28);
+        }
+        .site-shell-modern .site-mobile-menu {
+          background: rgba(15, 23, 42, 0.96) !important;
+          border-top-color: rgba(148, 163, 184, 0.16) !important;
+        }
+        .site-shell-modern .site-mobile-item {
+          color: rgba(226, 232, 240, 0.88) !important;
+        }
+        .site-shell-modern .site-mobile-item-active {
+          background: rgba(255, 255, 255, 0.08) !important;
+          color: white !important;
+        }
+        .site-shell-modern .site-hero {
+          height: 92vh;
+        }
+        .site-shell-modern .site-hero::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.08) 28%, rgba(15, 23, 42, 0.72) 100%);
+          pointer-events: none;
+          z-index: 15;
+        }
+        .site-shell-modern .site-about {
+          background: transparent;
+          padding-top: 5rem;
+        }
+        .site-shell-modern .site-about-card {
+          background: rgba(255, 255, 255, 0.84);
+          border: 1px solid rgba(148, 163, 184, 0.16);
+          border-radius: 2rem;
+          box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+          backdrop-filter: blur(18px);
+          padding: 3rem 2rem;
+        }
+        .site-shell-modern .site-room-stage,
+        .site-shell-modern .site-contact-card {
+          background: rgba(255, 255, 255, 0.84) !important;
+          border-color: rgba(148, 163, 184, 0.18) !important;
+          box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10) !important;
+          backdrop-filter: blur(18px);
+        }
+        .site-shell-modern .site-footer {
+          background: rgba(15, 23, 42, 0.94) !important;
+          border-top-color: rgba(148, 163, 184, 0.18) !important;
+        }
+        .site-shell-modern .site-footer p {
+          color: rgba(226, 232, 240, 0.85) !important;
+        }
       `}} />
 
-      <div className="min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white" onContextMenu={(e) => e.preventDefault()}>
+      <div className={`site-shell site-shell-${websiteStyle} min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white`} onContextMenu={(e) => e.preventDefault()}>
         
         {/* 헤더 */}
-        <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
+        <header className="site-header fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
           <div className="flex justify-between items-center px-6 md:px-12 py-4 relative z-50">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveMenu('HOME')}>
                 {safeConfig.logo_url ? (
@@ -336,25 +468,25 @@ export default function HotelWebsite({ domain }) {
                     sizes="240px"
                   />
                 ) : (
-                  <span className="text-2xl font-black theme-text uppercase">{hotelDisplayName}</span>
+                  <span className="site-logo-text text-2xl font-black theme-text uppercase">{hotelDisplayName}</span>
                 )}
               </div>
               <div className="hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest">
                 {[ { id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact } ].map(menu => (
-                    <button key={menu.id} onClick={() => setActiveMenu(menu.id)} className={`transition-colors pb-1 ${activeMenu === menu.id ? 'theme-text border-b-2 theme-border' : 'hover:theme-text'}`}>{menu.label}</button>
+                    <button key={menu.id} onClick={() => setActiveMenu(menu.id)} className={`site-nav-button transition-colors pb-1 ${activeMenu === menu.id ? 'site-nav-button-active theme-text border-b-2 theme-border' : 'hover:theme-text'}`}>{menu.label}</button>
                 ))}
               </div>
               <div className="flex items-center gap-2 md:gap-4">
                   <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
                       <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                   </select>
-                  <button onClick={() => setActiveMenu('BOOK')} className="theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
+                  <button onClick={() => setActiveMenu('BOOK')} className="site-book-button theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
                   <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
               </div>
           </div>
-          <div className={`md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
+          <div className={`site-mobile-menu md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
               {[ { id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact } ].map(menu => (
-                  <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
+                  <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`site-mobile-item p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'site-mobile-item-active theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
               ))}
           </div>
         </header>
@@ -362,7 +494,7 @@ export default function HotelWebsite({ domain }) {
         {/* 🏠 메인 화면 */}
         {activeMenu === 'HOME' && (
           <div className="animate-fade-in-up">
-            <section className="relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
+            <section className="site-hero relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
               {sliderImages.map((img, idx) => (
                   <CmsImage
                     key={idx}
@@ -384,8 +516,8 @@ export default function HotelWebsite({ domain }) {
               </div>
             </section>
             
-            <section className="py-24 px-8 bg-white text-center">
-              <div className="max-w-3xl mx-auto">
+            <section className="site-about py-24 px-8 bg-white text-center">
+              <div className="site-about-card max-w-3xl mx-auto">
                 <h2 className="text-3xl font-black mb-8 theme-text">{t.aboutUs}</h2>
                 <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: safeConfig.description || "Information updating..." }} />
               </div>

@@ -1,27 +1,51 @@
-'use client'; 
+'use client';
+
+import { useEffect, useState } from "react";
+import { buildHotelUrl } from "../lib/portalHotels";
+
+const resolveHotelCode = () => {
+  if (typeof window === "undefined") return null;
+
+  const params = new URLSearchParams(window.location.search);
+  const hotelParam = params.get("hotel")?.trim();
+  if (hotelParam) return hotelParam;
+
+  const storedHotelCode = window.localStorage.getItem("hotelCode")?.trim();
+  if (storedHotelCode) return storedHotelCode;
+
+  const host = window.location.hostname.toLowerCase();
+  if (host.endsWith(".localhost")) {
+    return host.replace(/\.localhost$/, "") || null;
+  }
+
+  return null;
+};
 
 export default function FloatingBackButton() {
-  
-  // 💡 [핵심] Next.js 기능 다 무시하고, 브라우저 자체를 홈으로 강제 새로고침하며 꽂아버리는 함수
+  const [hotelCode, setHotelCode] = useState(null);
+
+  useEffect(() => {
+    setHotelCode(resolveHotelCode());
+  }, []);
+
+  if (!hotelCode) return null;
+
   const forceGoHome = (e) => {
-    e.preventDefault(); // 혹시 모를 다른 클릭 이벤트 방해 공작 차단
-    window.location.href = '/'; // 가장 강력한 원초적 이동 방법
+    e.preventDefault();
+    window.location.href = buildHotelUrl(hotelCode);
   };
 
   return (
     <button
-      onClick={forceGoHome} // 무적의 함수 연결
+      onClick={forceGoHome}
       aria-label="Go to Home"
-      // md:hidden -> 모바일에서만 노출
-      // z-[99999]: z-index를 극한으로 올려서 무조건 제일 위에 오게 함
       className="md:hidden fixed z-[99999] bg-white/90 backdrop-blur text-slate-700 shadow-[0_4px_15px_rgba(0,0,0,0.15)] border border-gray-200 rounded-full flex items-center justify-center active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-slate-700/50"
-      
       style={{
-        width: '56px',  
-        height: '56px', 
-        bottom: '56px', 
-        right: '40px',  
-        pointerEvents: 'auto', // 💡 [핵심] 투명한 막이 덮고 있어도 이 버튼은 무조건 클릭을 인식해라!
+        width: '56px',
+        height: '56px',
+        bottom: '56px',
+        right: '40px',
+        pointerEvents: 'auto',
         cursor: 'pointer'
       }}
     >
