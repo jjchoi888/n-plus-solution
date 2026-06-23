@@ -481,6 +481,8 @@ export default function HotelWebsite({ domain }) {
               const formattedRooms = adminData.rooms.map(r => ({
                   id: r.id, 
                   name: typeof r.name === 'object' ? r.name.en : r.name,
+                  roomType: typeof r.name === 'object' ? r.name.en : r.name,
+                  hotelCode,
                   price: r.basePrice, 
                   images: r.images || [], 
                   availableCount: 5, 
@@ -545,7 +547,8 @@ export default function HotelWebsite({ domain }) {
 
   useEffect(() => {
       if (checkIn && checkOut && activeRoom && activeMenu === 'ROOMS') {
-          fetch(`${BASE_URL}/api/public/check-availability?hotel=${hotelCode}&type=${activeRoom.name}&check_in=${checkIn}&check_out=${checkOut}`)
+          const targetRoomType = activeRoom.roomType || activeRoom.name;
+          fetch(`${BASE_URL}/api/public/check-availability?hotel=${hotelCode}&type=${encodeURIComponent(targetRoomType)}&check_in=${checkIn}&check_out=${checkOut}`)
               .then(r => r.json())
               .then(data => setAvailableCount(data.count))
               .catch(() => setAvailableCount(null));
@@ -1088,21 +1091,29 @@ export default function HotelWebsite({ domain }) {
                 }
                 setIsBooking(true);
                 try {
-                    const res = await fetch(`${BASE_URL}/api/public/reservations/create`, {
+                    const requestedRoomType = activeRoom?.roomType || activeRoom?.name;
+                    const fullName = `${firstName} ${lastName}`.trim();
+                    const dividedTotal = roomCount > 0 ? finalTotal / roomCount : finalTotal;
+                    const bookings = Array.from({ length: roomCount }, (_, index) => ({
+                        room_type: requestedRoomType,
+                        check_in_date: checkIn,
+                        check_out_date: checkOut,
+                        guest_name: roomCount > 1 ? `${fullName} (Room ${index + 1})` : fullName,
+                        nationality,
+                        email: guestEmail,
+                        phone: guestPhone,
+                        total_price: dividedTotal,
+                        payment_method: "Credit Card",
+                        payment_channel: "PG",
+                        payment_flow: "redirect",
+                        channel: "Website",
+                        hotel_code: hotelCode,
+                    }));
+
+                    const res = await fetch(`${BASE_URL}/api/public/reservations/batch-create`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            hotel_code: hotelCode,
-                            room_type: activeRoom.name,
-                            check_in_date: checkIn,
-                            check_out_date: checkOut,
-                            guest_name: `${firstName} ${lastName}`, 
-                            email: guestEmail,
-                            phone: guestPhone,
-                            nationality: nationality,
-                            total_price: finalTotal,
-                            room_count: roomCount 
-                        })
+                        body: JSON.stringify({ hotel_code: hotelCode, bookings })
                     });
                     
                     const data = await res.json();

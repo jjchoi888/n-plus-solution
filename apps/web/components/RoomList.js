@@ -207,10 +207,11 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
       for (let i = 0; i < count; i++) {
         const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-        const targetHotelCode = room.hotelCode || effectiveHotelCode;
+        const targetHotelCode = room.hotelCode || room.hotel_code || effectiveHotelCode;
+        const targetRoomType = room.roomType || room.room_type || room.name;
 
         bookingPayloads.push({
-          room_type: room.name,
+          room_type: targetRoomType,
           check_in_date: effectiveCheckIn,
           check_out_date: effectiveCheckOut,
           guest_name: totalRoomsInCart > 1 ? `${fullName} (${t.roomInfo} ${bookingPayloads.length + 1})` : fullName,
@@ -221,6 +222,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           payment_method: "Credit Card",
           payment_channel: "PG",
           payment_flow: "redirect",
+          channel: "Website",
           hotel_code: targetHotelCode 
         });
       }
