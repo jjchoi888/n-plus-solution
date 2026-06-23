@@ -398,9 +398,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
                   
-                  <button type="submit" disabled={isBooking} className={`mt-8 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
-                    {isBooking ? t.processing : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
-                  </button>
                 </div>
 
                 <div className="w-full lg:w-80 bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col h-fit sticky top-6 text-left">
@@ -467,6 +464,10 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                       <span>₱{grandTotal.toLocaleString()}</span>
                     </p>
                   </div>
+
+                  <button type="submit" disabled={isBooking} className={`mt-6 w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all text-lg ${isBooking ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald hover:bg-emerald-dark hover:shadow-xl hover:-translate-y-1'}`}>
+                    {isBooking ? t.processing : `${lang === 'ko' ? '' : t.pay} ₱${grandTotal.toLocaleString()} ${t.andBook}`}
+                  </button>
                 </div>
 
               </form>

@@ -1,8 +1,9 @@
 "use client";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 const BASE_URL = '';
+const emptySubscribe = () => () => {};
 
 const passthroughImageLoader = ({ src }) => src;
 
@@ -46,7 +47,11 @@ const resolveHotelCode = () => {
 };
 
 export default function AdminRoomManager() {
-  const [hotelCode] = useState(resolveHotelCode);
+  const hotelCode = useSyncExternalStore(
+    emptySubscribe,
+    resolveHotelCode,
+    () => DEFAULT_HOTEL_CODE,
+  );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginData, setLoginData] = useState({ user_id: "", password: "" });
   const [loginError, setLoginError] = useState("");

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import { buildHotelUrl } from "../lib/portalHotels";
+
+const emptySubscribe = () => () => {};
 
 const resolveHotelCode = () => {
   if (typeof window === "undefined") return null;
@@ -22,7 +24,11 @@ const resolveHotelCode = () => {
 };
 
 export default function FloatingBackButton() {
-  const [hotelCode] = useState(resolveHotelCode);
+  const hotelCode = useSyncExternalStore(
+    emptySubscribe,
+    resolveHotelCode,
+    () => null,
+  );
 
   if (!hotelCode) return null;
 
