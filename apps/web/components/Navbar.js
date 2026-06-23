@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import {
   CONTACT_EMAIL,
@@ -104,7 +105,7 @@ export default function Navbar({ currentLang, setLang, onMenuClick }) {
     <>
       <nav className="w-full flex justify-between items-center px-6 md:px-8 py-4 md:py-6 bg-white border-b border-gray-100 shadow-sm fixed top-0 z-50">
         <div onClick={() => onMenuClick && onMenuClick('HOME')} className="cursor-pointer flex items-center">
-            <img src="/logo.png" alt="Hotel Logo" className="h-8 md:h-10 w-auto object-contain" />
+            <Image src="/logo.png" alt="Hotel Logo" width={160} height={40} priority className="h-8 md:h-10 w-auto object-contain" />
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">

@@ -73,14 +73,15 @@ const translations = {
         expStart: 'Experience', startingFrom: 'starting from', night: '/night',
         checkIn: 'Check-in', checkOut: 'Check-out', guestsRooms: 'Guests & Rooms',
         adults: 'Adults', age13: 'Age 13+', children: 'Children', age2_12: 'Ages 2-12', infants: 'Infants', under2: 'Under 2',
-        room: 'Room', rooms: 'Rooms', done: 'Done', maxGuests: 'Max', guests: 'Guests',
+        room: 'Room', roomsLabel: 'Rooms', done: 'Done', maxGuests: 'Max', guests: 'Guests',
         noImg: 'No Image Available', noRooms: 'No rooms available.', noFac: 'No facilities registered.', noAtt: 'No attractions registered.',
         mapUpdating: 'Location map is currently being updated.', contactUs: 'Contact Us', rights: 'All rights reserved.',
         standardBed: 'Standard Bed', available: 'Available', soldOut: 'Sold Out / Not Enough Rooms',
         secureCheckout: 'Secure Checkout', guestDetails: 'Guest Details', 
         firstName: 'First Name', lastName: 'Last Name', email: 'Email Address', phone: 'Phone Number', nationality: 'Nationality',
         extraOptions: 'Extra Options', extraBed: 'Extra Bed',
-        paymentMethod: 'Payment Method', cardNum: 'Card Number', expiry: 'Expiry Date', cvv: 'CVV',
+        paymentMethod: 'Payment',
+        paymentRedirectNote: 'You will be redirected to the secure PG payment page after confirming your booking.',
         bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...'
     },
     ko: {
@@ -89,14 +90,15 @@ const translations = {
         expStart: '', startingFrom: '최저가', night: '/1박',
         checkIn: '체크인', checkOut: '체크아웃', guestsRooms: '인원 및 객실',
         adults: '성인', age13: '13세 이상', children: '어린이', age2_12: '2~12세', infants: '유아', under2: '2세 미만',
-        room: '객실', rooms: '객실', done: '완료', maxGuests: '최대', guests: '명',
+        room: '객실', roomsLabel: '객실', done: '완료', maxGuests: '최대', guests: '명',
         noImg: '이미지 없음', noRooms: '등록된 객실이 없습니다.', noFac: '등록된 부대시설이 없습니다.', noAtt: '등록된 관광지가 없습니다.',
         mapUpdating: '지도가 업데이트 중입니다.', contactUs: '문의 및 연락처', rights: '모든 권리 보유.',
         standardBed: '스탠다드 베드', available: '예약 가능', soldOut: '해당 일자 예약 마감 (객실 부족)',
         secureCheckout: '안전한 객실 결제', guestDetails: '예약자 정보', 
         firstName: '이름 (First Name)', lastName: '성 (Last Name)', email: '이메일', phone: '연락처', nationality: '국적',
         extraOptions: '추가 옵션', extraBed: '엑스트라 베드',
-        paymentMethod: '결제 정보', cardNum: '카드 번호', expiry: '유효기간 (MM/YY)', cvv: '보안코드 (CVV)',
+        paymentMethod: '결제',
+        paymentRedirectNote: '예약 확정 후 PG 결제창으로 이동합니다.',
         bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...'
     },
     zh: {
@@ -105,14 +107,15 @@ const translations = {
         expStart: '体验', startingFrom: '起价', night: '/晚',
         checkIn: '入住', checkOut: '退房', guestsRooms: '人数与客房',
         adults: '成人', age13: '13岁以上', children: '儿童', age2_12: '2-12岁', infants: '婴儿', under2: '2岁以下',
-        room: '间', rooms: '间', done: '完成', maxGuests: '最多', guests: '人',
+        room: '间', roomsLabel: '间', done: '完成', maxGuests: '最多', guests: '人',
         noImg: '暂无图片', noRooms: '暂无客房。', noFac: '暂无设施。', noAtt: '暂无景点。',
         mapUpdating: '位置地图正在更新中。', contactUs: '联系我们', rights: '版权所有。',
         standardBed: '标准床', available: '可预订', soldOut: '客房已满',
         secureCheckout: '安全结账', guestDetails: '客人信息', 
         firstName: '名字', lastName: '姓氏', email: '电子邮件', phone: '电话号码', nationality: '国籍',
         extraOptions: '额外选项', extraBed: '加床',
-        paymentMethod: '付款方式', cardNum: '卡号', expiry: '有效期', cvv: 'CVV',
+        paymentMethod: '付款',
+        paymentRedirectNote: '确认预订后，您将跳转到安全的 PG 支付页面。',
         bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...'
     },
     ja: {
@@ -121,14 +124,15 @@ const translations = {
         expStart: '', startingFrom: '最安値', night: '/泊',
         checkIn: 'チェックイン', checkOut: 'チェックアウト', guestsRooms: '人数と客室',
         adults: '大人', age13: '13歳以上', children: '子供', age2_12: '2~12歳', infants: '幼児', under2: '2歳未満',
-        room: '室', rooms: '室', done: '完了', maxGuests: '最大', guests: '名',
+        room: '室', roomsLabel: '室', done: '完了', maxGuests: '最大', guests: '名',
         noImg: '画像なし', noRooms: '利用可能な客室がありません。', noFac: '登録された施設がありません。', noAtt: '登録された観光地がありません。',
         mapUpdating: 'マップは現在更新中です。', contactUs: 'お問い合わせ', rights: '無断複写・転載を禁じます。',
         standardBed: 'スタンダードベッド', available: '空室あり', soldOut: '満室 (予約不可)',
         secureCheckout: '安全なチェックアウト', guestDetails: '宿泊者情報', 
         firstName: '名', lastName: '姓', email: 'メールアドレス', phone: '電話番号', nationality: '国籍',
         extraOptions: '追加オプション', extraBed: 'エキストラベッド',
-        paymentMethod: 'お支払い方法', cardNum: 'カード番号', expiry: '有効期限', cvv: 'CVV',
+        paymentMethod: 'お支払い',
+        paymentRedirectNote: '予約確定後、PG決済ページへ移動します。',
         bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...'
     }
 };
@@ -141,20 +145,18 @@ const collectStyleCandidates = (candidate) => {
   }
 
   if (typeof candidate === "object") {
-    return [
-      candidate.value,
-      candidate.label,
-      candidate.name,
-      candidate.id,
-      candidate.key,
-      candidate.mode,
-      candidate.style,
-      candidate.version,
-      candidate.website_style,
-      candidate.website_version,
-      candidate.style_version,
-      candidate.style_mode,
-    ].flatMap(collectStyleCandidates);
+    return Object.values(candidate).flatMap(collectStyleCandidates);
+  }
+
+  if (typeof candidate === "string") {
+    const trimmed = candidate.trim();
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      try {
+        return [candidate, ...collectStyleCandidates(JSON.parse(trimmed))];
+      } catch {
+        return [candidate];
+      }
+    }
   }
 
   return [candidate];
@@ -163,36 +165,103 @@ const collectStyleCandidates = (candidate) => {
 const resolveWebsiteStyle = (config = {}, sns = {}) => {
   const candidates = [
     config.website_style,
+    config.websiteStyle,
     config.website_version,
+    config.websiteVersion,
     config.style_version,
+    config.styleVersion,
     config.style_mode,
+    config.styleMode,
     config.design_style,
+    config.designStyle,
     config.template_style,
+    config.templateStyle,
     config.version_style,
+    config.versionStyle,
     config.site_style,
+    config.siteStyle,
     config.site_version,
+    config.siteVersion,
     config.theme_style,
+    config.themeStyle,
     config.layout_style,
+    config.layoutStyle,
     config.layout_version,
+    config.layoutVersion,
     config.builder_style,
+    config.builderStyle,
     config.builder_version,
+    config.builderVersion,
+    config.builder_type,
+    config.builderType,
+    config.website_template,
+    config.websiteTemplate,
+    config.template_version,
+    config.templateVersion,
+    config.style_type,
+    config.styleType,
+    config.website_type,
+    config.websiteType,
+    config.mode,
+    config.version,
+    config.variant,
     config.template,
     config.style,
     sns.website_style,
+    sns.websiteStyle,
     sns.website_version,
+    sns.websiteVersion,
     sns.style_version,
+    sns.styleVersion,
     sns.style_mode,
+    sns.styleMode,
     sns.design_style,
+    sns.designStyle,
+    sns.template_style,
+    sns.templateStyle,
     sns.version_style,
+    sns.versionStyle,
     sns.site_style,
+    sns.siteStyle,
     sns.site_version,
+    sns.siteVersion,
     sns.theme_style,
+    sns.themeStyle,
     sns.layout_style,
+    sns.layoutStyle,
     sns.layout_version,
+    sns.layoutVersion,
     sns.builder_style,
+    sns.builderStyle,
     sns.builder_version,
+    sns.builderVersion,
+    sns.builder_type,
+    sns.builderType,
+    sns.website_template,
+    sns.websiteTemplate,
+    sns.template_version,
+    sns.templateVersion,
+    sns.style_type,
+    sns.styleType,
+    sns.website_type,
+    sns.websiteType,
+    sns.mode,
+    sns.version,
+    sns.variant,
     sns.template,
     sns.style,
+    config.website_builder_json,
+    config.builder_json,
+    config.design_json,
+    config.style_json,
+    config.layout_json,
+    config.template_json,
+    sns.website_builder_json,
+    sns.builder_json,
+    sns.design_json,
+    sns.style_json,
+    sns.layout_json,
+    sns.template_json,
   ].flatMap(collectStyleCandidates);
 
   const modernTokens = new Set([
@@ -201,6 +270,10 @@ const resolveWebsiteStyle = (config = {}, sns = {}) => {
     "ver2",
     "style2",
     "version2",
+    "template2",
+    "builder2",
+    "layout2",
+    "mode2",
     "modern",
     "modernstyle",
     "모던",
@@ -215,8 +288,14 @@ const resolveWebsiteStyle = (config = {}, sns = {}) => {
     "ver1",
     "style1",
     "version1",
+    "template1",
+    "builder1",
+    "layout1",
+    "mode1",
     "classic",
     "classicstyle",
+    "default",
+    "basic",
     "클래식",
     "기본",
     "クラシック",
@@ -224,9 +303,13 @@ const resolveWebsiteStyle = (config = {}, sns = {}) => {
     "經典",
   ]);
 
+  let numericFallback = "";
+
   for (const candidate of candidates) {
     if (typeof candidate === "number") {
-      return candidate === 2 ? "modern" : "classic";
+      if (candidate === 2) numericFallback = "modern";
+      else if (!numericFallback && candidate === 1) numericFallback = "classic";
+      continue;
     }
 
     const normalized = String(candidate).trim().toLowerCase().replace(/[\s_-]+/g, "");
@@ -251,7 +334,67 @@ const resolveWebsiteStyle = (config = {}, sns = {}) => {
     }
   }
 
+  if (numericFallback) {
+    return numericFallback;
+  }
+
   return "classic";
+};
+
+const resolvePaymentRedirectUrl = (payload) => {
+  const visited = new WeakSet();
+  const queue = [
+    payload?.payment_url,
+    payload?.redirect_url,
+    payload?.redirectUrl,
+    payload?.checkout_url,
+    payload?.checkoutUrl,
+    payload?.pg_url,
+    payload?.pgUrl,
+    payload?.pay_url,
+    payload?.payUrl,
+    payload?.paymentPageUrl,
+    payload?.approval_url,
+    payload?.approvalUrl,
+    payload?.payment,
+    payload?.checkout,
+    payload?.redirect,
+    payload?.data,
+    payload,
+  ];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+
+    if (typeof current === "string") {
+      const trimmed = current.trim();
+      if (/^(https?:)?\/\//i.test(trimmed)) {
+        return trimmed;
+      }
+
+      if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+        try {
+          queue.push(JSON.parse(trimmed));
+        } catch {}
+      }
+
+      continue;
+    }
+
+    if (Array.isArray(current)) {
+      queue.push(...current);
+      continue;
+    }
+
+    if (typeof current === "object") {
+      if (visited.has(current)) continue;
+      visited.add(current);
+      queue.push(...Object.values(current));
+    }
+  }
+
+  return null;
 };
 
 export default function HotelWebsite({ domain }) {
@@ -289,9 +432,6 @@ export default function HotelWebsite({ domain }) {
   const [guestPhone, setGuestPhone] = useState('');
   const [nationality, setNationality] = useState('Philippines');
   const [extraBed, setExtraBed] = useState(0);
-  const [cardNum, setCardNum] = useState('');
-  const [cardExp, setCardExp] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isBooking, setIsBooking] = useState(false);
 
@@ -658,7 +798,7 @@ export default function HotelWebsite({ domain }) {
                                   </div>
 
                                   <div className="border-t border-slate-100 pt-5 flex justify-between items-center">
-                                      <div><p className="font-bold text-sm">{t.rooms}</p></div>
+                                      <div><p className="font-bold text-sm">{t.roomsLabel}</p></div>
                                       <div className="flex items-center gap-3"><button type="button" onClick={(e)=>{e.stopPropagation(); setRoomCount(Math.max(1, roomCount-1)); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={(e)=>{e.stopPropagation(); setRoomCount(roomCount+1); setHasSearched(false);}} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                   </div>
                                   <button type="button" onClick={(e)=>{e.stopPropagation(); setShowGuestPicker(false);}} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl mt-2 hover:bg-slate-800 transition-colors">{t.done}</button>
@@ -787,7 +927,7 @@ export default function HotelWebsite({ domain }) {
                                                 <div className="flex items-center gap-3"><button type="button" onClick={()=>setInfants(Math.max(0, infants-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{infants}</span><button type="button" onClick={()=>setInfants(infants+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                             </div>
                                             <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
-                                                <div><p className="font-bold text-sm">{t.rooms}</p></div>
+                                                <div><p className="font-bold text-sm">{t.roomsLabel}</p></div>
                                                 <div className="flex items-center gap-3"><button type="button" onClick={()=>setRoomCount(Math.max(1, roomCount-1))} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">-</button><span className="w-4 text-center font-bold">{roomCount}</span><button type="button" onClick={()=>setRoomCount(roomCount+1)} className="w-8 h-8 rounded-full bg-slate-100 font-bold hover:bg-slate-200">+</button></div>
                                             </div>
                                             <button type="button" onClick={()=>setShowGuestPicker(false)} className="w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl mt-2 hover:bg-slate-800 transition-colors">{t.done}</button>
@@ -797,7 +937,7 @@ export default function HotelWebsite({ domain }) {
                                 
                                 {availableCount !== null && checkIn && checkOut && (
                                     <div className="mt-4 p-3 rounded-xl text-center font-black text-sm border shadow-sm transition-all" style={{ backgroundColor: availableCount >= roomCount ? '#f0fdf4' : '#fef2f2', borderColor: availableCount >= roomCount ? '#bbf7d0' : '#fecaca', color: availableCount >= roomCount ? '#166534' : '#991b1b' }}>
-                                        {availableCount >= roomCount ? `✅ ${availableCount} ${t.rooms} ${t.available}` : `❌ ${t.soldOut}`}
+                                        {availableCount >= roomCount ? `✅ ${availableCount} ${t.roomsLabel} ${t.available}` : `❌ ${t.soldOut}`}
                                     </div>
                                 )}
 
@@ -943,7 +1083,7 @@ export default function HotelWebsite({ domain }) {
 
             const handleConfirmBooking = async () => {
                 // 💡 [Cleaned] Standardized alert messages to English
-                if (!firstName || !lastName || !guestEmail || !guestPhone || !cardNum) {
+                if (!firstName || !lastName || !guestEmail || !guestPhone) {
                     return setAlertMessage("Please fill in all required details.");
                 }
                 setIsBooking(true);
@@ -966,11 +1106,17 @@ export default function HotelWebsite({ domain }) {
                     });
                     
                     const data = await res.json();
+                    const paymentRedirectUrl = resolvePaymentRedirectUrl(data);
+                    if (paymentRedirectUrl) {
+                        window.location.href = paymentRedirectUrl;
+                        return;
+                    }
+
                     if (res.ok || data.success) {
                         setAlertMessage("✅ Booking Confirmed!\nEmail and receipt have been sent.");
                         setShowBookingModal(false);
                         setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
-                        setCardNum(''); setCardExp(''); setCardCvv(''); setExtraBed(0);
+                        setExtraBed(0);
                         setCheckIn(''); setCheckOut('');
                     } else {
                         setAlertMessage("❌ Failed: " + (data.message || "Booking API Error"));
@@ -1044,21 +1190,10 @@ export default function HotelWebsite({ domain }) {
 
                             <section>
                                 <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">3. {t.paymentMethod}</h3>
-                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cardNum}</label>
-                                        <input value={cardNum} onChange={e=>setCardNum(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none tracking-widest" placeholder="0000 0000 0000 0000" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.expiry}</label>
-                                            <input value={cardExp} onChange={e=>setCardExp(e.target.value)} disabled={isBooking} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none text-center" placeholder="MM/YY" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t.cvv}</label>
-                                            <input value={cardCvv} onChange={e=>setCardCvv(e.target.value)} disabled={isBooking} type="password" maxLength={4} className="w-full p-3 border border-slate-200 rounded-xl font-mono text-sm theme-focus outline-none text-center tracking-widest" placeholder="•••" />
-                                        </div>
-                                    </div>
+                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                    <p className="text-sm leading-relaxed text-slate-600 font-medium">
+                                        {t.paymentRedirectNote}
+                                    </p>
                                 </div>
                             </section>
                         </div>

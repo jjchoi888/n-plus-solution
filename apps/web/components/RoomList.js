@@ -1,8 +1,11 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { getHotelDisplayName } from "../lib/hotelDirectory";
 
 const BASE_URL = '';
+
+const passthroughImageLoader = ({ src }) => src;
 
 const TOP_COUNTRIES = ["Philippines", "South Korea", "China", "United States"];
 const ALL_COUNTRIES = [
@@ -10,10 +13,10 @@ const ALL_COUNTRIES = [
 ];
 
 const translations = {
-  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
-  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
-  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
-  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
+  en: { searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", paymentRedirectNote: "After confirming, you will be redirected to the secure PG payment page.", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", error: "Error", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", ok: "OK", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:" },
+  ko: { searchResults: "검색 결과", roomsLeft: "객실 남음", night: "/ 1박", selectRooms: "수량 선택", cartTotal: "개의 객실 선택됨", proceedCheckout: "예약 진행하기", secureCheckout: "안전 결제", guestDetails: "1. 예약자 정보", paymentMethod: "2. 결제 정보", paymentRedirectNote: "확정 후 PG 결제창으로 이동합니다.", extraOptions: "3. 추가 옵션", extraBed: "엑스트라 베드", childFee: "아동 추가 요금", promoCode: "할인 코드", apply: "적용", summary: "예약 요약", processing: "결제 진행 중...", pay: "", andBook: "결제 및 예약하기", success: "예약 완료!", successMsg: "결제 및 예약이 성공적으로 완료되었습니다!", error: "오류", failMsg: "일부 예약 처리에 실패했습니다", networkError: "네트워크 오류입니다. 다시 시도해 주세요.", dateMissing: "날짜 정보가 누락되었습니다.", ok: "확인", roomInfo: "객실", discount: "할인 금액", size: "sq.m", maxGuests: "최대 인원:" },
+  zh: { searchResults: "搜索结果", roomsLeft: "间客房剩余", night: "/ 晚", selectRooms: "选择数量", cartTotal: "间客房已选", proceedCheckout: "去结账", secureCheckout: "安全结账", guestDetails: "1. 客人信息", paymentMethod: "2. 付款方式", paymentRedirectNote: "确认后，您将跳转到安全的 PG 支付页面。", extraOptions: "3. 额外选项", extraBed: "加床", childFee: "儿童附加费", promoCode: "优惠码", apply: "应用", summary: "预订摘要", processing: "处理中...", pay: "支付", andBook: "并预订", success: "成功！", successMsg: "付款成功，预订已确认！", error: "错误", failMsg: "部分预订失败", networkError: "网络错误，请重试。", dateMissing: "缺少日期信息。", ok: "确定", roomInfo: "房间", discount: "折扣", size: "平方米", maxGuests: "最多人数:" },
+  ja: { searchResults: "検索結果", roomsLeft: "室残り", night: "/ 泊", selectRooms: "数量を選択", cartTotal: "室選択中", proceedCheckout: "チェックアウトへ進む", secureCheckout: "安全な決済", guestDetails: "1. 宿泊者情報", paymentMethod: "2. お支払い方法", paymentRedirectNote: "確定後、PG決済ページへ移動します。", extraOptions: "3. 追加オプション", extraBed: "エキストラベッド", childFee: "子供追加料金", promoCode: "プロモコード", apply: "適用", summary: "予約の概要", processing: "処理中...", pay: "支払う", andBook: "＆予約", success: "予約完了！", successMsg: "決済と予約が正常に完了しました！", error: "エラー", failMsg: "一部の予約に失敗しました", networkError: "ネットワークエラーです。もう一度お試しください。", dateMissing: "日付が選択されていません。", ok: "確認", roomInfo: "客室", discount: "割引額", size: "平米", maxGuests: "最大定員:" }
 };
 
 const RoomImageCarousel = ({ images, name }) => {
@@ -24,7 +27,64 @@ const RoomImageCarousel = ({ images, name }) => {
     return () => clearInterval(timer);
   }, [images]);
   if (!images || images.length === 0) return <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm border-b">No Image</div>;
-  return <img src={images[currentIndex]} alt={name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" key={currentIndex} />;
+  return (
+    <Image
+      key={currentIndex}
+      loader={passthroughImageLoader}
+      unoptimized
+      src={images[currentIndex]}
+      alt={name}
+      fill
+      sizes="(max-width: 768px) 100vw, 33vw"
+      className="object-cover hover:scale-105 transition-transform duration-500"
+    />
+  );
+};
+
+const resolvePaymentRedirectUrl = (payload) => {
+  const visited = new WeakSet();
+  const queue = [
+    payload?.payment_url,
+    payload?.redirect_url,
+    payload?.redirectUrl,
+    payload?.checkout_url,
+    payload?.checkoutUrl,
+    payload?.pg_url,
+    payload?.pgUrl,
+    payload?.pay_url,
+    payload?.payUrl,
+    payload?.paymentPageUrl,
+    payload?.approval_url,
+    payload?.approvalUrl,
+    payload?.payment,
+    payload?.checkout,
+    payload?.redirect,
+    payload,
+  ];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+
+    if (typeof current === "string") {
+      const trimmed = current.trim();
+      if (/^https?:\/\//i.test(trimmed)) return trimmed;
+      continue;
+    }
+
+    if (Array.isArray(current)) {
+      queue.push(...current);
+      continue;
+    }
+
+    if (typeof current === "object") {
+      if (visited.has(current)) continue;
+      visited.add(current);
+      queue.push(...Object.values(current));
+    }
+  }
+
+  return "";
 };
 
 export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids }) {
@@ -39,7 +99,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const [isBooking, setIsBooking] = useState(false);
   
   const [modal, setModal] = useState({ show: false, title: '', message: '', highlight: '', type: 'warning' });
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "", cardNumber: "", expiry: "", cvv: "" });
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "" });
 
   const [extraBeds, setExtraBeds] = useState(0);
   const [promoInput, setPromoInput] = useState("");
@@ -159,6 +219,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           phone: formData.phone,
           total_price: dividedGrandTotal,
           payment_method: "Credit Card",
+          payment_channel: "PG",
+          payment_flow: "redirect",
           hotel_code: targetHotelCode 
         });
       }
@@ -171,6 +233,12 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
           body: JSON.stringify({ bookings: bookingPayloads }) 
       });
       const data = await response.json();
+
+      const paymentRedirectUrl = resolvePaymentRedirectUrl(data);
+      if (paymentRedirectUrl) {
+        window.location.href = paymentRedirectUrl;
+        return;
+      }
       
       if (data.success) {
           setModal({ show: true, type: 'success', title: t.success, message: t.successMsg, highlight: data.res_ids.join('\n') });
@@ -325,12 +393,8 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
-                      <div className="text-left"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" required placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={e => setFormData({...formData, cardNumber: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none font-mono" /></div>
-                      <div className="grid grid-cols-2 gap-4 text-left">
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" required placeholder="MM/YY" value={formData.expiry} onChange={e => setFormData({...formData, expiry: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center" /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" required placeholder="123" maxLength="3" value={formData.cvv} onChange={e => setFormData({...formData, cvv: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald outline-none text-center tracking-widest" /></div>
-                      </div>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <p className="text-sm font-bold text-gray-700">{t.paymentRedirectNote}</p>
                     </div>
                   </div>
                   

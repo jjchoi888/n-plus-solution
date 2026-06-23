@@ -1,7 +1,34 @@
 "use client";
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 
 const BASE_URL = '';
+
+const passthroughImageLoader = ({ src }) => src;
+
+function AdminPreviewImage({
+  src,
+  alt,
+  className,
+  fill = false,
+  width = 1200,
+  height = 800,
+  sizes,
+}) {
+  return (
+    <Image
+      loader={passthroughImageLoader}
+      unoptimized
+      src={src}
+      alt={alt}
+      className={className}
+      fill={fill}
+      width={fill ? undefined : width}
+      height={fill ? undefined : height}
+      sizes={sizes}
+    />
+  );
+}
 
 const DEFAULT_HOTEL_CODE = process.env.NEXT_PUBLIC_HOTEL_CODE || 'NPLUS01';
 
@@ -52,16 +79,16 @@ export default function AdminRoomManager() {
     googleMapLink: "",
   });
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     try {
       // 💡 꼬리표 달기
       const res = await fetch(`${BASE_URL}/api/admin/room-types?hotel=${hotelCode}`);
       const data = await res.json();
       if(data.success) setSavedRooms(data.rooms);
     } catch (e) { console.error(e); }
-  };
+  }, [hotelCode]);
 
-  const fetchFees = async () => {
+  const fetchFees = useCallback(async () => {
     try {
         // 💡 꼬리표 달기
         const res = await fetch(`${BASE_URL}/api/settings/fees?hotel=${hotelCode}`);
@@ -70,9 +97,9 @@ export default function AdminRoomManager() {
             setGlobalFees({ childFee: data.fees.child_fee, extraBedFee: data.fees.extra_bed_fee });
         }
     } catch (e) { console.error(e); }
-  };
+  }, [hotelCode]);
 
-  const fetchWebsiteSettings = async () => {
+  const fetchWebsiteSettings = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/settings/website?hotel=${hotelCode}`);
       const data = await res.json();
@@ -99,7 +126,7 @@ export default function AdminRoomManager() {
         googleMapLink: data.config.map_embed_url || data.config.map_url || sns.map_link || "",
       });
     } catch (e) { console.error(e); }
-  };
+  }, [hotelCode]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -107,7 +134,7 @@ export default function AdminRoomManager() {
         fetchFees(); 
         fetchWebsiteSettings();
     }
-  }, [hotelCode, isLoggedIn]);
+  }, [fetchFees, fetchRooms, fetchWebsiteSettings, isLoggedIn]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -412,8 +439,8 @@ export default function AdminRoomManager() {
                 {savedRooms.map(room => (
                     <div key={room.id} className="border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition">
                         <div>
-                            <div className="h-32 bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                                {room.images && room.images[0] ? <img src={room.images[0]} className="w-full h-full object-cover" alt="room"/> : <div className="flex items-center justify-center h-full text-gray-400">No Image</div>}
+                            <div className="relative h-32 bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                                {room.images && room.images[0] ? <AdminPreviewImage src={room.images[0]} alt="room" fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover"/> : <div className="flex items-center justify-center h-full text-gray-400">No Image</div>}
                             </div>
                             <h4 className="font-bold text-gray-800 text-lg">{room.name?.en || 'Unnamed'}</h4>
                             <p className="text-emerald font-black text-sm">₱{room.price?.toLocaleString()}</p>
@@ -480,7 +507,7 @@ export default function AdminRoomManager() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {existingImages.map((url, index) => (
                       <div key={`exist-${index}`} className="relative group rounded-lg overflow-hidden border-2 border-emerald shadow-sm aspect-video">
-                        <img src={url} alt={`Existing ${index}`} className="w-full h-full object-cover opacity-80" />
+                        <AdminPreviewImage src={url} alt={`Existing ${index}`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover opacity-80" />
                         <div className="absolute top-0 left-0 bg-emerald text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg">Saved</div>
                         <button type="button" onClick={() => removeExistingPhoto(index)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                       </div>
@@ -488,7 +515,7 @@ export default function AdminRoomManager() {
                     
                     {previewUrls.map((url, index) => (
                       <div key={`new-${index}`} className="relative group rounded-lg overflow-hidden border border-gray-300 shadow-sm aspect-video">
-                        <img src={url} alt={`New ${index}`} className="w-full h-full object-cover" />
+                        <AdminPreviewImage src={url} alt={`New ${index}`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover" />
                         <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg">New</div>
                         <button type="button" onClick={() => removeNewPhoto(index)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                       </div>
