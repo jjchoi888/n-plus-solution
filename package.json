@@ -4,10 +4,10 @@
   "name": "n-plus-solution",
   "private": true,
   "scripts": {
-    "postinstall": "cd apps/web && npm install",
-    "dev": "cd apps/web && npm run dev",
-    "build": "cd apps/web && npm run build",
-    "vercel-build": "cd apps/web && npm run build",
-    "lint": "cd apps/web && npm run lint"
+    "postinstall": "npm --prefix apps/web install",
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm --prefix apps/web run build",
+    "vercel-build": "npm --prefix apps/web run build",
+    "lint": "npm --prefix apps/web run lint"
   }
 }
