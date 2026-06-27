@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Navbar from "./Navbar";
 import BookingBar from "./BookingBar";
 import RoomList from "./RoomList";
+import { buildCategoryGroups, fetchPortalHotels } from "../lib/portalHotels";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { app } from '../lib/firebase';
 import axios from 'axios';
@@ -158,6 +159,57 @@ const translations = {
   }
 };
 
+const categoryTranslations = {
+  en: {
+    title: "Explore by Category",
+    desc: "Tap a category to see matching hotels and quickly send one back into the booking search.",
+    propertyType: "Property Type",
+    guestHighlight: "Guest Search Highlights",
+    tags: "tags",
+    hotels: "hotels",
+    selected: "Selected Category",
+    select: "Use for Search",
+    open: "Open Hotel",
+    noLocation: "Location details will be updated soon.",
+  },
+  ko: {
+    title: "카테고리로 호텔 찾기",
+    desc: "카테고리를 선택하면 해당 호텔만 모아서 보고, 원하는 호텔을 바로 검색에 반영할 수 있습니다.",
+    propertyType: "숙소 유형",
+    guestHighlight: "게스트 검색 포인트",
+    tags: "카테고리",
+    hotels: "개 호텔",
+    selected: "선택된 카테고리",
+    select: "검색에 반영",
+    open: "호텔 보기",
+    noLocation: "위치 정보가 곧 업데이트됩니다.",
+  },
+  zh: {
+    title: "按分类查找酒店",
+    desc: "点击分类后即可查看匹配酒店，并把该酒店直接带回上方搜索。",
+    propertyType: "酒店类型",
+    guestHighlight: "宾客搜索亮点",
+    tags: "个分类",
+    hotels: "家酒店",
+    selected: "当前分类",
+    select: "用于搜索",
+    open: "查看酒店",
+    noLocation: "位置信息即将更新。",
+  },
+  ja: {
+    title: "カテゴリーでホテルを探す",
+    desc: "カテゴリーを選ぶと該当ホテルをまとめて確認でき、そのまま上の検索に反映できます。",
+    propertyType: "宿泊タイプ",
+    guestHighlight: "検索ハイライト",
+    tags: "カテゴリ",
+    hotels: "軒",
+    selected: "選択中のカテゴリー",
+    select: "検索に反映",
+    open: "ホテルを見る",
+    noLocation: "所在地情報はまもなく更新されます。",
+  },
+};
+
 export default function MainPortal() {
   const [lang, setLang] = useState("en");
   const [searchData, setSearchData] = useState(null);
@@ -195,7 +247,9 @@ export default function MainPortal() {
   const [promotions, setPromotions] = useState([]);
   const [partnerHotels, setPartnerHotels] = useState([]);
 
+  const [categoryHotels, setCategoryHotels] = useState([]);
   const [selectedPromoHotel, setSelectedPromoHotel] = useState(null);
+  const [activeCategoryId, setActiveCategoryId] = useState("");
 
   const [user, setUser] = useState(null);
   const [isMembershipActive, setIsMembershipActive] = useState(false);
@@ -564,6 +618,30 @@ export default function MainPortal() {
     fetchAllData();
   }, []);
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadCategoryHotels = async () => {
+      try {
+        const hotels = await fetchPortalHotels(lang);
+        if (!isCancelled) {
+          setCategoryHotels(hotels);
+        }
+      } catch (error) {
+        console.error("Failed to load category hotel data", error);
+        if (!isCancelled) {
+          setCategoryHotels([]);
+        }
+      }
+    };
+
+    loadCategoryHotels();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [lang]);
+
   const [promoRegion, setPromoRegion] = useState("ALL");
   const [promoSearch, setPromoSearch] = useState("");
 
@@ -590,6 +668,21 @@ export default function MainPortal() {
   });
 
   const t = translations[lang] || translations.en;
+  const categoryT = categoryTranslations[lang] || categoryTranslations.en;
+  const categoryGroups = buildCategoryGroups(categoryHotels);
+  const activeCategory = categoryGroups.find((category) => category.id === activeCategoryId) || null;
+  const categorySections = [
+    {
+      id: "propertyType",
+      label: categoryT.propertyType,
+      categories: categoryGroups.filter((category) => category.group === "propertyType"),
+    },
+    {
+      id: "guestHighlight",
+      label: categoryT.guestHighlight,
+      categories: categoryGroups.filter((category) => category.group === "guestHighlight"),
+    },
+  ].filter((section) => section.categories.length > 0);
 
   const sliderRef = useRef(null);
   const slideLeft = () => { if (sliderRef.current) sliderRef.current.scrollBy({ left: -350, behavior: 'smooth' }); };
@@ -605,6 +698,23 @@ export default function MainPortal() {
   const handleSearchResults = (data) => {
     window.history.pushState({ page: 'search' }, '');
     setSearchData(data);
+  };
+
+  const focusPortalBookingBar = () => {
+    const bookingBar = document.getElementById("portal-booking-bar");
+    if (bookingBar) {
+      bookingBar.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const handleCategoryToggle = (categoryId) => {
+    setActiveCategoryId((current) => (current === categoryId ? "" : categoryId));
+  };
+
+  const handleCategoryHotelSelect = (hotel) => {
+    setSelectedPromoHotel(hotel.code);
+    setActiveCategoryId("");
+    focusPortalBookingBar();
   };
 
   const handleMenuClick = (action) => {
@@ -1100,7 +1210,7 @@ export default function MainPortal() {
               </p>
             </div>
 
-            <div className="relative z-[60] w-full max-w-6xl px-4 mt-6 md:mt-12 md:-mb-32">
+            <div id="portal-booking-bar" className="relative z-[60] w-full max-w-6xl px-4 mt-6 md:mt-12 md:-mb-32">
               <div className="bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-4 md:p-6 border border-slate-100 flex flex-col gap-4">
                 <div className="flex justify-between items-center px-2">
                   <h3 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
@@ -1112,7 +1222,135 @@ export default function MainPortal() {
             </div>
           </section>
 
-          <section className="w-full bg-slate-50 pt-40 md:pt-48 pb-16 px-6 -mt-10">
+          {categorySections.length > 0 && (
+            <section className="w-full bg-slate-50 pt-40 md:pt-48 pb-8 px-6 -mt-10">
+              <div className="max-w-6xl mx-auto">
+                <div className="rounded-[32px] border border-slate-200 bg-white p-6 md:p-8 shadow-xl">
+                  <div className="mb-6">
+                    <h4 className="text-2xl md:text-3xl font-black text-slate-900">{categoryT.title}</h4>
+                    <p className="mt-2 max-w-3xl text-sm md:text-base leading-relaxed text-slate-500">
+                      {categoryT.desc}
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {categorySections.map((section) => (
+                      <div key={section.id} className="space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[11px] md:text-xs font-black uppercase tracking-[0.24em] text-slate-400">
+                            {section.label}
+                          </p>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] md:text-xs font-bold text-slate-400">
+                            {section.categories.length} {categoryT.tags}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+                          {section.categories.map((category) => {
+                            const isActive = activeCategoryId === category.id;
+
+                            return (
+                              <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => handleCategoryToggle(category.id)}
+                                className={`rounded-2xl border px-3 py-4 text-center transition-all duration-200 ${
+                                  isActive
+                                    ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                                    : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"
+                                }`}
+                              >
+                                <span className="mb-2 block text-2xl">{category.icon}</span>
+                                <span className="block min-h-[2rem] text-xs font-black leading-tight text-slate-800">
+                                  {category.label}
+                                </span>
+                                <span className="mt-1 block text-[10px] text-slate-500">
+                                  {category.hotels.length} {categoryT.hotels}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {activeCategory && (
+                      <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50/40 shadow-sm">
+                        <div className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-600">
+                              {categoryT.selected}
+                            </p>
+                            <h5 className="mt-1 text-lg font-black text-slate-900">
+                              <span className="mr-2">{activeCategory.icon}</span>
+                              {activeCategory.label}
+                            </h5>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveCategoryId("")}
+                            className="self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800"
+                          >
+                            {t.close}
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
+                          {activeCategory.hotels.map((hotel) => (
+                            <div
+                              key={hotel.code}
+                              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                            >
+                              <div className="relative h-40 bg-slate-100">
+                                <img
+                                  src={hotel.image || "/hero1.png"}
+                                  alt={hotel.name}
+                                  className="h-full w-full object-cover"
+                                  onError={(event) => {
+                                    event.currentTarget.src = "/hero1.png";
+                                  }}
+                                />
+                              </div>
+                              <div className="flex flex-col gap-3 p-4">
+                                <div>
+                                  <h6 className="text-base font-black text-slate-900">{hotel.name}</h6>
+                                  <p className="mt-1 text-sm font-semibold text-slate-600">
+                                    {[hotel.cityMunicipal, hotel.province].filter(Boolean).join(", ") || categoryT.noLocation}
+                                  </p>
+                                  {hotel.address && (
+                                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                                      {hotel.address}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="mt-auto flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCategoryHotelSelect(hotel)}
+                                    className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-700"
+                                  >
+                                    {categoryT.select}
+                                  </button>
+                                  <a
+                                    href={hotel.url}
+                                    className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-black text-slate-700 hover:bg-slate-50"
+                                  >
+                                    {categoryT.open}
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section className={`w-full bg-slate-50 px-6 pb-16 ${categorySections.length > 0 ? "pt-12 md:pt-16" : "pt-40 md:pt-48 -mt-10"}`}>
             <div className="max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
                 <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2 shrink-0">
@@ -1608,7 +1846,7 @@ export default function MainPortal() {
                   ) : (
                     <>
                       <p className="font-bold text-slate-800 text-lg mb-1">Tap to Upload ID</p>
-                      <p className="text-xs font-medium text-slate-400">Passport, Driver's License, or National ID</p>
+                      <p className="text-xs font-medium text-slate-400">Passport, Driver&apos;s License, or National ID</p>
                     </>
                   )}
                 </div>
