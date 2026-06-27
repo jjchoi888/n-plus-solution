@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { getPendingPaymentContext } from "../lib/paymentFlow";
 
 const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
 const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
@@ -23,6 +24,11 @@ function getMatchedHotel(initialHotel) {
   const host = window.location.hostname.toLowerCase();
   if (host.endsWith('.localhost')) {
     return host.replace(/\.localhost$/, '') || null;
+  }
+
+  const pendingPayment = getPendingPaymentContext();
+  if (pendingPayment?.routeType === 'hotel' && pendingPayment.hotelCode) {
+    return pendingPayment.hotelCode;
   }
 
   return null;

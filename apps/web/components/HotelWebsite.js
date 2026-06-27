@@ -1,8 +1,17 @@
 "use client";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import RoomList from "./RoomList";
-import { parseGoogleMapEmbedSrc } from "../lib/portalHotels";
+import { buildHotelUrl, parseGoogleMapEmbedSrc } from "../lib/portalHotels";
+import {
+  clearPendingPaymentContext,
+  extractReservationIds,
+  getPendingPaymentContext,
+  isReservationFailedStatus,
+  isReservationPendingStatus,
+  isReservationSuccessfulStatus,
+  savePendingPaymentContext,
+} from "../lib/paymentFlow";
 
 const BASE_URL = '';
 
@@ -82,7 +91,8 @@ const translations = {
         extraOptions: 'Extra Options', extraBed: 'Extra Bed',
         paymentMethod: 'Payment',
         paymentRedirectNote: 'You will be redirected to the secure PG payment page after confirming your booking.',
-        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...'
+        bookingSummary: 'Booking Summary', promoCode: 'Promo Code', apply: 'Apply', total: 'Total', confirmBook: 'Confirm & Book', processing: 'Processing...',
+        paymentSuccessTitle: 'Payment Complete', paymentSuccessMessage: 'Your payment was completed successfully and the reservation has been sent to the front desk.', paymentPendingTitle: 'Payment Check Needed', paymentPendingMessage: 'Your payment was not completed or is still processing. Please check the reservation number below.', paymentFailedTitle: 'Payment Failed', paymentFailedMessage: 'Your payment was not completed. Please try again or contact the hotel.', paymentPartialTitle: 'Reservation Check Needed', paymentPartialMessage: 'Some reservation items were confirmed, but at least one item still needs attention. Please review the reservation numbers below.', reservationNumbers: 'Reservation Number', goHome: 'Go to Home'
     },
     ko: {
         home: '홈', rooms: '객실', facilities: '부대시설', attractions: '관광지', contact: '오시는길',
@@ -99,7 +109,8 @@ const translations = {
         extraOptions: '추가 옵션', extraBed: '엑스트라 베드',
         paymentMethod: '결제',
         paymentRedirectNote: '예약 확정 후 PG 결제창으로 이동합니다.',
-        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...'
+        bookingSummary: '예약 요약', promoCode: '프로모션 코드', apply: '적용', total: '총 결제 금액', confirmBook: '결제 및 예약 확정', processing: '처리 중...',
+        paymentSuccessTitle: '결제 완료', paymentSuccessMessage: '결제가 정상적으로 완료되었고 예약 정보가 프론트데스크로 전달되었습니다.', paymentPendingTitle: '결제 확인 필요', paymentPendingMessage: '결제가 완료되지 않았거나 아직 처리 중입니다. 아래 예약번호를 확인해 주세요.', paymentFailedTitle: '결제 실패', paymentFailedMessage: '결제가 완료되지 않았습니다. 다시 시도하시거나 호텔로 문의해 주세요.', paymentPartialTitle: '예약 확인 필요', paymentPartialMessage: '일부 예약은 확인되었지만 추가 확인이 필요한 항목이 있습니다. 아래 예약번호를 확인해 주세요.', reservationNumbers: '예약 번호', goHome: '홈으로 이동'
     },
     zh: {
         home: '首页', rooms: '客房', facilities: '设施', attractions: '景点', contact: '联系我们',
@@ -116,7 +127,8 @@ const translations = {
         extraOptions: '额外选项', extraBed: '加床',
         paymentMethod: '付款',
         paymentRedirectNote: '确认预订后，您将跳转到安全的 PG 支付页面。',
-        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...'
+        bookingSummary: '预订摘要', promoCode: '优惠码', apply: '应用', total: '总计', confirmBook: '确认并预订', processing: '处理中...',
+        paymentSuccessTitle: '付款完成', paymentSuccessMessage: '您的付款已成功完成，预订信息已发送到前台。', paymentPendingTitle: '需要确认付款', paymentPendingMessage: '付款尚未完成或仍在处理中。请查看下面的预订编号。', paymentFailedTitle: '付款失败', paymentFailedMessage: '付款未完成。请重试或联系酒店。', paymentPartialTitle: '需要确认预订', paymentPartialMessage: '部分预订已确认，但仍有项目需要进一步确认。请查看下面的预订编号。', reservationNumbers: '预订编号', goHome: '返回首页'
     },
     ja: {
         home: 'ホーム', rooms: '客室', facilities: '施設', attractions: '観光', contact: 'アクセス',
@@ -133,7 +145,8 @@ const translations = {
         extraOptions: '追加オプション', extraBed: 'エキストラベッド',
         paymentMethod: 'お支払い',
         paymentRedirectNote: '予約確定後、PG決済ページへ移動します。',
-        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...'
+        bookingSummary: '予約の概要', promoCode: 'プロモコード', apply: '適用', total: '合計', confirmBook: '予約を確定する', processing: '処理中...',
+        paymentSuccessTitle: '決済完了', paymentSuccessMessage: '決済が正常に完了し、予約情報がフロントデスクへ送信されました。', paymentPendingTitle: '決済確認が必要です', paymentPendingMessage: '決済が完了していないか、まだ処理中です。以下の予約番号をご確認ください。', paymentFailedTitle: '決済失敗', paymentFailedMessage: '決済は完了していません。再度お試しいただくか、ホテルまでお問い合わせください。', paymentPartialTitle: '予約確認が必要です', paymentPartialMessage: '一部の予約は確認されましたが、追加確認が必要な項目があります。以下の予約番号をご確認ください。', reservationNumbers: '予約番号', goHome: 'ホームへ戻る'
     }
 };
 
@@ -425,6 +438,8 @@ export default function HotelWebsite({ domain }) {
   const [showBookingModal, setShowBookingModal] = useState(false); 
   const [hasSearched, setHasSearched] = useState(false); // 💡 모달 대신 검색창 바로 밑에 띄우기 위한 스위치
   const [alertMessage, setAlertMessage] = useState('');
+  const [paymentStatusModal, setPaymentStatusModal] = useState({ show: false, title: '', message: '', highlight: '', type: 'success' });
+  const paymentReturnKeyRef = useRef('');
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -458,6 +473,19 @@ export default function HotelWebsite({ domain }) {
   };
 
   const hotelCode = getEffectiveHotelCode();
+
+  const closePaymentStatusModal = () => {
+    setActiveMenu('HOME');
+    setHasSearched(false);
+    setShowBookingModal(false);
+    setIsMobileMenuOpen(false);
+    setPaymentStatusModal({ show: false, title: '', message: '', highlight: '', type: 'success' });
+
+    if (typeof window !== 'undefined' && hotelCode) {
+      window.localStorage.setItem('hotelCode', hotelCode);
+      window.history.replaceState({}, '', buildHotelUrl(hotelCode));
+    }
+  };
 
   useEffect(() => {
     // 💡 로딩 상태 시작
@@ -499,6 +527,147 @@ export default function HotelWebsite({ domain }) {
       .finally(() => setLoading(false));
       
   }, [hotelCode]); //
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const pendingPayment = getPendingPaymentContext();
+    if (!pendingPayment || pendingPayment.routeType !== 'hotel') return;
+    if (pendingPayment.hotelCode && pendingPayment.hotelCode !== hotelCode) return;
+
+    const paymentKey = [
+      pendingPayment.hotelCode,
+      pendingPayment.createdAt,
+      pendingPayment.reservationIds.join(','),
+      pendingPayment.guestEmail,
+    ].join('|');
+
+    if (paymentReturnKeyRef.current === paymentKey) return;
+    paymentReturnKeyRef.current = paymentKey;
+
+    let cancelled = false;
+
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const paymentLocale = translations[pendingPayment.lang] || translations[lang] || translations.en;
+
+    const lookupReservation = async (lookupPayload) => {
+      const response = await fetch(`${BASE_URL}/api/public/reservations/lookup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lookupPayload),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data?.success || !data?.reservation) return null;
+      return data.reservation;
+    };
+
+    const resolvePaymentOutcome = async () => {
+      const reservationIds = Array.isArray(pendingPayment.reservationIds) ? pendingPayment.reservationIds : [];
+      let reservations = [];
+
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const lookupResults = reservationIds.length > 0
+          ? await Promise.all(reservationIds.map((resId) => lookupReservation({ res_id: resId })))
+          : pendingPayment.guestEmail
+            ? [await lookupReservation({ email: pendingPayment.guestEmail })]
+            : [];
+
+        reservations = lookupResults.filter(Boolean);
+        const statuses = reservations.map((reservation) => reservation?.status);
+
+        if (statuses.length > 0) {
+          if (statuses.every(isReservationSuccessfulStatus)) {
+            return { outcome: 'success', reservations };
+          }
+
+          if (statuses.some(isReservationSuccessfulStatus) && statuses.some((status) => !isReservationSuccessfulStatus(status))) {
+            return { outcome: 'partial', reservations };
+          }
+
+          if (statuses.every(isReservationFailedStatus)) {
+            return { outcome: 'failed', reservations };
+          }
+        }
+
+        if (attempt < 4) {
+          await wait(1500);
+        }
+      }
+
+      if (reservations.length === 0) {
+        return { outcome: 'unknown', reservations: [] };
+      }
+
+      const statuses = reservations.map((reservation) => reservation?.status);
+      if (statuses.every(isReservationSuccessfulStatus)) return { outcome: 'success', reservations };
+      if (statuses.some(isReservationSuccessfulStatus)) return { outcome: 'partial', reservations };
+      if (statuses.every(isReservationFailedStatus)) return { outcome: 'failed', reservations };
+      if (statuses.some(isReservationPendingStatus)) return { outcome: 'pending', reservations };
+      return { outcome: 'unknown', reservations };
+    };
+
+    const finalizePaymentReturn = async () => {
+      if (pendingPayment.lang && pendingPayment.lang !== lang) {
+        setLang(pendingPayment.lang);
+      }
+
+      try {
+        const { outcome, reservations } = await resolvePaymentOutcome();
+        if (cancelled) return;
+
+        const highlightedIds = (
+          reservations.map((reservation) => reservation?.res_id).filter(Boolean).length > 0
+            ? reservations.map((reservation) => reservation?.res_id).filter(Boolean)
+            : pendingPayment.reservationIds
+        ).join('\n');
+
+        setActiveMenu('HOME');
+        setHasSearched(false);
+        setShowBookingModal(false);
+        setIsMobileMenuOpen(false);
+
+        if (pendingPayment.hotelCode) {
+          window.localStorage.setItem('hotelCode', pendingPayment.hotelCode);
+          window.history.replaceState({}, '', buildHotelUrl(pendingPayment.hotelCode));
+        }
+
+        if (outcome === 'success') {
+          setPaymentStatusModal({ show: true, type: 'success', title: paymentLocale.paymentSuccessTitle, message: paymentLocale.paymentSuccessMessage, highlight: highlightedIds });
+        } else if (outcome === 'partial') {
+          setPaymentStatusModal({ show: true, type: 'warning', title: paymentLocale.paymentPartialTitle, message: paymentLocale.paymentPartialMessage, highlight: highlightedIds });
+        } else if (outcome === 'failed') {
+          setPaymentStatusModal({ show: true, type: 'error', title: paymentLocale.paymentFailedTitle, message: paymentLocale.paymentFailedMessage, highlight: highlightedIds });
+        } else {
+          setPaymentStatusModal({ show: true, type: 'warning', title: paymentLocale.paymentPendingTitle, message: paymentLocale.paymentPendingMessage, highlight: highlightedIds });
+        }
+      } catch (error) {
+        console.error('Failed to resolve payment return:', error);
+        if (cancelled) return;
+
+        const highlightedIds = pendingPayment.reservationIds.join('\n');
+        setActiveMenu('HOME');
+        setHasSearched(false);
+        setShowBookingModal(false);
+        setIsMobileMenuOpen(false);
+
+        if (pendingPayment.hotelCode) {
+          window.localStorage.setItem('hotelCode', pendingPayment.hotelCode);
+          window.history.replaceState({}, '', buildHotelUrl(pendingPayment.hotelCode));
+        }
+
+        setPaymentStatusModal({ show: true, type: 'warning', title: paymentLocale.paymentPendingTitle, message: paymentLocale.paymentPendingMessage, highlight: highlightedIds });
+      } finally {
+        clearPendingPaymentContext();
+      }
+    };
+
+    finalizePaymentReturn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hotelCode, lang]);
 
   const safeConfig = config || {};
   let gallery = []; try { gallery = JSON.parse(safeConfig.gallery_json || '[]'); } catch(e){}
@@ -679,8 +848,8 @@ export default function HotelWebsite({ domain }) {
         
         {/* 헤더 */}
         <header className={`site-header fixed top-0 w-full z-50 ${isModernWebsite ? 'px-3 pt-3 md:px-6 md:pt-4' : 'bg-white/95 backdrop-blur-md shadow-sm'}`}>
-          <div className={`relative z-50 flex items-center justify-between ${isModernWebsite ? 'mx-auto max-w-[1380px] rounded-[28px] border border-white/10 bg-slate-950/70 px-4 py-3 shadow-[0_22px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl md:px-6 md:py-4' : 'px-6 py-4 md:px-12'}`}>
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveMenu('HOME')}>
+              <div className={`relative z-50 flex items-center justify-between ${isModernWebsite ? 'mx-auto max-w-[1380px] rounded-[28px] border border-white/10 bg-slate-950/70 px-4 py-3 shadow-[0_22px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl md:px-6 md:py-4' : 'px-6 py-4 md:px-12'}`}>
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveMenu('HOME'); setIsMobileMenuOpen(false); }}>
                 {safeConfig.logo_url ? (
                   <CmsImage
                     src={safeConfig.logo_url}
@@ -710,15 +879,39 @@ export default function HotelWebsite({ domain }) {
                   <select value={lang} onChange={(e) => setLang(e.target.value)} className={`${isModernWebsite ? 'border border-white/10 bg-white/10 text-white hover:bg-white/15' : 'border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200'} rounded-lg px-2 py-1.5 text-xs font-bold outline-none transition-colors cursor-pointer md:px-3 md:py-2 md:text-sm`}>
                       <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                   </select>
-                  <button onClick={() => setActiveMenu('BOOK')} className={`site-book-button theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 font-bold shadow-md text-xs md:text-base whitespace-nowrap ${isModernWebsite ? 'rounded-2xl tracking-[0.18em] uppercase' : 'rounded-full'}`}>{isModernWebsite ? t.reserveNow : t.bookNow}</button>
+                  <button onClick={() => { setActiveMenu('BOOK'); setIsMobileMenuOpen(false); }} className={`site-book-button theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 font-bold shadow-md text-xs md:text-base whitespace-nowrap ${isModernWebsite ? 'rounded-2xl tracking-[0.18em] uppercase' : 'rounded-full'}`}>{isModernWebsite ? t.reserveNow : t.bookNow}</button>
                   <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`md:hidden p-2 text-2xl ${isModernWebsite ? 'text-white' : 'theme-text'}`}>{isMobileMenuOpen ? '✕' : '☰'}</button>
               </div>
           </div>
-          <div className={`site-mobile-menu md:hidden absolute flex flex-col overflow-hidden transition-all duration-300 ${isModernWebsite ? 'left-3 right-3 top-[calc(100%+0.75rem)] rounded-[24px] border border-white/10 bg-slate-950/95 shadow-[0_22px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl' : 'top-full left-0 w-full bg-white shadow-xl border-t border-slate-100'} ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
+          {isModernWebsite ? (
+            <>
+              <div
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`md:hidden fixed inset-0 z-[55] bg-slate-950/18 transition-opacity duration-300 ${isMobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+              />
+              <div className={`md:hidden fixed right-4 bottom-36 z-[60] flex flex-col items-end gap-3 transition-all duration-300 ${isMobileMenuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-6 opacity-0'}`}>
+                {menuItems.map(menu => (
+                  <button
+                    key={menu.id}
+                    onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }}
+                    className={`min-w-[148px] rounded-[20px] border px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.28em] shadow-[0_18px_45px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-all ${
+                      activeMenu === menu.id
+                        ? 'border-white/28 bg-white/18 text-white'
+                        : 'border-white/14 bg-slate-950/46 text-white/82 hover:bg-slate-950/68 hover:text-white'
+                    }`}
+                  >
+                    {menu.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className={`site-mobile-menu md:hidden absolute flex flex-col overflow-hidden transition-all duration-300 top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
               {menuItems.map(menu => (
-                  <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`site-mobile-item p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'site-mobile-item-active theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
+                <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`site-mobile-item p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'site-mobile-item-active theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
               ))}
-          </div>
+            </div>
+          )}
         </header>
 
         {/* 🏠 메인 화면 */}
@@ -928,6 +1121,7 @@ export default function HotelWebsite({ domain }) {
                               checkOut={checkOut} 
                               adults={adults} 
                               kids={kids} 
+                              paymentReturnMode="hotel"
                           />
                       </ErrorBoundary>
                   </div>
@@ -1216,14 +1410,30 @@ export default function HotelWebsite({ domain }) {
                     });
                     
                     const data = await res.json();
+                    const reservationIds = extractReservationIds(data);
                     const paymentRedirectUrl = resolvePaymentRedirectUrl(data);
                     if (paymentRedirectUrl) {
+                        savePendingPaymentContext({
+                            routeType: 'hotel',
+                            hotelCode,
+                            guestEmail,
+                            lang,
+                            reservationIds,
+                        });
                         window.location.href = paymentRedirectUrl;
                         return;
                     }
 
                     if (res.ok || data.success) {
-                        setAlertMessage("✅ Booking Confirmed!\nEmail and receipt have been sent.");
+                        setActiveMenu('HOME');
+                        setHasSearched(false);
+                        setPaymentStatusModal({
+                            show: true,
+                            type: 'success',
+                            title: t.paymentSuccessTitle,
+                            message: t.paymentSuccessMessage,
+                            highlight: reservationIds.join('\n'),
+                        });
                         setShowBookingModal(false);
                         setFirstName(''); setLastName(''); setGuestEmail(''); setGuestPhone('');
                         setExtraBed(0);
@@ -1356,6 +1566,38 @@ export default function HotelWebsite({ domain }) {
             </div>
             );
         })()}    
+
+        {paymentStatusModal.show && (
+            <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={closePaymentStatusModal}>
+                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100" onClick={e => e.stopPropagation()}>
+                    <div className={`p-5 text-white flex items-center justify-center ${paymentStatusModal.type === 'success' ? 'bg-emerald-600' : paymentStatusModal.type === 'warning' ? 'bg-amber-500' : 'bg-red-600'}`}>
+                        <h3 className="font-black text-xl">{paymentStatusModal.title}</h3>
+                    </div>
+                    <div className="p-8">
+                        <p className="text-slate-600 font-medium text-sm leading-relaxed whitespace-pre-wrap text-center">
+                            {paymentStatusModal.message}
+                        </p>
+
+                        {paymentStatusModal.highlight && (
+                            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+                                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400 mb-3">{t.reservationNumbers}</p>
+                                <div className="space-y-2">
+                                    {paymentStatusModal.highlight.split('\n').filter(Boolean).map((reservationId) => (
+                                        <div key={reservationId} className="rounded-xl bg-white px-3 py-2 font-mono font-black text-slate-800 shadow-sm border border-slate-100">
+                                            {reservationId}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <button onClick={closePaymentStatusModal} className="w-full mt-6 theme-bg theme-hover text-white py-3.5 rounded-2xl font-black shadow-lg">
+                            {t.goHome}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {/* 💡 전역 알림(Alert) 커스텀 모달창 */}
         {alertMessage && (

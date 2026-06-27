@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { getHotelDisplayName } from "../lib/hotelDirectory";
+import { extractReservationIds, savePendingPaymentContext } from "../lib/paymentFlow";
 
 const BASE_URL = '';
 
@@ -87,7 +88,7 @@ const resolvePaymentRedirectUrl = (payload) => {
   return "";
 };
 
-export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids }) {
+export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, checkIn, checkOut, adults, kids, paymentReturnMode = 'portal' }) {
   const t = translations[lang] || translations.en;
 
   const [fetchedRooms, setFetchedRooms] = useState([]);
@@ -238,12 +239,22 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
 
       const paymentRedirectUrl = resolvePaymentRedirectUrl(data);
       if (paymentRedirectUrl) {
+        if (paymentReturnMode === 'hotel') {
+          savePendingPaymentContext({
+            routeType: 'hotel',
+            hotelCode: effectiveHotelCode,
+            guestEmail: formData.email,
+            lang,
+            reservationIds: extractReservationIds(data),
+          });
+        }
         window.location.href = paymentRedirectUrl;
         return;
       }
       
       if (data.success) {
-          setModal({ show: true, type: 'success', title: t.success, message: t.successMsg, highlight: data.res_ids.join('\n') });
+          const reservationIds = extractReservationIds(data);
+          setModal({ show: true, type: 'success', title: t.success, message: t.successMsg, highlight: reservationIds.join('\n') });
           setIsCheckoutOpen(false); setCart({}); setExtraBeds(0); setAppliedPromo(null); setPromoInput("");
       } else {
           setModal({ show: true, title: t.error, message: data.message || t.networkError, type: 'error', highlight: '' });
