@@ -563,6 +563,24 @@ export default function HotelWebsite({ domain }) {
   const htmlRenderClass = "leading-relaxed text-slate-600 font-medium text-sm md:text-base [&>h1]:text-3xl [&>h1]:font-black [&>h1]:mb-3 [&>h1]:text-slate-800 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:mb-2 [&>h3]:text-slate-800 [&>p]:mb-2";
 
   const t = translations[lang] || translations.en;
+  const isModernWebsite = websiteStyle === 'modern';
+  const menuItems = [
+    { id: 'HOME', label: t.home },
+    { id: 'ROOMS', label: t.rooms },
+    { id: 'FACILITIES', label: t.facilities },
+    { id: 'ATTRACTIONS', label: t.attractions },
+    { id: 'CONTACT', label: t.contact }
+  ];
+  const titleBoxWidth = Math.max(24, Math.min(82, Number(textPos.title?.w) || (isModernWebsite ? 44 : 80)));
+  const subtitleBoxWidth = Math.max(20, Math.min(82, Number(textPos.subtitle?.w) || (isModernWebsite ? 36 : 72)));
+  const titleLeft = Math.max(4, Math.min(76, Number(textPos.title?.x) || (isModernWebsite ? 10 : 50)));
+  const titleTop = Math.max(8, Math.min(76, Number(textPos.title?.y) || (isModernWebsite ? 20 : 40)));
+  const subtitleLeft = Math.max(4, Math.min(76, Number(textPos.subtitle?.x) || (isModernWebsite ? 30 : 50)));
+  const subtitleTop = Math.max(18, Math.min(82, Number(textPos.subtitle?.y) || (isModernWebsite ? 52 : 60)));
+  const titleTextAlign = safeConfig.welcome_title_text_align || (isModernWebsite ? 'left' : (titleLeft < 30 ? 'left' : titleLeft > 70 ? 'right' : 'center'));
+  const subtitleTextAlign = safeConfig.welcome_subtitle_text_align || (isModernWebsite ? 'left' : (subtitleLeft < 30 ? 'left' : subtitleLeft > 70 ? 'right' : 'center'));
+  const websiteDescription = safeConfig.description || "Information updating...";
+  const hotelInitial = hotelDisplayName.trim().charAt(0).toUpperCase() || 'H';
   
   const renderPriceStr = (price, name) => {
       if(lang === 'ko') return `${name} 객실을 ₱${price.toLocaleString()}${t.night} ${t.startingFrom}`;
@@ -590,9 +608,9 @@ export default function HotelWebsite({ domain }) {
             linear-gradient(180deg, #f8fbff 0%, #eef6ff 38%, #f8fafc 100%);
         }
         .site-shell-modern .site-header {
-          background: rgba(15, 23, 42, 0.82) !important;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-          box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+          background: transparent !important;
+          border-bottom: none;
+          box-shadow: none;
         }
         .site-shell-modern .site-logo-text {
           color: white !important;
@@ -624,18 +642,14 @@ export default function HotelWebsite({ domain }) {
         }
         .site-shell-modern .site-hero {
           height: 92vh;
+          background: transparent;
         }
         .site-shell-modern .site-hero::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(180deg, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.08) 28%, rgba(15, 23, 42, 0.72) 100%);
-          pointer-events: none;
-          z-index: 15;
+          display: none;
         }
         .site-shell-modern .site-about {
           background: transparent;
-          padding-top: 5rem;
+          padding-top: 0;
         }
         .site-shell-modern .site-about-card {
           background: rgba(255, 255, 255, 0.84);
@@ -664,8 +678,8 @@ export default function HotelWebsite({ domain }) {
       <div className={`site-shell site-shell-${websiteStyle} min-h-screen bg-slate-50 flex flex-col animate-fade-in custom-font selection:bg-slate-800 selection:text-white`} onContextMenu={(e) => e.preventDefault()}>
         
         {/* 헤더 */}
-        <header className="site-header fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
-          <div className="flex justify-between items-center px-6 md:px-12 py-4 relative z-50">
+        <header className={`site-header fixed top-0 w-full z-50 ${isModernWebsite ? 'px-3 pt-3 md:px-6 md:pt-4' : 'bg-white/95 backdrop-blur-md shadow-sm'}`}>
+          <div className={`relative z-50 flex items-center justify-between ${isModernWebsite ? 'mx-auto max-w-[1380px] rounded-[28px] border border-white/10 bg-slate-950/70 px-4 py-3 shadow-[0_22px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl md:px-6 md:py-4' : 'px-6 py-4 md:px-12'}`}>
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveMenu('HOME')}>
                 {safeConfig.logo_url ? (
                   <CmsImage
@@ -677,24 +691,31 @@ export default function HotelWebsite({ domain }) {
                     sizes="240px"
                   />
                 ) : (
-                  <span className="site-logo-text text-2xl font-black theme-text uppercase">{hotelDisplayName}</span>
+                  <div className="flex items-center gap-3">
+                    {isModernWebsite && (
+                      <div className="flex h-10 w-10 items-center justify-center border border-white/20 bg-white/10 text-xs font-black tracking-[0.28em] text-white">
+                        {hotelInitial}
+                      </div>
+                    )}
+                    <span className={`site-logo-text text-2xl font-black uppercase ${isModernWebsite ? 'text-white' : 'theme-text'}`}>{hotelDisplayName}</span>
+                  </div>
                 )}
               </div>
-              <div className="hidden md:flex gap-8 font-bold text-sm text-slate-500 uppercase tracking-widest">
-                {[ { id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact } ].map(menu => (
-                    <button key={menu.id} onClick={() => setActiveMenu(menu.id)} className={`site-nav-button transition-colors pb-1 ${activeMenu === menu.id ? 'site-nav-button-active theme-text border-b-2 theme-border' : 'hover:theme-text'}`}>{menu.label}</button>
+              <div className={`hidden md:flex font-bold uppercase ${isModernWebsite ? 'gap-6 text-[11px] tracking-[0.28em] text-white/68' : 'gap-8 text-sm tracking-widest text-slate-500'}`}>
+                {menuItems.map(menu => (
+                    <button key={menu.id} onClick={() => setActiveMenu(menu.id)} className={`site-nav-button transition-all pb-1 ${activeMenu === menu.id ? (isModernWebsite ? 'site-nav-button-active border-b-2 border-white/35 text-white' : 'site-nav-button-active theme-text border-b-2 theme-border') : (isModernWebsite ? 'hover:text-white' : 'hover:theme-text')}`}>{menu.label}</button>
                 ))}
               </div>
               <div className="flex items-center gap-2 md:gap-4">
-                  <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-100 text-slate-600 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-bold outline-none cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200">
+                  <select value={lang} onChange={(e) => setLang(e.target.value)} className={`${isModernWebsite ? 'border border-white/10 bg-white/10 text-white hover:bg-white/15' : 'border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200'} rounded-lg px-2 py-1.5 text-xs font-bold outline-none transition-colors cursor-pointer md:px-3 md:py-2 md:text-sm`}>
                       <option value="en">EN</option><option value="ko">KR</option><option value="zh">CN</option><option value="ja">JP</option>
                   </select>
-                  <button onClick={() => setActiveMenu('BOOK')} className="site-book-button theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 rounded-full font-bold shadow-md text-xs md:text-base whitespace-nowrap">{t.bookNow}</button>
-                  <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-2xl theme-text p-2">{isMobileMenuOpen ? '✕' : '☰'}</button>
+                  <button onClick={() => setActiveMenu('BOOK')} className={`site-book-button theme-bg theme-hover text-white px-4 md:px-7 py-2 md:py-2.5 font-bold shadow-md text-xs md:text-base whitespace-nowrap ${isModernWebsite ? 'rounded-2xl tracking-[0.18em] uppercase' : 'rounded-full'}`}>{isModernWebsite ? t.reserveNow : t.bookNow}</button>
+                  <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`md:hidden p-2 text-2xl ${isModernWebsite ? 'text-white' : 'theme-text'}`}>{isMobileMenuOpen ? '✕' : '☰'}</button>
               </div>
           </div>
-          <div className={`site-mobile-menu md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 flex flex-col overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
-              {[ { id: 'HOME', label: t.home }, { id: 'ROOMS', label: t.rooms }, { id: 'FACILITIES', label: t.facilities }, { id: 'ATTRACTIONS', label: t.attractions }, { id: 'CONTACT', label: t.contact } ].map(menu => (
+          <div className={`site-mobile-menu md:hidden absolute flex flex-col overflow-hidden transition-all duration-300 ${isModernWebsite ? 'left-3 right-3 top-[calc(100%+0.75rem)] rounded-[24px] border border-white/10 bg-slate-950/95 shadow-[0_22px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl' : 'top-full left-0 w-full bg-white shadow-xl border-t border-slate-100'} ${isMobileMenuOpen ? 'max-h-80 py-2' : 'max-h-0 py-0'}`}>
+              {menuItems.map(menu => (
                   <button key={menu.id} onClick={() => { setActiveMenu(menu.id); setIsMobileMenuOpen(false); }} className={`site-mobile-item p-4 text-left font-black text-sm tracking-widest uppercase ${activeMenu === menu.id ? 'site-mobile-item-active theme-text bg-slate-50' : 'text-slate-600'}`}>{menu.label}</button>
               ))}
           </div>
@@ -703,34 +724,112 @@ export default function HotelWebsite({ domain }) {
         {/* 🏠 메인 화면 */}
         {activeMenu === 'HOME' && (
           <div className="animate-fade-in-up">
-            <section className="site-hero relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
-              {sliderImages.map((img, idx) => (
-                  <CmsImage
-                    key={idx}
-                    src={img}
-                    alt="slide"
-                    fill
-                    sizes="100vw"
-                    className={`object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`}
-                    priority={idx === 0}
-                  />
-              ))}
-              <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
-                   style={{ left: `${textPos.title?.x ?? 50}%`, top: `${textPos.title?.y ?? 40}%`, transform: `translate(-${textPos.title?.x ?? 50}%, -${textPos.title?.y ?? 40}%)`, textAlign: (textPos.title?.x ?? 50) < 30 ? 'left' : (textPos.title?.x ?? 50) > 70 ? 'right' : 'center' }}>
-                <h1 className="text-5xl md:text-7xl text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap">{safeConfig.welcome_title || "Welcome"}</h1>
-              </div>
-              <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
-                   style={{ left: `${textPos.subtitle?.x ?? 50}%`, top: `${textPos.subtitle?.y ?? 60}%`, transform: `translate(-${textPos.subtitle?.x ?? 50}%, -${textPos.subtitle?.y ?? 60}%)`, textAlign: (textPos.subtitle?.x ?? 50) < 30 ? 'left' : (textPos.subtitle?.x ?? 50) > 70 ? 'right' : 'center' }}>
-                <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap">{safeConfig.welcome_subtitle || "Your perfect stay awaits."}</p>
-              </div>
-            </section>
-            
-            <section className="site-about py-24 px-8 bg-white text-center">
-              <div className="site-about-card max-w-3xl mx-auto">
-                <h2 className="text-3xl font-black mb-8 theme-text">{t.aboutUs}</h2>
-                <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: safeConfig.description || "Information updating..." }} />
-              </div>
-            </section>
+            {isModernWebsite ? (
+              <>
+                <section className="site-hero relative mt-[96px] overflow-hidden bg-transparent px-3 pb-6 md:mt-[112px] md:px-6">
+                  <div className="relative mx-auto h-[72vh] min-h-[520px] max-w-[1380px] overflow-hidden rounded-[30px] border border-white/12 bg-slate-950 shadow-[0_28px_90px_rgba(15,23,42,0.38)]">
+                    {sliderImages.map((img, idx) => (
+                        <CmsImage
+                          key={idx}
+                          src={img}
+                          alt="slide"
+                          fill
+                          sizes="100vw"
+                          className={`object-cover transition-all duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-70 z-10 scale-[1.02]' : 'opacity-0 z-0 scale-100'}`}
+                          priority={idx === 0}
+                        />
+                    ))}
+                    <div className="absolute inset-0 z-10 bg-gradient-to-r from-slate-950/88 via-slate-950/48 to-slate-950/18"></div>
+                    <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_34%)]"></div>
+
+                    <div className="absolute left-4 top-4 z-20 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md md:left-6 md:top-6">
+                      <div className="flex h-10 w-10 items-center justify-center border border-white/20 bg-white/10 text-xs font-black tracking-[0.28em] text-white">
+                        {hotelInitial}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/45">Hotel</p>
+                        <p className="truncate text-sm font-semibold text-white/80 md:text-base">{hotelDisplayName}</p>
+                      </div>
+                    </div>
+
+                    <div className="absolute z-20 rounded-[28px] border border-white/14 bg-slate-950/25 px-5 py-5 shadow-[0_24px_70px_rgba(15,23,42,0.34)] backdrop-blur-md md:px-7 md:py-6"
+                         style={{ left: `${titleLeft}%`, top: `${titleTop}%`, width: `${titleBoxWidth}%`, maxWidth: 'min(720px, calc(100% - 2rem))' }}>
+                      <h1 className="whitespace-pre-wrap text-4xl font-light leading-[0.98] tracking-tight text-white drop-shadow-2xl md:text-6xl xl:text-7xl" style={{ textAlign: titleTextAlign }}>
+                        {safeConfig.welcome_title || "Welcome"}
+                      </h1>
+                    </div>
+
+                    <div className="absolute z-20 rounded-[24px] border border-white/10 bg-slate-950/20 px-4 py-3 backdrop-blur-md md:px-5 md:py-4"
+                         style={{ left: `${subtitleLeft}%`, top: `${subtitleTop}%`, width: `${subtitleBoxWidth}%`, maxWidth: 'min(560px, calc(100% - 2rem))' }}>
+                      <p className="whitespace-pre-wrap text-sm font-light leading-relaxed text-white/80 drop-shadow-lg md:text-lg xl:text-xl" style={{ textAlign: subtitleTextAlign }}>
+                        {safeConfig.welcome_subtitle || "Your perfect stay awaits."}
+                      </p>
+                    </div>
+
+                    <div className="absolute bottom-4 right-4 z-20 w-[170px] rounded-[26px] border border-white/12 bg-white/10 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.34)] backdrop-blur-xl md:bottom-6 md:right-6 md:w-[240px] md:p-5">
+                      <div className="mb-2 text-[10px] font-black uppercase tracking-[0.32em] text-white/45">Editorial Card</div>
+                      <div className="mb-3 text-base font-light leading-tight text-white md:text-xl">{hotelDisplayName}</div>
+                      <div className="mb-3 h-px w-10 bg-white/35"></div>
+                      <div className="text-[11px] leading-relaxed text-white/72 md:text-xs">{sns?.email || sns?.phone || t.contactUs}</div>
+                    </div>
+
+                    <button onClick={() => setActiveMenu('BOOK')} className="absolute bottom-4 left-4 z-20 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-[0.24em] text-white shadow-xl md:bottom-6 md:left-6 md:text-sm theme-bg theme-hover">
+                      {t.reserveNow}
+                    </button>
+                  </div>
+                </section>
+
+                <section className="site-about relative z-20 -mt-2 px-3 pb-14 md:-mt-6 md:px-6">
+                  <div className="site-about-card mx-auto grid max-w-[1380px] gap-6 text-left lg:grid-cols-[minmax(0,1.15fr)_320px]">
+                    <div>
+                      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.32em] text-slate-400">{t.aboutUs}</p>
+                      <div className={htmlRenderClass} dangerouslySetInnerHTML={{ __html: websiteDescription }} />
+                    </div>
+                    <div className="rounded-[28px] bg-slate-950 p-6 text-white shadow-[0_22px_60px_rgba(15,23,42,0.18)]">
+                      <div className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/45">Modern Flow</div>
+                      <div className="text-xl font-light leading-tight">{safeConfig.welcome_title || hotelDisplayName}</div>
+                      <div className="mt-4 space-y-3 text-sm text-white/74">
+                        {sns?.address && <p className="whitespace-pre-wrap">{sns.address}</p>}
+                        {sns?.phone && <p>{sns.phone}</p>}
+                        {sns?.email && <p>{sns.email}</p>}
+                        {!sns?.address && !sns?.phone && !sns?.email && <p>{t.contactUs}</p>}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </>
+            ) : (
+              <>
+                <section className="site-hero relative h-[85vh] flex flex-col items-center justify-center mt-[72px] overflow-hidden bg-slate-900">
+                  {sliderImages.map((img, idx) => (
+                      <CmsImage
+                        key={idx}
+                        src={img}
+                        alt="slide"
+                        fill
+                        sizes="100vw"
+                        className={`object-cover transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-60 z-10' : 'opacity-0 z-0'}`}
+                        priority={idx === 0}
+                      />
+                  ))}
+                  <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
+                       style={{ left: `${textPos.title?.x ?? 50}%`, top: `${textPos.title?.y ?? 40}%`, transform: `translate(-${textPos.title?.x ?? 50}%, -${textPos.title?.y ?? 40}%)`, textAlign: titleTextAlign }}>
+                    <h1 className="text-5xl md:text-7xl text-white leading-tight drop-shadow-2xl font-black whitespace-pre-wrap">{safeConfig.welcome_title || "Welcome"}</h1>
+                  </div>
+                  <div className="absolute z-20 w-full px-4 md:w-auto transition-all duration-500 ease-out" 
+                       style={{ left: `${textPos.subtitle?.x ?? 50}%`, top: `${textPos.subtitle?.y ?? 60}%`, transform: `translate(-${textPos.subtitle?.x ?? 50}%, -${textPos.subtitle?.y ?? 60}%)`, textAlign: subtitleTextAlign }}>
+                    <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-lg whitespace-pre-wrap">{safeConfig.welcome_subtitle || "Your perfect stay awaits."}</p>
+                  </div>
+                </section>
+                
+                <section className="site-about py-24 px-8 bg-white text-center">
+                  <div className="site-about-card max-w-3xl mx-auto">
+                    <h2 className="text-3xl font-black mb-8 theme-text">{t.aboutUs}</h2>
+                    <div className={`${htmlRenderClass} text-center`} dangerouslySetInnerHTML={{ __html: websiteDescription }} />
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         )}
 
