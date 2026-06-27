@@ -16,8 +16,15 @@ Features already re-applied in this repo:
 
 Features preserved in the separate admin repo:
 - Repo path: `C:\Users\jjcho\hotel-pms-admin`
+- Current admin HEAD kept separately: `4ab8199` (`event 22`)
+- Admin backup branch pushed: `backup-eventpos-companyworkflow-20260627`
 - `Company Workflow`: `src/FloatingApprovalInbox.jsx`, `src/pages/ApprovalCenter.jsx`
+- Company Workflow base commits:
+- `c3a9cf4` (`event 13`) for `FloatingApprovalInbox.jsx`
+- `c3a9cf4` (`event 13`) for `ApprovalCenter.jsx`
 - `Event POS`: `src/pages/EventPos.jsx`
+- Event POS base commit:
+- `59462b4` (`event5`) for `EventPos.jsx`
 - Event POS entry button: `src/pages/Home.jsx`
 
 Notes:
