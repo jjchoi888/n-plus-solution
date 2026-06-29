@@ -1,0 +1,1668 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import UserManagement from "./UserManagement";
+import MemberManagement from './MemberManagement';
+
+const BASE_URL = '';
+
+const TAB_TITLES = {
+    DASHBOARD: "HQ Overview",
+    PARTNERS: "Partner Management",
+    AGENTS: "Sales Representatives (Commissions)",
+    SETTLEMENT: "Commission Settlement",
+    BILLING: "Billing & Commission Management",
+    MULTI_PG: "Multi-PG Routing Control",
+    MEMBERS: "Members Management",
+    USERS: "n+ Rewards Club"
+};
+
+const SIDEBAR_MENUS = [
+    { id: "DASHBOARD", label: "HQ Overview", icon: "📊", roles: ["SUPER_ADMIN"] },
+    { id: "PARTNERS", label: "Partner Hotels", icon: "🏨", roles: ["SUPER_ADMIN"] },
+    { id: "MEMBERS", label: "Members", icon: "👤", roles: ["SUPER_ADMIN"] },
+    { id: "USERS", label: "n+ Rewards Club", icon: "🎁", roles: ["SUPER_ADMIN"] },
+    { id: "AGENTS", label: "Sales Agents", icon: "🤝", roles: ["SUPER_ADMIN", "AGENT"] },
+    { id: "SETTLEMENT", label: "Commissions", icon: "💰", roles: ["SUPER_ADMIN", "AGENT"] },
+    { id: "BILLING", label: "Billing & Plans", icon: "💳", roles: ["SUPER_ADMIN", "AGENT"] }
+    , { id: "MULTI_PG", label: "Multi-PG Settings", icon: "🧭", roles: ["SUPER_ADMIN"] }
+];
+
+const AgentTreeNode = ({ node, level = 0, selectedId, onSelect }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+    const hasChildren = node.children && node.children.length > 0;
+
+    return (
+        <div className="select-none">
+            <div
+                className={`flex items-center py-2 px-3 rounded-xl cursor-pointer transition-all border border-transparent ${selectedId === node.agent_id
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+                    : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                style={{ marginLeft: `${level * 16}px` }}
+                onClick={() => onSelect(node)}
+            >
+                <div
+                    onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                    className="w-5 h-5 flex items-center justify-center mr-2 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200 transition-colors"
+                >
+                    {hasChildren ? (isExpanded ? '▾' : '▸') : '•'}
+                </div>
+                <div className="flex-1 flex flex-col min-w-0">
+                    <span className="text-sm font-bold truncate leading-tight">{node.name}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[9px] px-1.5 rounded-sm font-black uppercase tracking-wider ${node.tier === 'Master' ? 'bg-blue-100 text-blue-700' :
+                            node.tier === 'Branch' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'
+                            }`}>{node.tier}</span>
+                        <span className="text-[10px] font-mono text-slate-400 truncate">{node.agent_id}</span>
+                    </div>
+                </div>
+            </div>
+            {hasChildren && isExpanded && (
+                <div className="mt-1 border-l-2 border-slate-100 ml-4 pl-2 space-y-1">
+                    {node.children.map(child => (
+                        <AgentTreeNode key={child.agent_id} node={child} level={0} selectedId={selectedId} onSelect={onSelect} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default function PortalAdmin() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    // 💡 Add Role State
+    const [adminRole, setAdminRole] = useState("SUPER_ADMIN");
+    const [adminAgentId, setAdminAgentId] = useState("");
+
+    const [loginId, setLoginId] = useState("");
+    const [loginPw, setLoginPw] = useState("");
+    const [loginError, setLoginError] = useState("");
+    const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+    const [activeTab, setActiveTab] = useState("DASHBOARD");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [partners, setPartners] = useState([]);
+    const [agents, setAgents] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [toastMessage, setToastMessage] = useState("");
+
+    const [pendingMemberCount, setPendingMemberCount] = useState(0);
+    const [multiPgConfig, setMultiPgConfig] = useState({
+        providers: [
+            { key: "paynplus", label: "Paynplus", enabled: true, priority: 1 },
+            { key: "aqwire", label: "Aqwire", enabled: true, priority: 2 },
+            { key: "hitpay", label: "HitPay", enabled: true, priority: 3 }
+        ],
+        routing: {
+            card: "paynplus",
+            wallet: "aqwire",
+            international: "hitpay"
+        },
+        fallbackEnabled: true,
+        fallbackChain: "paynplus>aqwire>hitpay",
+        timeoutMs: 8000
+    });
+    const [newProviderForm, setNewProviderForm] = useState({ key: "", label: "" });
+    const [multiPgHealth, setMultiPgHealth] = useState([]);
+    const [isSavingMultiPg, setIsSavingMultiPg] = useState(false);
+    const [credentialHotelCode, setCredentialHotelCode] = useState("");
+    const [providerCredentials, setProviderCredentials] = useState({});
+    const [isSavingCredential, setIsSavingCredential] = useState(false);
+
+    const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
+    const [newAgent, setNewAgent] = useState({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
+    const [isIdAvailable, setIsIdAvailable] = useState(null);
+
+    const [selectedAgent, setSelectedAgent] = useState(null);
+    const [isEditingAgent, setIsEditingAgent] = useState(false);
+    const [editAgentData, setEditAgentData] = useState(null);
+
+    const handleUpdateAgent = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/update`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editAgentData)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("✅ Agent info updated successfully!");
+                setIsEditingAgent(false);
+                fetchData();
+            } else showToast(`❌ Update Failed.`);
+        } catch (error) { showToast("❌ Network Error."); }
+    };
+
+    const handleDeleteAgent = async (agentId) => {
+        if (!window.confirm(`Are you sure you want to delete Agent [${agentId}]?\n\n* Agents with sub-agents or active hotels cannot be deleted.`)) return;
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/${agentId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) { showToast("✅ Agent deleted successfully!"); setSelectedAgent(null); fetchData(); }
+            else { showToast(`❌ Delete Failed: ${data.message}`); }
+        } catch (e) { showToast("❌ Network Error."); }
+    };
+
+    const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+    const [isEditingPartner, setIsEditingPartner] = useState(false);
+    const [isHotelCodeAvailable, setIsHotelCodeAvailable] = useState(null); // 💡 [추가] 호텔 코드 중복 확인 상태
+    const [partnerForm, setPartnerForm] = useState({
+        code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
+    });
+
+    const handleCheckHotelCode = async () => {
+        if (!partnerForm.code || partnerForm.code.trim().length !== 6) {
+            return showToast("Please enter exactly 6 characters for the Hotel Code.");
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/partners/check-code`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: partnerForm.code })
+            });
+            const data = await res.json();
+            if (data.success && data.available) {
+                setIsHotelCodeAvailable(true);
+                showToast("✅ Hotel Code is available!");
+            } else {
+                setIsHotelCodeAvailable(false);
+                showToast("❌ Hotel Code already exists.");
+            }
+        } catch (error) {
+            showToast("❌ Network error during code check.");
+        }
+    };
+
+    const handlePartnerSubmit = async (e) => {
+        e.preventDefault();
+        const url = isEditingPartner ? `${BASE_URL}/api/admin/partners/${partnerForm.code}` : `${BASE_URL}/api/admin/partners/register`;
+        const method = isEditingPartner ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(partnerForm)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`✅ Partner successfully ${isEditingPartner ? 'updated' : 'registered'}!`);
+                setIsPartnerModalOpen(false);
+                fetchData();
+            } else {
+                showToast(`❌ Error: ${data.message}`);
+            }
+        } catch (error) { showToast("❌ Network error."); }
+    };
+
+    const handleDeletePartner = async (code, name) => {
+        if (!window.confirm(`⚠️ [WARNING]\nAre you sure you want to completely delete '${name}'?\nThis will erase the hotel and ALL associated user accounts!`)) return;
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/partners/${code}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                showToast("✅ Partner deleted successfully!");
+                fetchData();
+            } else { showToast(`❌ Delete Failed: ${data.message}`); }
+        } catch (error) { showToast("❌ Network error."); }
+    };
+
+    const calculateSettlement = (targetAgentId) => {
+        const agentMap = {};
+        agents.forEach(a => agentMap[a.agent_id] = a);
+
+        let totalGross = 0; let totalNet = 0; let myCommission = 0; let hotelDetails = [];
+
+        partners.filter(p => p.status === 'Active' && Number(p.mrr) > 0).forEach(hotel => {
+            if (!hotel.agent_id || hotel.agent_id === 'HQ Direct') return;
+
+            let currentAgentId = hotel.agent_id;
+            let currentRate = 0;
+            let pathPayouts = {};
+
+            while (currentAgentId && agentMap[currentAgentId]) {
+                const agent = agentMap[currentAgentId];
+                let payoutRate = agent.commission_rate - currentRate;
+                if (payoutRate < 0) payoutRate = 0;
+
+                pathPayouts[agent.agent_id] = payoutRate;
+                currentRate = agent.commission_rate;
+                currentAgentId = agent.parent_agent_id;
+            }
+
+            if (pathPayouts[targetAgentId] !== undefined) {
+                const gross = Number(hotel.mrr);
+                const net = gross * 0.88;
+                const targetPayoutRate = pathPayouts[targetAgentId];
+                const targetEarned = net * (targetPayoutRate / 100);
+
+                totalGross += gross; totalNet += net; myCommission += targetEarned;
+                hotelDetails.push({ hotelCode: hotel.code, hotelName: hotel.name, directAgent: hotel.agent_id, gross, net, myRate: targetPayoutRate, earned: targetEarned });
+            }
+        });
+        return { totalGross, totalNet, myCommission, hotelDetails };
+    };
+
+    const buildAgentTree = () => {
+        const agentMap = {};
+        const roots = [];
+        agents.forEach(ag => { agentMap[ag.agent_id] = { ...ag, children: [] }; });
+
+        agents.forEach(ag => {
+            if (ag.parent_agent_id === 'HQ' || !agentMap[ag.parent_agent_id]) roots.push(agentMap[ag.agent_id]);
+            else agentMap[ag.parent_agent_id].children.push(agentMap[ag.agent_id]);
+        });
+
+        // 💡 If logged in as an Agent, only show from their node downwards
+        if (adminRole === "AGENT" && adminAgentId) {
+            const myNode = agentMap[adminAgentId];
+            return myNode ? [myNode] : [];
+        }
+
+        return roots;
+    };
+    const agentTree = buildAgentTree();
+
+    const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(""), 3000);
+    };
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoginError("");
+        setIsAuthenticating(true);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/hq-login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: loginId, password: loginPw })
+            });
+            const data = await res.json();
+
+            // 💡 Both SUPER_ADMIN and AGENT can log in now
+            if (data.success && (data.role === 'SUPER_ADMIN' || data.role === 'AGENT')) {
+                sessionStorage.setItem("hq_logged_in", "true");
+                sessionStorage.setItem("hq_role", data.role);
+                sessionStorage.setItem("hq_agent_id", data.agent_id || "");
+
+                setAdminRole(data.role);
+                setAdminAgentId(data.agent_id || "");
+                setIsLoggedIn(true);
+
+                // Automatically set the first allowed tab based on role
+                if (data.role === "AGENT") {
+                    setActiveTab("AGENTS");
+                } else {
+                    setActiveTab("DASHBOARD");
+                }
+            } else {
+                setLoginError("Invalid HQ credentials.");
+            }
+        } catch (err) {
+            setLoginError("Failed to connect to the HQ server.");
+        } finally {
+            setIsAuthenticating(false);
+        }
+    };
+
+    // 💡 [신규 추가] 파트너(호텔) Edit 모달창 열기 함수
+    const openPartnerEditModal = (partner) => {
+        setIsEditingPartner(true);
+        setPartnerForm({
+            code: partner.code,
+            name: partner.name,
+            master_id: partner.master_id || "",
+            master_pw: "", // 보안상 비밀번호는 빈칸으로 둠 (변경 시에만 입력)
+            agent_id: partner.agent_id || "HQ Direct",
+            status: partner.status || "Active"
+        });
+        setIsPartnerModalOpen(true);
+    };
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            // 💡 If agent, pass agent_id to fetch only their relevant data (Requires backend support)
+            const queryParam = adminRole === 'AGENT' ? `?agent_id=${adminAgentId}` : '';
+
+            const [partnerRes, agentRes] = await Promise.all([
+                fetch(`${BASE_URL}/api/admin/partners${queryParam}`),
+                fetch(`${BASE_URL}/api/admin/agents${queryParam}`)
+            ]);
+
+            const pData = await partnerRes.json();
+            const aData = await agentRes.json();
+
+            if (Array.isArray(pData)) setPartners(pData);
+            if (Array.isArray(aData)) setAgents(aData);
+        } catch (error) {
+            showToast("❌ Failed to load data from server.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const fetchPendingMembersCount = async () => {
+        if (adminRole !== "SUPER_ADMIN") return; // Agents don't need this
+        try {
+            const res = await fetch(`/api/hq/members`);
+            const data = await res.json();
+            if (data.success && data.members) {
+                const pending = data.members.filter(m => m.membership_status === 'pending').length;
+                setPendingMemberCount(pending);
+            }
+        } catch (e) { }
+    };
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            fetchData();
+            fetchPendingMembersCount();
+            const interval = setInterval(fetchPendingMembersCount, 10000);
+            return () => clearInterval(interval);
+        }
+    }, [isLoggedIn, adminRole]);
+
+    useEffect(() => {
+        if (!isLoggedIn || activeTab !== "MULTI_PG") return;
+        const defaultHotelCode = partners?.[0]?.code || "";
+        if (defaultHotelCode && !credentialHotelCode) setCredentialHotelCode(defaultHotelCode);
+
+        const fetchMultiPgConfig = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/multi-pg-config`);
+                const data = await res.json();
+                if (data?.success && data?.config) setMultiPgConfig(prev => ({ ...prev, ...data.config }));
+            } catch (e) { }
+        };
+        const fetchMultiPgHealth = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/multi-pg-health`);
+                const data = await res.json();
+                if (data?.success && Array.isArray(data?.rows)) setMultiPgHealth(data.rows);
+            } catch (e) { }
+        };
+        fetchMultiPgConfig();
+        fetchMultiPgHealth();
+    }, [isLoggedIn, activeTab, partners]);
+
+    useEffect(() => {
+        if (!isLoggedIn || activeTab !== "MULTI_PG" || !credentialHotelCode) return;
+        const fetchProviderCredentials = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/portal/settings/pg?hotel_code=${encodeURIComponent(credentialHotelCode)}`);
+                const data = await res.json();
+                if (data?.success && Array.isArray(data?.rows)) {
+                    const map = {};
+                    data.rows.forEach((row) => {
+                        map[row.provider] = {
+                            public_key: row.public_key || "",
+                            secret_key: "",
+                            merchant_id: row.merchant_id || "",
+                            webhook_secret: row.webhook_secret || "",
+                            mode: row.mode || "sandbox",
+                            is_active: row.is_active === 1 || row.is_active === true
+                        };
+                    });
+                    setProviderCredentials(map);
+                }
+            } catch (e) { }
+        };
+        fetchProviderCredentials();
+    }, [isLoggedIn, activeTab, credentialHotelCode]);
+
+    useEffect(() => {
+        const isAuth = sessionStorage.getItem("hq_logged_in");
+        const role = sessionStorage.getItem("hq_role") || "SUPER_ADMIN";
+        const storedAgentId = sessionStorage.getItem("hq_agent_id") || "";
+
+        if (isAuth === "true") {
+            setAdminRole(role);
+            setAdminAgentId(storedAgentId);
+            setIsLoggedIn(true);
+            if (role === "AGENT") setActiveTab("AGENTS");
+        }
+    }, []);
+
+    const handleLocalChange = (code, field, value) => {
+        setPartners(prev => prev.map(p => p.code === code ? { ...p, [field]: value } : p));
+    };
+
+    const handleSaveBilling = async (partner) => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/billing/update`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hotel_code: partner.code,
+                    plan: "Enterprise Suite",
+                    status: partner.status,
+                    mrr: partner.mrr,
+                    agent_id: partner.agent_id
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`✅ [${partner.code}] Billing & Agent updated!`);
+                fetchData();
+            } else showToast("❌ Failed to update.");
+        } catch (e) {
+            showToast("❌ Network Error.");
+        }
+    };
+
+    const handleSaveDomain = async (partner) => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/domains/update`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hotel_code: partner.code,
+                    domain: partner.domain === "Pending" ? "" : partner.domain
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`🌐 [${partner.code}] Domain linked!`);
+                fetchData();
+            } else showToast("❌ Failed to link domain.");
+        } catch (e) {
+            showToast("❌ Network Error.");
+        }
+    };
+
+    const handleCheckAgentId = async () => {
+        if (!newAgent.agent_id.trim()) {
+            return showToast("Please enter an Agent ID first.");
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/check-id`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ agent_id: newAgent.agent_id })
+            });
+            const data = await res.json();
+            if (data.success && data.available) {
+                setIsIdAvailable(true);
+                showToast("✅ Agent ID is available!");
+            } else {
+                setIsIdAvailable(false);
+                showToast("❌ Agent ID already exists.");
+            }
+        } catch (error) {
+            showToast("❌ Network error during ID check.");
+        }
+    };
+
+    const handleSaveMultiPgConfig = async () => {
+        try {
+            setIsSavingMultiPg(true);
+            const res = await fetch(`${BASE_URL}/api/admin/multi-pg-config`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(multiPgConfig)
+            });
+            const data = await res.json();
+            if (data?.success) showToast("✅ Multi-PG config saved.");
+            else showToast("❌ Failed to save Multi-PG config.");
+        } catch (e) {
+            showToast("❌ Network error while saving Multi-PG config.");
+        } finally {
+            setIsSavingMultiPg(false);
+        }
+    };
+
+    const handleRunMultiPgHealthCheck = async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/multi-pg-health/check`, { method: "POST" });
+            const data = await res.json();
+            if (data?.success && Array.isArray(data?.rows)) {
+                setMultiPgHealth(data.rows);
+                showToast("✅ Multi-PG health check completed.");
+            } else {
+                showToast("⚠️ Health check completed with warnings.");
+            }
+        } catch (e) {
+            showToast("❌ Failed to run Multi-PG health check.");
+        }
+    };
+
+    const normalizeProviderKey = (raw) => String(raw || "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+
+    const handleAddManualProvider = () => {
+        const key = normalizeProviderKey(newProviderForm.key);
+        const label = String(newProviderForm.label || "").trim();
+        if (!key || !label) return showToast("⚠️ Enter provider key and label.");
+        if (multiPgConfig.providers.some(p => p.key === key)) return showToast("⚠️ Provider key already exists.");
+
+        const nextPriority = (multiPgConfig.providers.reduce((m, p) => Math.max(m, Number(p.priority || 0)), 0) || 0) + 1;
+        setMultiPgConfig(prev => ({
+            ...prev,
+            providers: [...prev.providers, { key, label, enabled: false, priority: nextPriority }]
+        }));
+        setNewProviderForm({ key: "", label: "" });
+        showToast("✅ Provider added. Set routing/enable then save.");
+    };
+
+    const handleRemoveProvider = (key) => {
+        const nextProviders = multiPgConfig.providers.filter(p => p.key !== key);
+        const fallbackProvider = nextProviders.find(p => p.enabled) || nextProviders[0];
+        setMultiPgConfig(prev => ({
+            ...prev,
+            providers: nextProviders,
+            routing: {
+                card: prev.routing.card === key ? (fallbackProvider?.key || "") : prev.routing.card,
+                wallet: prev.routing.wallet === key ? (fallbackProvider?.key || "") : prev.routing.wallet,
+                international: prev.routing.international === key ? (fallbackProvider?.key || "") : prev.routing.international
+            },
+            fallbackChain: String(prev.fallbackChain || "")
+                .split(">")
+                .map(v => v.trim())
+                .filter(v => v && v !== key)
+                .join(">")
+        }));
+        showToast("🗑️ Provider removed. Save config to persist.");
+    };
+
+    const handleCredentialField = (providerKey, field, value) => {
+        setProviderCredentials(prev => ({
+            ...prev,
+            [providerKey]: {
+                public_key: "",
+                secret_key: "",
+                merchant_id: "",
+                webhook_secret: "",
+                mode: "sandbox",
+                is_active: false,
+                ...(prev[providerKey] || {}),
+                [field]: value
+            }
+        }));
+    };
+
+    const handleSaveProviderCredential = async (providerKey) => {
+        if (!credentialHotelCode) return showToast("⚠️ Select hotel code first.");
+        const row = providerCredentials[providerKey] || {};
+        if (!row.public_key && !row.secret_key) {
+            return showToast("⚠️ Enter at least API/Public key or Secret key.");
+        }
+        try {
+            setIsSavingCredential(true);
+            const res = await fetch(`${BASE_URL}/api/portal/settings/pg`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hotel_code: credentialHotelCode,
+                    provider: providerKey,
+                    public_key: row.public_key || "",
+                    secret_key: row.secret_key || "",
+                    webhook_secret: row.webhook_secret || "",
+                    merchant_id: row.merchant_id || "",
+                    mode: row.mode || "sandbox",
+                    is_active: !!row.is_active,
+                    config_json: {}
+                })
+            });
+            const data = await res.json();
+            if (data?.success) {
+                showToast(`✅ [${providerKey}] credentials saved.`);
+                setProviderCredentials(prev => ({
+                    ...prev,
+                    [providerKey]: { ...(prev[providerKey] || {}), secret_key: "" }
+                }));
+            } else {
+                showToast(`❌ Save failed for ${providerKey}.`);
+            }
+        } catch (e) {
+            showToast("❌ Network error while saving credentials.");
+        } finally {
+            setIsSavingCredential(false);
+        }
+    };
+
+    const handleRegisterAgent = async (e) => {
+        e.preventDefault();
+        if (isIdAvailable !== true) {
+            return showToast("⚠️ Please check Agent ID availability first.");
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/agents/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newAgent)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("✅ New Agent registered successfully!");
+                setIsAgentModalOpen(false);
+                setNewAgent({ agent_id: "", password: "", name: "", tier: "Rep", parent_agent_id: "HQ", commission_rate: "" });
+                setIsIdAvailable(null);
+                fetchData();
+            } else {
+                showToast(`❌ Registration Failed: ${data.message}`);
+            }
+        } catch (error) {
+            showToast("❌ Network Error.");
+        }
+    };
+
+    if (!isLoggedIn) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-emerald-500/20 blur-[120px] rounded-full pointer-events-none"></div>
+                <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 relative z-10 animate-fade-in-up">
+                    <div className="text-center mb-10">
+                        <div className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-1 mb-2">
+                            <span className="text-emerald-500">n+</span> Portal HQ
+                        </div>
+                        <p className="text-slate-400 text-sm font-bold tracking-widest uppercase">Master Administration</p>
+                    </div>
+                    {loginError && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm font-bold text-center p-3 rounded-xl mb-6">{loginError}</div>}
+                    <form onSubmit={handleLogin} className="space-y-6">
+                        <div>
+                            <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">User ID (HQ or Agent)</label>
+                            <input type="text" required value={loginId} onChange={(e) => setLoginId(e.target.value)} className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors" placeholder="Admin or Agent ID" />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Password</label>
+                            <input type="password" required value={loginPw} onChange={(e) => setLoginPw(e.target.value)} className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors tracking-widest" placeholder="••••••••" />
+                        </div>
+                        <button type="submit" disabled={isAuthenticating} className="w-full bg-emerald-600 text-white font-black py-4 rounded-xl hover:bg-emerald-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-95 disabled:opacity-50 mt-4">
+                            {isAuthenticating ? "AUTHENTICATING..." : "ACCESS PORTAL"}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
+    if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-500">Loading Dashboard...</div>;
+
+    const totalPartners = partners.length;
+    const activePartners = partners.filter(p => p.status === "Active").length;
+    const totalMRR = partners.filter(p => p.status === "Active").reduce((sum, p) => sum + Number(p.mrr || 0), 0);
+    const totalBookings = partners.reduce((sum, p) => sum + (p.bookings || 0), 0);
+
+    const totalPortalBookings = partners.reduce((sum, p) => sum + (p.portalBookings || 0), 0);
+    const totalWebBookings = partners.reduce((sum, p) => sum + (p.webBookings || 0), 0);
+
+    const filteredPartners = partners.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.code.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // 💡 Filter Sidebar menus based on user role
+    const visibleMenus = SIDEBAR_MENUS.filter(menu => menu.roles.includes(adminRole));
+
+    return (
+        <div className="flex h-screen bg-slate-50 font-sans font-medium selection:bg-emerald-500 selection:text-white animate-fade-in relative">
+
+            {toastMessage && (
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 animate-fade-in-up border border-slate-700">
+                    {toastMessage}
+                </div>
+            )}
+
+            {isAgentModalOpen && (
+                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 border border-slate-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-black text-slate-800">Register New Agent</h3>
+                            <button onClick={() => { setIsAgentModalOpen(false); setIsIdAvailable(null); }} className="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
+                        </div>
+                        <form onSubmit={handleRegisterAgent} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Agent ID</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newAgent.agent_id}
+                                        onChange={e => { setNewAgent({ ...newAgent, agent_id: e.target.value }); setIsIdAvailable(null); }}
+                                        className={`w-full border rounded-xl px-4 py-2 outline-none focus:ring-1 transition-colors ${isIdAvailable === true ? "border-emerald-500 focus:ring-emerald-500" :
+                                            isIdAvailable === false ? "border-red-500 focus:ring-red-500" : "focus:border-blue-500 focus:ring-blue-500"
+                                            }`}
+                                        placeholder="e.g. MS-045"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCheckAgentId}
+                                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap"
+                                    >
+                                        Check ID
+                                    </button>
+                                </div>
+                                {isIdAvailable === true && <p className="text-[10px] text-emerald-600 mt-1 font-bold">✅ Available ID</p>}
+                                {isIdAvailable === false && <p className="text-[10px] text-red-600 mt-1 font-bold">❌ Already in use</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
+                                <input type="password" required value={newAgent.password} onChange={e => setNewAgent({ ...newAgent, password: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••" />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company / Agent Name</label>
+                                <input type="text" required value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="e.g. Metro Sales Inc." />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tier Level</label>
+                                    <select value={newAgent.tier} onChange={e => setNewAgent({ ...newAgent, tier: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer bg-white">
+                                        <option value="Master">Master</option>
+                                        <option value="Branch">Branch</option>
+                                        <option value="Rep">Rep</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Commission (%)</label>
+                                    <input type="number" required value={newAgent.commission_rate} onChange={e => setNewAgent({ ...newAgent, commission_rate: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="e.g. 20" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Parent Agency</label>
+                                <select value={newAgent.parent_agent_id} onChange={e => setNewAgent({ ...newAgent, parent_agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer bg-white">
+                                    {adminRole === "SUPER_ADMIN" && <option value="HQ">Directly Under HQ</option>}
+                                    {agents.map(ag => (
+                                        <option key={`opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name} ({ag.agent_id})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => { setIsAgentModalOpen(false); setIsIdAvailable(null); }} className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                                <button type="submit" className="flex-1 px-4 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-md transition-colors disabled:opacity-50" disabled={isIdAvailable !== true}>Register</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 📌 Left Dark Sidebar */}
+            <aside className="w-64 bg-slate-950 text-slate-300 flex flex-col shadow-2xl z-20 shrink-0">
+                <div className="h-20 flex items-center px-6 border-b border-slate-800 shrink-0 bg-slate-950">
+                    <div className="text-2xl font-black text-white tracking-tight flex items-center gap-1">
+                        <span className="text-emerald-500">n+</span> Portal HQ
+                    </div>
+                </div>
+
+                <div className="p-6 flex-1 overflow-y-auto">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-4">Main Menu</p>
+                    <nav className="space-y-2">
+                        {visibleMenus.map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-left outline-none transition-colors duration-300 ease-in-out ${activeTab === item.id
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg w-6 text-center">{item.icon}</span>
+                                    <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                                </div>
+                                {item.id === "USERS" && pendingMemberCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-md">
+                                        {pendingMemberCount}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+
+                <div className="mt-auto p-6 border-t border-slate-800">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full ${adminRole === "AGENT" ? "bg-blue-600" : "bg-emerald-600"} flex items-center justify-center font-black text-white shadow-lg`}>
+                                {adminRole === "AGENT" ? "AG" : "HQ"}
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white truncate max-w-[100px]">{loginId}</p>
+                                <p className={`text-[10px] ${adminRole === "AGENT" ? "text-blue-500" : "text-emerald-500"} font-bold uppercase tracking-widest`}>
+                                    {adminRole === "AGENT" ? "Sales Agent" : "Super User"}
+                                </p>
+                            </div>
+                        </div>
+                        <button onClick={() => {
+                            sessionStorage.removeItem("hq_logged_in");
+                            sessionStorage.removeItem("hq_role");
+                            sessionStorage.removeItem("hq_agent_id");
+                            setIsLoggedIn(false);
+                        }} className="text-slate-500 hover:text-red-400 transition-colors p-2 outline-none focus:outline-none" title="Logout">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* 📌 Main Content Area */}
+            <main className="flex-1 flex flex-col h-screen overflow-hidden">
+                <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
+                    <h1 className="text-xl font-black text-slate-800 transition-none">
+                        {TAB_TITLES[activeTab]}
+                    </h1>
+
+                    {activeTab !== "DASHBOARD" && (
+                        <div className="relative w-64">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm bg-slate-50"
+                            />
+                        </div>
+                    )}
+                </header>
+
+                <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+
+                    {activeTab === "DASHBOARD" && adminRole === "SUPER_ADMIN" && (
+                        <div className="animate-fade-in space-y-8 max-w-6xl mx-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Active Partners</p>
+                                        <h3 className="text-4xl font-black text-slate-800">{activePartners} <span className="text-lg text-slate-400 font-medium">/ {totalPartners}</span></h3>
+                                    </div>
+                                    <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl">🏨</div>
+                                </div>
+                                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Monthly Recurring Revenue</p>
+                                        <h3 className="text-3xl font-black text-emerald-600">₱{totalMRR.toLocaleString()}</h3>
+                                    </div>
+                                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl">📈</div>
+                                </div>
+                                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Global Direct Bookings</p>
+                                        <h3 className="text-4xl font-black text-slate-800">{totalBookings.toLocaleString()}</h3>
+                                        <div className="mt-2 text-[10px] font-bold text-slate-500 flex gap-3 bg-slate-50 px-2 py-1 rounded w-fit">
+                                            <span className="text-blue-600">Portal: {totalPortalBookings.toLocaleString()}</span>
+                                            <span className="text-slate-300">|</span>
+                                            <span className="text-emerald-600">Hotel Web: {totalWebBookings.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl">⚡</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "PARTNERS" && adminRole === "SUPER_ADMIN" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+
+                            <div className="flex justify-between items-end mb-6 shrink-0">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800">Partner Hotel Directory</h2>
+                                    <p className="text-sm font-bold text-slate-500 mt-1">Manage Properties & Master Accounts</p>
+                                </div>
+                                <button onClick={() => {
+                                    setPartnerForm({
+                                        code: "", name: "", master_id: "", master_pw: "", status: "Active", agent_id: "HQ Direct"
+                                    });
+                                    setIsEditingPartner(false);
+                                    setIsHotelCodeAvailable(null);
+                                    setIsPartnerModalOpen(true);
+                                }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
+                                    <span>+</span> Register New Partner
+                                </button>
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                                <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-end shrink-0">
+                                    <span className="text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">Total {filteredPartners.length} Properties</span>
+                                </div>
+                                <div className="overflow-y-auto flex-1">
+                                    <table className="w-full text-left border-collapse relative">
+                                        <thead className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                            <tr className="text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-200">
+                                                <th className="p-4 font-black">Property Details</th>
+                                                <th className="p-4 font-black">Sales Agent</th>
+                                                <th className="p-4 font-black text-center">Status</th>
+                                                <th className="p-4 font-black text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm font-bold text-slate-800">
+                                            {filteredPartners.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4" className="p-10 text-center text-slate-400 font-bold">No partners found.</td>
+                                                </tr>
+                                            ) : (
+                                                filteredPartners.map(p => (
+                                                    <tr key={`partner_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
+                                                        <td className="p-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner uppercase tracking-wider">{p.code}</span>
+                                                                <div className="text-[13px] font-black text-slate-800">{p.name}</div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <span className="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 font-medium">{p.agent_id || 'HQ Direct'}</span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-black border ${p.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                                p.status === 'Overdue' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                                                }`}>
+                                                                {p.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button onClick={() => {
+                                                                    setPartnerForm({
+                                                                        code: p.code, name: p.name, master_id: p.master_id || "", master_pw: "", status: p.status, agent_id: p.agent_id || "HQ Direct"
+                                                                    });
+                                                                    setIsEditingPartner(true);
+                                                                    setIsPartnerModalOpen(true); // 👈 여기서 모달창을 띄우라고 명령하고 있습니다.
+                                                                }} className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                                                                    Edit ⚙️
+                                                                </button>
+                                                                <button onClick={() => handleDeletePartner(p.code, p.name)} className="bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                                                                    Delete 🗑️
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "MEMBERS" && adminRole === "SUPER_ADMIN" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto">
+                            <MemberManagement />
+                        </div>
+                    )}
+
+                    {activeTab === "USERS" && adminRole === "SUPER_ADMIN" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto">
+                            <UserManagement />
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* 💡 AGENTS */}
+                    {/* ========================================================= */}
+                    {activeTab === "AGENTS" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+                            <div className="flex justify-between items-end mb-6 shrink-0">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800">Sales Representatives</h2>
+                                    <p className="text-sm font-bold text-slate-500 mt-1">Manage Agency Hierarchy & Commissions</p>
+                                </div>
+                                {/* 💡 Hide Register button if Agent */}
+                                {adminRole === "SUPER_ADMIN" && (
+                                    <button onClick={() => setIsAgentModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2">
+                                        <span>+</span> Register New Agent
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex-1 flex gap-6 min-h-0 pb-6">
+                                <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Agency Tree</h3>
+                                    </div>
+                                    <div className="p-4 overflow-y-auto flex-1 space-y-1">
+                                        {agents.length === 0 ? (
+                                            <p className="text-center text-sm text-slate-400 mt-10">No agents found.</p>
+                                        ) : (
+                                            agentTree.map(rootNode => (
+                                                <AgentTreeNode
+                                                    key={rootNode.agent_id}
+                                                    node={rootNode}
+                                                    selectedId={selectedAgent?.agent_id}
+                                                    onSelect={(node) => {
+                                                        setSelectedAgent(node);
+                                                        setIsEditingAgent(false);
+                                                    }}
+                                                />
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="w-2/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    {!selectedAgent ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10">
+                                            <div className="text-6xl mb-4 opacity-20">📁</div>
+                                            <p className="font-bold">Select an agent from the tree to view or edit details.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col h-full">
+                                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 shrink-0 flex justify-between items-center">
+                                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+                                                    {isEditingAgent ? "Edit Agent Profile" : "Agent Details"}
+                                                </h3>
+                                                {/* 💡 Hide Edit/Delete if Agent (Unless it's themselves, but usually agents can't edit agents) */}
+                                                {!isEditingAgent && adminRole === "SUPER_ADMIN" && (
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => { setEditAgentData({ ...selectedAgent }); setIsEditingAgent(true); }} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm">
+                                                            Edit ⚙️
+                                                        </button>
+                                                        <button onClick={() => handleDeleteAgent(selectedAgent.agent_id)} className="px-4 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-bold text-red-600 hover:bg-red-100 shadow-sm transition-colors">
+                                                            Delete 🗑️
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="p-8 overflow-y-auto flex-1">
+                                                {!isEditingAgent ? (
+                                                    <div className="space-y-6">
+                                                        <div>
+                                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Company / Agent Name</div>
+                                                            <div className="text-2xl font-black text-slate-800">{selectedAgent.name}</div>
+                                                            <div className="text-sm font-mono text-emerald-600 font-bold mt-1">ID: {selectedAgent.agent_id}</div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tier Level</div>
+                                                                <div className="font-bold text-slate-700">{selectedAgent.tier}</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Commission Rate</div>
+                                                                <div className="font-black text-emerald-600 text-lg">{selectedAgent.commission_rate}%</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Parent Agency</div>
+                                                                <div className="font-bold text-slate-700">{selectedAgent.parent_agent_id}</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Hotels Managed</div>
+                                                                <div className="font-black text-purple-600 text-lg">{selectedAgent.activeHotels || 0}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <form onSubmit={handleUpdateAgent} className="space-y-5">
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company / Agent Name</label>
+                                                            <input type="text" required value={editAgentData.name} onChange={e => setEditAgentData({ ...editAgentData, name: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-5">
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tier Level</label>
+                                                                <select value={editAgentData.tier} onChange={e => setEditAgentData({ ...editAgentData, tier: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 bg-white">
+                                                                    <option value="Master">Master</option>
+                                                                    <option value="Branch">Branch</option>
+                                                                    <option value="Rep">Rep</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Commission (%)</label>
+                                                                <input type="number" required value={editAgentData.commission_rate} onChange={e => setEditAgentData({ ...editAgentData, commission_rate: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Parent Agency</label>
+                                                            <select value={editAgentData.parent_agent_id} onChange={e => setEditAgentData({ ...editAgentData, parent_agent_id: e.target.value })} className="w-full border rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 bg-white">
+                                                                <option value="HQ">Directly Under HQ</option>
+                                                                {agents.filter(a => a.agent_id !== editAgentData.agent_id).map(ag => (
+                                                                    <option key={`edit_opt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="pt-6 flex gap-3">
+                                                            <button type="button" onClick={() => setIsEditingAgent(false)} className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+                                                            <button type="submit" className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">Save Changes</button>
+                                                        </div>
+                                                    </form>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* 💡 SETTLEMENT */}
+                    {/* ========================================================= */}
+                    {activeTab === "SETTLEMENT" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+                            <div className="flex justify-between items-end mb-6 shrink-0">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800">Commission Settlement</h2>
+                                    <p className="text-sm font-bold text-slate-500 mt-1">Net Revenue = Gross - 12% E.VAT (Differential Roll-up Payout)</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex gap-6 min-h-0 pb-6">
+                                <div className="w-1/3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Agency</h3>
+                                    </div>
+                                    <div className="p-4 overflow-y-auto flex-1 space-y-1">
+                                        {agents.length === 0 ? <p className="text-center text-sm text-slate-400 mt-10">No agents found.</p> :
+                                            agentTree.map(rootNode => (
+                                                <AgentTreeNode key={`stl_${rootNode.agent_id}`} node={rootNode} selectedId={selectedAgent?.agent_id} onSelect={setSelectedAgent} />
+                                            ))
+                                        }
+                                    </div>
+                                </div>
+
+                                <div className="w-2/3 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+                                    {!selectedAgent ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10 bg-white">
+                                            <div className="text-6xl mb-4 opacity-20">💰</div>
+                                            <p className="font-bold">Select an agent from the tree to view their settlement report.</p>
+                                        </div>
+                                    ) : (() => {
+                                        const settlement = calculateSettlement(selectedAgent.agent_id);
+
+                                        return (
+                                            <div className="flex flex-col h-full">
+                                                <div className="p-6 border-b border-slate-200 bg-white shrink-0">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <h3 className="text-xl font-black text-slate-800">{selectedAgent.name}</h3>
+                                                        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-black border border-emerald-200">
+                                                            Tier: {selectedAgent.tier} (Set Rate: {selectedAgent.commission_rate}%)
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 font-mono">Agent ID: {selectedAgent.agent_id}</p>
+                                                </div>
+
+                                                <div className="p-6 shrink-0 grid grid-cols-3 gap-4">
+                                                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                                                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Total Gross Vol.</p>
+                                                        <p className="text-xl font-black text-slate-800">₱{settlement.totalGross.toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 bg-red-50 text-red-500 text-[9px] font-black px-2 py-0.5 rounded-bl-lg border-b border-l border-red-100">-12% E.VAT</div>
+                                                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Net Revenue (Base)</p>
+                                                        <p className="text-xl font-black text-slate-700">₱{settlement.totalNet.toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="bg-emerald-600 p-4 rounded-2xl shadow-md text-white relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 bg-emerald-700 text-emerald-100 text-[9px] font-black px-2 py-0.5 rounded-bl-lg">Roll-up Applied</div>
+                                                        <p className="text-[9px] text-emerald-200 font-black uppercase tracking-widest mb-1">Total Payout</p>
+                                                        <p className="text-2xl font-black">₱{settlement.myCommission.toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Revenue Sources (Hotel Breakdown)</h4>
+                                                    {settlement.hotelDetails.length === 0 ? (
+                                                        <p className="text-sm text-slate-400 text-center py-10 bg-white rounded-xl border border-slate-200 border-dashed">No active revenue sources found for this agent.</p>
+                                                    ) : (
+                                                        <div className="space-y-3">
+                                                            {settlement.hotelDetails.map((h, i) => (
+                                                                <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-emerald-300 transition-colors">
+                                                                    <div>
+                                                                        <p className="font-bold text-slate-800 text-sm">{h.hotelName} <span className="text-xs text-slate-400 font-normal">({h.hotelCode})</span></p>
+                                                                        <p className="text-[10px] text-slate-500 mt-1">Direct Agent: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{h.directAgent}</span></p>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <p className="text-[10px] text-slate-400 mb-0.5">
+                                                                            Net ₱{h.net.toLocaleString()} × <span className="text-emerald-500 font-black">{h.myRate}%</span> <span className="text-slate-300">(Diff)</span>
+                                                                        </p>
+                                                                        <p className="font-black text-emerald-600 text-base">₱{h.earned.toLocaleString()}</p>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* 💡 MULTI PG */}
+                    {/* ========================================================= */}
+                    {activeTab === "MULTI_PG" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto space-y-6">
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <div className="flex items-center justify-between mb-5">
+                                    <div>
+                                        <h2 className="text-lg font-black text-slate-800">Multi-PG Routing Control</h2>
+                                        <p className="text-xs font-bold text-slate-500 mt-1">Set provider priorities, payment-method routing, and fallback behavior.</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={handleRunMultiPgHealthCheck} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">Health Check</button>
+                                        <button onClick={handleSaveMultiPgConfig} disabled={isSavingMultiPg} className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-black text-xs shadow disabled:opacity-50">
+                                            {isSavingMultiPg ? "Saving..." : "Save Config"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="rounded-2xl border border-slate-200 p-4">
+                                        <h3 className="text-sm font-black text-slate-700 mb-3">Provider Priority</h3>
+                                        <div className="grid grid-cols-12 gap-2 mb-4">
+                                            <input
+                                                value={newProviderForm.key}
+                                                onChange={(e) => setNewProviderForm(prev => ({ ...prev, key: e.target.value }))}
+                                                placeholder="provider key (e.g. adyen)"
+                                                className="col-span-4 border border-slate-200 rounded-lg px-2 py-2 text-sm"
+                                            />
+                                            <input
+                                                value={newProviderForm.label}
+                                                onChange={(e) => setNewProviderForm(prev => ({ ...prev, label: e.target.value }))}
+                                                placeholder="provider label"
+                                                className="col-span-5 border border-slate-200 rounded-lg px-2 py-2 text-sm"
+                                            />
+                                            <button
+                                                onClick={handleAddManualProvider}
+                                                className="col-span-3 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-black"
+                                            >
+                                                + Add Provider
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {multiPgConfig.providers.map((pg, idx) => (
+                                                <div key={pg.key} className="grid grid-cols-12 gap-2 items-center">
+                                                    <div className="col-span-4 font-bold text-sm text-slate-700">{pg.label}</div>
+                                                    <button
+                                                        onClick={() => handleRemoveProvider(pg.key)}
+                                                        className="col-span-1 text-[10px] px-2 py-1 rounded bg-red-50 text-red-600 font-black border border-red-200"
+                                                        title="Remove provider"
+                                                    >
+                                                        Del
+                                                    </button>
+                                                    <div className="col-span-3">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={pg.priority}
+                                                            onChange={(e) => {
+                                                                const next = [...multiPgConfig.providers];
+                                                                next[idx] = { ...next[idx], priority: Number(e.target.value || 1) };
+                                                                setMultiPgConfig(prev => ({ ...prev, providers: next }));
+                                                            }}
+                                                            className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                                                        />
+                                                    </div>
+                                                    <label className="col-span-4 flex items-center justify-end gap-2 text-xs font-bold text-slate-600">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!pg.enabled}
+                                                            onChange={(e) => {
+                                                                const next = [...multiPgConfig.providers];
+                                                                next[idx] = { ...next[idx], enabled: e.target.checked };
+                                                                setMultiPgConfig(prev => ({ ...prev, providers: next }));
+                                                            }}
+                                                        />
+                                                        Enabled
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-slate-200 p-4 space-y-3">
+                                        <h3 className="text-sm font-black text-slate-700">Method Routing</h3>
+                                        {[
+                                            { key: "card", label: "Card Payments" },
+                                            { key: "wallet", label: "Wallet / QR" },
+                                            { key: "international", label: "International Card" }
+                                        ].map(row => (
+                                            <div key={row.key}>
+                                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{row.label}</label>
+                                                <select
+                                                    value={multiPgConfig.routing[row.key]}
+                                                    onChange={(e) => setMultiPgConfig(prev => ({ ...prev, routing: { ...prev.routing, [row.key]: e.target.value } }))}
+                                                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                                                >
+                                                    {multiPgConfig.providers.filter(p => p.enabled).map(p => (
+                                                        <option key={`${row.key}_${p.key}`} value={p.key}>{p.label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 rounded-2xl border border-slate-200 p-4">
+                                    <h3 className="text-sm font-black text-slate-700 mb-3">Fallback Policy</h3>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-end">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!multiPgConfig.fallbackEnabled}
+                                                onChange={(e) => setMultiPgConfig(prev => ({ ...prev, fallbackEnabled: e.target.checked }))}
+                                            />
+                                            Enable Auto Fallback
+                                        </label>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Fallback Chain</label>
+                                            <input
+                                                value={multiPgConfig.fallbackChain}
+                                                onChange={(e) => setMultiPgConfig(prev => ({ ...prev, fallbackChain: e.target.value }))}
+                                                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono"
+                                                placeholder="stripe>paypal>xendit"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Timeout (ms)</label>
+                                            <input
+                                                type="number"
+                                                min="1000"
+                                                step="500"
+                                                value={multiPgConfig.timeoutMs}
+                                                onChange={(e) => setMultiPgConfig(prev => ({ ...prev, timeoutMs: Number(e.target.value || 8000) }))}
+                                                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <h3 className="text-sm font-black text-slate-700 mb-3">Gateway Health & Last Checks</h3>
+                                {multiPgHealth.length === 0 ? (
+                                    <p className="text-sm text-slate-400 font-bold">No health check history yet.</p>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-sm">
+                                            <thead>
+                                                <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase">
+                                                    <th className="py-2 pr-3">Provider</th>
+                                                    <th className="py-2 pr-3">Status</th>
+                                                    <th className="py-2 pr-3">Latency</th>
+                                                    <th className="py-2 pr-3">Last Checked</th>
+                                                    <th className="py-2 pr-3">Message</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {multiPgHealth.map((row, i) => (
+                                                    <tr key={`${row.provider || "pg"}_${i}`} className="border-b border-slate-100">
+                                                        <td className="py-2 pr-3 font-bold">{row.provider || "-"}</td>
+                                                        <td className="py-2 pr-3">
+                                                            <span className={`px-2 py-1 rounded text-xs font-black ${row.status === "UP" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                                                                {row.status || "UNKNOWN"}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-2 pr-3">{row.latency_ms ?? "-"} ms</td>
+                                                        <td className="py-2 pr-3">{row.checked_at || "-"}</td>
+                                                        <td className="py-2 pr-3 text-slate-500">{row.message || "-"}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
+                                    <div>
+                                        <h3 className="text-sm font-black text-slate-700">Provider Credentials</h3>
+                                        <p className="text-xs text-slate-500 font-bold mt-1">Hotel-specific API/Public key + Secret key settings.</p>
+                                    </div>
+                                    <div className="w-full md:w-64">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Target Hotel Code</label>
+                                        <select
+                                            value={credentialHotelCode}
+                                            onChange={(e) => setCredentialHotelCode(e.target.value)}
+                                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                                        >
+                                            <option value="">Select Hotel</option>
+                                            {partners.map((p) => (
+                                                <option key={`cred_hotel_${p.code}`} value={p.code}>{p.code} - {p.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {multiPgConfig.providers.map((pg) => {
+                                        const row = providerCredentials[pg.key] || {};
+                                        return (
+                                            <div key={`cred_${pg.key}`} className="border border-slate-200 rounded-2xl p-4">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h4 className="text-sm font-black text-slate-800">{pg.label} <span className="text-slate-400 font-mono">({pg.key})</span></h4>
+                                                    <label className="text-xs font-bold text-slate-600 flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!row.is_active}
+                                                            onChange={(e) => handleCredentialField(pg.key, "is_active", e.target.checked)}
+                                                        />
+                                                        Active for this hotel
+                                                    </label>
+                                                </div>
+                                                <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
+                                                    <input value={row.public_key || ""} onChange={(e) => handleCredentialField(pg.key, "public_key", e.target.value)} placeholder="API/Public Key" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <input type="password" value={row.secret_key || ""} onChange={(e) => handleCredentialField(pg.key, "secret_key", e.target.value)} placeholder="Secret Key (input to update)" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <input value={row.merchant_id || ""} onChange={(e) => handleCredentialField(pg.key, "merchant_id", e.target.value)} placeholder="Merchant ID" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <input value={row.webhook_secret || ""} onChange={(e) => handleCredentialField(pg.key, "webhook_secret", e.target.value)} placeholder="Webhook Secret" className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                                                    <select value={row.mode || "sandbox"} onChange={(e) => handleCredentialField(pg.key, "mode", e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <option value="sandbox">sandbox</option>
+                                                        <option value="live">live</option>
+                                                    </select>
+                                                </div>
+                                                <div className="flex justify-end mt-3">
+                                                    <button
+                                                        onClick={() => handleSaveProviderCredential(pg.key)}
+                                                        disabled={isSavingCredential || !credentialHotelCode}
+                                                        className="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-black disabled:opacity-50"
+                                                    >
+                                                        Save {pg.label} Credentials
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* 💡 BILLING */}
+                    {/* ========================================================= */}
+                    {activeTab === "BILLING" && (
+                        <div className="animate-fade-in max-w-7xl mx-auto">
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                    <div>
+                                        <h2 className="text-lg font-black text-slate-800">Billing & Commission Control</h2>
+                                        <p className="text-xs font-bold text-slate-500 mt-1">All properties default to Enterprise Suite.</p>
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-200">
+                                                <th className="p-4 font-black">Property Code</th>
+                                                <th className="p-4 font-black">System Plan & Assign Agent</th>
+                                                <th className="p-4 font-black">MRR (₱)</th>
+                                                <th className="p-4 font-black">Account Status</th>
+                                                <th className="p-4 font-black text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm font-bold text-slate-800">
+                                            {filteredPartners.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" className="p-8 text-center text-slate-400 font-bold">No partners found.</td>
+                                                </tr>
+                                            ) : (
+                                                filteredPartners.map(p => {
+                                                    // 💡 If logged in as Agent, only show their direct properties
+                                                    if (adminRole === "AGENT" && p.agent_id !== adminAgentId) return null;
+
+                                                    return (
+                                                        <tr key={`bill_${p.code}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                            <td className="p-4">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-mono text-xs shadow-inner">{p.code}</span>
+
+                                                                    {/* 💡 [신규 추가] 본사에서 해당 호텔의 카드 등록 여부를 한눈에 파악하는 배지 */}
+                                                                    {p.card_token ? (
+                                                                        <span title="Auto-payment card registered" className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black border border-emerald-200 flex items-center gap-1">
+                                                                            💳 LINKED
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span title="No card registered" className="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">
+                                                                            No Card
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-[10px] text-slate-400">{p.name}</div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span className="text-emerald-700 font-black text-sm">Enterprise Suite</span>
+                                                                    {adminRole === "SUPER_ADMIN" ? (
+                                                                        <select
+                                                                            value={p.agent_id || 'HQ Direct'}
+                                                                            onChange={(e) => handleLocalChange(p.code, 'agent_id', e.target.value)}
+                                                                            className="text-xs text-slate-600 bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer w-fit max-w-[200px] truncate"
+                                                                        >
+                                                                            <option value="HQ Direct">HQ Direct (No Commission)</option>
+                                                                            {agents.map(ag => (
+                                                                                <option key={`opt_${p.code}_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        <span className="text-xs text-slate-500 font-bold">Managed by You</span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <input
+                                                                    type="number"
+                                                                    value={p.mrr}
+                                                                    onChange={(e) => handleLocalChange(p.code, 'mrr', e.target.value)}
+                                                                    disabled={adminRole === "AGENT"} // 💡 Agent cannot change MRR
+                                                                    className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-2 w-28 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm disabled:bg-slate-100"
+                                                                />
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <select
+                                                                    value={p.status}
+                                                                    onChange={(e) => handleLocalChange(p.code, 'status', e.target.value)}
+                                                                    disabled={adminRole === "AGENT"} // 💡 Agent cannot change status
+                                                                    className={`border rounded-lg px-3 py-2 text-sm outline-none shadow-sm font-black w-full max-w-[180px]
+                                                                        ${p.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                                                            p.status === 'Overdue' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-50 border-slate-300 text-slate-600'}
+                                                                        ${adminRole === "AGENT" ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                                                                >
+                                                                    <option value="Active">Active</option>
+                                                                    <option value="Onboarding">Onboarding</option>
+                                                                    <option value="Overdue">Overdue (Lock System)</option>
+                                                                    <option value="Cancelled">Cancelled</option>
+                                                                </select>
+                                                            </td>
+                                                            <td className="p-4 text-right">
+                                                                {adminRole === "SUPER_ADMIN" && (
+                                                                    <button
+                                                                        onClick={() => handleSaveBilling(p)}
+                                                                        className="bg-slate-900 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs tracking-wider uppercase font-black transition-all shadow-md active:scale-95"
+                                                                    >
+                                                                        Save 💾
+                                                                    </button>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })
+                                            )}
+                                        </tbody>
+                                    </table>
+
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+
+                {/* 💡 [수정됨] 파트너 등록/수정 모달창 (모든 화면 요소 중 가장 위에 덮이도록 파일 최하단으로 이동) */}
+                {isPartnerModalOpen && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                            <div className="bg-slate-800 p-5 flex justify-between items-center text-white">
+                                <h3 className="font-bold text-lg">
+                                    {isEditingPartner ? 'Edit Partner Hotel' : 'Register New Partner'}
+                                </h3>
+                                <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+                            </div>
+
+                            <form onSubmit={handlePartnerSubmit} className="p-6 space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Code (6 Chars)</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            maxLength="6"
+                                            required
+                                            disabled={isEditingPartner}
+                                            value={partnerForm.code}
+                                            onChange={e => {
+                                                setPartnerForm({ ...partnerForm, code: e.target.value.toUpperCase() });
+                                                setIsHotelCodeAvailable(null); // 💡 글자가 바뀌면 다시 체크하도록 상태 초기화
+                                            }}
+                                            className={`w-full p-2.5 border rounded-lg uppercase outline-none focus:ring-1 transition-colors ${isHotelCodeAvailable === true ? "border-emerald-500 focus:ring-emerald-500 bg-emerald-50" :
+                                                    isHotelCodeAvailable === false ? "border-red-500 focus:ring-red-500 bg-red-50" : "bg-slate-50 focus:border-emerald-500"
+                                                }`}
+                                        />
+                                        {!isEditingPartner && (
+                                            <button
+                                                type="button"
+                                                onClick={handleCheckHotelCode}
+                                                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
+                                            >
+                                                Check Code
+                                            </button>
+                                        )}
+                                    </div>
+                                    {!isEditingPartner && isHotelCodeAvailable === true && <p className="text-[10px] text-emerald-600 mt-1 font-bold">✅ Available Code</p>}
+                                    {!isEditingPartner && isHotelCodeAvailable === false && <p className="text-[10px] text-red-600 mt-1 font-bold">❌ Already in use</p>}
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Hotel Name</label>
+                                    <input type="text" required value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Master Admin ID</label>
+                                    <input type="text" required value={partnerForm.master_id} onChange={e => setPartnerForm({ ...partnerForm, master_id: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Master Password {isEditingPartner && "(Leave blank to keep)"}</label>
+                                    <input type="password" required={!isEditingPartner} value={partnerForm.master_pw} onChange={e => setPartnerForm({ ...partnerForm, master_pw: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Assign Agent</label>
+                                    <select value={partnerForm.agent_id} onChange={e => setPartnerForm({ ...partnerForm, agent_id: e.target.value })} className="w-full p-2.5 border rounded-lg bg-slate-50 cursor-pointer outline-none focus:border-emerald-500">
+                                        <option value="HQ Direct">HQ Direct (No Commission)</option>
+                                        {agents && agents.map(ag => (
+                                            <option key={`modal_agt_${ag.agent_id}`} value={ag.agent_id}>[{ag.tier}] {ag.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <button type="button" onClick={() => setIsPartnerModalOpen(false)} className="flex-1 py-3 border border-slate-200 font-bold text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+                                    <button
+                                        type="submit"
+                                        disabled={!isEditingPartner && isHotelCodeAvailable !== true}
+                                        className="flex-1 py-3 bg-emerald-600 font-bold text-white rounded-xl hover:bg-emerald-700 shadow-md transition-colors disabled:opacity-50"
+                                    >
+                                        {isEditingPartner ? 'Save Changes' : 'Register'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+            </main>
+        </div>
+    );
+}

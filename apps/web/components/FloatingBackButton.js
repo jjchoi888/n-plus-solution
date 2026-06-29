@@ -1,53 +1,27 @@
 'use client';
 
-import { useSyncExternalStore } from "react";
-import { buildHotelUrl } from "../lib/portalHotels";
-
-const emptySubscribe = () => () => {};
-
-const resolveHotelCode = () => {
-  if (typeof window === "undefined") return null;
-
-  const params = new URLSearchParams(window.location.search);
-  const hotelParam = params.get("hotel")?.trim();
-  if (hotelParam) return hotelParam;
-
-  const storedHotelCode = window.localStorage.getItem("hotelCode")?.trim();
-  if (storedHotelCode) return storedHotelCode;
-
-  const host = window.location.hostname.toLowerCase();
-  if (host.endsWith(".localhost")) {
-    return host.replace(/\.localhost$/, "") || null;
-  }
-
-  return null;
-};
-
 export default function FloatingBackButton() {
-  const hotelCode = useSyncExternalStore(
-    emptySubscribe,
-    resolveHotelCode,
-    () => null,
-  );
 
-  if (!hotelCode) return null;
-
+  // 💡 [Core] Bypasses Next.js routing and forces a hard browser redirect to the home page.
   const forceGoHome = (e) => {
-    e.preventDefault();
-    window.location.href = buildHotelUrl(hotelCode);
+    e.preventDefault(); // Prevent any potential interference from other click events
+    window.location.href = '/'; // The most reliable, native way to navigate
   };
 
   return (
     <button
-      onClick={forceGoHome}
+      onClick={forceGoHome} // Attach the redirect function
       aria-label="Go to Home"
+      // md:hidden -> Only visible on mobile devices
+      // z-[99999]: Extremely high z-index to ensure it's always on top
       className="md:hidden fixed z-[99999] bg-white/90 backdrop-blur text-slate-700 shadow-[0_4px_15px_rgba(0,0,0,0.15)] border border-gray-200 rounded-full flex items-center justify-center active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-slate-700/50"
+
       style={{
         width: '56px',
         height: '56px',
         bottom: '56px',
         right: '40px',
-        pointerEvents: 'auto',
+        pointerEvents: 'auto', // 💡 [Core] Ensure the button receives clicks even if covered by a transparent overlay!
         cursor: 'pointer'
       }}
     >

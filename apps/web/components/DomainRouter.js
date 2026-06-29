@@ -1,53 +1,71 @@
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { getPendingPaymentContext } from "../lib/paymentFlow";
 
 const MainPortal = dynamic(() => import('./MainPortal'), { ssr: false });
 const HotelWebsite = dynamic(() => import('./HotelWebsite'), { ssr: false });
-
-function getMatchedHotel(initialHotel) {
-  if (typeof window === 'undefined') {
-    return initialHotel || null;
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  const hotelParam = params.get('hotel')?.trim();
-  if (hotelParam) {
-    return hotelParam;
-  }
-
-  if (initialHotel) {
-    return initialHotel;
-  }
-
-  const host = window.location.hostname.toLowerCase();
-  if (host.endsWith('.localhost')) {
-    return host.replace(/\.localhost$/, '') || null;
-  }
-
-  const pendingPayment = getPendingPaymentContext();
-  if (pendingPayment?.routeType === 'hotel' && pendingPayment.hotelCode) {
-    return pendingPayment.hotelCode;
-  }
-
-  return null;
-}
+const PortalAdmin = dynamic(() => import('./PortalAdmin'), { ssr: false });
+// 💡 1. Register the new My Page (Member Dashboard) component
+const MemberDashboard = dynamic(() => import('./MemberDashboard'), { ssr: false });
 
 export default function DomainRouter({ initialHotel }) {
-  const targetHotel = getMatchedHotel(initialHotel);
-  const view = targetHotel ? 'HOTEL' : 'PORTAL';
+  const [view, setView] = useState(null);
+  const [targetHotel, setTargetHotel] = useState(null);
 
   useEffect(() => {
-    if (targetHotel) {
-      localStorage.setItem('hotelCode', targetHotel);
-    } else {
+    const host = window.location.hostname;
+    const pathname = window.location.pathname; // 💡 Check current path (e.g., /member)
+    const params = new URLSearchParams(window.location.search);
+    const hotelParam = params.get('hotel');
+    const paymentStatus = params.get('payment');
+    const paymentType = params.get('type');
+    const hasBookingReturn =
+      (paymentStatus === 'success' || paymentStatus === 'cancel') &&
+      (paymentType === 'booking' || params.has('res_ids') || params.has('invoice'));
+    const storedHotelCode = localStorage.getItem('hotelCode');
+
+    const isMainPortal = host === 'hotelnplus.com' || host === 'www.hotelnplus.com';
+    const isSystemSubdomain = host.startsWith('app.') || host.startsWith('manage.');
+    const isHQ = host === 'hq.hotelnplus.com' || host.startsWith('hq.localhost');
+
+    // 💡 2. Check My Page entry condition (when entering via /member path)
+    if (pathname === '/member') {
+      setView('MEMBER');
+      setTargetHotel(hotelParam || null); // If ?hotel=A001 exists, operate in that specific hotel's mode
+      return;
+    }
+
+    if (isHQ) {
+      setView('HQ');
+      setTargetHotel(null);
       localStorage.removeItem('hotelCode');
     }
-  }, [targetHotel]);
+    else if (
+      hotelParam ||
+      initialHotel ||
+      (hasBookingReturn && storedHotelCode) ||
+      (!isMainPortal && !isSystemSubdomain && host !== 'localhost')
+    ) {
+      const matchedHotel = hotelParam || initialHotel || (hasBookingReturn ? storedHotelCode : '') || host.split('.')[0];
+      setView('HOTEL');
+      setTargetHotel(matchedHotel);
+      localStorage.setItem('hotelCode', matchedHotel);
+    }
+    else {
+      setView('PORTAL');
+      setTargetHotel(null);
+      localStorage.removeItem('hotelCode');
+    }
+  }, [initialHotel]);
 
-  // 💡 결정된 뷰에 따라 컴포넌트 렌더링
-  if (view === 'HOTEL') {
+  if (!view) return <div className="min-h-screen bg-white" />;
+
+  // 💡 3. Render view based on routing logic
+  if (view === 'MEMBER') {
+    return <MemberDashboard hotelCode={targetHotel} />;
+  } else if (view === 'HQ') {
+    return <PortalAdmin />;
+  } else if (view === 'HOTEL') {
     return <HotelWebsite domain={targetHotel} />;
   } else {
     return <MainPortal />;

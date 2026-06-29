@@ -30,28 +30,28 @@ const parseJsonSafely = (value, fallback) => {
 const normalizeText = (value) => String(value || "").trim();
 
 const CATEGORY_DEFINITIONS = [
-  { id: "city-hotel", label: "City Hotel", icon: "🏙️", group: "propertyType" },
-  { id: "business-hotel", label: "Business Hotel", icon: "💼", group: "propertyType" },
-  { id: "airport-hotel", label: "Airport Hotel", icon: "✈️", group: "propertyType" },
-  { id: "beach-hotel-resort", label: "Beach Hotel & Resort", icon: "🏖️", group: "propertyType" },
-  { id: "island-resort", label: "Island Resort", icon: "🌴", group: "propertyType" },
-  { id: "lakeside-hotel-resort", label: "Lakeside Hotel & Resort", icon: "🏞️", group: "propertyType" },
-  { id: "mountain-hotel-resort", label: "Mountain Hotel & Resort", icon: "⛰️", group: "propertyType" },
-  { id: "boutique-hotel", label: "Boutique Hotel", icon: "🛍️", group: "propertyType" },
-  { id: "heritage-hotel", label: "Heritage Hotel", icon: "🏛️", group: "propertyType" },
-  { id: "wellness-resort", label: "Wellness Resort", icon: "🌿", group: "propertyType" },
-  { id: "pet-friendly", label: "Pet Friendly", icon: "🐾", group: "guestHighlight" },
-  { id: "family-friendly", label: "Family Friendly", icon: "👨‍👩‍👧‍👦", group: "guestHighlight" },
-  { id: "couple-getaway", label: "Couple Getaway", icon: "💕", group: "guestHighlight" },
-  { id: "workation-friendly", label: "Workation Friendly", icon: "💻", group: "guestHighlight" },
-  { id: "with-pool", label: "With Pool", icon: "🏊", group: "guestHighlight" },
-  { id: "spa-wellness", label: "Spa & Wellness", icon: "🧖", group: "guestHighlight" },
-  { id: "event-wedding-venue", label: "Event & Wedding Venue", icon: "💍", group: "guestHighlight" },
-  { id: "nature-escape", label: "Nature Escape", icon: "🍃", group: "guestHighlight" },
-  { id: "near-tourist-spots", label: "Near Tourist Spots", icon: "📍", group: "guestHighlight" },
-  { id: "long-stay-friendly", label: "Long Stay Friendly", icon: "🧳", group: "guestHighlight" },
-  { id: "luxury-stay", label: "Luxury Stay", icon: "✨", group: "guestHighlight" },
-  { id: "all-inclusive-feel", label: "All-Inclusive Feel", icon: "🍽️", group: "guestHighlight" },
+  { id: "city-hotel", label: "City Hotel", icon: "building", group: "propertyType" },
+  { id: "business-hotel", label: "Business Hotel", icon: "briefcase", group: "propertyType" },
+  { id: "airport-hotel", label: "Airport Hotel", icon: "plane", group: "propertyType" },
+  { id: "beach-hotel-resort", label: "Beach Hotel & Resort", icon: "sun-wave", group: "propertyType" },
+  { id: "island-resort", label: "Island Resort", icon: "palm", group: "propertyType" },
+  { id: "lakeside-hotel-resort", label: "Lakeside Hotel & Resort", icon: "lake", group: "propertyType" },
+  { id: "mountain-hotel-resort", label: "Mountain Hotel & Resort", icon: "mountain", group: "propertyType" },
+  { id: "boutique-hotel", label: "Boutique Hotel", icon: "storefront", group: "propertyType" },
+  { id: "heritage-hotel", label: "Heritage Hotel", icon: "landmark", group: "propertyType" },
+  { id: "wellness-resort", label: "Wellness Resort", icon: "leaf", group: "propertyType" },
+  { id: "pet-friendly", label: "Pet Friendly", icon: "paw", group: "guestHighlight" },
+  { id: "family-friendly", label: "Family Friendly", icon: "users", group: "guestHighlight" },
+  { id: "couple-getaway", label: "Couple Getaway", icon: "heart", group: "guestHighlight" },
+  { id: "workation-friendly", label: "Workation Friendly", icon: "laptop", group: "guestHighlight" },
+  { id: "with-pool", label: "With Pool", icon: "pool", group: "guestHighlight" },
+  { id: "spa-wellness", label: "Spa & Wellness", icon: "sparkles", group: "guestHighlight" },
+  { id: "event-wedding-venue", label: "Event & Wedding Venue", icon: "celebration", group: "guestHighlight" },
+  { id: "nature-escape", label: "Nature Escape", icon: "sprout", group: "guestHighlight" },
+  { id: "near-tourist-spots", label: "Near Tourist Spots", icon: "map-pin", group: "guestHighlight" },
+  { id: "long-stay-friendly", label: "Long Stay Friendly", icon: "suitcase", group: "guestHighlight" },
+  { id: "luxury-stay", label: "Luxury Stay", icon: "star", group: "guestHighlight" },
+  { id: "all-inclusive-feel", label: "All-Inclusive Feel", icon: "utensils", group: "guestHighlight" },
 ];
 
 const normalizeCategoryKey = (value) =>
@@ -331,17 +331,17 @@ export const groupHotelsByProvince = (hotels) =>
     hotels
       .filter((hotel) => normalizeText(hotel.province))
       .reduce((provinceMap, hotel) => {
-      if (!provinceMap.has(hotel.province)) {
-        provinceMap.set(hotel.province, new Map());
-      }
+        if (!provinceMap.has(hotel.province)) {
+          provinceMap.set(hotel.province, new Map());
+        }
 
-      const cityMap = provinceMap.get(hotel.province);
-      if (!cityMap.has(hotel.cityMunicipal)) {
-        cityMap.set(hotel.cityMunicipal, []);
-      }
+        const cityMap = provinceMap.get(hotel.province);
+        if (!cityMap.has(hotel.cityMunicipal)) {
+          cityMap.set(hotel.cityMunicipal, []);
+        }
 
-      cityMap.get(hotel.cityMunicipal).push(hotel);
-      return provinceMap;
+        cityMap.get(hotel.cityMunicipal).push(hotel);
+        return provinceMap;
       }, new Map()).entries(),
   )
     .map(([province, cityMap]) => ({
@@ -359,7 +359,7 @@ export const buildCategoryGroups = (hotels) =>
     hotels: hotels.filter((hotel) =>
       Array.isArray(hotel.categories) && hotel.categories.some((item) => item.id === category.id),
     ),
-  })).filter((category) => category.hotels.length > 0);
+  }));
 
 export const fetchPortalHotels = async (lang = "en", options = {}) => {
   const { forceRefresh = false } = options;
