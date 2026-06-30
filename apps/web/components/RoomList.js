@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { RESERVATION_PAYMENT_FIELDS } from "../lib/reservationPayment";
 
 const BASE_URL = '';
 
@@ -282,6 +283,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             total_price: dividedGrandTotal,
             hotel_code: targetHotelCode,
             channel: source,
+            ...RESERVATION_PAYMENT_FIELDS,
             status: 'PENDING_PAYMENT'
           });
         }
@@ -292,6 +294,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookings: bookingPayloads,
+          ...RESERVATION_PAYMENT_FIELDS,
           points_redeem: appliedRedeemPoints > 0 && user?.email
             ? { email: user.email, points_used: appliedRedeemPoints }
             : null

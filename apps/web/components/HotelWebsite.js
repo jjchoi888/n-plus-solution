@@ -4,6 +4,7 @@ import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { app, hasValidFirebaseConfig, firebaseInitError } from '../lib/firebase';
 import MemberDashboard from "./MemberDashboard";
+import { RESERVATION_PAYMENT_FIELDS } from '../lib/reservationPayment';
 
 const BASE_URL = '';
 
@@ -1537,6 +1538,7 @@ export default function HotelWebsite({ domain }) {
                     promo_code: appliedPromo ? appliedPromo.code : null,
                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
                     channel: "Hotel Web",
+                    ...RESERVATION_PAYMENT_FIELDS,
                     status: 'PENDING_PAYMENT'
                 });
             }
@@ -1546,6 +1548,7 @@ export default function HotelWebsite({ domain }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     bookings: bookingPayloads,
+                    ...RESERVATION_PAYMENT_FIELDS,
                     points_redeem: appliedRedeemPoints > 0
                         ? {
                             email: user?.email || guestEmail,
