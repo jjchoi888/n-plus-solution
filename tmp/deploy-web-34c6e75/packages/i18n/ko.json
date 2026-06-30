@@ -1,0 +1,19 @@
+{
+  "common": {
+    "brand": "n+",
+    "bookNow": "지금 예약하기",
+    "viewRooms": "객실 보기",
+    "contactUs": "문의하기"
+  },
+  "home": {
+    "heroTitle": "머무름, 그 이상의 가치",
+    "heroSubtitle": "n+와 함께하는 완벽한 휴식. 지금 가장 특별한 객실을 만나보세요.",
+    "location": "위치 정보"
+  },
+  "booking": {
+    "checkIn": "체크인",
+    "checkOut": "체크아웃",
+    "guests": "인원",
+    "search": "예약 가능 여부 확인"
+  }
+}

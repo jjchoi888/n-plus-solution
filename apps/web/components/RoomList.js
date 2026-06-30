@@ -280,7 +280,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             email: formData.email,
             phone: formData.phone,
             total_price: dividedGrandTotal,
-            payment_method: "Credit Card",
             hotel_code: targetHotelCode,
             channel: source,
             status: 'PENDING_PAYMENT'

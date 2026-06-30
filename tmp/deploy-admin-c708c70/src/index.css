@@ -1,0 +1,60 @@
+/* 💡 1. 구글 기본 폰트 15종 통합 로드 (무조건 맨 윗줄에 있어야 함) */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+/* 💡 2. 커스텀 폰트 통합 로드 */
+@font-face {
+    font-family: 'ArcticonsSans';
+    src: url('/fonts/ArcticonsSans-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Cuprum';
+    src: url('/fonts/Cuprum-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Cuyabra';
+    src: url('/fonts/cuyabra.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'DreamOrphans';
+    src: url('/fonts/DreamOrphans.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Elevatia';
+    src: url('/fonts/Elevatia-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Guanine';
+    src: url('/fonts/Guanine.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Jura';
+    src: url('/fonts/JuraBook.woff2') format('woff2');
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: 'Jura';
+    src: url('/fonts/JuraDemiBold.woff2') format('woff2');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'LTEnergy';
+    src: url('/fonts/LTEnergy-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'LTRenovate';
+    src: url('/fonts/LTRenovate-Regular.woff2') format('woff2');
+}
+
+/* 👇 아래부터는 기존에 있던 Tailwind 코드들이 이어집니다 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

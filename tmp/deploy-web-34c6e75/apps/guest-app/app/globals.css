@@ -1,0 +1,25 @@
+/* 1. 구글 폰트(Nunito) 불러오기 */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+/* 2. Tailwind 최신 문법 */
+@import "tailwindcss";
+
+/* 3. 기본 테마 색상 설정 */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* 4. 문제가 되던 @theme 블록을 완전히 삭제하고 body에 직접 폰트 강제 주입 */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Nunito', sans-serif !important;
+}

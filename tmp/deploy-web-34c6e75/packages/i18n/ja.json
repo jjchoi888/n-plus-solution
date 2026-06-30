@@ -1,0 +1,19 @@
+{
+  "common": {
+    "brand": "n+",
+    "bookNow": "今すぐ予約",
+    "viewRooms": "客室を見る",
+    "contactUs": "お問い合わせ"
+  },
+  "home": {
+    "heroTitle": "滞在、それ以上の価値",
+    "heroSubtitle": "n+で過ごす完璧な休息。今、最も特別な客室をご覧ください。",
+    "location": "アクセス"
+  },
+  "booking": {
+    "checkIn": "チェック인",
+    "checkOut": "チェックアウト",
+    "guests": "人数",
+    "search": "空室検索"
+  }
+}

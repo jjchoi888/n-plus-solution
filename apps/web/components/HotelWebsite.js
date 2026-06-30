@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
@@ -1536,7 +1536,6 @@ export default function HotelWebsite({ domain }) {
                     total_price: dividedGrandTotal,
                     promo_code: appliedPromo ? appliedPromo.code : null,
                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
-                    payment_method: "Credit Card",
                     channel: "Hotel Web",
                     status: 'PENDING_PAYMENT'
                 });

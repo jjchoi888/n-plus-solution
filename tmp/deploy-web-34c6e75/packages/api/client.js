@@ -1,0 +1,25 @@
+// 기본 API 클라이언트 설정
+// 💡 [수정] 통합된 백엔드 서버와 통신할 수 있도록 8000번 포트로 변경합니다.
+const BASE_URL = ''; // j.j님의  백엔드 주소
+
+export const apiClient = async (endpoint, options = {}) => {
+  const { lang, ...customOptions } = options;
+  
+  // URL에 언어 파라미터 자동 추가 (다국어 대응)
+  const url = new URL(`${BASE_URL}${endpoint}`);
+  if (lang) url.searchParams.append('lang', lang);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...customOptions,
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  return response.json();
+};

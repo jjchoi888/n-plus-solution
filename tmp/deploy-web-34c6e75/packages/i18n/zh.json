@@ -1,0 +1,19 @@
+{
+  "common": {
+    "brand": "n+",
+    "bookNow": "立即预订",
+    "viewRooms": "查看客房",
+    "contactUs": "联系我们"
+  },
+  "home": {
+    "heroTitle": "超越停留的价值",
+    "heroSubtitle": "在 n+ 体验完美放松。立即查看我们最特别的客房。",
+    "location": "地点"
+  },
+  "booking": {
+    "checkIn": "入住",
+    "checkOut": "退房",
+    "guests": "人数",
+    "search": "查询空房"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "defaultLanguage": "en",
+  "supportedLanguages": ["en", "ko", "zh", "ja"],
+  "displayNames": {
+    "En": "English",
+    "Ko": "한국어",
+    "Zh": "简体中文",
+    "Ja": "日本語"
+  }
+}

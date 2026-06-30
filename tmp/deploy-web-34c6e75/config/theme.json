@@ -1,0 +1,9 @@
+{
+  "primary": "#50C878",
+  "secondary": "#FFFFFF",
+  "accent": "#F8F9FA",
+  "text": {
+    "main": "#1A1A1A",
+    "muted": "#666666"
+  }
+}
