@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { RESERVATION_PAYMENT_FIELDS } from "../lib/reservationPayment";
+import { DEFAULT_RESERVATION_PAYMENT_METHOD, RESERVATION_PAYMENT_METHODS, getReservationPaymentFields } from "../lib/reservationPayment";
 
 const translations = {
   en: { destination: "Destination", whereTo: "Where are you going?", mapTitle: "Select Region & Hotel", allHotels: "All Philippines", checkIn: "Check-In", checkOut: "Check-Out", guestsRooms: "Guests & Rooms", guests: "Guests", room: "Room", adult: "Adults", child: "Children", infant: "Infants", free: "Free", search: "Search", searching: "Searching...", error: "Notice", selectDates: "Please select both check-in and check-out dates.", fetchError: "Failed to fetch rooms. Please try again.", fullyBooked: "Fully Booked!", noRooms: "There are no rooms available for the selected dates.\nPlease try changing your check-in or check-out schedule.", ok: "OK", okChange: "Change Dates", proceed: "Proceed anyway", viewOnMap: "View on Map", selectHotel: "Select Hotel", searchResults: "Search Results", roomsLeft: "ROOM(S) LEFT", night: "/ night", selectRooms: "Select Quantity", cartTotal: "Room(s) Selected", proceedCheckout: "Proceed to Checkout", secureCheckout: "Secure Checkout", guestDetails: "1. Guest Details", paymentMethod: "2. Payment Method", paymentGatewayNotice: "After you continue, the secure PG payment module will let you choose Card, QR, or E-wallet.", extraOptions: "3. Extra Options", extraBed: "Extra Bed", childFee: "Child Surcharge", promoCode: "Promo Code", apply: "Apply", summary: "Booking Summary", processing: "Processing...", pay: "Pay", andBook: "& Book", success: "Success!", successMsg: "Payment Successful & Booking Confirmed!", failMsg: "Failed to create some bookings", networkError: "Network Error. Please try again.", dateMissing: "Dates are missing.", roomInfo: "Room", discount: "Discount", size: "sq.m", maxGuests: "Max Guests:", guestNameMissing: "Please enter the guest's First and Last Name." },
@@ -117,6 +117,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   });
 
   const [extraBeds, setExtraBeds] = useState(0);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(DEFAULT_RESERVATION_PAYMENT_METHOD);
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
@@ -125,6 +126,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const effectiveCheckIn = checkIn || "";
   const effectiveCheckOut = checkOut || "";
   const effectiveHotelCode = destination.code || 'ALL';
+  const reservationPaymentFields = getReservationPaymentFields(selectedPaymentMethod);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -352,7 +354,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
             guest_last_name: formData.guestLastName,
             guest_email: formData.guestEmail,
             guest_phone: formData.guestPhone,
-            ...RESERVATION_PAYMENT_FIELDS,
+            ...reservationPaymentFields,
             status: 'PENDING_PAYMENT'
           });
         }
@@ -363,7 +365,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookings: bookingPayloads,
-          ...RESERVATION_PAYMENT_FIELDS
+          ...reservationPaymentFields
         })
       });
 
@@ -761,15 +763,20 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
                   </div>
                 </div>
 
-                {/* 5. PG payment module notice */}
+                {/* 5. Payment method */}
                 <div className="space-y-4 pt-4 border-t border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">{t.paymentMethod}</h3>
                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3 text-left">
                     <div className="flex flex-wrap gap-2">
-                      {["Card", "QR", "E-wallet"].map((method) => (
-                        <span key={method} className="rounded-full border border-emerald-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-wide text-emerald-700">
-                          {method}
-                        </span>
+                      {RESERVATION_PAYMENT_METHODS.map((method) => (
+                        <button
+                          key={method.value}
+                          type="button"
+                          onClick={() => setSelectedPaymentMethod(method.value)}
+                          className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wide transition-all ${selectedPaymentMethod === method.value ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm' : 'border-emerald-200 bg-white text-emerald-700 hover:border-emerald-500'}`}
+                        >
+                          {method.label}
+                        </button>
                       ))}
                     </div>
                     <p className="text-sm font-bold leading-relaxed text-slate-600">{t.paymentGatewayNotice}</p>

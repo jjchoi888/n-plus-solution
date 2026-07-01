@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { app, hasValidFirebaseConfig, firebaseInitError } from '../lib/firebase';
 import MemberDashboard from "./MemberDashboard";
-import { RESERVATION_PAYMENT_FIELDS } from '../lib/reservationPayment';
+import { DEFAULT_RESERVATION_PAYMENT_METHOD, RESERVATION_PAYMENT_METHODS, getReservationPaymentFields } from '../lib/reservationPayment';
 
 const BASE_URL = '';
 
@@ -350,6 +350,7 @@ export default function HotelWebsite({ domain }) {
     const [guestDob, setGuestDob] = useState('');
     const [guestDocumentUrl, setGuestDocumentUrl] = useState('');
     const [extraBed, setExtraBed] = useState(0);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(DEFAULT_RESERVATION_PAYMENT_METHOD);
 
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
@@ -385,6 +386,7 @@ export default function HotelWebsite({ domain }) {
     const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
     const t = translations[lang] || translations.en;
+    const reservationPaymentFields = getReservationPaymentFields(selectedPaymentMethod);
     const hotelCode = getEffectiveHotelCode();
 
     const navigateAfterAuth = (destination = postAuthDestination) => {
@@ -1538,7 +1540,7 @@ export default function HotelWebsite({ domain }) {
                     promo_code: appliedPromo ? appliedPromo.code : null,
                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
                     channel: "Hotel Web",
-                    ...RESERVATION_PAYMENT_FIELDS,
+                    ...reservationPaymentFields,
                     status: 'PENDING_PAYMENT'
                 });
             }
@@ -1548,7 +1550,7 @@ export default function HotelWebsite({ domain }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     bookings: bookingPayloads,
-                    ...RESERVATION_PAYMENT_FIELDS,
+                    ...reservationPaymentFields,
                     points_redeem: appliedRedeemPoints > 0
                         ? {
                             email: user?.email || guestEmail,
@@ -2356,6 +2358,23 @@ export default function HotelWebsite({ domain }) {
                                                 <span className="w-4 text-center font-bold text-emerald-600">{extraBed}</span>
                                                 <button type="button" onClick={() => setExtraBed(extraBed + 1)} className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-slate-600 hover:text-emerald-600">+</button>
                                             </div>
+                                        </div>
+                                    </section>
+
+                                    <section>
+                                        <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">3. {t.paymentMethod || 'Payment Method'}</h3>
+                                        <div className="flex flex-wrap gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                            {RESERVATION_PAYMENT_METHODS.map((method) => (
+                                                <button
+                                                    key={method.value}
+                                                    type="button"
+                                                    onClick={() => setSelectedPaymentMethod(method.value)}
+                                                    disabled={isBooking}
+                                                    className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition-all ${selectedPaymentMethod === method.value ? 'theme-border theme-bg text-white shadow-sm' : 'theme-border bg-white theme-text hover:bg-slate-50'} disabled:opacity-60`}
+                                                >
+                                                    {method.label}
+                                                </button>
+                                            ))}
                                         </div>
                                     </section>
                                 </div>
