@@ -385,7 +385,6 @@ export default function HotelWebsite({ domain }) {
     const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
     const t = translations[lang] || translations.en;
-    const reservationPaymentFields = RESERVATION_PAYMENT_FIELDS;
     const hotelCode = getEffectiveHotelCode();
 
     const navigateAfterAuth = (destination = postAuthDestination) => {
@@ -1539,7 +1538,7 @@ export default function HotelWebsite({ domain }) {
                     promo_code: appliedPromo ? appliedPromo.code : null,
                     discount_amount: appliedPromo ? (discountAmount / safeRoomCount) : 0,
                     channel: "Hotel Web",
-                    ...reservationPaymentFields,
+                    ...RESERVATION_PAYMENT_FIELDS,
                     status: 'PENDING_PAYMENT'
                 });
             }
@@ -1549,7 +1548,7 @@ export default function HotelWebsite({ domain }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     bookings: bookingPayloads,
-                    ...reservationPaymentFields,
+                    ...RESERVATION_PAYMENT_FIELDS,
                     points_redeem: appliedRedeemPoints > 0
                         ? {
                             email: user?.email || guestEmail,

@@ -125,7 +125,6 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
   const effectiveCheckIn = checkIn || "";
   const effectiveCheckOut = checkOut || "";
   const effectiveHotelCode = destination.code || 'ALL';
-  const reservationPaymentFields = RESERVATION_PAYMENT_FIELDS;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -353,7 +352,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
             guest_last_name: formData.guestLastName,
             guest_email: formData.guestEmail,
             guest_phone: formData.guestPhone,
-            ...reservationPaymentFields,
+            ...RESERVATION_PAYMENT_FIELDS,
             status: 'PENDING_PAYMENT'
           });
         }
@@ -364,7 +363,7 @@ export default function BookingBar({ lang = 'en', onSearchResults, hotels = [], 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookings: bookingPayloads,
-          ...reservationPaymentFields
+          ...RESERVATION_PAYMENT_FIELDS
         })
       });
 

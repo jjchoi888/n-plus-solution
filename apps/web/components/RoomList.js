@@ -70,7 +70,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const effectiveAdults = adults || searchParams?.guests?.adults || 2;
   const effectiveKids = kids || searchParams?.guests?.child || 0;
   const effectiveHotelCode = hotelCode || searchParams?.destination || 'ALL';
-  const reservationPaymentFields = RESERVATION_PAYMENT_FIELDS;
 
   useEffect(() => {
     const fetchFees = async () => {
@@ -284,7 +283,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
             total_price: dividedGrandTotal,
             hotel_code: targetHotelCode,
             channel: source,
-            ...reservationPaymentFields,
+            ...RESERVATION_PAYMENT_FIELDS,
             status: 'PENDING_PAYMENT'
           });
         }
@@ -295,7 +294,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookings: bookingPayloads,
-          ...reservationPaymentFields,
+          ...RESERVATION_PAYMENT_FIELDS,
           points_redeem: appliedRedeemPoints > 0 && user?.email
             ? { email: user.email, points_used: appliedRedeemPoints }
             : null
