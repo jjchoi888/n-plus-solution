@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { DEFAULT_RESERVATION_PAYMENT_METHOD, RESERVATION_PAYMENT_METHODS, getReservationPaymentFields } from "../lib/reservationPayment";
+import { RESERVATION_PAYMENT_FIELDS } from "../lib/reservationPayment";
 
 const BASE_URL = '';
 
@@ -56,7 +56,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const [formData, setFormData] = useState({ firstName: "", lastName: "", nationality: "Philippines", email: "", phone: "" });
 
   const [extraBeds, setExtraBeds] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(DEFAULT_RESERVATION_PAYMENT_METHOD);
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
@@ -71,7 +70,7 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
   const effectiveAdults = adults || searchParams?.guests?.adults || 2;
   const effectiveKids = kids || searchParams?.guests?.child || 0;
   const effectiveHotelCode = hotelCode || searchParams?.destination || 'ALL';
-  const reservationPaymentFields = getReservationPaymentFields(selectedPaymentMethod);
+  const reservationPaymentFields = RESERVATION_PAYMENT_FIELDS;
 
   useEffect(() => {
     const fetchFees = async () => {
@@ -503,21 +502,6 @@ export default function RoomList({ rooms, searchParams, lang = 'en', hotelCode, 
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800 border-b pb-2 pt-2 text-left">Payment Method</h3>
-                    <div className="flex flex-wrap gap-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      {RESERVATION_PAYMENT_METHODS.map((method) => (
-                        <button
-                          key={method.value}
-                          type="button"
-                          onClick={() => setSelectedPaymentMethod(method.value)}
-                          className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition-all ${selectedPaymentMethod === method.value ? 'border-emerald-600 theme-border bg-emerald-600 theme-bg text-white shadow-sm' : 'border-emerald-200 theme-border bg-white text-emerald-700 theme-text hover:border-emerald-500'}`}
-                        >
-                          {method.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Booking Summary */}

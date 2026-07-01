@@ -4,7 +4,7 @@ import RoomList from "./RoomList";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { app, hasValidFirebaseConfig, firebaseInitError } from '../lib/firebase';
 import MemberDashboard from "./MemberDashboard";
-import { DEFAULT_RESERVATION_PAYMENT_METHOD, RESERVATION_PAYMENT_METHODS, getReservationPaymentFields } from '../lib/reservationPayment';
+import { RESERVATION_PAYMENT_FIELDS } from '../lib/reservationPayment';
 
 const BASE_URL = '';
 
@@ -350,7 +350,6 @@ export default function HotelWebsite({ domain }) {
     const [guestDob, setGuestDob] = useState('');
     const [guestDocumentUrl, setGuestDocumentUrl] = useState('');
     const [extraBed, setExtraBed] = useState(0);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(DEFAULT_RESERVATION_PAYMENT_METHOD);
 
     const [promoCode, setPromoCode] = useState('');
     const [isBooking, setIsBooking] = useState(false);
@@ -386,7 +385,7 @@ export default function HotelWebsite({ domain }) {
     const [appliedRedeemAmount, setAppliedRedeemAmount] = useState(0);
 
     const t = translations[lang] || translations.en;
-    const reservationPaymentFields = getReservationPaymentFields(selectedPaymentMethod);
+    const reservationPaymentFields = RESERVATION_PAYMENT_FIELDS;
     const hotelCode = getEffectiveHotelCode();
 
     const navigateAfterAuth = (destination = postAuthDestination) => {
@@ -2361,22 +2360,6 @@ export default function HotelWebsite({ domain }) {
                                         </div>
                                     </section>
 
-                                    <section>
-                                        <h3 className="text-lg font-black text-slate-800 border-b-2 border-slate-100 pb-2 mb-4">3. {t.paymentMethod || 'Payment Method'}</h3>
-                                        <div className="flex flex-wrap gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                            {RESERVATION_PAYMENT_METHODS.map((method) => (
-                                                <button
-                                                    key={method.value}
-                                                    type="button"
-                                                    onClick={() => setSelectedPaymentMethod(method.value)}
-                                                    disabled={isBooking}
-                                                    className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition-all ${selectedPaymentMethod === method.value ? 'theme-border theme-bg text-white shadow-sm' : 'theme-border bg-white theme-text hover:bg-slate-50'} disabled:opacity-60`}
-                                                >
-                                                    {method.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </section>
                                 </div>
 
                                 {/* 2. 우측 사이드바 (Summary + Button, 레이아웃 순서 고정) */}
